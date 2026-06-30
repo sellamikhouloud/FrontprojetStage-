@@ -1,0 +1,43 @@
+# NutriGest Frontend
+# Dependencies
+
+## Core
+React
+Vite
+
+## Styling
+Tailwind CSS
+
+## Routing
+React Router DOM
+
+## Forms
+React Hook Form
+
+## HTTP Client
+Axios
+
+## Icons
+React Icons
+Lucide React
+
+## UI Components
+React Select
+React Datepicker
+
+## Charts
+Recharts
+
+## Animations
+Framer Motion
+
+## PDF Export (Future)
+jsPDFs
+jsPDF-AutoTable
+
+## Excel Export (Future)
+XLSX
+File Saver
+
+## Optional
+vite-tsconfig-paths
