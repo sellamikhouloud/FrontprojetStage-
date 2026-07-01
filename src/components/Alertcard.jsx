@@ -52,7 +52,8 @@ const AlertCard = ({
   className={`
     absolute
 
-    left-[-1px]
+    left-[-0px]
+    right-[-1px]
     top-[7px]
     bottom-[7px]
 
@@ -74,32 +75,40 @@ const AlertCard = ({
           className="w-[50px] h-[50px] shrink-0"
         />
 
-        {/* Texte */}
-        <div className="flex flex-col gap-[6px] flex-1">
+   {/* Texte */}
+<div className="flex flex-col gap-[6px] flex-1">
 
-          <h2
-            className="
-              text-[20px]
-              font-semibold
-              text-[#202124]
-              leading-none
-            "
-          >
-            {title}
-          </h2>
+  <h2
+    className="
+      text-[14px]
+      sm:text-[16px]
+      md:text-[18px]
+      lg:text-[20px]
 
-          <p
-            className="
-              text-[14px]
-              font-normal
-              text-[#6B7280]
-              leading-none
-            "
-          >
-            {description}
-          </p>
+      font-semibold
+      text-[#202124]
+      leading-none
+    "
+  >
+    {title}
+  </h2>
 
-        </div>
+  <p
+    className="
+      text-[11px]
+      sm:text-[12px]
+      md:text-[13px]
+      lg:text-[14px]
+
+      font-normal
+      text-[#6B7280]
+      leading-none
+    "
+  >
+    {description}
+  </p>
+
+</div>
       </div>
 
       {/* Flèche */}
@@ -128,4 +137,4 @@ const AlertCard = ({
   );
 };
 
-
+export default AlertCard;
