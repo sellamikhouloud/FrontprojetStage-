@@ -1,1 +1,131 @@
+import AlertIcon from "../assets/Overlay.png";
+import VisitIcon from "../assets/Overlay (1).png";
+import ArrowRight from "../assets/arrow-drop-down.png";
+
+const variants = {
+  danger: {
+    background: "bg-[#EF44441A]",
+     border: "border-[#C73939]",
+     accent: "bg-[#EF4444]",
+    icon: AlertIcon,
+  },
+
+  warning: {
+     background: "bg-[#F59E0B1A]",
+      border: "border-[#CC8409]",
+      accent: "bg-[#F59E0B]",
+    icon: VisitIcon,
+  },
+};
+const AlertCard = ({
+  variant = "",
+  title,
+  description,
+  onArrowClick,
+}) => {
+  const style = variants[variant];
+
+  return (
+    <div
+  className={`
+        relative
+        w-full
+        max-w-[580px]
+
+        h-[70px]
+
+        ${style.background}
+        ${style.border}
+
+        border
+        rounded-[20px]
+
+        px-[18px]
+        py-[20px]
+
+        flex
+        items-center
+        justify-between
+      `}
+>
+    <div
+  className={`
+    absolute
+
+    left-[-1px]
+    top-[7px]
+    bottom-[7px]
+
+    w-[6px]
+
+    ${style.accent}
+
+    rounded-l-[50px]
+    rounded-r-[9px]
+  `}
+/>
+  {/* Partie gauche */}
+  <div className="flex items-center gap-[18px] flex-1">
+
+        {/* Icône */}
+        <img
+          src={style.icon}
+          alt=""
+          className="w-[50px] h-[50px] shrink-0"
+        />
+
+        {/* Texte */}
+        <div className="flex flex-col gap-[6px] flex-1">
+
+          <h2
+            className="
+              text-[20px]
+              font-semibold
+              text-[#202124]
+              leading-none
+            "
+          >
+            {title}
+          </h2>
+
+          <p
+            className="
+              text-[14px]
+              font-normal
+              text-[#6B7280]
+              leading-none
+            "
+          >
+            {description}
+          </p>
+
+        </div>
+      </div>
+
+      {/* Flèche */}
+      <button
+        onClick={onArrowClick}
+        className="
+          ml-[10px]
+          flex
+          items-center
+          justify-center
+          cursor-pointer
+          transition-transform
+          duration-200
+          hover:scale-110
+          active:scale-95
+          shrink-0
+        "
+      >
+        <img
+          src={ArrowRight}
+          alt="ouvrir"
+          className="w-[20px] h-[20px]"
+        />
+      </button>
+    </div>
+  );
+};
+
 
