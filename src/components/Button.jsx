@@ -38,6 +38,16 @@ const Button = ({
       border-[#4E9F8A]
       hover:bg-[#EAF7F7]
     `,
+
+
+     // Confirmer la sortie
+    confirm: `
+      bg-[#4E9F8A]
+      text-white
+      hover:bg-[#458f7b]
+    `,
+
+
   };
 
   // Les boutons Enregistrer et Historique gardent leur ancien padding
@@ -52,6 +62,11 @@ const Button = ({
         lg:pl-50
         lg:pr-5
 
+        py-2
+      `
+       : variant === "confirm"
+      ? `
+        w-full
         py-2
       `
       : `
