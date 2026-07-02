@@ -41,7 +41,6 @@ const Button = ({
       hover:bg-[#EAF7F7]
     `,
 
-<<<<<<< HEAD
     //Toutes 
     all : `
     bg-[#4E9F8A]
@@ -70,18 +69,16 @@ const Button = ({
     text-[#E85D5D]
     border
     border-[#E85D5D]
-    `
-=======
+    `,
 
      // Confirmer la sortie
-    confirm: `
+    confirm : `
       bg-[#4E9F8A]
       text-white
       hover:bg-[#458f7b]
     `,
 
 
->>>>>>> b35e9b66eb8c4b281bef821cf6722b9ed97ad8d5
   };
 
   // Les boutons Enregistrer et Historique gardent leur ancien padding
