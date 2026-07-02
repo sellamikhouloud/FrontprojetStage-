@@ -40,36 +40,6 @@ const Button = ({
       border-[#4E9F8A]
       hover:bg-[#EAF7F7]
     `,
-
-    //Toutes 
-    all : `
-    bg-[#4E9F8A]
-    text-white
-    `,
-
-    //Validees
-    validated : `
-    bg-[#E8F7EF]
-    text-[#22C55E]
-    border
-    border-[#22C55E]
-    `,
-    
-    //En Attente
-    EnAttente : `
-    bg-[#FFF4D8]
-    text-[#F59E0B]
-    border
-    border-[#F59E0B]
-    `,
-
-    //Refusees
-    refused : `
-    bg-[#FDECEC]
-    text-[#E85D5D]
-    border
-    border-[#E85D5D]
-    `
   };
 
   // Les boutons Enregistrer et Historique gardent leur ancien padding
@@ -84,6 +54,11 @@ const Button = ({
         lg:pl-50
         lg:pr-5
 
+        py-2
+      `
+       : variant === "confirm"
+      ? `
+        w-full
         py-2
       `
       : `
