@@ -41,3 +41,10 @@ File Saver
 
 ## Optional
 vite-tsconfig-paths
+
+
+
+
+
+## Installation
+npm install framer-motion 
