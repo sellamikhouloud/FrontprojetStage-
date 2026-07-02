@@ -8,14 +8,14 @@ const SearchBar = ({
   onFilterClick,
 }) => {
   return (
-    <div
+   <div
       className="
         flex items-center gap-[10px]
 
         w-full
 
         px-4
-        lg:pl-20
+        lg:pl-50
         lg:pr-5
 
         py-2
