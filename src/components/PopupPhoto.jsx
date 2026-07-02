@@ -38,12 +38,12 @@ const PopupPhoto = ({
     return () => stopCamera();
   }, []);
 
-  // 📱 MOBILE + fallback desktop file camera
+  // MOBILE + fallback desktop file camera
   const handleCameraMobile = () => {
     cameraInputRef.current?.click();
   };
 
-  // 💻 DESKTOP webcam
+  // DESKTOP webcam
   const handleCameraDesktop = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -90,7 +90,7 @@ const PopupPhoto = ({
     handleClose();
   };
 
-  // 📸 capture photo from webcam
+  // taking a picture from webcam
   const takePhoto = () => {
     if (!videoRef.current) return;
 
