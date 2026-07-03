@@ -1,7 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../assets/quitter.svg";
-import Card from "./card";
+import CardPopup from "./card2";
 
 const PopupRetard = ({
   open,
@@ -11,7 +11,7 @@ const PopupRetard = ({
   return (
     <AnimatePresence>
       {open && (
-     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -34,12 +34,9 @@ const PopupRetard = ({
                   flex
                   items-center
                   gap-2
-
                   text-[16px]
                   sm:text-[18px]
-
                   font-medium
-
                   hover:opacity-70
                   transition
                 "
@@ -49,19 +46,15 @@ const PopupRetard = ({
                   alt="Fermer"
                   className="w-5 h-5"
                 />
-
                 Fermer
               </button>
 
               <h2
                 className="
                   mt-3
-
                   text-[24px]
                   sm:text-[28px]
-
                   font-semibold
-
                   text-[#1E1E1E]
                 "
               >
@@ -71,26 +64,27 @@ const PopupRetard = ({
 
             {/* Liste des cartes */}
             <div
-            
-  className="
-    px-5
-    pb-5
-    pt-2
-
-    space-y-3
-
-    h-[420px]
-    overflow-y-auto
-
-    pr-2
-  "
-
+              className="
+                px-5
+                pb-5
+                pt-2
+                space-y-3
+                h-[420px]
+                overflow-y-auto
+                pr-2
+              "
             >
               {familleretard.length > 0 ? (
                 familleretard.map((item) => (
-                  <Card
+                  <CardPopup
                     key={item.id}
-                    {...item}
+                    sexe={item.sexe}
+                    enfant={item.enfant}
+                    region={item.region}
+                    naissance={item.naissance}
+                    code={item.code}
+                    badges={item.badges}
+                    onClick={() => console.log(item)}
                   />
                 ))
               ) : (
