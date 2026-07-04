@@ -8,21 +8,21 @@ import CardPopupDistribution from "./cardDistribution";
 const PopuphistoriqueDistribution = ({
   open,
   onClose,
-  familleretard = [],
+  Distribution = [],
 }) => {
   const [search, setSearch] = useState("");
 
   const data = useMemo(() => {
-    if (!search.trim()) return familleretard;
+    if (!search.trim()) return Distribution;
 
     const value = search.toLowerCase();
 
-    return familleretard.filter(
+    return Distribution.filter(
       (item) =>
         item.enfant.toLowerCase().includes(value) ||
         item.code.toLowerCase().includes(value)
     );
-  }, [search, familleretard]);
+  }, [search, Distribution]);
 
   return (
     <AnimatePresence>
