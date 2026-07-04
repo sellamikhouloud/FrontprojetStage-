@@ -8,21 +8,21 @@ import CardPopupvisite from "./cardvisite";
 const Popuphistoriquevisite = ({
   open,
   onClose,
-  familleretard = [],
+  Visites = [],
 }) => {
   const [search, setSearch] = useState("");
 
   const data = useMemo(() => {
-    if (!search.trim()) return familleretard;
+    if (!search.trim()) return Visites;
 
     const value = search.toLowerCase();
 
-    return familleretard.filter(
+    return Visites.filter(
       (item) =>
         item.enfant.toLowerCase().includes(value) ||
         item.code.toLowerCase().includes(value)
     );
-  }, [search, familleretard]);
+  }, [search, Visites]);
 
   return (
     <AnimatePresence>
