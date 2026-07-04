@@ -7,7 +7,7 @@ import CardPopupvisite from "./cardvisite";
 const Popupvisites = ({
   open,
   onClose,
-  familleretard = [],
+  Visites = [],
 }) => {
   return (
     <AnimatePresence>
@@ -48,8 +48,8 @@ const Popupvisites = ({
 
             {/* Cartes */}
             <div className="px-6 pb-6 mt-5 max-h-[500px] overflow-y-auto space-y-4">
-              {familleretard.length ? (
-                familleretard.map((item) => (
+              {Visites.length ? (
+                Visites.map((item) => (
                   <CardPopupvisite
                     key={item.id}
                     visite={item.visite}
