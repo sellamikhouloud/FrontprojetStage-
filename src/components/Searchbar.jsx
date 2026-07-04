@@ -6,53 +6,54 @@ const SearchBar = ({
   value,
   onChange,
   onFilterClick,
+  showFilter = true,
+
+  // Props
+  width = "w-full",
+  height = "h-[45px]",
+  className = "",
 }) => {
   return (
-   <div
-      className="
+    <div
+      className={`
         flex items-center gap-[10px]
-
         w-full
-
-        px-4
-        lg:pl-50
-        lg:pr-5
-
-        py-2
-      "
+        ${width}
+        ${className}
+      `}
     >
       {/* Input */}
-      <div className="relative flex-1">
-
+      <div className="relative flex-1 min-w-0">
         <input
           type="text"
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="
+          className={`
             w-full
-            h-[45px]
+            ${height}
 
             rounded-[15px]
-
-            border-[1px]
-            border-[#000000]
-
+            border
+            border-black
             bg-white
 
             pl-5
             pr-10
 
-             text-[16px]
-    font-normal
-    text-[#484848]
+            text-[14px]
+            sm:text-[15px]
+            md:text-[16px]
 
-    placeholder:text-[#484848]
+            font-normal
+            text-[#484848]
 
-    focus:outline-none
-    focus:ring-0
-    focus:border-black
-          "
+            placeholder:text-[#484848]
+
+            focus:outline-none
+            focus:ring-0
+            focus:border-black
+          `}
         />
 
         <img
@@ -68,50 +69,45 @@ const SearchBar = ({
             h-4
           "
         />
-
       </div>
 
       {/* Bouton filtre */}
 
-      <button
-        onClick={onFilterClick}
-        className="
-          w-[50px]
-          h-[45px]
+      {showFilter && (
+        <button
+          onClick={onFilterClick}
+          className={`
+            ${height}
 
-          rounded-[15px]
+            w-[45px]
+            sm:w-[50px]
 
-          bg-[#57B29D]
+            rounded-[15px]
 
-          flex
-          items-center
-          justify-center
+            bg-[#57B29D]
 
-           cursor-pointer
+            flex
+            items-center
+            justify-center
 
-    shadow-sm
-    hover:shadow-md
+            cursor-pointer
 
-          hover:bg-[#4DA38F]
+            shadow-sm
+            hover:bg-[#4DA38F]
+            active:scale-95
 
-           active:scale-95
-    active:bg-[#3E8C79]
+            transition-all
 
-          transition-all
-          duration-200
-
-          shrink-0
-        "
-      >
-
-        <img
-          src={FilterIcon}
-          alt="Filtre"
-          className="w-5 h-5"
-        />
-
-      </button>
-
+            shrink-0
+          `}
+        >
+          <img
+            src={FilterIcon}
+            alt="Filtre"
+            className="w-5 h-5"
+          />
+        </button>
+      )}
     </div>
   );
 };
