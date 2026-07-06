@@ -1,4 +1,3 @@
-
 const Button = ({
   title,
   icon,
@@ -7,6 +6,7 @@ const Button = ({
   variant = "primary",
   disabled = false,
   fullWidth = true,
+  noPadding = false,
 }) => {
   const variants = {
     // Enregistrer
@@ -21,6 +21,20 @@ const Button = ({
       bg-[#B5C8C7]
       text-white
       hover:bg-[#a7bdbc]
+    `,
+
+    //Modifier Image
+    modifier: `
+      bg-[#7BC8C4]
+      text-white
+    `,
+
+    //Supprimer Image
+    supprimer: `
+      bg-[#FFFFFF]
+      text-[#EF4444]
+      border
+      border-[#EF4444]
     `,
 
     // Filtrer
@@ -41,75 +55,92 @@ const Button = ({
       hover:bg-[#EAF7F7]
     `,
 
-    //Toutes 
-    all : `
-    bg-[#4E9F8A]
-    text-white
+    // Toutes
+    all: `
+      bg-[#4E9F8A]
+      text-white
     `,
 
-    //Validees
-    validated : `
-    bg-[#E8F7EF]
-    text-[#22C55E]
-    border
-    border-[#22C55E]
-    `,
-    
-    //En Attente
-    EnAttente : `
-    bg-[#FFF4D8]
-    text-[#F59E0B]
-    border
-    border-[#F59E0B]
+    // Validées
+    validated: `
+      bg-[#E8F7EF]
+      text-[#22C55E]
+      border
+      border-[#22C55E]
     `,
 
-    //Refusees
-    refused : `
-    bg-[#FDECEC]
-    text-[#E85D5D]
-    border
-    border-[#E85D5D]
+    // En attente
+    EnAttente: `
+      bg-[#FFF4D8]
+      text-[#F59E0B]
+      border
+      border-[#F59E0B]
     `,
 
-     // Confirmer la sortie
-    confirm : `
+    // Refusées
+    refused: `
+      bg-[#FDECEC]
+      text-[#E85D5D]
+      border
+      border-[#E85D5D]
+    `,
+
+    // Confirmer
+    confirm: `
       bg-[#4E9F8A]
       text-white
       hover:bg-[#458f7b]
     `,
 
+    // Changer
+    changer: `
+      bg-[#B5ECC9]
+      text-[#22C55E]
+      border
+      border-[#22C55E]
+      rounded-[24px]
+      h-[39px]
+    `,
 
+    //photo refusee
+    refusee: `
+      bg-[#FAC1C1]
+      text-[#EF4444]
+      border
+      border-[#E85D5D]
+      rounded-[24px]
+      h-[39px]
+    `,
   };
 
-  // Les boutons Enregistrer et Historique gardent leur ancien padding
   const wrapper =
-    variant === "primary" || variant === "secondary"
+    variant === "changer"
+      ? "inline-block"
+      : variant === "confirm"
       ? `
-        flex items-center
-
-        w-full
-
-        px-4
-        lg:pl-50
-        lg:pr-5
-
-        py-2
-      `
-       : variant === "confirm"
+          w-full
+          py-2
+        `
+      : noPadding
       ? `
-        w-full
-        py-2
-      `
+          w-full
+          py-2
+        `
+      : variant === "primary" || variant === "secondary"
+      ? `
+          flex items-center
+          w-full
+          px-4
+          lg:pl-50
+          lg:pr-5
+          py-2
+        `
       : `
-        flex items-center
-
-        w-full
-        px-4
-        lg:pl-300
-        lg:pr-5
-
-        py-2
-      `;
+          flex items-center
+          w-full
+          pr-[15px]
+          pl-[15px]
+        `;
 
   return (
     <div className={wrapper}>
@@ -117,8 +148,10 @@ const Button = ({
         type={type}
         onClick={onClick}
         disabled={disabled}
-        className={`  
-        ${fullWidth ? "w-full" : "inline-flex" }
+        className={`
+          ${fullWidth ? "w-full" : "inline-flex"}
+
+          flex
           items-center
           justify-center
           gap-2
@@ -127,6 +160,7 @@ const Button = ({
           h-[45px]
 
           rounded-[15px]
+
           font-semibold
           text-[14px]
           sm:text-[15px]
@@ -148,20 +182,22 @@ const Button = ({
           disabled:active:scale-100
 
           whitespace-nowrap
+
           ${variants[variant]}
         `}
       >
-          {icon && (
-             <img
-             src={icon}
-             alt=""
-             className="w-4 h-4"
-             /> 
-          )}
+        {icon && (
+          <img
+            src={icon}
+            alt=""
+            className="w-4 h-4"
+          />
+        )}
+
         <span>{title}</span>
       </button>
     </div>
   );
 };
 
-export default Button; 
+export default Button;
