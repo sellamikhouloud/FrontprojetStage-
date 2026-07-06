@@ -10,15 +10,17 @@ const SearchBar = ({
 
   // Props
   width = "w-full",
+  maxWidth = "max-w-[500px]",
   height = "h-[45px]",
   className = "",
 }) => {
   return (
     <div
       className={`
-        flex items-center gap-[10px]
-        w-full
+        flex items-center
+        gap-[10px]
         ${width}
+        ${maxWidth}
         ${className}
       `}
     >
@@ -32,24 +34,18 @@ const SearchBar = ({
           className={`
             w-full
             ${height}
-
             rounded-[15px]
             border
             border-black
             bg-white
-
             pl-5
             pr-10
-
             text-[14px]
             sm:text-[15px]
             md:text-[16px]
-
             font-normal
             text-[#484848]
-
             placeholder:text-[#484848]
-
             focus:outline-none
             focus:ring-0
             focus:border-black
@@ -64,7 +60,6 @@ const SearchBar = ({
             right-4
             top-1/2
             -translate-y-1/2
-
             w-4
             h-4
           "
@@ -72,32 +67,23 @@ const SearchBar = ({
       </div>
 
       {/* Bouton filtre */}
-
       {showFilter && (
         <button
           onClick={onFilterClick}
           className={`
             ${height}
-
             w-[45px]
             sm:w-[50px]
-
             rounded-[15px]
-
             bg-[#57B29D]
-
             flex
             items-center
             justify-center
-
             cursor-pointer
-
             shadow-sm
             hover:bg-[#4DA38F]
             active:scale-95
-
             transition-all
-
             shrink-0
           `}
         >
