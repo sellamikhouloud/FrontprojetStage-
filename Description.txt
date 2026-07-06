@@ -1,5 +1,5 @@
 ## Description composants 
-ARD2 : composant de la carte d'une famille utilisé dans la version Mobile ainsi que dans le pop-up MAS des visites en retard sur la version Web.
+card2 : composant de la carte d'une famille utilisé dans la version Mobile ainsi que dans le pop-up MAS des visites en retard sur la version Web.
 
 Card : composant de la carte d'une famille utilisé pour afficher les informations des familles.
 
