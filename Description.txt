@@ -1,0 +1,12 @@
+## Description composants 
+ARD2 : composant de la carte d'une famille utilisé dans la version Mobile ainsi que dans le pop-up MAS des visites en retard sur la version Web.
+
+Card : composant de la carte d'une famille utilisé pour afficher les informations des familles.
+
+AlertCard : composant qui contient les différents types d'alertes pouvant être affichés.
+
+Button : composant contient tout les modeles de boutton existe dans les pages .
+
+Navigation : pour naviger entre les pages le "suivant" et le " back " 
+
+Options : liste des options affichées lors de la saisie dans le Choice Container.
