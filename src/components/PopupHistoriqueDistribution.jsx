@@ -64,6 +64,7 @@ const PopuphistoriqueDistribution = ({
                 <SearchBar
                   placeholder="Cherchez ici"
                   width="w-full"
+                  maxWidth="max-w-none"
                   showFilter={false}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
