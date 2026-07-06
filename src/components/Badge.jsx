@@ -6,14 +6,13 @@ const StatusBadge = ({
   className = "",
 }) => {
   const styles = {
-
-
-      // MAM nourrisson
+    // MAM nourrisson
     mam: {
       border: "#F59E0B",
       background: "#FFFFFF",
       text: "#F59E0B",
     },
+
     mas: {
       border: "#EF4444",
       background: "#FAC1C1B2",
@@ -40,17 +39,22 @@ const StatusBadge = ({
       className={`
         inline-flex
         items-center
-        gap-2
+        justify-center
+        gap-1 sm:gap-2
 
-        h-[30px]
+        h-[28px]
+        sm:h-[30px]
 
-        px-4
+        px-3
+        sm:px-4
 
         rounded-[8px]
 
         border
 
-        text-[14px]
+        text-[12px]
+        sm:text-[14px]
+
         font-medium
 
         whitespace-nowrap
@@ -67,7 +71,7 @@ const StatusBadge = ({
         <img
           src={AlarmClock}
           alt="Alarm"
-          className="w-4 h-4"
+          className="w-3.5 h-3.5 sm:w-4 sm:h-4"
         />
       )}
 
