@@ -8,6 +8,7 @@ const SelectInput = ({
   options = [],
   value,
   onChange,
+  noPadding = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -17,18 +18,18 @@ const SelectInput = ({
   };
 
   return (
-   <div
-      className="
+    <div
+      className={`
         flex items-center gap-[10px]
-
         w-full
-
-        px-4
-        lg:pl-50
-        lg:pr-5
-
         py-2
-      "
+
+        ${
+          noPadding
+            ? ""
+            : "px-4 lg:pl-50 lg:pr-5"
+        }
+      `}
     >
       {/* Conteneur */}
       <div className="relative flex flex-col gap-2 w-full">
@@ -82,13 +83,7 @@ const SelectInput = ({
           "
         >
           <span
-            className={`
-              ${
-                value
-                  ? "text-black"
-                  : "text-gray-400"
-              }
-            `}
+            className={value ? "text-black" : "text-gray-400"}
           >
             {value || placeholder}
           </span>
@@ -97,11 +92,8 @@ const SelectInput = ({
             src={ArrowDown}
             alt="ouvrir"
             className={`
-              w-5
-              h-5
-              shrink-0
-              transition-transform
-              duration-200
+              w-5 h-5 shrink-0
+              transition-transform duration-200
               ${isOpen ? "rotate-180" : ""}
             `}
           />

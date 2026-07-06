@@ -1,14 +1,10 @@
-import React from "react";
-import PopupPhoto from "./components/PopupPhoto";
+import PhotoRefuse from "./components/PhotoRefusee";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <PopupPhoto
-        title="Ajouter une photo"
-        onClose={() => {
-          console.log("Popup closed");
-        }}
+    <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+      <PhotoRefuse
+        onClose={() => console.log("Close")}
       />
     </div>
   );

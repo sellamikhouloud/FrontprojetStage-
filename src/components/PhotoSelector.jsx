@@ -15,11 +15,6 @@ function PhotoSelector() {
     if (!file) return;
 
     console.log(file);
-
-    // Example:
-    // const imageUrl = URL.createObjectURL(file);
-    // setSelectedImage(imageUrl);
-    // uploadImage(file);
   };
 
   return (
