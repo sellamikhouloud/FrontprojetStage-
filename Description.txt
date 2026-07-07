@@ -10,3 +10,13 @@ Button : composant contient tout les modeles de boutton existe dans les pages .
 Navigation : pour naviger entre les pages le "suivant" et le " back " 
 
 Options : liste des options affichées lors de la saisie dans le Choice Container.
+
+PageHeader : : composant d'en-tête de page permettant d'afficher un bouton de retour, un titre principal et une action optionnelle à droite par example Annuler et voir historique ou bien Annuler seulement . 
+
+AfficherContainer : composant conteneur utilisé pour afficher des informations ou des données.
+
+Badge : composant permettant d'afficher les différents statuts dans les cartes.
+
+FilterTag : composant permettant d'afficher un filtre sélectionné sous forme d'étiquette, avec un bouton de suppression pour le retirer.
+
+Textarea : c'est un container pour ecrire .
