@@ -17,7 +17,23 @@ const PopupDistribution = ({
   return (
     <AnimatePresence>
       {open && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div
+  className="
+    fixed
+    inset-0
+    z-50
+
+    bg-white
+
+    flex
+    items-start
+    sm:items-center
+
+    justify-center
+
+    overflow-y-auto
+  "
+>
           <motion.div
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -25,15 +41,23 @@ const PopupDistribution = ({
             transition={{ duration: 0.2 }}
             className="
               w-full
-              max-w-[520px]
+
+              min-h-screen
+              sm:min-h-0
+
+              sm:max-w-[520px]
 
               bg-white
 
-              rounded-[15px]
-              border
-              border-[#4E9F8A]
+              rounded-none
+              sm:rounded-[15px]
 
-              shadow-xl
+              border-0
+              sm:border
+              sm:border-[#4E9F8A]
+
+              shadow-none
+              sm:shadow-xl
 
               px-5
               py-6
@@ -47,14 +71,14 @@ const PopupDistribution = ({
                 items-center
                 gap-2
 
-                text-[18px]
+                text-[16px]
+                sm:text-[18px]
+
                 font-medium
                 text-black
 
-                transition-opacity
-                duration-150
-
                 hover:opacity-70
+                transition-opacity
               "
             >
               <img
@@ -85,7 +109,7 @@ const PopupDistribution = ({
             </h2>
 
             {/* Liste */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               {items.map((item, index) => (
                 <div
                   key={index}
@@ -95,10 +119,10 @@ const PopupDistribution = ({
                     justify-between
                   "
                 >
-                  {/* Nom */}
                   <span
                     className="
-                      text-[18px]
+                      text-[16px]
+                      sm:text-[18px]
                       font-medium
                       text-black
                     "
@@ -106,15 +130,15 @@ const PopupDistribution = ({
                     {item.name}
                   </span>
 
-                  {/* Valeur */}
                   <div className="flex items-end gap-1">
                     <span
                       className="
                         text-[#4E9F8A]
 
-                        text-[24px]
-                        font-bold
+                        text-[22px]
+                        sm:text-[24px]
 
+                        font-bold
                         leading-none
                       "
                     >
@@ -123,8 +147,8 @@ const PopupDistribution = ({
 
                     <span
                       className="
-                        text-[15px]
-                        font-normal
+                        text-[14px]
+                        sm:text-[15px]
                         text-black
                       "
                     >
@@ -134,6 +158,7 @@ const PopupDistribution = ({
                 </div>
               ))}
             </div>
+
           </motion.div>
         </div>
       )}
