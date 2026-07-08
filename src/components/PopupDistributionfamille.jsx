@@ -12,7 +12,23 @@ const PopupDistributionfamille = ({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 p-4">
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+
+            bg-white
+
+            flex
+            items-start
+            sm:items-center
+
+            justify-center
+
+            overflow-y-auto
+          "
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -20,17 +36,40 @@ const PopupDistributionfamille = ({
             transition={{ duration: 0.2 }}
             className="
               w-full
-              max-w-[620px]
+
+              min-h-screen
+              sm:min-h-0
+
+              sm:max-w-[620px]
+
               bg-white
-              rounded-[18px]
-              shadow-2xl
+
+              rounded-none
+              sm:rounded-[18px]
+
+              border-0
+              sm:border
+              sm:border-[#DCE5EC]
+
+              shadow-none
+              sm:shadow-2xl
             "
           >
             {/* Header */}
-            <div className="px-6 pt-5">
+            <div className="px-5 sm:px-6 pt-5">
               <button
                 onClick={onClose}
-                className="flex items-center gap-2 text-[17px] hover:opacity-70"
+                className="
+                  flex
+                  items-center
+                  gap-2
+
+                  text-[16px]
+                  sm:text-[17px]
+
+                  hover:opacity-70
+                  transition
+                "
               >
                 <img
                   src={quitter}
@@ -40,13 +79,43 @@ const PopupDistributionfamille = ({
                 Fermer
               </button>
 
-              <h2 className="mt-5 text-[24px] font-semibold text-[#1E1E1E] text-center">
+              <h2
+                className="
+                  mt-5
+
+                  text-center
+
+                  text-[22px]
+                  sm:text-[24px]
+
+                  font-semibold
+                  text-[#1E1E1E]
+                "
+              >
                 Distributions
               </h2>
             </div>
 
             {/* Cartes */}
-            <div className="px-6 pb-5 mt-4 max-h-[420px] overflow-y-auto space-y-4">
+            <div
+              className="
+                px-5
+                sm:px-6
+
+                pb-6
+
+                mt-5
+
+                flex-1
+
+                max-h-none
+                sm:max-h-[420px]
+
+                overflow-y-auto
+
+                space-y-4
+              "
+            >
               {Distribution.length ? (
                 Distribution.map((item) => (
                   <CardPopupDistribution
