@@ -14,7 +14,23 @@ const PopupFinSuivi = ({
 
   return (
     <AnimatePresence>
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="
+          fixed
+          inset-0
+          z-50
+
+          bg-white
+
+          flex
+          items-start
+          sm:items-center
+
+          justify-center
+
+          overflow-y-auto
+        "
+      >
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -22,45 +38,54 @@ const PopupFinSuivi = ({
           transition={{ duration: 0.2 }}
           className="
             w-full
-            max-w-[550px]
+
+            min-h-screen
+            sm:min-h-0
+
+            sm:max-w-[550px]
 
             bg-white
 
-            rounded-[20px]
-            border
-            border-[#4E9F8A]
+            rounded-none
+            sm:rounded-[20px]
 
-            px-8
-            py-7
+            border-0
+            sm:border
+            sm:border-[#4E9F8A]
 
-            shadow-xl
+            shadow-none
+            sm:shadow-xl
+
+            px-5
+            sm:px-8
+
+            py-6
+            sm:py-7
           "
         >
-
           {/* Fermer */}
           <button
             onClick={onClose}
-           className="
-                flex
-                items-center
-                gap-2
+            className="
+              flex
+              items-center
+              gap-2
 
-                text-[18px]
-                font-medium
-                text-black
+              text-[16px]
+              sm:text-[18px]
 
-                transition-opacity
-                duration-150
+              font-medium
+              text-black
 
-                hover:opacity-70
-              "
+              hover:opacity-70
+              transition-opacity
+            "
           >
             <img
               src={quitter}
               alt="Fermer"
               className="w-5 h-5"
             />
-
             Fermer
           </button>
 
@@ -70,7 +95,9 @@ const PopupFinSuivi = ({
               mt-6
               mb-6
 
-              text-[28px]
+              text-[24px]
+              sm:text-[28px]
+
               font-semibold
               text-[#1F2937]
             "
@@ -87,16 +114,15 @@ const PopupFinSuivi = ({
             height="h-[130px]"
           />
 
-        <div className="mt-8">
-  <Button
-    title="Confirmer la sortie"
-    variant="confirm"
-    onClick={() => onConfirm?.(motif)}
-  />
-</div>
-
+          {/* Bouton */}
+          <div className="mt-8">
+            <Button
+              title="Confirmer la sortie"
+              variant="confirm"
+              onClick={() => onConfirm?.(motif)}
+            />
+          </div>
         </motion.div>
-
       </div>
     </AnimatePresence>
   );
