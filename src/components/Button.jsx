@@ -111,10 +111,26 @@ const Button = ({
       rounded-[24px]
       h-[39px]
     `,
+
+// Ajouter Produit
+ajouter: `
+  bg-white
+
+  text-[#525252]
+  text-[16px]
+  leading-[20px]
+  font-bold
+
+  border
+  border-dashed
+  border-[#52525299]
+
+  hover:bg-[#F8F8F8]
+`
   };
 
   const wrapper =
-    variant === "changer"
+    variant === "changer" 
       ? "inline-block"
       : variant === "confirm"
       ? `
@@ -126,7 +142,8 @@ const Button = ({
           w-full
           py-2
         `
-      : variant === "primary" || variant === "secondary"
+      : variant === "primary" || variant === "secondary" ||
+      variant === "ajouter"
       ? `
           flex items-center
           w-full
@@ -140,7 +157,8 @@ const Button = ({
           w-full
           pr-[15px]
           pl-[15px]
-        `;
+        `
+        ;
 
   return (
     <div className={wrapper}>
