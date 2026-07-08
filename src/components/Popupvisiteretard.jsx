@@ -11,7 +11,23 @@ const PopupRetard = ({
   return (
     <AnimatePresence>
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20">
+        <div
+          className="
+            fixed
+            inset-0
+            z-50
+
+            bg-white
+
+            flex
+            items-start
+            sm:items-center
+
+            justify-center
+
+            overflow-y-auto
+          "
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -19,10 +35,24 @@ const PopupRetard = ({
             transition={{ duration: 0.2 }}
             className="
               w-full
-              max-w-[760px]
+
+              min-h-screen
+              sm:min-h-0
+
+              sm:max-w-[760px]
+
               bg-white
-              rounded-[18px]
-              shadow-2xl
+
+              rounded-none
+              sm:rounded-[18px]
+
+              border-0
+              sm:border
+              sm:border-[#DCE5EC]
+
+              shadow-none
+              sm:shadow-2xl
+
               overflow-hidden
             "
           >
@@ -51,8 +81,9 @@ const PopupRetard = ({
 
               <h2
                 className="
-                  mt-3
-                  text-[24px]
+                  mt-5
+                  text-center
+                  text-[22px]
                   sm:text-[28px]
                   font-semibold
                   text-[#1E1E1E]
@@ -66,12 +97,20 @@ const PopupRetard = ({
             <div
               className="
                 px-5
-                pb-5
-                pt-2
-                space-y-3
-                h-[420px]
+                sm:px-6
+
+                pb-6
+
+                mt-4
+
+                flex-1
+
+                max-h-none
+                sm:h-[420px]
+
                 overflow-y-auto
-                pr-2
+
+                space-y-4
               "
             >
               {familleretard.length > 0 ? (
