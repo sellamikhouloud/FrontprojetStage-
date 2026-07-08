@@ -48,7 +48,7 @@ const StatusBadge = ({
         px-3
         sm:px-4
 
-        rounded-[8px]
+        rounded-full
 
         border
 
