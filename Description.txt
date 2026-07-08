@@ -20,3 +20,35 @@ Badge : composant permettant d'afficher les différents statuts dans les cartes.
 FilterTag : composant permettant d'afficher un filtre sélectionné sous forme d'étiquette, avec un bouton de suppression pour le retirer.
 
 Textarea : c'est un container pour ecrire .
+
+AlertBox : composant permettant d'afficher différents types d'alertes (succès, information, avertissement) avec un style adapté à chaque variante.
+
+ContainerEcriture : composant conteneur contenant un champ de saisie texte, utilisé pour les formulaires et pouvant être affiché en mode normal ou en mode pointillé (dashed).
+
+ChoiceContainer : composant conteneur permettant de sélectionner une valeur parmi une liste d'options.
+
+DateContainer : composant conteneur dédié à la saisie ou à la sélection d'une date.
+
+ImagePreview : composant permettant d'afficher un aperçu d'une image avec un bouton d'action configurable (Changer, Validée, Refusée).
+
+PopupPhoto : composant popup permettant d'ajouter une photo en choisissant entre prendre une photo ou en sélectionner une depuis l'appareil.
+
+AjouterPhoto : composant popup permettant d'ajouter une nouvelle photo avec ses informations (titre, village, date, description).
+
+ConsulterPhoto : composant popup permettant de consulter les informations d'une photo ainsi que son statut.
+
+ModifierPhoto : composant popup permettant de modifier les informations d'une photo existante.
+
+PhotoRefuse : composant popup permettant d'afficher une photo refusée ainsi que le motif du refus.
+
+ProductItem : composant permettant d'afficher un produit du colis alimentaire avec son icône, son nom, sa quantité et son unité.
+
+ColisAlimentaire : composant regroupant la liste des produits d'un colis alimentaire ainsi que le bouton permettant d'ajouter un nouveau produit.
+
+QuantitySelector : composant permettant d'augmenter ou de diminuer une quantité à l'aide de boutons "+" et "-".
+
+ConfirmationCheckbox : composant permettant à l'utilisateur de confirmer une action via une case à cocher accompagnée d'un libellé.
+
+PhotoSelection : composant permettant de sélectionner une photo parmi les photos disponibles.
+
+PhotoOption : composant représentant une option d'action liée à une photo (prendre une photo, sélectionner une photo, etc.).
