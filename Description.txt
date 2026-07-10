@@ -52,3 +52,5 @@ ConfirmationCheckbox : composant permettant à l'utilisateur de confirmer une ac
 PhotoSelection : composant permettant de sélectionner une photo parmi les photos disponibles.
 
 PhotoOption : composant représentant une option d'action liée à une photo (prendre une photo, sélectionner une photo, etc.).
+
+NavigationHeader :  Composant d'en-tête de navigation affichant un titre et une action (Ajouter, Modifier ou Enregistrer) selon le contexte de la page.
