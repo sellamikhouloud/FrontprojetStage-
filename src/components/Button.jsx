@@ -23,13 +23,13 @@ const Button = ({
       hover:bg-[#a7bdbc]
     `,
 
-    //Modifier Image
+    // Modifier Image
     modifier: `
       bg-[#7BC8C4]
       text-white
     `,
 
-    //Supprimer Image
+    // Supprimer Image
     supprimer: `
       bg-[#FFFFFF]
       text-[#EF4444]
@@ -102,7 +102,7 @@ const Button = ({
       h-[39px]
     `,
 
-    //photo refusee
+    // Photo refusée
     refusee: `
       bg-[#FAC1C1]
       text-[#EF4444]
@@ -112,25 +112,29 @@ const Button = ({
       h-[39px]
     `,
 
-// Ajouter Produit
-ajouter: `
-  bg-white
+    // Ajouter Produit
+    ajouter: `
+      bg-white
+      text-[#525252]
+      text-[16px]
+      leading-[20px]
+      font-bold
+      border
+      border-dashed
+      border-[#52525299]
+      hover:bg-[#F8F8F8]
+    `,
 
-  text-[#525252]
-  text-[16px]
-  leading-[20px]
-  font-bold
-
-  border
-  border-dashed
-  border-[#52525299]
-
-  hover:bg-[#F8F8F8]
-`
+    // Enregistrer les modifications
+    save: `
+      bg-[#4E9F8A]
+      text-white
+      hover:bg-[#458f7b]
+    `,
   };
 
   const wrapper =
-    variant === "changer" 
+    variant === "changer"
       ? "inline-block"
       : variant === "confirm"
       ? `
@@ -142,10 +146,13 @@ ajouter: `
           w-full
           py-2
         `
-      : variant === "primary" || variant === "secondary" ||
-      variant === "ajouter"
+      : variant === "primary" ||
+        variant === "secondary" ||
+        variant === "ajouter" ||
+        variant === "save"
       ? `
-          flex items-center
+          flex
+          items-center
           w-full
           px-4
           lg:pl-50
@@ -153,12 +160,12 @@ ajouter: `
           py-2
         `
       : `
-          flex items-center
+          flex
+          items-center
           w-full
           pr-[15px]
           pl-[15px]
-        `
-        ;
+        `;
 
   return (
     <div className={wrapper}>
@@ -174,15 +181,22 @@ ajouter: `
           justify-center
           gap-2
 
-          px-5
-          h-[45px]
+         px-3
+sm:px-4
+lg:px-5
 
-          rounded-[15px]
+h-[38px]
+sm:h-[42px]
+lg:h-[45px]
 
-          font-semibold
-          text-[14px]
-          sm:text-[15px]
-          lg:text-[16px]
+rounded-[12px]
+sm:rounded-[14px]
+lg:rounded-[15px]
+
+font-semibold
+text-[12px]
+sm:text-[14px]
+lg:text-[16px]
 
           shadow-md
 
@@ -208,7 +222,7 @@ ajouter: `
           <img
             src={icon}
             alt=""
-            className="w-4 h-4"
+            className="w-4 h-4 object-contain"
           />
         )}
 
