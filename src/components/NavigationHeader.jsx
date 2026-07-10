@@ -29,6 +29,7 @@ const NavigationHeader = ({
         <button
           onClick={onAction}
           className="
+            group
             flex
             items-center
             gap-1
@@ -42,9 +43,12 @@ const NavigationHeader = ({
 
             whitespace-nowrap
             shrink-0
+            cursor-pointer
 
+            transition-all
+            duration-150
             hover:opacity-70
-            transition
+            active:scale-95
           "
         >
           <span>{actionTitle}</span>
@@ -52,7 +56,15 @@ const NavigationHeader = ({
           <img
             src={Edit1}
             alt="Modifier"
-            className="w-4 h-4 sm:w-5 sm:h-5"
+            className="
+              w-4
+              h-4
+              sm:w-5
+              sm:h-5
+              transition-transform
+              duration-150
+              group-active:scale-90
+            "
           />
         </button>
       )}
@@ -62,6 +74,7 @@ const NavigationHeader = ({
         <button
           onClick={onAction}
           className="
+            group
             flex
             items-center
             gap-1
@@ -75,9 +88,12 @@ const NavigationHeader = ({
 
             whitespace-nowrap
             shrink-0
+            cursor-pointer
 
+            transition-all
+            duration-150
             hover:opacity-70
-            transition
+            active:scale-95
           "
         >
           <span>{actionTitle}</span>
@@ -85,7 +101,15 @@ const NavigationHeader = ({
           <img
             src={Add}
             alt="Ajouter"
-            className="w-4 h-4 sm:w-5 sm:h-5"
+            className="
+              w-4
+              h-4
+              sm:w-5
+              sm:h-5
+              transition-transform
+              duration-150
+              group-active:scale-90
+            "
           />
         </button>
       )}
