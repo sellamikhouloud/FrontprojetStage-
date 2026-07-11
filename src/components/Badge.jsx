@@ -42,13 +42,13 @@ const StatusBadge = ({
         justify-center
         gap-1 sm:gap-2
 
-        h-[28px]
-        sm:h-[30px]
+       h-[34px]
+sm:h-[36px]
 
         px-3
         sm:px-4
 
-        rounded-full
+        rounded-[8px]
 
         border
 
@@ -81,3 +81,4 @@ const StatusBadge = ({
 };
 
 export default StatusBadge;
+
