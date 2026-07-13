@@ -22,18 +22,10 @@ const SelectInput = ({
       className={`
         flex items-center gap-[10px]
         w-full
-        py-2
-
-        ${
-          noPadding
-            ? ""
-            : "px-4 lg:pl-50 lg:pr-5"
-        }
+        ${noPadding ? "" : "px-4 lg:pl-50 lg:pr-5"}
       `}
     >
-      {/* Conteneur */}
-      <div className="relative flex flex-col gap-2 w-full">
-
+      <div className="flex flex-col gap-2 w-full">
         {/* Label */}
         <label
           className="
@@ -48,66 +40,67 @@ const SelectInput = ({
         </label>
 
         {/* Select */}
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="
+        <div
+          className={`
             w-full
-            h-[45px]
-
-            rounded-[15px]
-
+            bg-white
             border
             border-[#4E9F8A]
-
-            bg-white
-
-            px-3
-
-            flex
-            items-center
-            justify-between
-
-            text-[14px]
-            sm:text-[15px]
-            lg:text-[16px]
-
-            text-left
-
-            focus:outline-none
-            focus:border-[#4E9F8A]
-            focus:ring-0
-
+            overflow-hidden
             transition-all
             duration-200
-          "
+            ${isOpen ? "rounded-[15px]" : "rounded-[15px]"}
+          `}
         >
-          <span
-            className={value ? "text-black" : "text-gray-400"}
+          {/* Button */}
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="
+              w-full
+              h-[45px]
+              px-3
+
+              flex
+              items-center
+              justify-between
+
+              bg-white
+
+              text-[14px]
+              sm:text-[15px]
+              lg:text-[16px]
+
+              text-left
+
+              focus:outline-none
+            "
           >
-            {value || placeholder}
-          </span>
+            <span className={value ? "text-black" : "text-gray-400"}>
+              {value || placeholder}
+            </span>
 
-          <img
-            src={ArrowDown}
-            alt="ouvrir"
-            className={`
-              w-5 h-5 shrink-0
-              transition-transform duration-200
-              ${isOpen ? "rotate-180" : ""}
-            `}
-          />
-        </button>
+            <img
+              src={ArrowDown}
+              alt="ouvrir"
+              className={`
+                w-5
+                h-5
+                transition-transform
+                duration-200
+                ${isOpen ? "rotate-180" : ""}
+              `}
+            />
+          </button>
 
-        {/* Liste des options */}
-        {isOpen && (
-          <Options
-            options={options}
-            handleSelect={handleSelect}
-            className="absolute top-full left-0 mt-2 w-full"
-          />
-        )}
-
+          {/* Options */}
+          {isOpen && (
+            <Options
+              options={options}
+              handleSelect={handleSelect}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
