@@ -33,7 +33,7 @@ const Input = ({
     bg-white
     px-3
     py-3
-    mb-5
+  
 
     text-[14px]
     sm:text-[15px]
