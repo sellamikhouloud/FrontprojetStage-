@@ -25,6 +25,20 @@ const StatusBadge = ({
       text: "#22C55E",
     },
 
+      // Mère normale active 
+    mereActive: {
+    border: "#22C55E",
+    background: "#B5ECC980",
+    text: "#22C55E",
+  },
+
+    // Mère normale (fond vert clair utiliser dans fiche famille meme que status mere )
+  mereNormal: {
+    border: "#22C55E",
+    background: "#DDF5E5",
+    text: "#22C55E",
+  },
+
     retard: {
       border: "#F59E0B",
       background: "#F59E0B",
@@ -42,9 +56,9 @@ const StatusBadge = ({
         justify-center
         gap-1 sm:gap-2
 
-       h-[34px]
-sm:h-[36px]
-
+    h-auto
+min-h-[34px]
+sm:min-h-[36px]
         px-3
         sm:px-4
 
@@ -81,4 +95,5 @@ sm:h-[36px]
 };
 
 export default StatusBadge;
+
 
