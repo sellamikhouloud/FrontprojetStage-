@@ -115,15 +115,19 @@ const NavigationHeader = ({
       )}
 
       {/* Enregistrer */}
-      {type === "save" && (
-        <Button
-          title={actionTitle}
-          icon={Edit2}
-          variant="primary"
-          fullWidth={false}
-          onClick={onAction}
-        />
-      )}
+     {type === "save" && (
+  <div className="shrink-0">
+    <Button
+  title={actionTitle}
+  icon={Edit2}
+  iconPosition="right"
+  variant="save"
+  fullWidth={false}
+  noPadding
+  onClick={onAction}
+/>
+  </div>
+)}
     </div>
   );
 };
