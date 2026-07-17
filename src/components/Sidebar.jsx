@@ -1,16 +1,28 @@
 import { useState } from "react";
 import SidebarItem from "./SidebarItem";
 import { sidebarConfig } from "./sidebarData";
-import menuIcon from "../assets/menu.svg"; // hamburger icon
-import closeIcon from "../assets/close.svg"; // X icon
+import menuIcon from "../assets/menu.svg";
+import closeIcon from "../assets/close.svg";
 
-export default function Sidebar({ role = "coordinator" }) {
+export default function Sidebar({
+  role = "coordinator",
+  user = {},
+}) {
   const [expanded, setExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const { navigation, actions, logo, avatar } = sidebarConfig[role];
+  // Fallback to coordinator if role doesn't exist
+  const config = sidebarConfig[role] || sidebarConfig.coordinator;
 
-  const showLabels = expanded || mobileOpen;
+  const {
+    navigation,
+    actions,
+    logo,
+    avatar: defaultAvatar,
+  } = config;
+
+  // User avatar if available, otherwise use the default avatar
+  const displayedAvatar = user.profilePicture || defaultAvatar;
 
   const handleItemClick = () => {
     setMobileOpen(false);
@@ -49,86 +61,106 @@ export default function Sidebar({ role = "coordinator" }) {
         />
       )}
 
-{/* ================= DESKTOP ================= */}
+      {/* ================= DESKTOP ================= */}
 
-<aside
-  onMouseLeave={() => setExpanded(false)}
-  className={`
-    hidden
-    md:flex
-    h-[944px]
-    bg-[#4E9F8A]
-    rounded-[42px]
-    pt-8
-    pb-6
-    flex-col
-    transition-all
-    duration-300
-    overflow-hidden
-    ${expanded ? "w-[295px] px-8" : "w-[86px] px-[18px]"}
-  `}
->
-  {/* Logo */}
-  <div className="flex justify-center">
-    <img
-      src={logo}
-      alt="NutriGest"
-      className="w-12 h-auto"
-    />
-  </div>
-
-  {/* Navigation centered */}
-  <div className="flex-1 flex items-center">
-    <div className="w-full">
-      {expanded && (
-        <p className="text-white font-bold mb-8">
-          Navigation
-        </p>
-      )}
-
-      <nav
-        className={`flex flex-col gap-8 ${
-          expanded ? "items-start" : "items-center"
-        }`}
+      <aside
+        onMouseLeave={() => setExpanded(false)}
+        className={`
+          hidden
+          md:flex
+          self-stretch
+          min-h-full
+          bg-[#4E9F8A]
+          rounded-[42px]
+          pt-8
+          pb-6
+          flex-col
+          transition-all
+          duration-300
+          overflow-hidden
+          ${expanded ? "w-[295px] px-8" : "w-[86px] px-[18px]"}
+        `}
       >
-        {navigation.map((item, index) => (
-          <SidebarItem
-            key={index}
-            item={item}
-            expanded={expanded}
-            onMouseEnter={() => setExpanded(true)}
+        {/* Logo */}
+
+        <div className="flex justify-center flex-shrink-0">
+          <img
+            src={logo}
+            alt="NutriGest"
+            className="w-12 h-auto"
           />
-        ))}
+        </div>
 
-        {actions.length > 0 && expanded && (
-          <p className="text-white font-bold mt-5">
-            Action rapide
-          </p>
-        )}
+        {/* Navigation */}
 
-        {actions.map((item, index) => (
-          <SidebarItem
-            key={index}
-            item={item}
-            expanded={expanded}
-            onMouseEnter={() => setExpanded(true)}
-          />
-        ))}
-      </nav>
-    </div>
-  </div>
+        <div
+          className="
+            flex-1
+            flex
+            items-center
+            justify-center
+            overflow-hidden
+          "
+        >
+          <div className="w-full">
+            {expanded && (
+              <p className="text-white font-bold mb-8">
+                Navigation
+              </p>
+            )}
 
-  {/* Avatar */}
-  <div className="flex justify-center">
-    <button>
-      <img
-        src={avatar}
-        alt="Avatar"
-        className="w-10 h-10 rounded-full"
-      />
-    </button>
-  </div>
-</aside>
+            <nav
+              className={`
+                flex
+                flex-col
+                gap-8
+                ${expanded ? "items-start" : "items-center"}
+              `}
+            >
+              {navigation.map((item, index) => (
+                <SidebarItem
+                  key={index}
+                  item={item}
+                  expanded={expanded}
+                  onMouseEnter={() => setExpanded(true)}
+                />
+              ))}
+
+              {actions.length > 0 && expanded && (
+                <p className="text-white font-bold mt-6">
+                  Action rapide
+                </p>
+              )}
+
+              {actions.map((item, index) => (
+                <SidebarItem
+                  key={index}
+                  item={item}
+                  expanded={expanded}
+                  onMouseEnter={() => setExpanded(true)}
+                />
+              ))}
+            </nav>
+          </div>
+        </div>
+
+        {/* Avatar */}
+
+        <div className="flex justify-center flex-shrink-0">
+          <button>
+            <img
+              src={displayedAvatar}
+              alt="Avatar"
+              className="
+                w-10
+                h-10
+                rounded-full
+                object-cover
+              "
+            />
+          </button>
+        </div>
+      </aside>
 
       {/* ================= MOBILE ================= */}
 
@@ -142,77 +174,104 @@ export default function Sidebar({ role = "coordinator" }) {
           max-w-[320px]
           bg-[#4E9F8A]
           rounded-r-[24px]
-          px-6
-          py-8
+          px-5
+          py-5
           z-50
+          flex
+          flex-col
           transition-transform
           duration-300
           lg:hidden
-
           ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
         `}
       >
-        {/* Close */}
+        {/* Top */}
 
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="mb-10"
-        >
-          <img
-            src={closeIcon}
-            alt="Close"
-            className="w-10 h-10"
-          />
-        </button>
+        <div className="flex-shrink-0">
+          <button onClick={() => setMobileOpen(false)}>
+            <img
+              src={closeIcon}
+              alt="Close"
+              className="w-8 h-8"
+            />
+          </button>
 
-        {/* Logo */}
-
-        <div className="flex justify-center mb-10">
-          <img src={logo} alt="NutriGest" className="w-14" />
+          <div className="flex justify-center mt-3">
+            <img
+              src={logo}
+              alt="NutriGest"
+              className="w-12 h-auto"
+            />
+          </div>
         </div>
 
         {/* Navigation */}
 
-        <p className="text-white font-bold text-xl mb-6">
-          Navigation
-        </p>
+        <div
+          className="
+            flex-1
+            flex
+            items-center
+            justify-center
+            min-h-0
+          "
+        >
+          <div className="w-full">
+            <p className="text-white font-bold text-[18px] mb-3">
+              Navigation
+            </p>
 
-        <nav className="flex flex-col gap-6">
-          {navigation.map((item, index) => (
-            <div key={index} onClick={handleItemClick}>
-              <SidebarItem
-                item={item}
-                expanded={true}
-              />
-            </div>
-          ))}
-
-          {actions.length > 0 && (
-            <>
-              <p className="text-white font-bold text-xl mt-4">
-                Action rapide
-              </p>
-
-              {actions.map((item, index) => (
-                <div key={index} onClick={handleItemClick}>
+            <nav className="flex flex-col gap-3">
+              {navigation.map((item, index) => (
+                <div
+                  key={index}
+                  onClick={handleItemClick}
+                >
                   <SidebarItem
                     item={item}
                     expanded={true}
                   />
                 </div>
               ))}
-            </>
-          )}
-        </nav>
+
+              {actions.length > 0 && (
+                <>
+                  <p className="text-white font-bold text-[18px] mt-4 mb-2">
+                    Action rapide
+                  </p>
+
+                  <div className="flex flex-col gap-3">
+                    {actions.map((item, index) => (
+                      <div
+                        key={index}
+                        onClick={handleItemClick}
+                      >
+                        <SidebarItem
+                          item={item}
+                          expanded={true}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </nav>
+          </div>
+        </div>
 
         {/* Avatar */}
 
-        <div className="absolute bottom-8 left-0 right-0 flex justify-center">
+        <div className="flex justify-center flex-shrink-0 pt-2">
           <button>
             <img
-              src={avatar}
+              src={displayedAvatar}
               alt="Avatar"
-              className="w-12 h-12 rounded-full"
+              className="
+                w-10
+                h-10
+                rounded-full
+                object-cover
+              "
             />
           </button>
         </div>
