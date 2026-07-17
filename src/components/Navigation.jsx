@@ -9,15 +9,7 @@ const Navigation = ({
   showBack = true,
 }) => {
   return (
-    <div
-      className="
-        w-full
-        px-4
-        lg:pl-50
-        lg:pr-5
-        py-2
-      "
-    >
+ <div className="w-full py-2">
       <div
         className="
           h-[45px]
