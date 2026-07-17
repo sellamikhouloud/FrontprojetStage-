@@ -1,1 +1,96 @@
 @import "tailwindcss";
+
+@import "react-datepicker/dist/react-datepicker.css";
+
+.custom-calendar {
+  width: 340px !important;
+  border: none !important;
+  border-radius: 24px !important;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.custom-calendar .react-datepicker__header {
+  background: white;
+  border-bottom: none;
+  padding: 0;
+}
+
+.custom-calendar .react-datepicker__month-container {
+  width: 100%;
+}
+
+/* ADD THESE THREE RULES HERE */
+
+/* Space between weekdays and dates */
+.custom-calendar .react-datepicker__month {
+  margin-top: 8px;
+}
+
+/* Center the weekday names */
+.custom-calendar .react-datepicker__day-names {
+  display: flex;
+  justify-content: center;
+}
+
+/* Center each week */
+.custom-calendar .react-datepicker__week {
+  display: flex;
+  justify-content: center;
+}
+
+/* -------------------------------- */
+
+
+.custom-calendar .react-datepicker__day-name {
+  width: 30px;
+  line-height: 30px;
+  margin: 4px;
+
+  font-size: 10px;
+  font-weight: 500;
+  color: #9CA3AF;
+
+  text-transform: uppercase;
+}
+
+.custom-calendar .react-datepicker__day {
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  margin: 4px;
+  border-radius: 9999px;
+  font-size: 16px;
+  font-weight: 400;
+  color: #374151;
+}
+
+.custom-calendar .react-datepicker__day:hover {
+  background: #A7CFC5;
+  color: white;
+}
+
+.custom-calendar .react-datepicker__day--selected,
+.custom-calendar .react-datepicker__day--keyboard-selected {
+  background: #4E9F8A !important;
+  color: white !important;
+}
+
+.custom-calendar .react-datepicker__day--today {
+  font-weight: 700;
+  color: #4E9F8A;
+}
+
+.custom-calendar .react-datepicker__navigation {
+  display: none;
+}
+
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+/* Hide days from previous/next month */
+.custom-calendar .react-datepicker__day--outside-month {
+  visibility: hidden;
+}

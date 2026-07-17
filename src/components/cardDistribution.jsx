@@ -30,7 +30,7 @@ const CardPopupDistribution = ({
 
       {/* Ligne 2 */}
       <div className="flex justify-between items-center mt-4">
-        <span className="text-[15px] sm:text-[16px] md:text-[18px] font-semibold text-[#1E1E1E]">
+        <span className="text-[15px] sm:text-[16px] md:text-[18px] font-bold text-[#1E1E1E]">
           {distribution}
         </span>
 

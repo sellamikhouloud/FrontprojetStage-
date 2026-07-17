@@ -29,7 +29,7 @@ const InfoCard = ({
             key={index}
             className="flex justify-between py-1"
           >
-            <span className="text-[#4E9F8A]">
+            <span className="text-[#4E9F8A] font-medium">
               {item.label}
             </span>
 

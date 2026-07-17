@@ -44,7 +44,7 @@ const CardPopupvisite = ({
 
       {/* Ligne 2 */}
       <div className="flex justify-between items-center mt-3">
-        <span className="text-[15px] sm:text-[16px] md:text-[18px] font-semibold text-[#1E1E1E]">
+        <span className="text-[15px] sm:text-[16px] md:text-[18px] font-bold text-[#1E1E1E]">
           {visite}
         </span>
 

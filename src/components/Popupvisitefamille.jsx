@@ -12,28 +12,30 @@ const Popupvisites = ({
   return (
     <AnimatePresence>
       {open && (
-        <div
-          className="
-            fixed
-            inset-0
-            z-50
+      <div
+  className="
+    fixed
+    inset-0
+    z-50
 
-            bg-white
+    bg-black/30
 
-            flex
-            items-start
-            sm:items-center
+    flex
+    items-start
+    sm:items-center
 
-            justify-center
+    justify-center
 
-            overflow-y-auto
-          "
-        >
+    overflow-y-auto
+  "
+  onClick={onClose}
+>
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
             className="
               w-full
 
@@ -142,3 +144,4 @@ const Popupvisites = ({
 };
 
 export default Popupvisites;
+

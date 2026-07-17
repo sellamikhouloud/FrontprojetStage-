@@ -1,6 +1,7 @@
 const Button = ({
   title,
   icon,
+  iconPosition = "left",
   onClick,
   type = "button",
   variant = "primary",
@@ -218,15 +219,23 @@ lg:text-[16px]
           ${variants[variant]}
         `}
       >
-        {icon && (
-          <img
-            src={icon}
-            alt=""
-            className="w-4 h-4 object-contain"
-          />
-        )}
+        {iconPosition === "left" && icon && (
+  <img
+    src={icon}
+    alt=""
+    className="w-4 h-4 object-contain"
+  />
+)}
 
-        <span>{title}</span>
+<span>{title}</span>
+
+{iconPosition === "right" && icon && (
+  <img
+    src={icon}
+    alt=""
+    className="w-4 h-4 object-contain"
+  />
+)}
       </button>
     </div>
   );
