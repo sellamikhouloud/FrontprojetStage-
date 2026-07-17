@@ -8,9 +8,12 @@ import PopupDistributionfamille from "../components/PopupDistributionfamille";
 import Button from "../components/Button";
 import Popupvisites from "../components/Popupvisitefamille"
 import MotherPhoto from "../assets/photo mere.svg";
+import { useNavigate, useParams } from "react-router-dom";
 
 
 const FamilyProfile = () => {
+    const navigate = useNavigate();
+const { id } = useParams();
   const nourrisson = [
     { label: "Date de naissance", value: "15/05/2026" },
     { label: "Sexe", value: "Masculin" },
@@ -148,17 +151,18 @@ return (
 />
       {/* Contenu */}
       <main className="w-full flex-1 pt-16 md:pt-0 overflow-y-auto">
-        <PageHeader
-          leftTitle="Revenir"
-          showRight={false}
-          onBack={() => window.history.back()}
-        />
+     <PageHeader
+  leftTitle="Revenir"
+  showRight={false}
+  onBack={() => navigate("/liste-famille")}
+/>
 
-        <NavigationHeader
-          title="Fiche famille"
-          type="edit"
-          actionTitle="Modifier la fiche famille"
-        />
+       <NavigationHeader
+  title="Fiche famille"
+  type="edit"
+  actionTitle="Modifier la fiche famille"
+  onAction={() => navigate(`/famille/${id}/modifier`)}
+/>
 
         {/* ==================== HAUT ==================== */}
 

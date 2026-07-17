@@ -14,7 +14,10 @@ import DonorCard from "../components/DonorCard";
 import AttentionIcon from "../assets/Attention.svg";
 import RetardIcon from "../assets/retard.svg";
 
+import { useNavigate } from "react-router-dom";
+
 const Dashboard = () => {
+     const navigate = useNavigate();
   /* ==========================
     Welcome
 ========================== */
@@ -295,10 +298,10 @@ const newDonorsThisMonth = 18;
 
 
           <FamilyStatusCard
-            title={familyStatusTitle}
-            stats={familyStats}
-            onClick={()=>console.log("Family")}
-          />
+              title={familyStatusTitle}
+              stats={familyStats}
+             onClick={() => navigate("/liste-famille")}
+           />
 
 
           <NutritionCard
@@ -391,11 +394,11 @@ const newDonorsThisMonth = 18;
 
           <div className="flex flex-col gap-[18px]">
 
-            <FamilyStatusCard
-              title={familyStatusTitle}
-              stats={familyStats}
-              onClick={()=>console.log("Family")}
-            />
+<FamilyStatusCard
+  title={familyStatusTitle}
+  stats={familyStats}
+  onClick={() => navigate("/liste-famille")}
+/>
 
 
             <NutritionCard

@@ -9,9 +9,14 @@ import Button from "../components/Button";
 import Popupvisites from "../components/Popupvisitefamille"
 import MotherPhoto from "../assets/photo mere.svg";
 import EditableInfoCard from "../components/ModifierContainer";
+import { useNavigate, useParams } from "react-router-dom";
 
 
 const Modifyfamilly = () => {
+    
+const navigate = useNavigate();
+
+const { id } = useParams();
   const [nourrisson, setNourrisson] = useState([
     { label: "Date de naissance", value: "15/05/2026" },
     { label: "Sexe", value: "Masculin" },
@@ -183,12 +188,16 @@ return (
           onBack={() => window.history.back()}
         />
 
-      <NavigationHeader
+     <NavigationHeader
   title="Fiche famille"
   type="save"
-  actionTitle="Enregistrer les modification "
-  onAction={() => console.log("Enregistrer")}
- />
+  actionTitle="Enregistrer les modifications"
+  onAction={() => {
+    // TODO: Save to your API here
+
+    navigate(`/famille/${id}`);
+  }}
+/>
         {/* ==================== HAUT ==================== */}
 
      <div className="grid grid-cols-1 lg:grid-cols-[520px_minmax(0,1fr)] gap-10 mb-8">

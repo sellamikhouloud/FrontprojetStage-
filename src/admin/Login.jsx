@@ -10,13 +10,14 @@ import Vector from "../assets/Vector.svg";
 import Vector1 from "../assets/Vector1.svg";
 import Vector2 from "../assets/Vector2.svg";
 import WaveM from "../assets/Vector4.svg";
+import { useNavigate } from "react-router-dom";
 
 
 const Login = () => {
   const [adminID, setAdminID] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+const navigate = useNavigate();
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -24,6 +25,7 @@ const Login = () => {
       adminID,
       password,
     });
+    navigate("/dashboard");
   };
 
   return (

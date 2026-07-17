@@ -10,6 +10,7 @@ import CardPopup from "../components/card2";
 import NoResultImage from "../assets/no result picture.svg";
 import PageHeader from "../components/PageHeader";
 import FilterTag from "../components/FilterTag";
+import { useNavigate } from "react-router-dom";
 
 
 export default function FamiliesPage() {
@@ -19,6 +20,7 @@ export default function FamiliesPage() {
   const [error, setError] = useState(null);
  const [isFilterOpen, setIsFilterOpen] = useState(false);
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+const navigate = useNavigate();
 
 useEffect(() => {
   const handleResize = () => {
@@ -352,12 +354,15 @@ if  (isFilterOpen && isMobile)  {
   <Sidebar role="admin" />
 
 <main className="w-full flex-1 pt-16 md:pt-0">
-          <NavigationHeader
-            title="Liste des familles"
-            type="add"
-            actionTitle="Ajouter une famille"
-            onAction={() => console.log("Ajouter")}
-          />
+        <NavigationHeader
+  title="Liste des familles"
+  type="add"
+  actionTitle="Ajouter une famille"
+  onAction={() => {
+    console.log("Button clicked");
+    navigate("/information-mere");
+  }}
+/>
 
           <div className="my-6">
             <SearchBar
@@ -405,29 +410,43 @@ if  (isFilterOpen && isMobile)  {
     {filteredFamilies.map((famille) => (
       <div key={famille.id}>
         {/* Desktop */}
-        <div className="hidden md:block">
-          <Card
-            enfant={famille.enfant}
-            mere={famille.mere}
-            sexe={famille.sexe}
-            region={famille.region}
-            naissance={famille.naissance}
-            code={famille.code}
-            badges={famille.badges}
-          />
-        </div>
+       <div
+  className="hidden md:block cursor-pointer"
+  onClick={() =>
+    navigate(`/famille/${famille.id}`, {
+      state: famille,
+    })
+  }
+>
+  <Card
+    enfant={famille.enfant}
+    mere={famille.mere}
+    sexe={famille.sexe}
+    region={famille.region}
+    naissance={famille.naissance}
+    code={famille.code}
+    badges={famille.badges}
+  />
+</div>
 
         {/* Mobile */}
-        <div className="block md:hidden">
-          <CardPopup
-            enfant={famille.enfant}
-            sexe={famille.sexe}
-            region={famille.region}
-            naissance={famille.naissance}
-            code={famille.code}
-            badges={famille.badges}
-          />
-        </div>
+       <div
+  className="block md:hidden cursor-pointer"
+  onClick={() =>
+    navigate(`/famille/${famille.id}`, {
+      state: famille,
+    })
+  }
+>
+  <CardPopup
+    enfant={famille.enfant}
+    sexe={famille.sexe}
+    region={famille.region}
+    naissance={famille.naissance}
+    code={famille.code}
+    badges={famille.badges}
+  />
+</div>
       </div>
     ))}
   </div>
