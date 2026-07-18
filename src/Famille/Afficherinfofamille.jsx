@@ -166,8 +166,8 @@ return (
 
         {/* ==================== HAUT ==================== */}
 
-     <div className="grid grid-cols-1 lg:grid-cols-[520px_minmax(0,1fr)] gap-10 mb-8">
-          {/* Photo */}
+    <div className="grid grid-cols-1 xl:grid-cols-[520px_minmax(0,1fr)] gap-6 xl:gap-10 mb-8">
+        
          {/* Photo */}
 <div className="w-full lg:w-[520px] h-[331px] rounded-[15px] overflow-hidden border border-[#E5E7EB] bg-white shadow-sm">
   <img
@@ -193,7 +193,7 @@ return (
 
             {/* Statuts */}
          
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
 
  <StatusBadge
   type="mereActive"
@@ -218,15 +218,17 @@ return (
 </div>
 
             {/* Informations administratives */}
-
-            <InfoCard
+<div className="-mt-3">
+   <InfoCard
               title="Informations administratives"
               data={programme}
             />
+</div>
+           
 
-            {/* Zakat + Distribution */}
+            {/* Zakat + Distribution  et superive par */}
 
-          <div className="grid grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
   {/* Colonne gauche */}
   <div className="flex flex-col gap-4">
     <InfoCard
@@ -261,7 +263,7 @@ return (
         </div>
 
         {/* ==================== BAS ==================== */}
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 -mt-3">
 
   {/* Colonne gauche */}
   <div className="flex flex-col gap-4">
