@@ -8,6 +8,7 @@ import PopupDistributionfamille from "../components/Popups/PopupDistributionfami
 import Button from "../components/Button/Button";
 import Popupvisites from "../components/Popups/Popupvisitefamille"
 import MotherPhoto from "../assets/photo mere.svg";
+import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import { useNavigate, useParams } from "react-router-dom";
 
 
@@ -131,6 +132,7 @@ const visiteList = [
     ],
   },
 ];
+const [openFinSuivi, setOpenFinSuivi] = useState(false);
 return (
   <div className="min-h-screen px-4 py-4 md:p-6 ">
     <div className="flex md:gap-8 items-start">
@@ -148,6 +150,18 @@ return (
   open={openVisites}
   onClose={() => setOpenVisites(false)}
   Visites ={visiteList}
+/>
+
+<PopupFinSuivi
+  open={openFinSuivi}
+  onClose={() => setOpenFinSuivi(false)}
+  onConfirm={(motif) => {
+    console.log("Motif :", motif);
+
+    // Ici API
+
+    setOpenFinSuivi(false);
+  }}
 />
       {/* Contenu */}
       <main className="w-full flex-1 pt-16 md:pt-0 overflow-y-auto">
@@ -291,14 +305,12 @@ return (
   </div>
 
 </div>
-
-
 <div className="mt-8 w-full">
   <Button
-    title="Sortir du programme "
+    title="Sortir du programme"
     variant="primary"
     noPadding
-    onClick={() => console.log("Enregistrer")}
+    onClick={() => setOpenFinSuivi(true)}
   />
 </div>
       </main>
@@ -308,3 +320,4 @@ return (
 };
 
 export default FamilyProfile;
+
