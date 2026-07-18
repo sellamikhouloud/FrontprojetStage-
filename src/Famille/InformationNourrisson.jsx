@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Sidebar from "../components/Sidebar.jsx";
-import PageHeader from "../components/PageHeader.jsx";
-import Input from "../components/ContainerEcriture.jsx";
-import DateContainer from "../components/DateContainer.jsx";
-import ChoiceContainer from "../components/ChoiceContainer.jsx";
-import StepIndicator from "../components/StepIndicator.jsx";
-import Navigation from "../components/Navigation.jsx";
+import Sidebar from "../components/Sidebar/Sidebar.jsx";
+import PageHeader from "../components/Navigation,Pageheader/PageHeader.jsx";
+import Input from "../components/Containers/ContainerEcriture.jsx";
+import DateContainer from "../components/Containers/DateContainer.jsx";
+import ChoiceContainer from "../components/Containers/ChoiceContainer.jsx";
+import StepIndicator from "../components/Progress/StepIndicator.jsx";
+import Navigation from "../components/Navigation,Pageheader/Navigation.jsx";
 
 import bunny from "../assets/images/bunny.svg"; 
 

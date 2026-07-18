@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 
-import Sidebar from "../components/Sidebar";
-import NavigationHeader from "../components/NavigationHeader";
-import SearchBar from "../components/Searchbar";
-import Card from "../components/card";
-import Button from "../components/Button";
-import SelectInput from "../components/ChoiceContainer";
-import CardPopup from "../components/card2";
+import Sidebar from "../components/Sidebar/Sidebar";
+import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
+import SearchBar from "../components/Filter/Searchbar";
+import Card from "../components/Cards/card";
+import Button from "../components/Button/Button";
+import SelectInput from "../components/Containers/ChoiceContainer";
+import CardPopup from "../components/Cards/card2";
 import NoResultImage from "../assets/no result picture.svg";
-import PageHeader from "../components/PageHeader";
-import FilterTag from "../components/FilterTag";
+import PageHeader from "../components/Navigation,Pageheader/PageHeader";
+import FilterTag from "../components/Filter/FilterTag";
 import { useNavigate } from "react-router-dom";
 
 

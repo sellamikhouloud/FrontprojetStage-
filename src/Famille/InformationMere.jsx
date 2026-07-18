@@ -1,14 +1,14 @@
 import { useState } from "react";
 
-import Sidebar from "../components/Sidebar";
-import PageHeader from "../components/PageHeader";
-import Input from "../components/ContainerEcriture";
-import DateContainer from "../components/DateContainer";
-import ChoiceContainer from "../components/ChoiceContainer";
-import StepIndicator from "../components/StepIndicator.jsx";
-import Navigation from "../components/Navigation";
+import Sidebar from "../components/Sidebar/Sidebar.jsx";
+import PageHeader from "../components/Navigation,Pageheader/PageHeader.jsx";
+import Input from "../components/Containers/ContainerEcriture.jsx";
+import DateContainer from "../components/Containers/DateContainer.jsx";
+import ChoiceContainer from "../components/Containers/ChoiceContainer";
+import StepIndicator from "../components/Progress/StepIndicator.jsx";
+import Navigation from "../components/Navigation,Pageheader/Navigation.jsx";
 
-import CounterInput from "../components/CounterInput";
+import CounterInput from "../components/Forms/CounterInput.jsx";
 
 import motherbaby from "../assets/images/motherbaby.png";
 import { useNavigate } from "react-router-dom";

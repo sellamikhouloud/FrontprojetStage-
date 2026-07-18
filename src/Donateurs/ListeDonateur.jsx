@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Sidebar from "../components/Sidebar";
-import NavigationHeader from "../components/NavigationHeader";
-import SearchBar from "../components/Searchbar";
-import CardDonateur from "../components/carteDonateur";
-import PageHeader from "../components/PageHeader";
+import Sidebar from "../components/Sidebar/Sidebar";
+import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
+import SearchBar from "../components/Filter/Searchbar";
+import CardDonateur from "../components/Cards/carteDonateur";
+import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import NoResultImage from "../assets/no result picture.svg";
 
 export default function ListeDonateur() {

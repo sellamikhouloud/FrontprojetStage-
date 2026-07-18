@@ -1,12 +1,12 @@
 import { useState } from "react";
-import PageHeader from "../components/PageHeader";
-import NavigationHeader from "../components/NavigationHeader";
-import InfoCard from "../components/AfficherContainer";
-import Sidebar from "../components/Sidebar";
-import StatusBadge from "../components/Badge";
-import PopupDistributionfamille from "../components/PopupDistributionfamille";
-import Button from "../components/Button";
-import Popupvisites from "../components/Popupvisitefamille"
+import PageHeader from "../components/Navigation,Pageheader/PageHeader";
+import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
+import InfoCard from "../components/Containers/AfficherContainer";
+import Sidebar from "../components/Sidebar/Sidebar";
+import StatusBadge from "../components/Cards/Badge";
+import PopupDistributionfamille from "../components/Popups/PopupDistributionfamille";
+import Button from "../components/Button/Button";
+import Popupvisites from "../components/Popups/Popupvisitefamille"
 import MotherPhoto from "../assets/photo mere.svg";
 import { useNavigate, useParams } from "react-router-dom";
 

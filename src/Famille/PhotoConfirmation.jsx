@@ -1,14 +1,14 @@
 import { useState } from "react";
 
-import Sidebar from "../components/Sidebar.jsx";
-import PageHeader from "../components/PageHeader.jsx";
-import DateContainer from "../components/DateContainer.jsx";
-import Input from "../components/ContainerEcriture.jsx";
-import ChoiceContainer from "../components/ChoiceContainer.jsx";
-import StepIndicator from "../components/StepIndicator.jsx";
-import Button from "../components/Button.jsx";
+import Sidebar from "../components/Sidebar/Sidebar.jsx";
+import PageHeader from "../components/Navigation,Pageheader/PageHeader.jsx";
+import DateContainer from "../components/Containers/DateContainer.jsx";
+import Input from "../components/Containers/ContainerEcriture.jsx";
+import ChoiceContainer from "../components/Containers/ChoiceContainer.jsx";
+import StepIndicator from "../components/Progress/StepIndicator.jsx";
+import Button from "../components/Button/Button.jsx";
 import { useNavigate } from "react-router-dom";
-import Popup from "../components/SuccessPopup.jsx";
+import Popup from "../components/Popups/SuccessPopup.jsx";
 
 import successImage from "../assets/Success.svg"; 
 import blackCamera from "../assets/blackCamera.svg";
