@@ -42,26 +42,11 @@ const CardDonateur = ({
       </div>
 
       {/* Deuxième ligne */}
-      <div
-        className="
-          mt-2
-          flex
-          flex-wrap
-          items-center
-          gap-x-2
-          gap-y-1
-          text-sm
-          sm:text-base
-          md:text-lg
-          text-[#374151]
-        "
-      >
-        <span className="break-all">{email}</span>
+     <div className="mt-2 text-sm sm:text-base md:text-lg text-[#374151]">
+  <p className="break-all">{email}</p>
 
-        <span>•</span>
-
-        <span>{date}</span>
-      </div>
+  <p className="mt-1">{date}</p>
+</div>
     </div>
   );
 };

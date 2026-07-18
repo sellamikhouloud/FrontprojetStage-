@@ -1,0 +1,125 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+import Sidebar from "../components/Sidebar";
+import NavigationHeader from "../components/NavigationHeader";
+import SearchBar from "../components/Searchbar";
+import CardDonateur from "../components/carteDonateur";
+import PageHeader from "../components/PageHeader";
+import NoResultImage from "../assets/no result picture.svg";
+
+export default function ListeDonateur() {
+  const navigate = useNavigate();
+
+  const [search, setSearch] = useState("");
+
+  const [coordinateurs] = useState([
+    {
+      id: 1,
+      name: "Amadou Ba",
+      email: "amadouba@gmail.com",
+      date: "12/05/2025",
+      code: "GDK-2026-003",
+      status: "Actif",
+    },
+    {
+      id: 2,
+      name: "Fatima Ahmed",
+      email: "fatima@gmail.com",
+      date: "10/05/2025",
+      code: "GDK-2026-004",
+      status: "Actif",
+    },
+    {
+      id: 3,
+      name: "Mohamed Ali",
+      email: "mohamed@gmail.com",
+      date: "08/05/2025",
+      code: "GDK-2026-005",
+      status: "Inactif",
+    },
+
+
+    
+
+    
+
+     
+  ]);
+
+  const filteredCoordinateurs = coordinateurs.filter((item) => {
+    const keyword = search.toLowerCase();
+
+    return (
+      item.name.toLowerCase().includes(keyword) ||
+      item.code.toLowerCase().includes(keyword)
+    );
+  });
+
+  return (
+    <div className="min-h-screen px-4 py-4 md:p-6">
+      <div className="flex md:gap-8 items-start">
+
+        <Sidebar role="admin" />
+
+        <main className="w-full flex-1 pt-20 md:pt-6">
+
+         <NavigationHeader
+  title="Liste des coordinateurs"
+  type="add"
+  actionTitle="Ajouter un coordinateur"
+  onAction={() => navigate("")}
+
+  secondType="export"
+  secondActionTitle="Importer un fichier"
+  onSecondAction={() => console.log("Importer")}
+/>
+          <div className="my-6">
+            <SearchBar
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              showFilter={false}
+              maxWidth="max-w-full"
+              placeholder="Entrer ici pour chercher"
+            />
+          </div>
+
+        {filteredCoordinateurs.length === 0 && (
+  <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
+    <img
+      src={NoResultImage}
+      alt="Aucun résultat"
+      className="w-56 sm:w-72 md:w-96 h-auto"
+    />
+  </div>
+)}
+
+{filteredCoordinateurs.length > 0 && (
+  <div className="space-y-4">
+    {filteredCoordinateurs.map((coordinateur) => (
+      <div
+        key={coordinateur.id}
+        className="cursor-pointer"
+        onClick={() =>
+          navigate(`/coordinateur/${coordinateur.id}`, {
+            state: coordinateur,
+          })
+        }
+      >
+        <CardDonateur
+          name={coordinateur.name}
+          email={coordinateur.email}
+          date={coordinateur.date}
+          code={coordinateur.code}
+          status={coordinateur.status}
+        />
+      </div>
+    ))}
+  </div>
+)}
+
+        </main>
+      </div>
+    </div>
+  );
+}

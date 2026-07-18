@@ -1,12 +1,14 @@
-import ListeFamille from "./admin/Listefamille";
-import Login from "./admin/Login";
- import Dashboard from "./admin/Dashboard";
- import FamilyProfile from "./admin/Afficherinfofamille";
+import ListeFamille from "./Famille/Listefamille";
+import Login from "./Famille/Login";
+ import Dashboard from "./Famille/Dashboard";
+ import FamilyProfile from "./Famille/Afficherinfofamille";
  import { BrowserRouter, Routes, Route } from "react-router-dom";
- import Modifyfamilly from "./admin/Modifierfamille";
- import InformationMere from "./admin/InformationMere";
-import InformationNourrisson from "./admin/InformationNourrisson";
-import PhotoConfirmation from "./admin/PhotoConfirmation";
+ import Modifyfamilly from "./Famille/Modifierfamille";
+ import InformationMere from "./Famille/InformationMere";
+import InformationNourrisson from "./Famille/InformationNourrisson";
+import PhotoConfirmation from "./Famille/PhotoConfirmation";
+import ListeCoordinateurs from "./Famille/ListeCoordinateur";
+import  ListeDonateur from "./Famille/ListeDonateur";
 
 function App() {
   return (
@@ -33,6 +35,18 @@ function App() {
           path="/photo-confirmation"
           element={<PhotoConfirmation />}
         />
+
+
+        {/* Coordinateur */}
+         <Route
+          path="/liste-coordinateurs" element={<ListeCoordinateurs />}
+        />
+
+         {/* Donateur */}
+         <Route
+          path="/liste-Donateurs" element={<ListeDonateur />}
+        />
+
       </Routes>
     </BrowserRouter>
   );
