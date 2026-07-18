@@ -68,7 +68,15 @@ const handleProgrammeChange = (index, value) => {
     )
   );
 };
- 
+ const handleSuperviseurChange = (index, value) => {
+  setSuperviseur((prev) =>
+    prev.map((item, i) =>
+      i === index
+        ? { ...item, value }
+        : item
+    )
+  );
+};
 
   const zakat = [
     {
@@ -99,13 +107,12 @@ const handleProgrammeChange = (index, value) => {
     },
   ];
 
-
-const superviseur = [
+const [superviseur, setSuperviseur] = useState([
   {
     label: "Nom du coordinateur",
     value: "Kshfhd Qdjshf",
   },
-];
+]);
 const [openDistribution, setOpenDistribution] = useState(false);
 const [openVisites, setOpenVisites] = useState(false);
 const distributionList = [
@@ -200,10 +207,10 @@ return (
 />
         {/* ==================== HAUT ==================== */}
 
-     <div className="grid grid-cols-1 lg:grid-cols-[520px_minmax(0,1fr)] gap-10 mb-8">
+     <div className="grid grid-cols-1 xl:grid-cols-[520px_minmax(0,1fr)] gap-6 xl:gap-10 mb-8">
           {/* Photo */}
-         {/* Photo */}
-<div className="w-full lg:w-[520px] h-[331px] rounded-[15px] overflow-hidden border border-[#E5E7EB] bg-white shadow-sm">
+       
+<div className="w-full lg:w-[520px] h-[220px] sm:h-[260px] md:h-[300px] lg:h-[331px] rounded-[15px] overflow-hidden border border-[#E5E7EB] bg-white shadow-sm">
   <img
     src={MotherPhoto}
     alt="Photo de la mère"
@@ -252,17 +259,18 @@ return (
 </div>
 
             {/* Informations administratives */}
-
-           <EditableInfoCard
+<div className="-mt-3"> 
+  <EditableInfoCard
   title="Informations administratives"
   data={programme}
   editable={true}
   onChange={handleProgrammeChange}
-/>
+/></div>
+          
 
-            {/* Zakat + Distribution */}
+            {/* Zakat + Distribution et supervise par */}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
   {/* Colonne gauche */}
   <div className="flex flex-col gap-4">
     <InfoCard
@@ -280,16 +288,12 @@ return (
       
       data={distributions}
     />
-
-    <InfoCard
-      title="Supervise par"
-      data={[
-        {
-          label: "Nom du coordinateur",
-          value: "Kshfhd Qdjshf",
-        },
-      ]}
-    />
+<EditableInfoCard
+  title="Supervisé par"
+  data={superviseur}
+  editable={true}
+  onChange={handleSuperviseurChange}
+/>
   </div>
 </div>
 
@@ -297,7 +301,7 @@ return (
         </div>
 
         {/* ==================== BAS ==================== */}
-<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 -mt-3">
 
   {/* Colonne gauche */}
   <div className="flex flex-col gap-4">
