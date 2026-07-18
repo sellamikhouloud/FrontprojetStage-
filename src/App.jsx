@@ -7,8 +7,8 @@ import Login from "./Famille/Login";
  import InformationMere from "./Famille/InformationMere";
 import InformationNourrisson from "./Famille/InformationNourrisson";
 import PhotoConfirmation from "./Famille/PhotoConfirmation";
-import ListeCoordinateurs from "./Famille/ListeCoordinateur";
-import  ListeDonateur from "./Famille/ListeDonateur";
+import ListeCoordinateurs from "./Coordinateurs/ListeCoordinateur";
+import  ListeDonateur from "./Donateurs/ListeDonateur";
 
 function App() {
   return (
