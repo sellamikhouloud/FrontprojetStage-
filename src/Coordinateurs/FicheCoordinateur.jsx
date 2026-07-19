@@ -37,22 +37,23 @@ const [showDeletePopup, setShowDeletePopup] = useState(false);
 
   // Hide automatically after 3 seconds
   setTimeout(() => {
-    setShowBanner(false);
-  }, 1000);
+    navigate("/liste-coordinateurs");
+  }, 1500);
 };
+
+
 
  const handleDelete = () => {
   setShowDeletePopup(true);
 };
 const confirmDelete = () => {
-  // API delete later
-
+  // API delete plus tard
   console.log("Coordinateur supprimé");
 
   setShowDeletePopup(false);
 
-  // Optionally navigate afterwards
-  // navigate("/liste-coordinateurs");
+  // Revenir à la liste des coordinateurs
+  navigate("/liste-coordinateurs");
 };
 
   return (
@@ -194,11 +195,10 @@ const confirmDelete = () => {
   variant="deleteCoordinator"
   noPadding
   onClick={handleDelete}
-/>
-{showDeletePopup && (
+/>{showDeletePopup && (
   <Popup
     title="Confirmer la suppression"
-    image={SuccessImage} 
+    image={SuccessImage}
     description="Êtes-vous sûr de vouloir supprimer ce coordinateur ? Cette action est irréversible."
     primaryButtonText="Supprimer"
     secondaryButtonText="Annuler"

@@ -77,10 +77,10 @@ export default function ListeDonateur() {
   >
 
          <NavigationHeader
-  title="Liste des coordinateurs"
+  title="Liste des donateurs"
   type="add"
-  actionTitle="Ajouter un coordinateur"
-  onAction={() => navigate("")}
+  actionTitle="Ajouter un donateur"
+  onAction={() => navigate("/ajout-donateur")}
 
   secondType="export"
   secondActionTitle="Importer un fichier"
@@ -107,17 +107,13 @@ export default function ListeDonateur() {
 )}
 
 {filteredCoordinateurs.length > 0 && (
-  <div className="space-y-4">
+   <div className="space-y-4">
     {filteredCoordinateurs.map((coordinateur) => (
       <div
-        key={coordinateur.id}
-        className="cursor-pointer"
-        onClick={() =>
-          navigate(`/coordinateur/${coordinateur.id}`, {
-            state: coordinateur,
-          })
-        }
-      >
+  key={coordinateur.id}
+  className="cursor-pointer"
+ onClick={() => navigate("/fiche-donateur")}
+>
         <CardDonateur
           name={coordinateur.name}
           email={coordinateur.email}

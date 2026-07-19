@@ -358,7 +358,7 @@ const newDonorsThisMonth = 18;
             totalDonors={totalDonors}
             activeDonors={activeDonors}
             newDonorsThisMonth={newDonorsThisMonth}
-            onClick={()=>console.log("Donors")}
+           onClick={() => navigate("/liste-Donateurs")}
           />
 
 
@@ -471,7 +471,7 @@ const newDonorsThisMonth = 18;
               totalDonors={totalDonors}
               activeDonors={activeDonors}
               newDonorsThisMonth={newDonorsThisMonth}
-              onClick={()=>console.log("Donors")}
+              onClick={() => navigate("/liste-Donateurs")}
             />
 
 

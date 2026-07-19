@@ -217,8 +217,8 @@ export default function PhotoConfirmation() {
     id="GDK-2026-003"
     primaryButtonText="Voir la fiche de la famille"
     secondaryButtonText="Revenir à l'accueil"
-    onPrimaryClick={() => navigate("/family")}
-    onSecondaryClick={() => navigate("/")}
+    onPrimaryClick={() => navigate("/famille/1")}
+    onSecondaryClick={() => navigate("/dashboard")}
   />
 )}
         </div>

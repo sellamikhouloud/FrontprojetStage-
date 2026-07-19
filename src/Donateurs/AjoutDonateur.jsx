@@ -6,46 +6,28 @@ import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import Input from "../components/Containers/ContainerEcriture";
 import ChoiceContainer from "../components/Containers/ChoiceContainer";
 import Button from "../components/Button/Button";
+import DateContainer from "../components/Containers/DateContainer";
 
-import Coordinator from "../assets/images/Coordinator.svg";
-import { AiOutlineInfoCircle } from "react-icons/ai";
+import Donateur from "../assets/images/Donateur.svg";
 
 import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
 
-export default function AjoutCoordinateur() {
+export default function AjoutDonateur() {
   const navigate = useNavigate();
+
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const [dateAdhesion, setDateAdhesion] = useState(null);
   const [statut, setStatut] = useState("Active");
 
-  const [emailSent, setEmailSent] = useState(false);
-  const [showError, setShowError] = useState(false);
-
-  const handleSendEmail = () => {
-    // API ici plus tard
-    setEmailSent(true);
-    setShowError(false);
-  };
-
   const handleSave = () => {
-  if (!emailSent) {
-    setShowError(true);
-    return;
-  }
-
-  setShowError(false);
-
-  // API Ajouter Coordinateur
-  console.log("Coordinateur enregistré");
-
-  // Show popup
-  setShowSuccessPopup(true);
-};
+    console.log("Donateur enregistré");
+    setShowSuccessPopup(true);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -54,7 +36,7 @@ export default function AjoutCoordinateur() {
         <Sidebar role="admin" />
       </div>
 
-      {/* Contenu */}
+      {/* Main */}
       <main
         className="
           flex-1
@@ -83,14 +65,14 @@ export default function AjoutCoordinateur() {
               text-center
             "
           >
-            Nouveau Coordinateur
+            Nouveau Donateur
           </h1>
 
-          {/* Photo */}
+          {/* Illustration */}
           <div className="flex justify-center">
             <img
-              src={Coordinator}
-              alt="Coordinateur"
+              src={Donateur}
+              alt="Donateur"
               className="
                 w-[120px]
                 h-[120px]
@@ -124,14 +106,12 @@ export default function AjoutCoordinateur() {
             noPadding
           />
 
-          <Input
-            label="Mot de passe"
-            placeholder="Entrez le mot de passe"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            noPadding
-          />
+        <DateContainer
+  label="Date d'adhésion"
+  value={dateAdhesion}
+  onChange={setDateAdhesion}
+  noPadding
+/>
 
           <ChoiceContainer
             label="Statut"
@@ -142,54 +122,33 @@ export default function AjoutCoordinateur() {
             noPadding
           />
 
-         {/* Boutons */}
-<div className="flex flex-col gap-[0px]">
-  <Button
-    title={
-      emailSent
-        ? "Email envoyé avec succès"
-        : "Partager un mail du mot de passe au coordinateur"
-    }
-   variant={emailSent ? "success" : "email"}
-    noPadding
-    onClick={handleSendEmail}
-  />
+          {/* Button */}
+          <div className="flex flex-col gap-0">
+            <Button
+              title="Enregistrer"
+              variant="primary"
+              noPadding
+              onClick={handleSave}
+            />
+          </div>
 
-  <Button
-    title="Enregistrer"
-    variant="primary"
-    noPadding
-    onClick={handleSave}
-  />
-  
-{/* Message d'erreur */}
-{showError && (
-  <div className="mt-4 flex items-center justify-center gap-2 text-[#EF4444]">
-    <AiOutlineInfoCircle className="text-[20px] shrink-0" />
-    <p className="text-sm font-bold">
-      Veuillez envoyer le mail au coordinateur avant de confirmer.
-    </p>
-  </div>
-)}
-</div>
-{showSuccessPopup && (
-  <Popup
-    title="Enregistrer avec succès"
-    image={SuccessImage}
-    id="COORD-001"
-    primaryButtonText="Voir le profil du coordinateur"
-    secondaryButtonText="Revenir au tableau de bord"
-    onPrimaryClick={() => {
-      setShowSuccessPopup(false);
-      navigate("/fiche-coordinateur");
-    }}
-    onSecondaryClick={() => {
-      setShowSuccessPopup(false);
-      navigate("/dashboard");
-    }}
-  />
-)}
-
+          {showSuccessPopup && (
+            <Popup
+              title="Enregistrer avec succès"
+              image={SuccessImage}
+              id="DON-001"
+              primaryButtonText="Voir le profil du donateur"
+              secondaryButtonText="Revenir à l'accueil"
+              onPrimaryClick={() => {
+                setShowSuccessPopup(false);
+                navigate("/fiche-donateur");
+              }}
+              onSecondaryClick={() => {
+                setShowSuccessPopup(false);
+                navigate("/dashboard");
+              }}
+            />
+          )}
 
         </div>
       </main>

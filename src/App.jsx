@@ -11,6 +11,8 @@ import ListeCoordinateurs from "./Coordinateurs/ListeCoordinateur";
 import AjoutCoordinateur from "./Coordinateurs/AjoutCoordinateur";
 import  ListeDonateur from "./Donateurs/ListeDonateur";
 import ModifierCoordinateur from "./Coordinateurs/FicheCoordinateur";
+import AjoutDonateur from "./Donateurs/AjoutDonateur";
+import FicheDonateur from "./Donateurs/FicheDonateur";
 
 function App() {
   return (
@@ -44,13 +46,19 @@ function App() {
           path="/liste-coordinateurs" element={<ListeCoordinateurs />}
         />
          <Route
-          path="/ajout-coordinateur"element={<AjoutCoordinateur />}
+          path="/ajout-coordinateur" element={<AjoutCoordinateur />}
         />
         <Route  path="/fiche-coordinateur"  element={<ModifierCoordinateur />} />
 
          {/* Donateur */}
          <Route
           path="/liste-Donateurs" element={<ListeDonateur />}
+        />
+         <Route
+          path="/ajout-donateur" element={<AjoutDonateur />}
+        />
+        <Route 
+          path="/fiche-donateur" element={<FicheDonateur />}
         />
 
       </Routes>
@@ -59,4 +67,3 @@ function App() {
 }
 
 export default App;
-
