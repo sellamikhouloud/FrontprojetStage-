@@ -134,11 +134,11 @@ const visiteList = [
 ];
 const [openFinSuivi, setOpenFinSuivi] = useState(false);
 return (
-  <div className="min-h-screen px-4 py-4 md:p-6 ">
-    <div className="flex md:gap-8 items-start">
-      {/* Sidebar */}
-    
-        <Sidebar role="admin" />
+  <div className="flex h-screen overflow-hidden bg-white">
+  {/* Sidebar */}
+  <div className="hidden md:block">
+    <Sidebar role="admin" />
+  </div>
       
       <PopupDistributionfamille
   open={openDistribution}
@@ -164,7 +164,17 @@ return (
   }}
 />
       {/* Contenu */}
-      <main className="w-full flex-1 pt-16 md:pt-0 overflow-y-auto">
+      <main
+    className="
+      flex-1
+      overflow-y-auto
+      px-5
+      pt-5
+      pb-8
+      lg:p-10
+      bg-white
+    "
+  >
      <PageHeader
   leftTitle="Revenir"
   showRight={false}
@@ -315,7 +325,7 @@ return (
 </div>
       </main>
     </div>
-  </div>
+  
 );
 };
 

@@ -57,12 +57,24 @@ export default function ListeDonateur() {
   });
 
   return (
-    <div className="min-h-screen px-4 py-4 md:p-6">
-      <div className="flex md:gap-8 items-start">
+    <div className="flex h-screen overflow-hidden bg-white">
+  {/* Sidebar */}
+  <div className="hidden md:block">
+    <Sidebar role="admin" />
+  </div>
 
-        <Sidebar role="admin" />
-
-        <main className="w-full flex-1 pt-20 md:pt-6">
+  {/* Contenu */}
+  <main
+    className="
+      flex-1
+      overflow-y-auto
+      px-5
+      pt-5
+      pb-8
+      lg:p-10
+      bg-white
+    "
+  >
 
          <NavigationHeader
   title="Liste des coordinateurs"
@@ -120,6 +132,6 @@ export default function ListeDonateur() {
 
         </main>
       </div>
-    </div>
+   
   );
 }
