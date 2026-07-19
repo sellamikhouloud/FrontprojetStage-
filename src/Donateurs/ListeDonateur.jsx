@@ -59,22 +59,12 @@ export default function ListeDonateur() {
   return (
     <div className="flex h-screen overflow-hidden bg-white">
   {/* Sidebar */}
-  <div className="hidden md:block">
+ 
     <Sidebar role="admin" />
-  </div>
+ 
 
   {/* Contenu */}
-  <main
-    className="
-      flex-1
-      overflow-y-auto
-      px-5
-      pt-5
-      pb-8
-      lg:p-10
-      bg-white
-    "
-  >
+ <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
 
          <NavigationHeader
   title="Liste des donateurs"
