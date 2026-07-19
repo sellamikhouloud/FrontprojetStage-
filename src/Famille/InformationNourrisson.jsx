@@ -9,8 +9,7 @@ import ChoiceContainer from "../components/Containers/ChoiceContainer.jsx";
 import StepIndicator from "../components/Progress/StepIndicator.jsx";
 import Navigation from "../components/Navigation,Pageheader/Navigation.jsx";
 
-import bunny from "../assets/images/bunny.svg"; 
-
+import bunny from "../assets/images/bunny.svg";
 export default function InformationNourrisson() {
   const [dateNaissance, setDateNaissance] = useState(null);
   const [poids, setPoids] = useState("");

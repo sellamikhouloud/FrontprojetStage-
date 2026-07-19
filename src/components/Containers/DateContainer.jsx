@@ -23,7 +23,7 @@ const DateContainer = ({
           className="
             text-[14px]
             font-semibold
-            text-[#4B5563]
+            text-[#000000]
           "
         >
           {label}

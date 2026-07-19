@@ -8,6 +8,7 @@ const Button = ({
   disabled = false,
   fullWidth = true,
   noPadding = false,
+  noWrapperPadding = false,
 }) => {
   const variants = {
     // Enregistrer
@@ -32,7 +33,7 @@ const Button = ({
 
     // Supprimer Image
     supprimer: `
-      bg-[#FFFFFF]
+      bg-white
       text-[#EF4444]
       border
       border-[#EF4444]
@@ -132,6 +133,27 @@ const Button = ({
       text-white
       hover:bg-[#458f7b]
     `,
+
+    // Succès
+    success: `
+      bg-[#22C55E]
+      text-white
+      hover:bg-[#16A34A]
+    `,
+
+    // Partager email
+    email: `
+      bg-[#7BC8C4]
+      text-white
+      hover:bg-[#6CBDB9]
+    `,
+
+    // Supprimer coordinateur
+    deleteCoordinator: `
+      bg-[#EF4444]
+      text-white
+      hover:bg-[#DC2626]
+    `,
   };
 
   const wrapper =
@@ -150,14 +172,15 @@ const Button = ({
       : variant === "primary" ||
         variant === "secondary" ||
         variant === "ajouter" ||
-        variant === "save"
+        variant === "save" ||
+        variant === "success" ||
+        variant === "email" ||
+        variant === "deleteCoordinator"
       ? `
           flex
           items-center
           w-full
-          px-4
-          lg:pl-50
-          lg:pr-5
+          ${noWrapperPadding ? "" : "px-4 lg:pl-50 lg:pr-5"}
           py-2
         `
       : `
@@ -182,22 +205,22 @@ const Button = ({
           justify-center
           gap-2
 
-         px-3
-sm:px-4
-lg:px-5
+          px-3
+          sm:px-4
+          lg:px-5
 
-h-[38px]
-sm:h-[42px]
-lg:h-[45px]
+          h-[38px]
+          sm:h-[42px]
+          lg:h-[45px]
 
-rounded-[12px]
-sm:rounded-[14px]
-lg:rounded-[15px]
+          rounded-[12px]
+          sm:rounded-[14px]
+          lg:rounded-[15px]
 
-font-semibold
-text-[12px]
-sm:text-[14px]
-lg:text-[16px]
+          font-semibold
+          text-[12px]
+          sm:text-[14px]
+          lg:text-[16px]
 
           shadow-md
 
@@ -220,22 +243,22 @@ lg:text-[16px]
         `}
       >
         {iconPosition === "left" && icon && (
-  <img
-    src={icon}
-    alt=""
-    className="w-4 h-4 object-contain"
-  />
-)}
+          <img
+            src={icon}
+            alt=""
+            className="w-4 h-4 object-contain"
+          />
+        )}
 
-<span>{title}</span>
+        <span>{title}</span>
 
-{iconPosition === "right" && icon && (
-  <img
-    src={icon}
-    alt=""
-    className="w-4 h-4 object-contain"
-  />
-)}
+        {iconPosition === "right" && icon && (
+          <img
+            src={icon}
+            alt=""
+            className="w-4 h-4 object-contain"
+          />
+        )}
       </button>
     </div>
   );

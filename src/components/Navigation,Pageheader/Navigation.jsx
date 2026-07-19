@@ -1,4 +1,5 @@
-import LeftArrow from "../../assets/left-arrow.png";
+
+import ArrowLeft from "../../assets/left-arrow.png";
 import ArrowRight from "../../assets/right-arrow.png";
 
 const Navigation = ({

@@ -371,7 +371,7 @@ const newDonorsThisMonth = 18;
             lastConnection={lastConnection}
             lastConnectionLabel={lastConnectionLabel}
             valueColor="#69B89C"
-            onClick={()=>console.log("Coordinator")}
+            onClick={() => navigate("/liste-coordinateurs")}
           />
 
         </div>
@@ -431,7 +431,7 @@ const newDonorsThisMonth = 18;
               lastConnection={lastConnection}
               lastConnectionLabel={lastConnectionLabel}
               valueColor="#69B89C"
-              onClick={()=>console.log("Coordinator")}
+               onClick={() => navigate("/liste-coordinateurs")}
             />
 
           </div>

@@ -72,7 +72,7 @@ export default function ListeCoordinateurs() {
             title="Liste des coordinateurs"
             type="add"
             actionTitle="Ajouter un coordinateur"
-            onAction={() => navigate("")}
+            onAction={() => navigate("/ajout-coordinateur")}
           />
 
           <div className="my-6">
@@ -99,14 +99,10 @@ export default function ListeCoordinateurs() {
   <div className="space-y-4">
     {filteredCoordinateurs.map((coordinateur) => (
       <div
-        key={coordinateur.id}
-        className="cursor-pointer"
-        onClick={() =>
-          navigate(`/coordinateur/${coordinateur.id}`, {
-            state: coordinateur,
-          })
-        }
-      >
+    key={coordinateur.id}
+    onClick={() => navigate("/fiche-coordinateur")}
+    className="cursor-pointer"
+  >
         <CardDonateur
           name={coordinateur.name}
           email={coordinateur.email}

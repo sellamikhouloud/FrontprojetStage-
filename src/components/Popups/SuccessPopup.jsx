@@ -1,11 +1,11 @@
-import Button from "../Button/Button";
-
 const Popup = ({
   title,
   image,
   id,
+  description,
   primaryButtonText,
   secondaryButtonText,
+  primaryButtonVariant = "success", // default success 
   onPrimaryClick,
   onSecondaryClick,
 }) => {
@@ -26,27 +26,26 @@ const Popup = ({
           bg-white
           rounded-[20px]
 
-          w-[357px]
-          px-[25px]
-          py-[20px]
+          w-[320px]
+          lg:w-[460px]
 
-          lg:w-[561px]
-          lg:px-[67px]
-          lg:py-[26px]
+          px-6
+          lg:px-8
+
+          py-6
 
           flex
           flex-col
           items-center
 
-          gap-[28px]
-          lg:gap-[26px]
+          gap-5
         "
       >
         {/* Titre */}
         <h2
           className="
-            text-[20px]
-            lg:text-[28px]
+            text-[18px]
+            lg:text-[20px]
             font-bold
             text-center
             text-black
@@ -56,107 +55,131 @@ const Popup = ({
         </h2>
 
         {/* Illustration */}
-       <img
-  src={image}
-  alt="Success"
-  className="
-    w-[140px]
-    h-[84px]
+        <img
+          src={image}
+          alt=""
+          className="
+            w-[120px]
+            h-[74px]
 
-    lg:w-[196px]
-    lg:h-[177px]
+            lg:w-[176px]
+            lg:h-[157px]
 
-    object-contain
-  "
-/>
+            object-contain
+          "
+        />
 
-        {/* Identifiant (optionnel) */}
+        {/* Description */}
+        {description && (
+          <p
+            className="
+              text-[14px]
+              lg:text-[16px]
+              text-center
+              text-[#6B7280]
+              leading-6
+            "
+          >
+            {description}
+          </p>
+        )}
+
+        {/* Identifiant */}
         {id && (
           <p
             className="
-              text-[16px]
-              lg:text-[22px]
-              font-semibold
+              text-[14px]
+              lg:text-[18px]
               text-center
               text-black
             "
           >
-            L'identifiant effectué : {id}
+            <span className="font-semibold">
+              L'identifiant effectué :
+            </span>{" "}
+            <span className="font-bold">
+              {id}
+            </span>
           </p>
         )}
 
-        {/* Boutons */}
-    {/* Buttons */}
-<div
-  className="
-    flex
-    flex-col
-    items-center
-    gap-[10px]
-    lg:gap-[14px]
-    w-full
-  "
->
-  {/* Primary Button */}
-  <button
-    type="button"
-    onClick={onPrimaryClick}
-    className="
-      w-[200px]
-      lg:w-[284px]
+        {/* Buttons */}
+        <div
+          className="
+            flex
+            flex-col
+            items-center
+            gap-[8px]
+            lg:gap-[12px]
+            w-full
+          "
+        >
+          {/* Primary */}
+          <button
+            type="button"
+            onClick={onPrimaryClick}
+            className={`
+              w-[200px]
+              lg:w-[284px]
 
-      h-[45px]
+              h-[45px]
 
-      rounded-[15px]
+              rounded-[15px]
 
-      bg-[#22C55E]
-      text-white
+              ${
+                primaryButtonVariant === "danger"
+                  ? "bg-[#EF4444]"
+                  : "bg-[#22C55E]"
+              }
 
-      text-[14px]
-      lg:text-[16px]
-      font-semibold
+              text-white
 
-      transition-all
-      duration-200
+              text-[14px]
+              lg:text-[16px]
+              font-semibold
 
-      hover:brightness-95
-      active:scale-[0.98]
-    "
-  >
-    {primaryButtonText}
-  </button>
+              transition-all
+              duration-200
 
-  {/* Secondary Button */}
-  <button
-    type="button"
-    onClick={onSecondaryClick}
-    className="
-      w-[200px]
-      lg:w-[284px]
+              hover:brightness-95
+              active:scale-[0.98]
+            `}
+          >
+            {primaryButtonText}
+          </button>
 
-      h-[45px]
+          {/* Secondary */}
+          <button
+            type="button"
+            onClick={onSecondaryClick}
+            className="
+              w-[200px]
+              lg:w-[284px]
 
-      rounded-[15px]
+              h-[45px]
 
-      border
-      border-[#4E9F8A]
-      bg-white
-      text-[#4E9F8A]
+              rounded-[15px]
 
-      text-[14px]
-      lg:text-[16px]
-      font-semibold
+              border
+              border-[#4E9F8A]
 
-      transition-all
-      duration-200
+              bg-white
+              text-[#4E9F8A]
 
-      hover:bg-[#F8FCFB]
-      active:scale-[0.98]
-    "
-  >
-    {secondaryButtonText}
-  </button>
-</div>
+              text-[14px]
+              lg:text-[16px]
+              font-semibold
+
+              transition-all
+              duration-200
+
+              hover:bg-[#F8FCFB]
+              active:scale-[0.98]
+            "
+          >
+            {secondaryButtonText}
+          </button>
+        </div>
       </div>
     </div>
   );

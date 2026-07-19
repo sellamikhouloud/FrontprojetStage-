@@ -8,7 +8,9 @@ import Login from "./Login/Login";
 import InformationNourrisson from "./Famille/InformationNourrisson";
 import PhotoConfirmation from "./Famille/PhotoConfirmation";
 import ListeCoordinateurs from "./Coordinateurs/ListeCoordinateur";
+import AjoutCoordinateur from "./Coordinateurs/AjoutCoordinateur";
 import  ListeDonateur from "./Donateurs/ListeDonateur";
+import ModifierCoordinateur from "./Coordinateurs/FicheCoordinateur";
 
 function App() {
   return (
@@ -41,6 +43,10 @@ function App() {
          <Route
           path="/liste-coordinateurs" element={<ListeCoordinateurs />}
         />
+         <Route
+          path="/ajout-coordinateur"element={<AjoutCoordinateur />}
+        />
+        <Route  path="/fiche-coordinateur"  element={<ModifierCoordinateur />} />
 
          {/* Donateur */}
          <Route
