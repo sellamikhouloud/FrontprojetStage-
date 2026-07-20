@@ -8,7 +8,9 @@ import PopupDistributionfamille from "../components/Popups/PopupDistributionfami
 import Button from "../components/Button/Button";
 import Popupvisites from "../components/Popups/Popupvisitefamille"
 import MotherPhoto from "../assets/photo mere.svg";
+import successImage from "../assets/Success.svg"; 
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
+import Popup from "../components/Popups/SuccessPopup.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 
 
@@ -95,15 +97,39 @@ const distributionList = [
 const visiteList = [
   {
     id: 1,
+
+    numeroVisite: 1,
+
     enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+
+    sexe: "Fille",
+
+    region: "Lexeiba",
+
+    dateNaissance: "15/05/2026",
+
     code: "GDK-2026-003",
-    visite: "Visite 1",
+
     date: "15/05/2026",
-    poids: "500",
-    taille: "35",
-    badges: [
+
+    enregistrePar: "Coordinateur",
+
+    nourrisson: {
+      poids: 500,
+      taille: 35,
+      muac: 112,
+    },
+
+    mereMesure: {
+      poids: 55,
+      taille: "-",
+      muac: 240,
+    },
+
+    statuts: [
       {
-        type: "mas",
+        type: "mam",
         text: "MAS nourrisson",
       },
       {
@@ -111,19 +137,21 @@ const visiteList = [
         text: "Mère normale",
       },
     ],
-  },
-  {
-    id: 2,
-    enfant: "Aïcha Mint Mohamed",
-    code: "GDK-2026-003",
-    visite: "Visite 2",
-    date: "15/06/2026",
-    poids: "650",
-    taille: "38",
+
+    observationNourrisson: "Observation nourrisson",
+
+    observationMere: "Observation mère",
+
+    evaluationFamiliale: "Famille stable",
+
+    // uniquement pour CardPopupvisite
+    visite: "Visite 1",
+    poids: "500",
+    taille: "35",
     badges: [
       {
         type: "mam",
-        text: "MAM nourrisson",
+        text: "MAS nourrisson",
       },
       {
         type: "mere",
@@ -133,6 +161,7 @@ const visiteList = [
   },
 ];
 const [openFinSuivi, setOpenFinSuivi] = useState(false);
+const [openSuccess, setOpenSuccess] = useState(false);
 return (
   <div className="flex h-screen overflow-hidden bg-white">
   {/* Sidebar */}
@@ -160,9 +189,22 @@ return (
 
     // Ici API
 
-    setOpenFinSuivi(false);
+    
+      setOpenSuccess(true);
   }}
 />
+
+{openSuccess && (
+  <Popup
+    title="Fin de suivi avec succès"
+    image={successImage}
+    primaryButtonText="Voir la fiche de la famille"
+   onPrimaryClick={() => {
+  setOpenSuccess(false);
+  setOpenFinSuivi(false);
+}}
+  />
+)}
       {/* Contenu */}
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
      <PageHeader

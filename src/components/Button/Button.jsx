@@ -7,6 +7,7 @@ const Button = ({
   variant = "primary",
   disabled = false,
   fullWidth = true,
+  width,
   noPadding = false,
   noWrapperPadding = false,
 }) => {
@@ -183,14 +184,13 @@ const Button = ({
           ${noWrapperPadding ? "" : "px-4 lg:pl-50 lg:pr-5"}
           py-2
         `
+      
       : `
-          flex
-          items-center
-          w-full
-          pr-[15px]
-          pl-[15px]
-        `;
-
+    flex
+    items-center
+    ${fullWidth ? "w-full" : ""}
+    ${noWrapperPadding ? "" : "pr-[15px] pl-[15px]"}
+  `;
   return (
     <div className={wrapper}>
       <button
@@ -198,7 +198,7 @@ const Button = ({
         onClick={onClick}
         disabled={disabled}
         className={`
-          ${fullWidth ? "w-full" : "inline-flex"}
+      ${width ? "" : fullWidth ? "w-full" : "inline-flex"}
 
           flex
           items-center

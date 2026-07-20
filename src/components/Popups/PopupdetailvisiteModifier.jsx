@@ -10,9 +10,9 @@ import EditIcon from "../../assets/Container.svg";
 import DeleteIcon from "../../assets/Delete.svg";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
-import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
+import ContainerEcritureModifier from "../Containers/ContainerEcritureModifier";
 
-const PopupDetailVisite = ({
+const PopupDetailVisiteModifier = ({
   open,
   onClose,
   visite,
@@ -20,8 +20,17 @@ const PopupDetailVisite = ({
   onDelete,
 }) => {
 
-      const [showDeletePopup, setShowDeletePopup] = useState(false);
-    
+const [observationNourrisson, setObservationNourrisson] = useState(
+  visite?.observationNourrisson || ""
+);
+
+const [observationMere, setObservationMere] = useState(
+  visite?.observationMere || ""
+);
+
+const [evaluationFamiliale, setEvaluationFamiliale] = useState(
+  visite?.evaluationFamiliale || ""
+);
   if (!open || !visite) return null;
 
   return (
@@ -47,23 +56,7 @@ const PopupDetailVisite = ({
 >
 
 
-   {showDeletePopup && (
-  <div onClick={(e) => e.stopPropagation()}>
-    <Popup
-      title="Confirmer la suppression"
-      image={SuccessImage}
-      description="Êtes-vous sûr de vouloir supprimer cette visite ? Cette action est irréversible."
-      primaryButtonText="Supprimer"
-      secondaryButtonText="Annuler"
-      primaryButtonVariant="danger"
-      onPrimaryClick={() => {
-        setShowDeletePopup(false);
-        onDelete?.(visite);
-      }}
-      onSecondaryClick={() => setShowDeletePopup(false)}
-    />
-  </div>
-)}
+  
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -161,27 +154,21 @@ const PopupDetailVisite = ({
                 taille={visite.nourrisson?.taille}
                 muac={visite.nourrisson?.muac}
               />
-
-          <InfoCard
-  title="Observations cliniques nourrisson"
-  text={visite.observationNourrisson || "-"}
+<ContainerEcritureModifier
+  label="Observations cliniques nourrisson"
+  value={observationNourrisson}
+  onChange={(e) => setObservationNourrisson(e.target.value)}
+  noPadding
 />
-<div className="hidden sm:grid mt-6 grid-cols-2 gap-4 w-full">
+<div className="hidden sm:block mt-3 w-full">
   <Button
-    title="Modifier"
-    variant="modifier"
+    title="Enregistrer"
+    variant="primary"
     icon={EditIcon}
     noWrapperPadding
+    className="w-full"
     onClick={() => onEdit?.(visite)}
   />
-
-  <Button
-  title="Supprimer"
-  variant="supprimer"
-  icon={DeleteIcon}
-  noWrapperPadding
-  onClick={() => setShowDeletePopup(true)}
-/>
 </div>
             </div>
 
@@ -244,36 +231,35 @@ const PopupDetailVisite = ({
                 muac={visite.mereMesure?.muac}
               />
 
-             <InfoCard
-  title="Observations cliniques mère"
-  text={visite.observationMere || "-"}
+          <ContainerEcritureModifier
+  label="Observations cliniques mère"
+  value={observationMere}
+  onChange={(e) => setObservationMere(e.target.value)}
+  noPadding
 />
-           <InfoCard
-  title="Évaluation visuelle de la situation familiale"
-  text={visite.evaluationFamiliale || "-"}
+
+<ContainerEcritureModifier
+  label="Évaluation visuelle de la situation familiale"
+  value={evaluationFamiliale}
+  onChange={(e) => setEvaluationFamiliale(e.target.value)}
+  noPadding
 />
+           
 
             </div>
 
           </div>
 
-{/* Boutons mobile */}
 <div className="mt-6 grid grid-cols-1 gap-3 w-full sm:hidden">
-  <Button
-    title="Modifier"
-    variant="modifier"
-    icon={EditIcon}
-    noWrapperPadding
-    onClick={() => onEdit?.(visite)}
-  />
-
-  <Button
-  title="Supprimer"
-  variant="supprimer"
-  icon={DeleteIcon}
-  noWrapperPadding
-  onClick={() => setShowDeletePopup(true)}
-/>
+     <div className="w-full">
+    <Button
+      title="Enregistrer"
+      variant="primary"
+      icon={EditIcon}
+      noWrapperPadding
+      onClick={() => onEdit?.(visite)}
+    />
+  </div>
 </div>
 
         </motion.div>
@@ -282,4 +268,4 @@ const PopupDetailVisite = ({
   );
 };
 
-export default PopupDetailVisite;
+export default PopupDetailVisiteModifier;
