@@ -149,36 +149,39 @@ const Popup = ({
           </button>
 
           {/* Secondary */}
-          <button
-            type="button"
-            onClick={onSecondaryClick}
-            className="
-              w-[200px]
-              lg:w-[284px]
+          {/* Secondary */}
+{secondaryButtonText && (
+  <button
+    type="button"
+    onClick={onSecondaryClick}
+    className="
+      w-[200px]
+      lg:w-[284px]
 
-              h-[45px]
+      h-[45px]
 
-              rounded-[15px]
+      rounded-[15px]
 
-              border
-              border-[#4E9F8A]
+      border
+      border-[#4E9F8A]
 
-              bg-white
-              text-[#4E9F8A]
+      bg-white
+      text-[#4E9F8A]
 
-              text-[14px]
-              lg:text-[16px]
-              font-semibold
+      text-[14px]
+      lg:text-[16px]
+      font-semibold
 
-              transition-all
-              duration-200
+      transition-all
+      duration-200
 
-              hover:bg-[#F8FCFB]
-              active:scale-[0.98]
-            "
-          >
-            {secondaryButtonText}
-          </button>
+      hover:bg-[#F8FCFB]
+      active:scale-[0.98]
+    "
+  >
+    {secondaryButtonText}
+  </button>
+)}
         </div>
       </div>
     </div>
