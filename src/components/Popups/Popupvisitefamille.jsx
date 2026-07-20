@@ -1,7 +1,8 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-
+import { useState } from "react";
+import PopupDetailVisite from "./Popupdetailsvisite";
 import CardPopupvisite from "../Cards/cardvisite";
 
 const Popupvisites = ({
@@ -9,25 +10,30 @@ const Popupvisites = ({
   onClose,
   Visites = [],
 }) => {
+
+   const [openDetail, setOpenDetail] = useState(false);
+  const [selectedVisite, setSelectedVisite] = useState(null);
+
   return (
     <AnimatePresence>
       {open && (
       <div
-  className="
-    fixed
-    inset-0
-    z-50
+ className="
+  fixed
+  inset-0
+  z-50
 
-    bg-black/30
+  bg-transparent
+  sm:bg-black/30
 
-    flex
-    items-start
-    sm:items-center
+  flex
+  items-start
+  sm:items-center
 
-    justify-center
+  justify-center
 
-    overflow-y-auto
-  "
+  overflow-y-auto
+"
   onClick={onClose}
 >
           <motion.div
@@ -57,6 +63,12 @@ const Popupvisites = ({
               sm:shadow-2xl
             "
           >
+
+            <PopupDetailVisite
+  open={openDetail}
+  onClose={() => setOpenDetail(false)}
+  visite={selectedVisite}
+/>
             {/* Header */}
             <div className="px-5 sm:px-6 pt-5">
               <button
@@ -127,7 +139,10 @@ const Popupvisites = ({
                     poids={item.poids}
                     taille={item.taille}
                     badges={item.badges}
-                    onClick={() => console.log(item)}
+                    onClick={() => {
+  setSelectedVisite(item);
+  setOpenDetail(true);
+}}
                   />
                 ))
               ) : (
@@ -144,4 +159,6 @@ const Popupvisites = ({
 };
 
 export default Popupvisites;
+
+
 
