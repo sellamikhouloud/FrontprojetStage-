@@ -1,6 +1,7 @@
 const InfoCard = ({
   title,
   data = [],
+  text,
   action,
   onActionClick,
 }) => {
@@ -22,23 +23,41 @@ const InfoCard = ({
         )}
       </div>
 
-      {/* Conteneur */}
-      <div className="border border-[#84D6D0] rounded-[15px] px-3 py-2">
-        {data.map((item, index) => (
-          <div
-            key={index}
-            className="flex justify-between py-1"
-          >
-            <span className="text-[#4E9F8A] font-medium">
-              {item.label}
-            </span>
+      {text !== undefined ? (
+        <div
+          className="
+            h-[60px]
+            rounded-[16px]
+            border
+            border-[#84D6D0]
+            bg-white
+            px-4
+            flex
+            items-center
+          "
+        >
+          <p className="text-[#202124] text-[16px]">
+            {text || "-"}
+          </p>
+        </div>
+      ) : (
+        <div className="border border-[#84D6D0] rounded-[15px] px-3 py-2">
+          {data.map((item, index) => (
+            <div
+              key={index}
+              className="flex justify-between items-center py-1"
+            >
+              <span className="text-[#4E9F8A] font-medium">
+                {item.label}
+              </span>
 
-            <span className="text-[#202124]">
-              {item.value}
-            </span>
-          </div>
-        ))}
-      </div>
+              <span className="text-[#202124]">
+                {item.value}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
