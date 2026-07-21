@@ -1,9 +1,9 @@
 import Card from "../Cards/Card";
 import StatusBadge from "../Cards/Badge";
 import InfoCard from "../Containers/AfficherContainer";
-import AfficherMesure from "../Containers/AfficherMesure";
+import ModifierMesure from "../Containers/ModifierMesure";
 import Button from "../Button/Button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
@@ -11,6 +11,7 @@ import DeleteIcon from "../../assets/Delete.svg";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
 import ContainerEcritureModifier from "../Containers/ContainerEcritureModifier";
+import SuccessBanner from "./SuccessBanner";
 
 const PopupDetailVisiteModifier = ({
   open,
@@ -31,6 +32,72 @@ const [observationMere, setObservationMere] = useState(
 const [evaluationFamiliale, setEvaluationFamiliale] = useState(
   visite?.evaluationFamiliale || ""
 );
+
+
+const [poidsNourrisson, setPoidsNourrisson] = useState(
+  visite?.nourrisson?.poids || ""
+);
+
+const [tailleNourrisson, setTailleNourrisson] = useState(
+  visite?.nourrisson?.taille || ""
+);
+
+const [muacNourrisson, setMuacNourrisson] = useState(
+  visite?.nourrisson?.muac || ""
+);
+
+const [poidsMere, setPoidsMere] = useState(
+  visite?.mereMesure?.poids || ""
+);
+
+const [muacMere, setMuacMere] = useState(
+  visite?.mereMesure?.muac || ""
+);
+const [showBanner, setShowBanner] = useState(false);
+
+const handleSave = () => {
+  const updatedVisite = {
+    ...visite,
+    nourrisson: {
+      ...visite.nourrisson,
+      poids: poidsNourrisson,
+      taille: tailleNourrisson,
+      muac: muacNourrisson,
+    },
+    mereMesure: {
+      ...visite.mereMesure,
+      poids: poidsMere,
+      muac: muacMere,
+    },
+    observationNourrisson,
+    observationMere,
+    evaluationFamiliale,
+  };
+
+  onEdit?.(updatedVisite);
+
+  setShowBanner(true);
+
+  setTimeout(() => {
+    setShowBanner(false);
+    onClose(); // ferme la popup après 1,5 s
+  }, 1500);
+};
+
+useEffect(() => {
+  if (!visite) return;
+
+  setPoidsNourrisson(visite.nourrisson?.poids || "");
+  setTailleNourrisson(visite.nourrisson?.taille || "");
+  setMuacNourrisson(visite.nourrisson?.muac || "");
+
+  setPoidsMere(visite.mereMesure?.poids || "");
+  setMuacMere(visite.mereMesure?.muac || "");
+
+  setObservationNourrisson(visite.observationNourrisson || "");
+  setObservationMere(visite.observationMere || "");
+  setEvaluationFamiliale(visite.evaluationFamiliale || "");
+}, [visite]);
   if (!open || !visite) return null;
 
   return (
@@ -148,12 +215,15 @@ const [evaluationFamiliale, setEvaluationFamiliale] = useState(
                 ]}
               />
 
-              <AfficherMesure
-                title="Mesure nourrisson"
-                poids={visite.nourrisson?.poids}
-                taille={visite.nourrisson?.taille}
-                muac={visite.nourrisson?.muac}
-              />
+            <ModifierMesure
+  title="Mesure nourrisson"
+  poids={poidsNourrisson}
+  taille={tailleNourrisson}
+  muac={muacNourrisson}
+  setPoids={setPoidsNourrisson}
+  setTaille={setTailleNourrisson}
+  setMuac={setMuacNourrisson}
+/>
 <ContainerEcritureModifier
   label="Observations cliniques nourrisson"
   value={observationNourrisson}
@@ -161,14 +231,17 @@ const [evaluationFamiliale, setEvaluationFamiliale] = useState(
   noPadding
 />
 <div className="hidden sm:block mt-3 w-full">
+   {showBanner && (
+  <SuccessBanner text="Enregistré avec succès" />
+)}
   <Button
-    title="Enregistrer"
-    variant="primary"
-    icon={EditIcon}
-    noWrapperPadding
-    className="w-full"
-    onClick={() => onEdit?.(visite)}
-  />
+      title="Enregistrer"
+      variant="primary"
+      icon={EditIcon}
+      noWrapperPadding
+    onClick={handleSave}
+    />
+   
 </div>
             </div>
 
@@ -224,12 +297,15 @@ const [evaluationFamiliale, setEvaluationFamiliale] = useState(
     ))}
   </div>
 </div>
-              <AfficherMesure
-                title="Mesure mère"
-                poids={visite.mereMesure?.poids}
-              
-                muac={visite.mereMesure?.muac}
-              />
+             <ModifierMesure
+  title="Mesure mère"
+  poids={poidsMere}
+  muac={muacMere}
+  taille=""
+  setPoids={setPoidsMere}
+  setMuac={setMuacMere}
+  setTaille={() => {}}
+/>
 
           <ContainerEcritureModifier
   label="Observations cliniques mère"
@@ -252,13 +328,17 @@ const [evaluationFamiliale, setEvaluationFamiliale] = useState(
 
 <div className="mt-6 grid grid-cols-1 gap-3 w-full sm:hidden">
      <div className="w-full">
+       {showBanner && (
+  <SuccessBanner text="Enregistré avec succès" />
+)}
     <Button
       title="Enregistrer"
       variant="primary"
       icon={EditIcon}
       noWrapperPadding
-      onClick={() => onEdit?.(visite)}
+    onClick={handleSave}
     />
+   
   </div>
 </div>
 
