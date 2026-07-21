@@ -1,14 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 
 import CardPopupDistribution from  "../Cards/cardDistribution";
-
+import PopupDetailDistribution from "./PopupdetailsDistributions";
+import PopupDetailDistributionModifier from "./PopupdetailsDistributionsModifier";
 const PopupDistributionfamille = ({
   open,
   onClose,
   Distribution = [],
 }) => {
+
+const [selectedDistribution, setSelectedDistribution] = useState(null);
+const [openDetail, setOpenDetail] = useState(false);
+const [openModifier, setOpenModifier] = useState(false);
   return (
     <AnimatePresence>
       {open && (
@@ -121,13 +126,16 @@ const PopupDistributionfamille = ({
             >
               {Distribution.length ? (
                 Distribution.map((item) => (
-                  <CardPopupDistribution
-                    key={item.id}
-                    distribution={item.distribution}
-                    date={item.date}
-                    produits={item.produits}
-                    onClick={() => console.log(item)}
-                  />
+                 <CardPopupDistribution
+  key={item.id}
+  distribution={item.distribution}
+  date={item.date}
+  produits={item.produits}
+  onClick={() => {
+    setSelectedDistribution(item);
+    setOpenDetail(true);
+  }}
+/>
                 ))
               ) : (
                 <div className="py-10 text-center text-gray-500">
@@ -138,6 +146,22 @@ const PopupDistributionfamille = ({
           </motion.div>
         </div>
       )}
+
+     <PopupDetailDistribution
+  open={openDetail}
+  onClose={() => setOpenDetail(false)}
+  distribution={selectedDistribution}
+  onEdit={() => {
+    setOpenDetail(false);
+    setOpenModifier(true);
+  }}
+/>
+
+<PopupDetailDistributionModifier
+  open={openModifier}
+  onClose={() => setOpenModifier(false)}
+  distribution={selectedDistribution}
+/>
     </AnimatePresence>
   );
 };

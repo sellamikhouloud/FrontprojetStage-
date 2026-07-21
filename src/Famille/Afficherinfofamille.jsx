@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../components/Containers/AfficherContainer";
@@ -83,6 +84,8 @@ const [openVisites, setOpenVisites] = useState(false);
 const distributionList = [
   {
     id: 1,
+
+    // Affichage dans CardPopupDistribution
     distribution: "Distribution 1",
     date: "15/05/2026",
     produits: [
@@ -90,9 +93,27 @@ const distributionList = [
       { nom: "Huile", quantite: "1 L" },
       { nom: "Riz", quantite: "5 kg" },
     ],
+
+    // Informations du popup détail
+    numeroDistribution: 1,
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "12 mars 2026",
+    code: "GDK-2026-003",
+
+    enregistrePar: "Coordinateur",
+
+    typeLait: "2ème âge (6–12 mois)",
+    nombreBoites: "4 boîtes",
+    poidsTotal: "1560 g (calculé automatiquement)",
+
+    cereales: "5 Kg",
+    sucre: "1 Kg",
+    sel: "1 Kg",
   },
 ];
-
 
 const visiteList = [
   {

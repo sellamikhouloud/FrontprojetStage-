@@ -10,6 +10,7 @@ import Popupvisites from "../components/Popups/Popupvisitefamille"
 import MotherPhoto from "../assets/photo mere.svg";
 import EditableInfoCard from "../components/Containers/ModifierContainer";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
+import Popup from "../components/Popups/SuccessPopup.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 
 
@@ -119,29 +120,81 @@ const [openVisites, setOpenVisites] = useState(false);
 const distributionList = [
   {
     id: 1,
+
     distribution: "Distribution 1",
     date: "15/05/2026",
+
     produits: [
       { nom: "Lait thérapeutique", quantite: "2 kg" },
       { nom: "Huile", quantite: "1 L" },
       { nom: "Riz", quantite: "5 kg" },
     ],
+
+    numeroDistribution: 1,
+
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+
+    sexe: "Fille",
+
+    region: "Lexeiba",
+
+    dateNaissance: "12 mars 2026",
+
+    code: "GDK-2026-003",
+
+    enregistrePar: "Coordinateur",
+
+    typeLait: "2ème âge (6–12 mois)",
+
+    nombreBoites: "4 boîtes",
+
+    poidsTotal: "1560 g",
+
+    cereales: "5 Kg",
+
+    sucre: "1 Kg",
+
+    sel: "1 Kg",
   },
 ];
-
 
 const visiteList = [
   {
     id: 1,
+
+    numeroVisite: 1,
+
     enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+
+    sexe: "Fille",
+
+    region: "Lexeiba",
+
+    dateNaissance: "15/05/2026",
+
     code: "GDK-2026-003",
-    visite: "Visite 1",
+
     date: "15/05/2026",
-    poids: "500",
-    taille: "35",
-    badges: [
+
+    enregistrePar: "Coordinateur",
+
+    nourrisson: {
+      poids: 500,
+      taille: 35,
+      muac: 112,
+    },
+
+    mereMesure: {
+      poids: 55,
+      taille: "-",
+      muac: 240,
+    },
+
+    statuts: [
       {
-        type: "mas",
+        type: "mam",
         text: "MAS nourrisson",
       },
       {
@@ -149,19 +202,23 @@ const visiteList = [
         text: "Mère normale",
       },
     ],
-  },
-  {
-    id: 2,
-    enfant: "Aïcha Mint Mohamed",
-    code: "GDK-2026-003",
-    visite: "Visite 2",
-    date: "15/06/2026",
-    poids: "650",
-    taille: "38",
+
+    observationNourrisson: "Observation nourrisson",
+
+    observationMere: "Observation mère",
+
+    evaluationFamiliale: "Famille stable",
+
+    visite: "Visite 1",
+
+    poids: "500",
+
+    taille: "35",
+
     badges: [
       {
         type: "mam",
-        text: "MAM nourrisson",
+        text: "MAS nourrisson",
       },
       {
         type: "mere",

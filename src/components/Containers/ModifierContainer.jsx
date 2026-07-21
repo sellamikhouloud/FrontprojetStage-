@@ -7,18 +7,18 @@ const EditableInfoCard = ({
   return (
     <div className="w-full">
       {/* Titre */}
-      <div className="flex justify-between items-center mb-2">
+      <div className="flex justify-between items-center mb-1">
         <h2 className="text-[18px] font-semibold">
           {title}
         </h2>
       </div>
 
       {/* Conteneur */}
-      <div className="border-2 border-dashed border-[#84D6D0] rounded-[15px] px-4 py-3">
+      <div className="border-2 border-dashed border-[#84D6D0] rounded-[15px] px-4 py-2">
         {data.map((item, index) => (
           <div
             key={index}
-            className="flex justify-between items-center py-2 gap-6"
+            className="flex justify-between items-center py-1 gap-4"
           >
             {/* Label */}
             <span className="text-[#4E9F8A] font-medium">
