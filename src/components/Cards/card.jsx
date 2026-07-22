@@ -26,9 +26,10 @@ const Card = ({
       onClick={onClick}
       className="
         w-full
-        rounded-[18px]
-        p-4
-        sm:p-5
+        min-h-[114px]
+        rounded-[15px]
+        px-[15px]
+        py-[15px]
         cursor-pointer
         transition
         hover:shadow-md
@@ -37,14 +38,16 @@ const Card = ({
         background: isGirl ? "#FFF2F5" : "#ECF8F7",
       }}
     >
-      <div className="flex flex-col lg:flex-row lg:justify-between gap-5">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+
         {/* Partie gauche */}
         <div className="flex flex-col gap-1 flex-1">
+
           <h2
             className="
               text-[18px]
-              sm:text-[20px]
-              lg:text-[22px]
+              sm:text-[19px]
+              lg:text-[20px]
               font-bold
               text-[#1E1E1E]
               leading-tight
@@ -55,9 +58,9 @@ const Card = ({
 
           <p
             className="
-              text-[16px]
-              sm:text-[18px]
-              lg:text-[19px]
+              text-[15px]
+              sm:text-[16px]
+              lg:text-[17px]
               font-medium
               text-[#222]
             "
@@ -71,12 +74,11 @@ const Card = ({
               flex-wrap
               items-center
               gap-2
-              sm:gap-3
               mt-2
 
               text-[13px]
-              sm:text-[15px]
-              lg:text-[16px]
+              sm:text-[14px]
+              lg:text-[15px]
 
               text-[#3A3A3A]
             "
@@ -84,7 +86,7 @@ const Card = ({
             <div className="flex items-center gap-1">
               <img
                 src={isGirl ? GenderFemale : GenderMale}
-                className="w-4 h-4 sm:w-5 sm:h-5"
+                className="w-4 h-4"
                 alt=""
               />
               {sexe}
@@ -95,7 +97,7 @@ const Card = ({
             <div className="flex items-center gap-1">
               <img
                 src={isGirl ? LocationRed : LocationBlue}
-                className="w-4 h-4 sm:w-5 sm:h-5"
+                className="w-4 h-4"
                 alt=""
               />
               {region}
@@ -106,7 +108,7 @@ const Card = ({
             <div className="flex items-center gap-1">
               <img
                 src={isGirl ? TimerRed : TimerBlue}
-                className="w-4 h-4 sm:w-5 sm:h-5"
+                className="w-4 h-4"
                 alt=""
               />
               né : {naissance}
@@ -115,7 +117,8 @@ const Card = ({
         </div>
 
         {/* Partie droite */}
-        <div className="flex flex-col lg:items-end gap-4">
+        <div className="flex flex-col lg:items-end gap-3">
+
           <div className="flex flex-wrap gap-2 lg:justify-end">
             {badges.map((badge, index) => (
               <StatusBadge
@@ -129,8 +132,8 @@ const Card = ({
           <span
             className="
               text-[18px]
-              sm:text-[20px]
-              lg:text-[22px]
+              sm:text-[19px]
+              lg:text-[20px]
               font-bold
             "
             style={{
@@ -139,7 +142,9 @@ const Card = ({
           >
             {code}
           </span>
+
         </div>
+
       </div>
     </div>
   );
