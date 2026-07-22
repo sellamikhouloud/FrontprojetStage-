@@ -97,7 +97,7 @@ export default function ListeDonateur() {
 )}
 
 {filteredCoordinateurs.length > 0 && (
-   <div className="space-y-4">
+   <div className="space-y-3">
     {filteredCoordinateurs.map((coordinateur) => (
       <div
   key={coordinateur.id}
