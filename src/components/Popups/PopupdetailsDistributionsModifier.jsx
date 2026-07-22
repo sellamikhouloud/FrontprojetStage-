@@ -44,11 +44,7 @@ useEffect(() => {
     { label: "Poids total", value: distribution.poidsTotal },
   ]);
 
-  setColisInfo([
-    { label: "Céréales", value: distribution.cereales },
-    { label: "Sucre", value: distribution.sucre },
-    { label: "Sel", value: distribution.sel },
-  ]);
+  setColisInfo(distribution.colisAlimentaire || []);
 }, [distribution]);
 
 const handleSave = () => {
