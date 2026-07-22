@@ -121,41 +121,131 @@ const distributionList = [
   {
     id: 1,
 
+    // Informations de la carte
     distribution: "Distribution 1",
     date: "15/05/2026",
-
     produits: [
-      { nom: "Lait thérapeutique", quantite: "2 kg" },
-      { nom: "Huile", quantite: "1 L" },
+      { nom: "Lait thérapeutique", quantite: "2 boîtes" },
       { nom: "Riz", quantite: "5 kg" },
+      { nom: "Huile", quantite: "1 L" },
     ],
 
+    // Informations générales
     numeroDistribution: 1,
-
     enfant: "Aïcha Mint Mohamed",
-    mere: "Meriem",
-
+    mere: "Meriem Mint Ahmed",
     sexe: "Fille",
-
     region: "Lexeiba",
-
-    dateNaissance: "12 mars 2026",
-
+    dateNaissance: "12 mars 2025",
     code: "GDK-2026-003",
 
     enregistrePar: "Coordinateur",
 
+    // Lait infantile
     typeLait: "2ème âge (6–12 mois)",
+    nombreBoites: "2 boîtes",
+    poidsTotal: "1600 g",
 
-    nombreBoites: "4 boîtes",
+    // Colis alimentaire (dynamique)
+    colisAlimentaire: [
+      {
+        label: "Riz",
+        value: "5 kg",
+      },
+      {
+        label: "Huile",
+        value: "1 L",
+      },
+      {
+        label: "Sucre",
+        value: "2 kg",
+      },
+      {
+        label: "Farine",
+        value: "3 kg",
+      },
+    ],
+  },
 
-    poidsTotal: "1560 g",
+  {
+    id: 2,
 
-    cereales: "5 Kg",
+    distribution: "Distribution 2",
+    date: "20/05/2026",
+    produits: [
+      { nom: "Lait infantile", quantite: "3 boîtes" },
+      { nom: "Farine", quantite: "4 kg" },
+    ],
 
-    sucre: "1 Kg",
+    numeroDistribution: 2,
+    enfant: "Mohamed Ould Ahmed",
+    mere: "Khadijetou Mint Mohamed",
+    sexe: "Fils",
+    region: "Nouakchott",
+    dateNaissance: "05 janvier 2025",
+    code: "GDK-2026-004",
 
-    sel: "1 Kg",
+    enregistrePar: "Administrateur",
+
+    typeLait: "1er âge (0–6 mois)",
+    nombreBoites: "3 boîtes",
+    poidsTotal: "2400 g",
+
+    colisAlimentaire: [
+      {
+        label: "Farine",
+        value: "4 kg",
+      },
+      {
+        label: "Huile",
+        value: "2 L",
+      },
+    ],
+  },
+
+  {
+    id: 3,
+
+    distribution: "Distribution 3",
+    date: "28/05/2026",
+    produits: [
+      { nom: "Lait infantile", quantite: "1 boîte" },
+      { nom: "Lentilles", quantite: "2 kg" },
+      { nom: "Riz", quantite: "3 kg" },
+    ],
+
+    numeroDistribution: 3,
+    enfant: "Fatimata Mint Sidi",
+    mere: "Aminetou Mint Ely",
+    sexe: "Fille",
+    region: "Rosso",
+    dateNaissance: "18 février 2025",
+    code: "GDK-2026-005",
+
+    enregistrePar: "Coordinateur",
+
+    typeLait: "3ème âge (12 mois et plus)",
+    nombreBoites: "1 boîte",
+    poidsTotal: "800 g",
+
+    colisAlimentaire: [
+      {
+        label: "Riz",
+        value: "3 kg",
+      },
+      {
+        label: "Lentilles",
+        value: "2 kg",
+      },
+      {
+        label: "Sel",
+        value: "1 kg",
+      },
+      {
+        label: "Sucre",
+        value: "1 kg",
+      },
+    ],
   },
 ];
 
