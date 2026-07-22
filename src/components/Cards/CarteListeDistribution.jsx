@@ -62,7 +62,7 @@ const CardListDistribution = ({
       <div className="mt-2 flex flex-wrap items-center gap-2 text-[14px] sm:text-[15px]">
         {produits.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            <span className="text-[#94A3B8]">•</span>
+          
 
             <span
               className="font-semibold"
