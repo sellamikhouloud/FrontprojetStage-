@@ -407,7 +407,7 @@ if  (isFilterOpen && isMobile)  {
           <div className="flex gap-6">
            <div className="flex-1 space-y-4">
  {filteredFamilies.length > 0 && (
-  <div className="w-full flex-1 space-y-4">
+  <div className="w-full flex-1 space-y-3">
     {filteredFamilies.map((famille) => (
       <div key={famille.id}>
         {/* Desktop */}
