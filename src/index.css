@@ -90,6 +90,10 @@
   z-index: 9999 !important;
 }
 
+/* Hide days from previous/next month */
+.custom-calendar .react-datepicker__day--outside-month {
+  visibility: hidden;
+}
 
 /* Hide scrollbar but keep scrolling */
 .scrollbar-hide::-webkit-scrollbar {
@@ -101,8 +105,3 @@
   scrollbar-width: none;     /* Firefox */
 }
 
-
-/* Hide days from previous/next month */
-.custom-calendar .react-datepicker__day--outside-month {
-  visibility: hidden;
-}
