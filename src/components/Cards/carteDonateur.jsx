@@ -9,44 +9,49 @@ const CardDonateur = ({
     <div
       className="
         w-full
-        rounded-2xl
+        min-h-[100px]
+        rounded-[15px]
         border
         bg-[#F8FBFC]
         border-[#E2E8F0]
-        px-4
-        py-4
+        px-[15px]
+        py-[15px]
+        transition
+        hover:shadow-sm
       "
     >
       {/* Première ligne */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* Nom + statut */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-[#111827]">
+          <h2 className="text-[18px] sm:text-[19px] lg:text-[20px] font-bold text-[#111827]">
             {name}
           </h2>
 
           <span className="text-[#94A3B8]">•</span>
 
           <span
-            className="text-base sm:text-lg md:text-xl font-semibold"
+            className="text-[16px] sm:text-[17px] font-semibold"
             style={{ color: "#528583" }}
           >
             {status}
           </span>
         </div>
 
-        {/* Code */}
-        <span className="text-base sm:text-lg md:text-xl font-semibold text-[#111827]">
+        <span className="text-[16px] sm:text-[17px] font-semibold text-[#111827]">
           {code}
         </span>
       </div>
 
       {/* Deuxième ligne */}
-     <div className="mt-2 text-sm sm:text-base md:text-lg text-[#374151]">
-  <p className="break-all">{email}</p>
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-[14px] sm:text-[15px] text-[#374151]">
+        <span className="text-[#94A3B8]">•</span>
 
-  <p className="mt-1">{date}</p>
-</div>
+        <span className="break-all">{email}</span>
+
+        <span className="text-[#94A3B8]">•</span>
+
+        <span>{date}</span>
+      </div>
     </div>
   );
 };
