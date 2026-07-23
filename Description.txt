@@ -54,3 +54,7 @@ PhotoSelection : composant permettant de sélectionner une photo parmi les photo
 PhotoOption : composant représentant une option d'action liée à une photo (prendre une photo, sélectionner une photo, etc.).
 
 NavigationHeader :  Composant d'en-tête de navigation affichant un titre et une action (Ajouter, Modifier ou Enregistrer) selon le contexte de la page.
+
+StockPopup : composant popup permettant de consulter le stock des produits nutritionnels, d'afficher leurs quantités disponibles et d'accéder à la modification des seuils d'alertes nutritionnelles.
+
+EditStockPopup : composant popup permettant de modifier les seuils d'alertes nutritionnelles des produits en saisissant de nouvelles valeurs et en les enregistrant.
