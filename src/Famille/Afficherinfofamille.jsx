@@ -14,6 +14,13 @@ import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 
+import OMSGraphs from "../components/OMSGraphs";
+
+import poidsAge from "../assets/oms/poids-age.png";
+import tailleAge from "../assets/oms/taille-age.png";
+import muacAge from "../assets/oms/muac-age.png";
+import poidsTaille from "../assets/oms/poids-taille.png";
+
 
 const FamilyProfile = () => {
     const navigate = useNavigate();
@@ -281,6 +288,31 @@ const visiteList = [
 ];
 const [openFinSuivi, setOpenFinSuivi] = useState(false);
 const [openSuccess, setOpenSuccess] = useState(false);
+
+
+const omsGraphs = [
+  {
+    id: 1,
+    image: poidsAge,
+    alt: "Poids pour l'âge",
+  },
+  {
+    id: 2,
+    image: tailleAge,
+    alt: "Taille pour l'âge",
+  },
+  {
+    id: 3,
+    image: muacAge,
+    alt: "MUAC pour l'âge",
+  },
+  {
+    id: 4,
+    image: poidsTaille,
+    alt: "Poids pour la taille",
+  },
+]; 
+
 return (
   <div className="flex h-screen overflow-hidden bg-white">
   {/* Sidebar */}
@@ -466,6 +498,13 @@ return (
   </div>
 
 </div>
+
+
+{/* ==================== Courbes OMS ==================== */}
+<div className="mt-4">
+  <OMSGraphs graphs={omsGraphs} />
+</div> 
+
 <div className="mt-8 w-full">
   <Button
     title="Sortir du programme"
@@ -481,4 +520,3 @@ return (
 };
 
 export default FamilyProfile;
-
