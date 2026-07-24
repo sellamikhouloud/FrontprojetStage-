@@ -167,5 +167,3 @@ const [openModifier, setOpenModifier] = useState(false);
 };
 
 export default PopupDistributionfamille;
-
-
