@@ -13,10 +13,10 @@ const CardListDistribution = ({
     <div
       onClick={onClick}
       className="w-full min-h-[100px] rounded-[15px] border px-[15px] py-[15px] transition hover:shadow-sm cursor-pointer"
-      style={{
-        background: isGirl ? "#FFF2F5" : "#ECF8F7",
-        borderColor: isGirl ? "#F3D5D5" : "#DCE8E8",
-      }}
+     style={{
+  background: isGirl ? "#FFF2F5" : "#F8FBFC",
+  borderColor: "#E2E8F0",
+}}
     >
       {/* ================= MOBILE ================= */}
       <div className="block md:hidden">
