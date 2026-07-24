@@ -27,7 +27,8 @@ const ConfirmationForm = ({
           className="mr-3"
         />
 
-        <span className="font-semibold text-[16px] text-[#202124]">
+        <span className="font-semibold  text-[14px]
+      lg:text-[16px] text-[#202124]">
           Je confirme la remise de cette distribution à la famille
         </span>
       </div>

@@ -56,13 +56,17 @@ const ProductItem = ({
             ">
                 {quantity}
             </span>
-            <span className="
-            text-[#6E7976]
-            text-14px
-            leading-5
-            ">
-                {unit}
-            </span>
+            <span
+  className="
+    w-8
+    text-center
+    text-[#6E7976]
+    text-[16px]
+    leading-5
+  "
+>
+  {unit}
+</span>
         </div>
        </div> 
     )

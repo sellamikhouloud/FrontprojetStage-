@@ -176,16 +176,16 @@ export default function AjoutCoordinateur() {
   <Popup
     title="Enregistrer avec succès"
     image={SuccessImage}
-    id="COORD-001"
+    id="COORD-001" // replace later with the id returned by the API
     primaryButtonText="Voir le profil du coordinateur"
-    secondaryButtonText="Revenir au tableau de bord"
+    secondaryButtonText="Revenir à l'accueil"
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
-      navigate("/fiche-coordinateur");
+      navigate("/profil-coordinateur");
     }}
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
-      navigate("/dashboard");
+      navigate("/");
     }}
   />
 )}

@@ -1,6 +1,7 @@
 import Sidebar from "../components/Sidebar/Sidebar";
 import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import Card from "../components/Cards/Card";
+import CardPopup from "../components/Cards/Card2";
 import LaitInfantile from "../components/LaitInfantile";
 
 import ColisAlimentaire from "../components/ColisAlimentaire";
@@ -91,45 +92,97 @@ const navigate = useNavigate();
     quantity: "",
   });
 
-  return (
-    <div className="min-h-screen bg-white">
-  
- {/* Fixed sidebar */}
+return (
+  <div className="min-h-screen bg-white">
 
-<div
-  className="
-    fixed
-    inset-y-0
-    left-4
-    flex
-    items-center
-    z-50
-  "
->
-  <Sidebar />
-</div>
+    {/* Desktop fixed sidebar */}
+    <div
+      className="
+        hidden
+        lg:flex
+        fixed
+        inset-y-0
+        left-4
+        items-center
+        z-50
+      "
+    >
+      <Sidebar role="admin" />
+    </div>
 
-  {/* Page content */}
-<div className="ml-24 flex-1 overflow-y-auto px-5 pt-6 pb-8 lg:px-10 lg:pt-4 lg:pb-10 bg-white">
+    {/* Mobile sidebar (hamburger) */}
+    <div className="lg:hidden">
+      <Sidebar role="admin" />
+    </div>
 
+    {/* Mobile fixed white header */}
+    <div
+      className="
+        fixed
+        top-0
+        left-0
+        right-0
+        h-20
+        bg-white
+        z-40
+        lg:hidden
+      "
+    />
+
+    {/* Page content */}
+    <main
+      className="
+        flex-1
+        overflow-y-auto
+        bg-white
+
+        pt-20
+        lg:pt-4
+
+        px-4
+        lg:px-10
+
+        pb-8
+        lg:pb-10
+
+        lg:ml-24
+      "
+    >
         {/* Header */}
+        <div className="mb-0 lg:mb-6">
         <PageHeader
           leftTitle="Annuler"
           rightTitle="Voir historique des distributions"
           onBack={() => window.history.back()}
           onRightClick={() => {}}
         />
+        </div>
 
         {/* Family Card */}
-        <Card
-          enfant={enfant.enfant}
-          mere={enfant.mere}
-          sexe={enfant.sexe}
-          region={enfant.region}
-          naissance={enfant.naissance}
-          code={enfant.code}
-          badges={enfant.badges}
-        />
+       {/* Mobile */}
+<div className="block lg:hidden mt-4">
+  <CardPopup
+    enfant={enfant.enfant}
+    sexe={enfant.sexe}
+    region={enfant.region}
+    naissance={enfant.naissance}
+    code={enfant.code}
+    badges={enfant.badges}
+  />
+</div>
+
+{/* Desktop */}
+<div className="hidden lg:block">
+  <Card
+    enfant={enfant.enfant}
+    mere={enfant.mere}
+    sexe={enfant.sexe}
+    region={enfant.region}
+    naissance={enfant.naissance}
+    code={enfant.code}
+    badges={enfant.badges}
+  />
+</div>
 
         {/* Rest of page */}
       {/* Main content */}
@@ -157,7 +210,7 @@ const navigate = useNavigate();
     Date de la distribution
   </h3>
 
-  <div className="grid grid-cols-2 gap-2 items-end">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-end">
     <DateContainer
       value={date}
       onChange={setDate}
@@ -190,23 +243,34 @@ const navigate = useNavigate();
     <LaitInfantile />
 
     {/* Temporary confirmation */}
-   <ConfirmationForm
-  checked={confirmed}
-  onChange={(e) => setConfirmed(e.target.checked)}
-  error={!confirmed}
-  errorMessage="Veuillez confirmer la remise avant d'enregistrer"
-/>
+  <div className="hidden lg:block">
+  <ConfirmationForm
+    checked={confirmed}
+    onChange={(e) => setConfirmed(e.target.checked)}
+    error={!confirmed}
+    errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+  />
+</div>
 
   </div>
 
   {/* RIGHT COLUMN */}
   <div>
-    <ColisAlimentaire
-      products={products}
-      onAddProduct={() => {}}
+  <ColisAlimentaire
+    products={products}
+    onAddProduct={() => {}}
+  />
+
+  {/* Mobile only */}
+  <div className="mt-4 lg:hidden">
+    <ConfirmationForm
+      checked={confirmed}
+      onChange={(e) => setConfirmed(e.target.checked)}
+      error={!confirmed}
+      errorMessage="Veuillez confirmer la remise avant d'enregistrer"
     />
   </div>
-
+</div>
 </div>
 
 {/* Save button */}
@@ -239,7 +303,7 @@ const navigate = useNavigate();
   />
 )}
 
-      </div>
+      </main>
     </div>
   );
 }

@@ -115,7 +115,7 @@ const LaitInfantile = () => {
       value={boxes}
       onIncrement={() => setBoxes((v) => v + 1)}
       onDecrement={() => setBoxes((v) => Math.max(0, v - 1))}
-      mobileWidth="w-[50px]"
+      mobileWidth="w-[60px]"
       desktopWidth="lg:w-[70px]"
     />
   </div>

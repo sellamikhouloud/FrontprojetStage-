@@ -23,7 +23,7 @@ const InfoHeader = ({
         <img
           src={icon}
           alt=""
-          className="w-5 h-5 lg:w-6 lg:h-6"
+          className="w-6 h-6 lg:w-6 lg:h-6"
         />
 
         <span
