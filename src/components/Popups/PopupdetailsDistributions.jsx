@@ -151,23 +151,10 @@ const PopupDetailDistribution = ({
 
             {/* Colonne droite */}
           <div className="space-y-3 sm:ml-2">
-              <InfoCard
-                title="Colis alimentaire"
-                data={[
-                  {
-                    label: "Céréales",
-                    value: distribution.cereales,
-                  },
-                  {
-                    label: "Sucre",
-                    value: distribution.sucre,
-                  },
-                  {
-                    label: "Sel",
-                    value: distribution.sel,
-                  },
-                ]}
-              />
+             <InfoCard
+  title="Colis alimentaire"
+  data={distribution.colisAlimentaire || []}
+/>
             </div>
           </div>
 
