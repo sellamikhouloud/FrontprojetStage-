@@ -11,14 +11,14 @@ const PageHeader = ({
   return (
     <div
       className="
-        w-full
         flex
-        items-center
-        justify-between
-        gap-4
-        py-3
+        flex-col
+        gap-3
+        lg:flex-row
+        lg:justify-between
+        lg:items-center
       "
-    >
+      >
       {/* Partie gauche */}
       <div className="flex items-center gap-2 min-w-0">
         <img
