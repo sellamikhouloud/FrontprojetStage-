@@ -28,8 +28,6 @@ const [appliedFilters, setAppliedFilters] = useState({
  const distributions = [
   {
     id: 1,
-
-    // Carte
     nom: "Aïcha Mint Mohamed",
     code: "GDK-2026-003",
     sexe: "Fille",
@@ -38,13 +36,6 @@ const [appliedFilters, setAppliedFilters] = useState({
     numeroDistribution: 1,
     date: "15/05/2026",
 
-    produits: [
-      { nom: "Lait thérapeutique", quantite: "2 boîtes" },
-      { nom: "Riz", quantite: "5 kg" },
-      { nom: "Huile", quantite: "1 L" },
-    ],
-
-    // Popup
     enfant: "Aïcha Mint Mohamed",
     mere: "Meriem Mint Ahmed",
     region: "Lexeiba",
@@ -55,6 +46,11 @@ const [appliedFilters, setAppliedFilters] = useState({
     typeLait: "2ème âge (6–12 mois)",
     nombreBoites: "2 boîtes",
     poidsTotal: "1600 g",
+ produits: [
+    { nom: "Lait thérapeutique", quantite: "2 boîtes" },
+    { nom: "Riz", quantite: "5 kg" },
+    { nom: "Huile", quantite: "1 L" },
+  ],
 
     colisAlimentaire: [
       { label: "Riz", value: "5 kg" },
@@ -62,43 +58,6 @@ const [appliedFilters, setAppliedFilters] = useState({
       { label: "Sucre", value: "2 kg" },
       { label: "Farine", value: "3 kg" },
     ],
-
-    success: true,
-  },
-
-  {
-    id: 2,
-
-    nom: "Mohamed Ould Ahmed",
-    code: "GDK-2026-004",
-    sexe: "Fils",
-
-    distribution: "Distribution 2",
-    numeroDistribution: 2,
-    date: "20/05/2026",
-
-    produits: [
-      { nom: "Lait infantile", quantite: "3 boîtes" },
-      { nom: "Farine", quantite: "4 kg" },
-    ],
-
-    enfant: "Mohamed Ould Ahmed",
-    mere: "Khadijetou Mint Mohamed",
-    region: "Nouakchott",
-    dateNaissance: "05 janvier 2025",
-
-    enregistrePar: "Administrateur",
-
-    typeLait: "1er âge (0–6 mois)",
-    nombreBoites: "3 boîtes",
-    poidsTotal: "2400 g",
-
-    colisAlimentaire: [
-      { label: "Farine", value: "4 kg" },
-      { label: "Huile", value: "2 L" },
-    ],
-
-    success: false,
   },
 ];
 const filtered = distributions.filter((item) => {
@@ -300,30 +259,10 @@ if (isFilterOpen && isMobile) {
   distribution={item.distribution}
   date={item.date}
   produits={item.produits}
-  onClick={() => {
-    setSelectedDistribution({
-      ...item,
-
-      numeroDistribution: item.distribution,
-
-      enfant: item.nom,
-      mere: "Meriem",
-      region: "Lexeiba",
-      dateNaissance: "12 mars 2026",
-
-      enregistrePar: "Admin",
-
-      typeLait: "Lait infantile",
-      nombreBoites: "2",
-      poidsTotal: "1,8 kg",
-
-      cereales: "8 kg",
-      sucre: "2 kg",
-      sel: "1 kg",
-    });
-
-    setIsPopupOpen(true);
-  }}
+ onClick={() => {
+  setSelectedDistribution(item);
+  setIsPopupOpen(true);
+}}
 />
             ))}
 
