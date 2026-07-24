@@ -15,6 +15,7 @@ const ProductItem = ({
        border-[#4E9F8A]
        rounded-[20px]
        px-4
+       bg-white
        ">
         <div className="
         flex
