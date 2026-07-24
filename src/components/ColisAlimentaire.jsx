@@ -11,7 +11,7 @@ const ColisAlimentaire = ({
   onAddProduct,
 }) => {
 
-   const [showNewProduct, setShowNewProduct] = useState(false);
+const [newProducts, setNewProducts] = useState([]);
 
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -52,26 +52,47 @@ const ColisAlimentaire = ({
       
       <div className="mt-5">
   <Button
-    icon={Plus}
-    title="Ajouter un autre produit"
-    variant="ajouter"
-    noPadding
-    onClick={() => setShowNewProduct(true)}
-    className="
-      w-full
-      h-[56px]
-      rounded-[20px]
-    "
-  />
+  icon={Plus}
+  title="Ajouter un autre produit"
+  variant="ajouter"
+  noPadding
+  onClick={() =>
+    setNewProducts([
+      ...newProducts,
+      {
+        id: Date.now(),
+        name: "",
+        unit: "",
+        quantity: "",
+      },
+    ])
+  }
+  className="
+    w-full
+    h-[56px]
+    rounded-[20px]
+  "
+/>
 </div>
 
-     {showNewProduct && (
+     {newProducts.map((product) => (
   <NewProductCard
-    product={newProduct}
-    setProduct={setNewProduct}
-    onClose={() => setShowNewProduct(false)}
+    key={product.id}
+    product={product}
+    setProduct={(updatedProduct) =>
+      setNewProducts(
+        newProducts.map((p) =>
+          p.id === product.id ? updatedProduct : p
+        )
+      )
+    }
+    onClose={() =>
+      setNewProducts(
+        newProducts.filter((p) => p.id !== product.id)
+      )
+    }
   />
-)}
+))}
 
       </div>
 

@@ -12,11 +12,16 @@ import Huile from "../assets/Huile.svg";
 import Sucre from "../assets/Sucre.svg";
 import Sel from "../assets/Sel.svg";
 
-
+import { useNavigate } from "react-router-dom";
 import DateContainer from "../components/Containers/DateContainer";
 import InfoCard from "../components/Containers/AfficherContainer";
 import InfoHeader from "../components/Containers/InfoBanner";
 import Button from "../components/Button/Button";
+
+import ConfirmationForm from "../components/Forms/ConfirmationForm";
+
+import Popup from "../components/Popups/SuccessPopup";
+import SuccessImage from "../assets/Success.svg";
 
 export default function AjoutDistribution() {
   const enfant = {
@@ -77,7 +82,9 @@ export default function AjoutDistribution() {
 ];
  const [showNewProduct, setShowNewProduct] = useState(false);
  const [date, setDate] = useState(new Date("2026-06-18"));
-
+ const [confirmed, setConfirmed] = useState(false);
+ const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
     name: "",
     unit: "",
@@ -85,7 +92,7 @@ export default function AjoutDistribution() {
   });
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA]">
+    <div className="min-h-screen bg-white">
   
  {/* Fixed sidebar */}
 
@@ -103,7 +110,7 @@ export default function AjoutDistribution() {
 </div>
 
   {/* Page content */}
- <div className="ml-24 flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
+<div className="ml-24 flex-1 overflow-y-auto px-5 pt-6 pb-8 lg:px-10 lg:pt-4 lg:pb-10 bg-white">
 
         {/* Header */}
         <PageHeader
@@ -126,10 +133,10 @@ export default function AjoutDistribution() {
 
         {/* Rest of page */}
       {/* Main content */}
-<div className="mt-6 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
+<div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
 
   {/* LEFT COLUMN */}
-  <div className="flex flex-col gap-5">
+  <div className="flex flex-col gap-4">
 
     {/* Last distribution */}
     <InfoHeader
@@ -138,7 +145,7 @@ export default function AjoutDistribution() {
     />
 
    {/* Date + Distribution number */}
-<div className="flex flex-col gap-1">
+<div className="flex flex-col gap-0">
   <h3
     className="
       text-[16px]
@@ -150,7 +157,7 @@ export default function AjoutDistribution() {
     Date de la distribution
   </h3>
 
-  <div className="grid grid-cols-2 gap-4 items-end">
+  <div className="grid grid-cols-2 gap-2 items-end">
     <DateContainer
       value={date}
       onChange={setDate}
@@ -183,32 +190,12 @@ export default function AjoutDistribution() {
     <LaitInfantile />
 
     {/* Temporary confirmation */}
-    <div
-      className="
-        h-[52px]
-        rounded-[15px]
-        border
-        border-[#D1D5DB]
-        bg-white
-        flex
-        items-center
-        px-4
-      "
-    >
-      <input
-        type="checkbox"
-        className="mr-3"
-      />
-
-      <span className="font-medium text-[15px]">
-        Je confirme la remise de cette distribution à la famille
-      </span>
-    </div>
-
-    {/* Temporary error */}
-    <p className="text-[#EF4444] text-[14px]">
-      Veuillez confirmer la remise avant d'enregistrer
-    </p>
+   <ConfirmationForm
+  checked={confirmed}
+  onChange={(e) => setConfirmed(e.target.checked)}
+  error={!confirmed}
+  errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+/>
 
   </div>
 
@@ -223,13 +210,34 @@ export default function AjoutDistribution() {
 </div>
 
 {/* Save button */}
-<div className="mt-8">
+<div className="mt-2">
   <Button
     title="Enregistrer"
     variant="save"
-    fullWidth
+    noPadding
+    onClick={() => setShowSuccessPopup(true)}
   />
 </div>
+{showSuccessPopup && (
+  <Popup
+    title="Distribution enregistrée avec succès"
+    image={SuccessImage}
+    primaryButtonText="Voir le détail de la distribution"
+    secondaryButtonText="Revenir à l'accueil"
+    onPrimaryClick={() => {
+      setShowSuccessPopup(false);
+
+      // Navigate to distribution details
+      // navigate(`/distribution/${id}`);
+    }}
+    onSecondaryClick={() => {
+      setShowSuccessPopup(false);
+
+      // Navigate to home
+      // navigate("/");
+    }}
+  />
+)}
 
       </div>
     </div>
