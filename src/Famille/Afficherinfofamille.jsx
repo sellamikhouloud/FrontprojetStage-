@@ -96,7 +96,7 @@ const distributionList = [
     distribution: "Distribution 1",
     date: "15/05/2026",
     produits: [
-      { nom: "Lait thérapeutique", quantite: "2 boîtes" },
+      { nom: "Lait infantile", quantite: "2 boîtes" },
       { nom: "Riz", quantite: "5 kg" },
       { nom: "Huile", quantite: "1 L" },
     ],
@@ -162,16 +162,7 @@ const distributionList = [
     nombreBoites: "3 boîtes",
     poidsTotal: "2400 g",
 
-    colisAlimentaire: [
-      {
-        label: "Farine",
-        value: "4 kg",
-      },
-      {
-        label: "Huile",
-        value: "2 L",
-      },
-    ],
+  
   },
 
   {
@@ -199,46 +190,21 @@ const distributionList = [
     nombreBoites: "1 boîte",
     poidsTotal: "800 g",
 
-    colisAlimentaire: [
-      {
-        label: "Riz",
-        value: "3 kg",
-      },
-      {
-        label: "Lentilles",
-        value: "2 kg",
-      },
-      {
-        label: "Sel",
-        value: "1 kg",
-      },
-      {
-        label: "Sucre",
-        value: "1 kg",
-      },
-    ],
+   
   },
 ];
 
 const visiteList = [
   {
     id: 1,
-
     numeroVisite: 1,
-
     enfant: "Aïcha Mint Mohamed",
     mere: "Meriem",
-
     sexe: "Fille",
-
     region: "Lexeiba",
-
     dateNaissance: "15/05/2026",
-
     code: "GDK-2026-003",
-
     date: "15/05/2026",
-
     enregistrePar: "Coordinateur",
 
     nourrisson: {
@@ -254,35 +220,200 @@ const visiteList = [
     },
 
     statuts: [
-      {
-        type: "mam",
-        text: "MAS nourrisson",
-      },
-      {
-        type: "mere",
-        text: "Mère normale",
-      },
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
     ],
 
     observationNourrisson: "Observation nourrisson",
-
     observationMere: "Observation mère",
-
     evaluationFamiliale: "Famille stable",
 
-    // uniquement pour CardPopupvisite
     visite: "Visite 1",
     poids: "500",
     taille: "35",
     badges: [
-      {
-        type: "mam",
-        text: "MAS nourrisson",
-      },
-      {
-        type: "mere",
-        text: "Mère normale",
-      },
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
+
+  {
+    id: 2,
+    numeroVisite: 2,
+    enfant: "Mohamed Ould Ahmed",
+    mere: "Fatimata",
+    sexe: "Garçon",
+    region: "Rosso",
+    dateNaissance: "20/04/2026",
+    code: "GDK-2026-004",
+    date: "20/06/2026",
+    enregistrePar: "Agent de santé",
+
+    nourrisson: {
+      poids: 610,
+      taille: 38,
+      muac: 118,
+    },
+
+    mereMesure: {
+      poids: 58,
+      taille: 162,
+      muac: 250,
+    },
+
+    statuts: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+
+    observationNourrisson:
+      "Bonne prise de poids depuis la dernière visite.",
+    observationMere:
+      "État nutritionnel satisfaisant.",
+    evaluationFamiliale:
+      "Famille coopérative.",
+
+    visite: "Visite 2",
+    poids: "610",
+    taille: "38",
+    badges: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
+
+  {
+    id: 3,
+    numeroVisite: 3,
+    enfant: "Khadijetou Mohamed",
+    mere: "Aminata",
+    sexe: "Fille",
+    region: "Kaédi",
+    dateNaissance: "05/03/2026",
+    code: "GDK-2026-005",
+    date: "10/07/2026",
+    enregistrePar: "Infirmier",
+
+    nourrisson: {
+      poids: 720,
+      taille: 41,
+      muac: 123,
+    },
+
+    mereMesure: {
+      poids: 60,
+      taille: 165,
+      muac: 255,
+    },
+
+    statuts: [
+      { type: "good", text: "Nourrisson normal" },
+      { type: "mere", text: "Mère normale" },
+    ],
+
+    observationNourrisson:
+      "Croissance normale.",
+    observationMere:
+      "Aucun problème détecté.",
+    evaluationFamiliale:
+      "Environnement favorable.",
+
+    visite: "Visite 3",
+    poids: "720",
+    taille: "41",
+    badges: [
+      { type: "good", text: "Nourrisson normal" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
+
+  {
+    id: 4,
+    numeroVisite: 4,
+    enfant: "Abdoulaye Diallo",
+    mere: "Hawa",
+    sexe: "Garçon",
+    region: "Boghé",
+    dateNaissance: "12/02/2026",
+    code: "GDK-2026-006",
+    date: "15/08/2026",
+    enregistrePar: "Coordinateur",
+
+    nourrisson: {
+      poids: 690,
+      taille: 40,
+      muac: 115,
+    },
+
+    mereMesure: {
+      poids: 52,
+      taille: 160,
+      muac: 232,
+    },
+
+    statuts: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "risk", text: "Mère à risque" },
+    ],
+
+    observationNourrisson:
+      "Suivi nutritionnel recommandé.",
+    observationMere:
+      "Complément alimentaire conseillé.",
+    evaluationFamiliale:
+      "Visites régulières nécessaires.",
+
+    visite: "Visite 4",
+    poids: "690",
+    taille: "40",
+    badges: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "risk", text: "Mère à risque" },
+    ],
+  },
+
+  {
+    id: 5,
+    numeroVisite: 5,
+    enfant: "Mariem Ould Salem",
+    mere: "Khadija",
+    sexe: "Fille",
+    region: "Nouakchott",
+    dateNaissance: "18/01/2026",
+    code: "GDK-2026-007",
+    date: "18/09/2026",
+    enregistrePar: "Sage-femme",
+
+    nourrisson: {
+      poids: 810,
+      taille: 44,
+      muac: 128,
+    },
+
+    mereMesure: {
+      poids: 63,
+      taille: 167,
+      muac: 260,
+    },
+
+    statuts: [
+      { type: "good", text: "Nourrisson normal" },
+      { type: "mere", text: "Mère normale" },
+    ],
+
+    observationNourrisson:
+      "Développement satisfaisant.",
+    observationMere:
+      "Bonne santé générale.",
+    evaluationFamiliale:
+      "Famille stable et autonome.",
+
+    visite: "Visite 5",
+    poids: "810",
+    taille: "44",
+    badges: [
+      { type: "good", text: "Nourrisson normal" },
+      { type: "mere", text: "Mère normale" },
     ],
   },
 ];
