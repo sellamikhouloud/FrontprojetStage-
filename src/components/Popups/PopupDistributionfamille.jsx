@@ -33,6 +33,7 @@ const [openModifier, setOpenModifier] = useState(false);
   justify-center
 
   overflow-y-auto
+  scrollbar-hide
 "
   onClick={onClose}
 >

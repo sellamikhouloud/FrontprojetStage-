@@ -42,6 +42,7 @@ const PopuphistoriqueDistribution = ({
             justify-center
 
             overflow-y-auto
+            scrollbar-hide
           "
         >
           <motion.div

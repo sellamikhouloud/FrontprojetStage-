@@ -45,7 +45,14 @@ useEffect(() => {
     { label: "Poids total", value: distribution.poidsTotal },
   ]);
 
-  setColisInfo(distribution.colisAlimentaire || []);
+ setColisInfo(
+  (distribution.produits || [])
+    .filter((item) => !item.nom.toLowerCase().includes("lait"))
+    .map((item) => ({
+      label: item.nom,
+      value: item.quantite,
+    }))
+);
 }, [distribution]);
 
 const handleSave = () => {
@@ -60,9 +67,16 @@ const handleSave = () => {
     nombreBoites: laitInfo[1]?.value,
     poidsTotal: laitInfo[2]?.value,
 
-    cereales: colisInfo[0]?.value,
-    sucre: colisInfo[1]?.value,
-    sel: colisInfo[2]?.value,
+  produits: [
+  {
+    nom: distribution.produits[0].nom, // le lait reste inchangé
+    quantite: distribution.produits[0].quantite,
+  },
+  ...colisInfo.map((item) => ({
+    nom: item.label,
+    quantite: item.value,
+  })),
+],
   };
 
  setShowBanner(true);

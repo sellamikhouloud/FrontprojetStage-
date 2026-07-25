@@ -195,24 +195,7 @@ const distributionList = [
     poidsTotal: "1600 g",
 
     // Colis alimentaire (dynamique)
-    colisAlimentaire: [
-      {
-        label: "Riz",
-        value: "5 kg",
-      },
-      {
-        label: "Huile",
-        value: "1 L",
-      },
-      {
-        label: "Sucre",
-        value: "2 kg",
-      },
-      {
-        label: "Farine",
-        value: "3 kg",
-      },
-    ],
+    
   },
 
   {
@@ -239,16 +222,7 @@ const distributionList = [
     nombreBoites: "3 boîtes",
     poidsTotal: "2400 g",
 
-    colisAlimentaire: [
-      {
-        label: "Farine",
-        value: "4 kg",
-      },
-      {
-        label: "Huile",
-        value: "2 L",
-      },
-    ],
+   
   },
 
   {
@@ -276,24 +250,7 @@ const distributionList = [
     nombreBoites: "1 boîte",
     poidsTotal: "800 g",
 
-    colisAlimentaire: [
-      {
-        label: "Riz",
-        value: "3 kg",
-      },
-      {
-        label: "Lentilles",
-        value: "2 kg",
-      },
-      {
-        label: "Sel",
-        value: "1 kg",
-      },
-      {
-        label: "Sucre",
-        value: "1 kg",
-      },
-    ],
+   
   },
 ];
 
@@ -557,4 +514,6 @@ return (
 };
 
 export default Modifyfamilly ;
+
+
 

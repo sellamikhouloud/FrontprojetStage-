@@ -152,9 +152,19 @@ const PopupDetailDistribution = ({
 
             {/* Colonne droite */}
           <div className="space-y-3 sm:ml-2">
-             <InfoCard
+           <InfoCard
   title="Colis alimentaire"
-  data={distribution.colisAlimentaire || []}
+  data={
+    (distribution.produits || [])
+      .filter(
+        (item) =>
+          !item.nom.toLowerCase().includes("lait")
+      )
+      .map((item) => ({
+        label: item.nom,
+        value: item.quantite,
+      }))
+  }
 />
             </div>
           </div>
