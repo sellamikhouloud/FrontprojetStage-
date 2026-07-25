@@ -1,21 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
 import PageHeader from "../Navigation,Pageheader/PageHeader";
 import Button from "../Button/Button";
+
 import Modify from "../../assets/Modify.svg";
 
-const initialProducts = [
-  { title: "Lait", quantity: 1, unit: "boîtes" },
-  { title: "Céréales", quantity: 1, unit: "Kg" },
-  { title: "Huile", quantity: 1, unit: "Litres" },
-  { title: "Sucre", quantity: 1, unit: "Kg" },
-  { title: "Sel iodé", quantity: 1, unit: "Kg" },
-  { title: "Légumineuses", quantity: 1, unit: "Kg" },
-  { title: "Farine de blé", quantity: 1, unit: "Kg" },
-  { title: "Pâtes alimentaires", quantity: 1, unit: "Kg" },
-];
-
-const EditStockPopup = ({ onClose, onSave }) => {
+const EditStockPopup = ({
+  products: initialProducts = [],
+  onClose,
+  onSave,
+}) => {
   const [products, setProducts] = useState(initialProducts);
+
+  useEffect(() => {
+    setProducts(initialProducts);
+  }, [initialProducts]);
 
   const handleChange = (index, value) => {
     const updated = [...products];
@@ -68,24 +67,27 @@ const EditStockPopup = ({ onClose, onSave }) => {
                 {product.title}
               </span>
 
-              <div className="
-                    flex
-                    items-center
-                    justify-center
-                    gap-[6px]
-                    px-[14px]
-                    h-[30px]
-                    rounded-[10px]
-                    bg-[#FFE6EC]
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-center
+                  gap-[6px]
+                  px-[14px]
+                  h-[30px]
+                  rounded-[10px]
+                  bg-[#FFE6EC]
                 "
-                >
+              >
                 <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={3}
-                    value={product.quantity}
-                    onChange={(e) => handleChange(index, e.target.value)}
-                    className="
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={3}
+                  value={product.quantity}
+                  onChange={(e) =>
+                    handleChange(index, e.target.value)
+                  }
+                  className="
                     w-[35px]
                     bg-transparent
                     text-[#EF4444]
@@ -93,13 +95,13 @@ const EditStockPopup = ({ onClose, onSave }) => {
                     font-bold
                     text-center
                     outline-none
-                    "
+                  "
                 />
 
                 <span className="text-[14px] whitespace-nowrap">
-                    {product.unit}
+                  {product.unit}
                 </span>
-                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -110,7 +112,7 @@ const EditStockPopup = ({ onClose, onSave }) => {
             variant="modifier"
             icon={Modify}
             noWrapperPadding
-            onClick={() => onSave?.(products)}
+            onClick={() => onSave(products)}
           />
         </div>
       </div>
