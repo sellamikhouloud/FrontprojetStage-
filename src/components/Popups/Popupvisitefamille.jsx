@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
 import quitter from "../../assets/quitter.svg";
-
+import { useState } from "react";
 import PopupDetailVisite from "./Popupdetailsvisite";
-import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
 import CardPopupvisite from "../Cards/cardvisite";
+import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
 
 const Popupvisites = ({
   open,
@@ -100,7 +99,8 @@ const Popupvisites = ({
                 className="
                   mt-5
                   text-center
-                  text-[22px] sm:text-[24px]
+                  text-[22px]
+                  sm:text-[24px]
                   font-semibold
                   text-[#1E1E1E]
                 "
@@ -109,7 +109,7 @@ const Popupvisites = ({
               </h2>
             </div>
 
-            {/* Liste des visites */}
+            {/* Cartes */}
             <div
               className="
                 space-y-4
@@ -117,8 +117,10 @@ const Popupvisites = ({
                 sm:max-h-[60vh]
                 sm:overflow-y-auto
 
-                pr-1
+                scrollbar-hide
+
                 pb-2
+                pr-1
               "
             >
               {Visites.length ? (
