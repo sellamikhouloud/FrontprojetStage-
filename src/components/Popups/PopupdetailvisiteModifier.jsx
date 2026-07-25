@@ -118,6 +118,7 @@ useEffect(() => {
     justify-center
 
     overflow-y-auto
+    scrollbar-hide
   "
   onClick={onClose}
 >
