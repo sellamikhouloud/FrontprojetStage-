@@ -236,9 +236,91 @@ const visiteList = [
       { type: "mere", text: "Mère normale" },
     ],
   },
+   {
+    id: 2,
+    numeroVisite: 1,
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "15/05/2026",
+    code: "GDK-2026-003",
+    date: "15/05/2026",
+    enregistrePar: "Coordinateur",
+
+    nourrisson: {
+      poids: 500,
+      taille: 35,
+      muac: 112,
+    },
+
+    mereMesure: {
+      poids: 55,
+      taille: "-",
+      muac: 240,
+    },
+
+    statuts: [
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+
+    observationNourrisson: "Observation nourrisson",
+    observationMere: "Observation mère",
+    evaluationFamiliale: "Famille stable",
+
+    visite: "Visite 1",
+    poids: "500",
+    taille: "35",
+    badges: [
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
+   {
+    id: 3,
+    numeroVisite: 1,
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "15/05/2026",
+    code: "GDK-2026-003",
+    date: "15/05/2026",
+    enregistrePar: "Coordinateur",
+
+    nourrisson: {
+      poids: 500,
+      taille: 35,
+      muac: 112,
+    },
+
+    mereMesure: {
+      poids: 55,
+      taille: "-",
+      muac: 240,
+    },
+
+    statuts: [
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+
+    observationNourrisson: "Observation nourrisson",
+    observationMere: "Observation mère",
+    evaluationFamiliale: "Famille stable",
+
+    visite: "Visite 1",
+    poids: "500",
+    taille: "35",
+    badges: [
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
 
   {
-    id: 2,
+    id: 4,
     numeroVisite: 2,
     enfant: "Mohamed Ould Ahmed",
     mere: "Fatimata",

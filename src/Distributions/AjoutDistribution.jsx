@@ -92,6 +92,17 @@ const navigate = useNavigate();
       quantite: `${p.quantity} ${p.unit}`,
     })),
   },
+   {
+    id: 2,
+    enfant: enfant.enfant,
+    code: enfant.code,
+    distribution: "Distribution 2",
+    date: "30/06/2026",
+    produits: products.map((p) => ({
+      nom: p.title,
+      quantite: `${p.quantity} ${p.unit}`,
+    })),
+  },
 
 ];
 

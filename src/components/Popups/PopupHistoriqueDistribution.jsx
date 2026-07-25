@@ -29,20 +29,17 @@ const PopuphistoriqueDistribution = ({
       {open && (
         <div
           className="
-            fixed
-            inset-0
-            z-50
+            fixed inset-0 z-50
 
-            bg-[#9A9A9A]/60
+            bg-transparent
+            sm:bg-black/40
 
             flex
             items-start
             sm:items-center
-
             justify-center
 
             overflow-y-auto
-            scrollbar-hide
           "
         >
           <motion.div
@@ -50,13 +47,18 @@ const PopuphistoriqueDistribution = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
             className="
               w-full
 
               min-h-screen
-              sm:min-h-0
 
-              sm:max-w-[620px]
+              sm:min-h-0
+              sm:w-[620px]
+              sm:max-h-[90vh]
+
+              overflow-y-auto
+              scrollbar-hide
 
               bg-white
 
@@ -69,10 +71,13 @@ const PopuphistoriqueDistribution = ({
 
               shadow-none
               sm:shadow-2xl
+
+              p-4
+              sm:p-6
             "
           >
             {/* Header */}
-            <div className="px-5 sm:px-6 pt-5">
+            <div className="mb-5">
               <button
                 onClick={onClose}
                 className="
@@ -126,22 +131,17 @@ const PopuphistoriqueDistribution = ({
             {/* Cartes */}
             <div
               className="
-                px-5
-                sm:px-6
-
-                pb-6
-
                 mt-5
 
-                flex-1
+                space-y-4
 
-                max-h-none
-                sm:max-h-[500px]
+                sm:max-h-[55vh]
+                sm:overflow-y-auto
 
-                overflow-y-auto
                 scrollbar-hide
 
-                space-y-4
+                pb-2
+                pr-1
               "
             >
               {data.length ? (
