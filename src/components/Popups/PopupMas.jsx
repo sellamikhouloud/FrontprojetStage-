@@ -1,7 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import quitter from "../assets/quitter.svg";
-import CardPopup from "./card2";
+import quitter from "../../assets/quitter.svg";
+import CardPopup from "../Cards/card2";
 
 const PopupMas = ({
   open,
@@ -17,7 +17,7 @@ const PopupMas = ({
             inset-0
             z-50
 
-            bg-white
+            bg-[#9A9A9A]/60
 
             flex
             items-start

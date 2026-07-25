@@ -10,14 +10,21 @@ import DistributionCard from "../components/DashbordCard/DistributionCard";
 import CoordinatorCard from "../components/DashbordCard/CoordinatorCard";
 import ZakatCard from "../components/DashbordCard/ZakatCard";
 import DonorCard from "../components/DashbordCard/DonorCard";
+import PopupRetard from "../components/Popups/Popupvisiteretard";
+import PopupMas from "../components/Popups/PopupMas";
 
 import AttentionIcon from "../assets/Attention.svg";
 import RetardIcon from "../assets/retard.svg";
 
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import PopupDistribution from "../components/Popups/Popupdistributions";
 
 const Dashboard = () => {
      const navigate = useNavigate();
+     const [showHistorique, setShowHistorique] = useState(false);
+     
+    
   /* ==========================
     Welcome
 ========================== */
@@ -145,6 +152,17 @@ const products = [
   },
 ];
 
+ const distributionHistory = [
+  {
+    id: 1,
+    enfant: "Aïcha Mint Mohamed",
+    code: "GDK-2026-003",
+    distribution: "Distribution numéro 02",
+    date: "15/05/2026",
+    produits: products,
+  },
+];
+
 /* ==========================
     Coordinators
 ========================== */
@@ -184,6 +202,46 @@ const donorTitle = "Donateurs";
 const totalDonors = 185;
 const activeDonors = 134;
 const newDonorsThisMonth = 18;
+
+
+const [showRetard, setShowRetard] = useState(false);
+
+const familleRetard = [
+  {
+    id: 1,
+    sexe: "Fille",
+    enfant: "Aïcha Mint Mohamed",
+    region: "Lexeiba",
+    naissance: "12 mars 2026",
+    code: "GDK-2026-003",
+    badges: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "mere", text: "Mère normale" },
+      { type: "retard", text: "Visite en retard" },
+    ],
+  },
+  
+  // ...more entries
+];
+
+const [showMas, setShowMas] = useState(false); 
+
+const familleMas = [
+  {
+    id: 1,
+    sexe: "Fille",
+    enfant: "Aïcha Mint Mohamed",
+    region: "Lexeiba",
+    naissance: "12 mars 2026",
+    code: "GDK-2026-003",
+    badges: [
+      { type: "mas", text: "MAS sévère" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
+  // ...more entries
+];
+
   /* ==========================
       Handlers
   ========================== */
@@ -191,10 +249,15 @@ const newDonorsThisMonth = 18;
   const handleNotifications = () => {};
 
   const handleSettings = () => {};
-
-  const handleAlertClick = (alert) => {
+const handleAlertClick = (alert) => {
+  if (alert.title === "Malnutrition aiguë sévère") {
+    setShowMas(true);
+  } else if (alert.title === "Visites en retard") {
+    setShowRetard(true);
+  } else {
     console.log(alert);
-  };
+  }
+};
 
   return (
   <div className="min-h-screen">
@@ -318,13 +381,12 @@ const newDonorsThisMonth = 18;
 
 
           <DistributionCard
-  title={distributionTitle}
-  products={products}
-  dividerColor="#73C8C5"
-  viewAllText="Voir tous"
-  onClick={() => navigate("/list-distributions")}
-  //i did not fix this yet 
-/>
+            title={distributionTitle}
+            products={products}
+            dividerColor="#73C8C5"
+            viewAllText="Voir tous"
+            onClick={() => setShowHistorique(true)}
+          />
 
 
           <VisitsCard
@@ -420,7 +482,7 @@ const newDonorsThisMonth = 18;
               products={products}
               dividerColor="#73C8C5"
               viewAllText="Voir tous"
-              onClick={()=>console.log("Distribution")}
+              onClick={() => setShowHistorique(true)}
             />
 
 
@@ -484,6 +546,31 @@ const newDonorsThisMonth = 18;
       </main>
 
     </div>
+    {showHistorique && (
+  <PopupDistribution
+    title="Distributions ce mois"
+    items={[
+      { name: "Farine", value: 250, unit: "Kg" },
+      { name: "Huile", value: 180, unit: "L" },
+      { name: "Sucre", value: 320, unit: "Kg" },
+      { name: "Riz", value: 150, unit: "Kg" },
+      { name: "Riz", value: 150, unit: "Kg" },
+      { name: "Huile", value: 180, unit: "L" },
+      { name: "Huile", value: 180, unit: "L" },
+    ]}
+    onClose={() => setShowHistorique(false)}
+  />
+)}
+<PopupRetard
+  open={showRetard}
+  onClose={() => setShowRetard(false)}
+  familleretard={familleRetard}
+/>
+<PopupMas
+  open={showMas}
+  onClose={() => setShowMas(false)}
+  familleMas={familleMas}
+/>
 
   </div>
 );
