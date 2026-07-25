@@ -5,10 +5,12 @@ const DistributionCard = ({
   products = [],
   viewAllText = "Voir tous",
   dividerColor = "#73C8C5",
-  onClick,
+  onClick,        // card click -> navigate
+  onViewAllClick, // button click -> open popup
 }) => {
   return (
     <div
+      onClick={onClick}
       className="
         w-full
         bg-[#F8FBFC]
@@ -18,6 +20,7 @@ const DistributionCard = ({
         shadow-sm
         border
         border-[#BCCAC14D]
+        cursor-pointer
       "
     >
       {/* Header */}
@@ -33,7 +36,10 @@ const DistributionCard = ({
         </h2>
 
         <button
-          onClick={onClick}
+          onClick={(e) => {
+            e.stopPropagation();
+            onViewAllClick?.();
+          }}
           className="
             text-[18px]
             font-medium

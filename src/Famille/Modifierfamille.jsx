@@ -26,11 +26,15 @@ const { id } = useParams();
     { label: "Taille de naissance", value: "35 cm" },
   ]);
 
-  const [mere, setMere] = useState([
-    { label: "Village", value: "Lexeiba" },
-    { label: "Téléphone", value: "24123456" },
-    
-  ]);
+
+ const [mere, setMere] = useState([
+  { label: "Village", value: "Lexeiba" },
+  { label: "Téléphone", value: "24123456" },
+  { label: "Date de naissance", value: "15/05/1990" },
+  { label: "Statut matrimonial", value: "Mariée" },
+  { label: "Nombre d'enfants à charge", value: "2" },
+  { label: "Référent médical", value: "Mariam Diallo" },
+]);
 
   const [programme, setProgramme] = useState([
   {
@@ -509,4 +513,3 @@ return (
 };
 
 export default Modifyfamilly ;
-

@@ -379,13 +379,13 @@ const handleAlertClick = (alert) => {
             onClick={()=>console.log("Nutrition")}
           />
 
-
           <DistributionCard
             title={distributionTitle}
             products={products}
             dividerColor="#73C8C5"
             viewAllText="Voir tous"
-            onClick={() => setShowHistorique(true)}
+            onClick={() => navigate("/liste-distributions")}
+            onViewAllClick={() => setShowHistorique(true)}
           />
 
 
@@ -477,13 +477,14 @@ const handleAlertClick = (alert) => {
             />
 
 
-            <DistributionCard
-              title={distributionTitle}
-              products={products}
-              dividerColor="#73C8C5"
-              viewAllText="Voir tous"
-              onClick={() => setShowHistorique(true)}
-            />
+          <DistributionCard
+           title={distributionTitle}
+            products={products}
+            dividerColor="#73C8C5"
+            viewAllText="Voir tous"
+            onClick={() => navigate("/liste-distributions")}
+            onViewAllClick={() => setShowHistorique(true)}
+          />
 
 
             <CoordinatorCard
