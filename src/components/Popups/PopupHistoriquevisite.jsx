@@ -42,6 +42,7 @@ const Popuphistoriquevisite = ({
             justify-center
 
             overflow-y-auto
+            scrollbar-hide
           "
         >
           <motion.div
