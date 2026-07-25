@@ -2,40 +2,38 @@ import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 
-import CardPopupDistribution from  "../Cards/cardDistribution";
+import CardPopupDistribution from "../Cards/cardDistribution";
 import PopupDetailDistribution from "./PopupdetailsDistributions";
 import PopupDetailDistributionModifier from "./PopupdetailsDistributionsModifier";
+
 const PopupDistributionfamille = ({
   open,
   onClose,
   Distribution = [],
 }) => {
+  const [selectedDistribution, setSelectedDistribution] = useState(null);
+  const [openDetail, setOpenDetail] = useState(false);
+  const [openModifier, setOpenModifier] = useState(false);
 
-const [selectedDistribution, setSelectedDistribution] = useState(null);
-const [openDetail, setOpenDetail] = useState(false);
-const [openModifier, setOpenModifier] = useState(false);
   return (
     <AnimatePresence>
       {open && (
         <div
- className="
-  fixed
-  inset-0
-  z-50
+          className="
+            fixed inset-0 z-50
 
-  bg-transparent
-  sm:bg-black/30
+            bg-transparent
+            sm:bg-black/40
 
-  flex
-  items-start
-  sm:items-center
+            flex
+            items-start
+            sm:items-center
+            justify-center
 
-  justify-center
-
-  overflow-y-auto
-"
-  onClick={onClose}
->
+            overflow-y-auto
+          "
+          onClick={onClose}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -46,9 +44,13 @@ const [openModifier, setOpenModifier] = useState(false);
               w-full
 
               min-h-screen
-              sm:min-h-0
 
-              sm:max-w-[620px]
+              sm:min-h-0
+              sm:w-[620px]
+              sm:max-h-[90vh]
+
+              overflow-y-auto
+              scrollbar-hide
 
               bg-white
 
@@ -61,10 +63,13 @@ const [openModifier, setOpenModifier] = useState(false);
 
               shadow-none
               sm:shadow-2xl
+
+              p-4
+              sm:p-6
             "
           >
             {/* Header */}
-            <div className="px-5 sm:px-6 pt-5">
+            <div className="mb-5">
               <button
                 onClick={onClose}
                 className="
@@ -107,35 +112,31 @@ const [openModifier, setOpenModifier] = useState(false);
             {/* Cartes */}
             <div
               className="
-                px-5
-                sm:px-6
-
-                pb-6
-
                 mt-5
 
-                flex-1
-
-                max-h-none
-                sm:max-h-[420px]
-
-                overflow-y-auto
-
                 space-y-4
+
+                sm:max-h-[60vh]
+                sm:overflow-y-auto
+
+                scrollbar-hide
+
+                pb-2
+                pr-1
               "
             >
               {Distribution.length ? (
                 Distribution.map((item) => (
-                 <CardPopupDistribution
-  key={item.id}
-  distribution={item.distribution}
-  date={item.date}
-  produits={item.produits}
-  onClick={() => {
-    setSelectedDistribution(item);
-    setOpenDetail(true);
-  }}
-/>
+                  <CardPopupDistribution
+                    key={item.id}
+                    distribution={item.distribution}
+                    date={item.date}
+                    produits={item.produits}
+                    onClick={() => {
+                      setSelectedDistribution(item);
+                      setOpenDetail(true);
+                    }}
+                  />
                 ))
               ) : (
                 <div className="py-10 text-center text-gray-500">
@@ -147,21 +148,21 @@ const [openModifier, setOpenModifier] = useState(false);
         </div>
       )}
 
-     <PopupDetailDistribution
-  open={openDetail}
-  onClose={() => setOpenDetail(false)}
-  distribution={selectedDistribution}
-  onEdit={() => {
-    setOpenDetail(false);
-    setOpenModifier(true);
-  }}
-/>
+      <PopupDetailDistribution
+        open={openDetail}
+        onClose={() => setOpenDetail(false)}
+        distribution={selectedDistribution}
+        onEdit={() => {
+          setOpenDetail(false);
+          setOpenModifier(true);
+        }}
+      />
 
-<PopupDetailDistributionModifier
-  open={openModifier}
-  onClose={() => setOpenModifier(false)}
-  distribution={selectedDistribution}
-/>
+      <PopupDetailDistributionModifier
+        open={openModifier}
+        onClose={() => setOpenModifier(false)}
+        distribution={selectedDistribution}
+      />
     </AnimatePresence>
   );
 };
