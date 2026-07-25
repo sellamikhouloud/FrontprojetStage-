@@ -1,45 +1,50 @@
+import { NavLink } from "react-router-dom";
+
 export default function SidebarItem({
   item,
   expanded,
   onMouseEnter,
 }) {
   return (
-    <button
-      onMouseEnter={onMouseEnter}
-      className={`
-        flex
-        items-center
-        w-full
-        transition-all
-        duration-200
-        hover:scale-105
-        ${expanded ? "gap-3 justify-start" : "justify-center"}
-      `}
-    >
-      <img
-        src={item.icon}
-        alt={item.label}
-        className="
-          w-6
-          h-6
-          lg:w-7
-          lg:h-7
-        "
-      />
-
-      {expanded && (
-        <span
-          className="
-            text-white
-            font-semibold
-            whitespace-nowrap
-            text-[17px]
-            lg:text-[20px]
-          "
+    <NavLink to={item.path}>
+      {({ isActive }) => (
+        <button
+          onMouseEnter={onMouseEnter}
+          className={`
+            flex
+            items-center
+            transition-all
+            duration-200
+            hover:scale-105
+            ${expanded ? "justify-start gap-2 xl:gap-3" : "justify-center"}
+          `}
         >
-          {item.label}
-        </span>
+          <img
+            src={isActive ? item.activeIcon : item.icon}
+            alt={item.label}
+            className="
+              w-5 h-5
+              lg:w-6 lg:h-6
+              xl:w-6 xl:h-6
+            "
+          />
+
+          {expanded && (
+            <span
+              className="
+                whitespace-nowrap
+                text-white
+                font-semibold
+                text-[14px]
+                lg:text-[15px]
+                xl:text-[15px]
+              "
+            >
+              {item.label}
+            </span>
+          )}
+        </button>
       )}
-    </button>
+    </NavLink>
   );
 }

@@ -197,30 +197,14 @@ const newDonorsThisMonth = 18;
   };
 
   return (
-  <div className="min-h-screen">
-
-    <div
-      className="
-        flex
-        flex-col
-        lg:flex-row
-        gap-[30px]
-        p-[18px]
-        pt-[32px]
-      "
-    >
-
+ <div className="flex h-screen overflow-hidden bg-white">
+    {/* Sidebar */}
+    <div className="ml-5 flex-shrink-0">
+   
       <Sidebar role="admin" />
+   </div>
 
-
-      <main
-        className="
-          flex-1
-          flex
-          flex-col
-          gap-[25px]
-        "
-      >
+  <main className="flex-1 overflow-y-auto px-5 pt-18 py-5 md:pt-0 pb-8 lg:p-10 bg-white">
 
 
         {/* ================= MOBILE HEADER ================= */}
@@ -260,6 +244,8 @@ const newDonorsThisMonth = 18;
             flex
             flex-col
             gap-[8px]
+            pt-3
+            pb-3
             lg:grid
             lg:grid-cols-3
           "
@@ -483,8 +469,6 @@ const newDonorsThisMonth = 18;
       </main>
 
     </div>
-
-  </div>
 );
 };
 
