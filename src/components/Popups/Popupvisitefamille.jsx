@@ -1,55 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+
 import quitter from "../../assets/quitter.svg";
-import { useState } from "react";
+
 import PopupDetailVisite from "./Popupdetailsvisite";
+import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
 import CardPopupvisite from "../Cards/cardvisite";
-import  PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
 
 const Popupvisites = ({
   open,
   onClose,
   Visites = [],
 }) => {
-
-   const [openDetail, setOpenDetail] = useState(false);
+  const [openDetail, setOpenDetail] = useState(false);
   const [selectedVisite, setSelectedVisite] = useState(null);
-const [openModifier, setOpenModifier] = useState(false);
+  const [openModifier, setOpenModifier] = useState(false);
+
   return (
     <AnimatePresence>
       {open && (
-      <div
- className="
-  fixed
-  inset-0
-  z-50
-
-  bg-transparent
-  sm:bg-black/30
-
-  flex
-  items-start
-  sm:items-center
-
-  justify-center
-
-  overflow-y-auto
-"
-  onClick={onClose}
->
+        <div
+          className="
+            fixed inset-0 z-50
+            bg-transparent sm:bg-black/40
+            flex items-start sm:items-center justify-center
+            overflow-y-auto
+          "
+          onClick={onClose}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             className="
               w-full
-
               min-h-screen
-              sm:min-h-0
 
-              sm:max-w-[560px]
+              sm:min-h-0
+              sm:w-[560px]
+              sm:max-h-[90vh]
+
+              overflow-y-auto
+              scrollbar-hide
 
               bg-white
 
@@ -62,37 +56,34 @@ const [openModifier, setOpenModifier] = useState(false);
 
               shadow-none
               sm:shadow-2xl
+
+              p-4
+              sm:p-6
             "
           >
+            <PopupDetailVisite
+              open={openDetail}
+              onClose={() => setOpenDetail(false)}
+              visite={selectedVisite}
+              onEdit={() => {
+                setOpenDetail(false);
+                setOpenModifier(true);
+              }}
+            />
 
-         <PopupDetailVisite
-  open={openDetail}
-  onClose={() => setOpenDetail(false)}
-  visite={selectedVisite}
-  onEdit={() => {
-    setOpenDetail(false);
-    setOpenModifier(true);
-  }}
-/>
+            <PopupDetailVisiteModifier
+              open={openModifier}
+              onClose={() => setOpenModifier(false)}
+              visite={selectedVisite}
+            />
 
-
-<PopupDetailVisiteModifier
-  open={openModifier}
-  onClose={() => setOpenModifier(false)}
-  visite={selectedVisite}
-/>
             {/* Header */}
-            <div className="px-5 sm:px-6 pt-5">
+            <div className="mb-5">
               <button
                 onClick={onClose}
                 className="
-                  flex
-                  items-center
-                  gap-2
-
-                  text-[16px]
-                  sm:text-[17px]
-
+                  flex items-center gap-2
+                  text-[16px] sm:text-[17px]
                   hover:opacity-70
                   transition
                 "
@@ -108,12 +99,8 @@ const [openModifier, setOpenModifier] = useState(false);
               <h2
                 className="
                   mt-5
-
                   text-center
-
-                  text-[22px]
-                  sm:text-[24px]
-
+                  text-[22px] sm:text-[24px]
                   font-semibold
                   text-[#1E1E1E]
                 "
@@ -122,24 +109,16 @@ const [openModifier, setOpenModifier] = useState(false);
               </h2>
             </div>
 
-            {/* Cartes */}
+            {/* Liste des visites */}
             <div
               className="
-                px-5
-                sm:px-6
-
-                pb-6
-
-                mt-5
-
-                flex-1
-
-                max-h-none
-                sm:max-h-[500px]
-
-                overflow-y-auto
-
                 space-y-4
+
+                sm:max-h-[60vh]
+                sm:overflow-y-auto
+
+                pr-1
+                pb-2
               "
             >
               {Visites.length ? (
@@ -152,9 +131,9 @@ const [openModifier, setOpenModifier] = useState(false);
                     taille={item.taille}
                     badges={item.badges}
                     onClick={() => {
-  setSelectedVisite(item);
-  setOpenDetail(true);
-}}
+                      setSelectedVisite(item);
+                      setOpenDetail(true);
+                    }}
                   />
                 ))
               ) : (
