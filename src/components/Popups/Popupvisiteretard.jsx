@@ -1,7 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import quitter from "../assets/quitter.svg";
-import CardPopup from "./card2";
+import quitter from "../../assets/quitter.svg";
+import CardPopup from "../Cards/card2";
 
 const PopupRetard = ({
   open,
@@ -17,7 +17,7 @@ const PopupRetard = ({
             inset-0
             z-50
 
-            bg-white
+            bg-[#9A9A9A]/60
 
             flex
             items-start
@@ -33,13 +33,17 @@ const PopupRetard = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
             className="
               w-full
 
               min-h-screen
-              sm:min-h-0
 
-              sm:max-w-[760px]
+              sm:min-h-0
+              sm:w-[760px]
+              sm:max-h-[90vh]
+
+              overflow-y-auto
 
               bg-white
 
@@ -52,8 +56,6 @@ const PopupRetard = ({
 
               shadow-none
               sm:shadow-2xl
-
-              overflow-hidden
             "
           >
             {/* Header */}
@@ -106,7 +108,7 @@ const PopupRetard = ({
                 flex-1
 
                 max-h-none
-                sm:h-[420px]
+                sm:max-h-[60vh]
 
                 overflow-y-auto
 
