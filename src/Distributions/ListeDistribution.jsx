@@ -66,7 +66,7 @@ const [appliedFilters, setAppliedFilters] = useState({
   },
 ];
 
-const products = [
+const [products, setProducts] = useState([
   { nom: "Lait", quantity: 38, unite: "boîtes" },
   { nom: "Céréales", quantity: 38, unite: "Kg" },
   { nom: "Huile", quantity: 38, unite: "Litres" },
@@ -76,7 +76,7 @@ const products = [
   { nom: "Lait", quantity: 38, unite: "boîtes" },
   { nom: "Légumineuses", quantity: 38, unite: "Kg" },
   { nom: "Huile", quantity: 38, unite: "Litres" },
-];
+]);
 const filtered = distributions.filter((item) => {
   const keyword = search.toLowerCase();
 
@@ -342,9 +342,11 @@ if (isFilterOpen && isMobile) {
   }}
 />
      
-       {showStockPopup && (
+{showStockPopup && (
   <StockPopup
     onClose={() => setShowStockPopup(false)}
+    initialProducts={products}
+    onSaveProducts={setProducts}
   />
 )}
       </main>
