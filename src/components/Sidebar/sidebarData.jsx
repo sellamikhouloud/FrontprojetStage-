@@ -123,7 +123,7 @@ export const sidebarConfig = {
         icon: distrib,
         activeIcon: distribWhite,
         label: "Distribution",
-        path: "/distribution",
+        path: "/liste-distributions",
       },
       {
         icon: donateurs,
