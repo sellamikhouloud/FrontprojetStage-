@@ -18,14 +18,17 @@ const PopupFinSuivi = ({
       {open && (
         <div
           className="
-            fixed inset-0 z-50
+            fixed
+            inset-0
+            z-50
 
-            bg-transparent
-            sm:bg-black/40
+            bg-white
+            sm:bg-black/30
 
             flex
             items-start
             sm:items-center
+
             justify-center
 
             overflow-y-auto
@@ -48,7 +51,6 @@ const PopupFinSuivi = ({
               sm:max-h-[90vh]
 
               overflow-y-auto
-              scrollbar-hide
 
               bg-white
 
@@ -62,8 +64,11 @@ const PopupFinSuivi = ({
               shadow-none
               sm:shadow-xl
 
-              p-5
-              sm:p-8
+              px-5
+              sm:px-8
+
+              py-6
+              sm:py-7
             "
           >
             {/* Fermer */}
@@ -80,7 +85,6 @@ const PopupFinSuivi = ({
                 font-medium
                 text-black
 
-                hover:opacity-70
                 transition-opacity
               "
             >
@@ -138,4 +142,3 @@ const PopupFinSuivi = ({
 };
 
 export default PopupFinSuivi;
-
