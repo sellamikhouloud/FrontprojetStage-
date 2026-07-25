@@ -139,6 +139,7 @@ const [openModifier, setOpenModifier] = useState(false);
                 sm:max-h-[500px]
 
                 overflow-y-auto
+               scrollbar-hide
 
                 space-y-4
               "
