@@ -19,19 +19,67 @@ const Modifyfamilly = () => {
 const navigate = useNavigate();
 
 const { id } = useParams();
-  const [nourrisson, setNourrisson] = useState([
-    { label: "Date de naissance", value: "15/05/2026" },
-    { label: "Sexe", value: "Masculin" },
-    { label: "Poids de naissance", value: "500 g" },
-    { label: "Taille de naissance", value: "35 cm" },
-  ]);
+ const [nourrisson, setNourrisson] = useState([
+  {
+    label: "Date de naissance",
+    value: new Date("2026-05-15"),
+    type: "date",
+  },
+  {
+    label: "Sexe",
+    value: "Masculin",
+    options: [
+      "Masculin",
+      "Féminin",
+    ],
+  },
+  {
+    label: "Poids de naissance",
+    value: "500 g",
+  },
+  {
+    label: "Taille de naissance",
+    value: "35 cm",
+  },
+]);
 
-  const [mere, setMere] = useState([
-    { label: "Village", value: "Lexeiba" },
-    { label: "Téléphone", value: "24123456" },
-    
-  ]);
-
+ const [mere, setMere] = useState([
+  {
+    label: "Village",
+    value: "Lexeiba",
+    options: [
+      "Lexeiba",
+      "Rosso",
+    ],
+  },
+  {
+    label: "Téléphone",
+    value: "24123456",
+  },
+  {
+    label: "Date de naissance",
+    value: new Date("1990-05-15"),
+    type: "date",
+  },
+  {
+    label: "Statut matrimonial",
+    value: "Mariée",
+    options: [
+      "Mariée",
+      "Célibataire",
+      "Divorcée",
+      "Veuve",
+    ],
+  },
+  {
+    label: "Nombre d'enfants à charge",
+    value: "2",
+  },
+  {
+    label: "Référent médical",
+    value: "Mariam Diallo",
+  },
+]);
   const [programme, setProgramme] = useState([
   {
     label: "Date d'entrée dans le programme",

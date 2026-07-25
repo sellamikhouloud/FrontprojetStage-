@@ -21,7 +21,8 @@ const DateContainer = ({
         {/* Label */}
         <label
           className="
-            text-[14px]
+             text-[14px]
+             lg:text-[16px]
             font-semibold
             text-[#000000]
           "

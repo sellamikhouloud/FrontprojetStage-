@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import quitter from "../assets/quitter.svg";
+import quitter from "../../assets/quitter.svg";
 
 import SearchBar from "../Filter/Searchbar";
 import CardPopupDistribution from "../Cards/cardDistribution";

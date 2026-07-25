@@ -23,6 +23,7 @@ const [generalInfo, setGeneralInfo] = useState([]);
 const [laitInfo, setLaitInfo] = useState([]);
 const [colisInfo, setColisInfo] = useState([]);
 
+
 const updateField = (setter, data) => (index, value) => {
   const updated = [...data];
   updated[index].value = value;
@@ -64,14 +65,13 @@ const handleSave = () => {
     sel: colisInfo[2]?.value,
   };
 
+ setShowBanner(true);
+
+setTimeout(() => {
+  setShowBanner(false); 
   onEdit?.(updatedDistribution);
-
-  setShowBanner(true);
-
-  setTimeout(() => {
-    setShowBanner(false);
-    onClose();
-  }, 1500);
+  onClose();
+}, 1500);
 };
   if (!open || !distribution) return null;
 
@@ -83,6 +83,7 @@ const handleSave = () => {
           bg-transparent sm:bg-black/40
           flex items-start sm:items-center justify-center
           overflow-y-auto
+          scrollbar-hide
         "
         onClick={onClose}
       >
@@ -103,6 +104,7 @@ const handleSave = () => {
             sm:max-h-[90vh]
 
             overflow-y-auto
+            scrollbar-hide
 
             bg-white
 

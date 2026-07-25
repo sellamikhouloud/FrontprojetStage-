@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import quitter from "../assets/quitter.svg";
+import quitter from "../../assets/quitter.svg";
 
 const PopupDistribution = ({
   title = "Distributions ce mois",
@@ -23,7 +23,7 @@ const PopupDistribution = ({
     inset-0
     z-50
 
-    bg-white
+    bg-[#9A9A9A]/60
 
     flex
     items-start
