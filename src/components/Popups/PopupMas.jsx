@@ -110,6 +110,7 @@ const PopupMas = ({
                 sm:h-[420px]
 
                 overflow-y-auto
+                scrollbar-hide
 
                 space-y-4
               "
