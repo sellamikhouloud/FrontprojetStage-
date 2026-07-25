@@ -66,7 +66,6 @@ const PopupDetailDistribution = ({
     sm:max-h-[90vh]
 
     overflow-y-auto
-    
     scrollbar-hide
 
     bg-white
