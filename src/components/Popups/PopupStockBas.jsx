@@ -15,7 +15,7 @@ export default function PopupStockBas({
           {/* Overlay */}
 
           <motion.div
-            className="fixed inset-0 z-40 bg-black/30"
+            className="fixed inset-0 bg-black/30 z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -67,52 +67,38 @@ export default function PopupStockBas({
                 alt="Fermer"
                 className="w-5 h-5"
               />
-
               Fermer
             </button>
 
             {/* Title */}
 
-            <h2 className="mt-8 mb-10 text-center text-[24px] font-semibold">
+            <h2 className="text-center text-[24px] font-semibold mt-8 mb-10">
               Stock Bas
             </h2>
 
             {/* Products */}
 
-            <div className="space-y-4">
-              {products.length > 0 ? (
-                products.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between"
-                  >
-                    <span className="text-[18px] font-medium">
-                      {item.name}
+            <div className="space-y-3">
+              {products.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex justify-between items-center"
+                >
+                  <span className="text-[18px] font-medium">
+                    {item.name}
+                  </span>
+
+                  <div className="flex items-end gap-1">
+                    <span className="text-[#EF4444] text-[24px] font-extrabold leading-[28px]">
+                      {item.quantity}
                     </span>
 
-                    <div className="flex items-end gap-1">
-                      <span
-                        className="
-                          text-[#EB5757]
-                          text-[26px]
-                          font-bold
-                          leading-none
-                        "
-                      >
-                        {item.quantity}
-                      </span>
-
-                      <span className="text-[15px] text-[#3A3A3A]">
-                        {item.unit}
-                      </span>
-                    </div>
+                    <span className="text-[14px]">
+                      {item.unit}
+                    </span>
                   </div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500">
-                  Aucun produit en stock bas.
-                </p>
-              )}
+                </div>
+              ))}
             </div>
 
             {/* Button */}
@@ -121,23 +107,22 @@ export default function PopupStockBas({
               onClick={onGoToStock}
               className="
                 mt-12
-                flex
-                h-[54px]
                 w-full
+                h-[54px]
+                rounded-full
+                bg-[#73C8C5]
+                hover:bg-[#69BEBB]
+                transition
+                flex
                 items-center
                 justify-center
                 gap-3
-                rounded-full
-                bg-[#73C8C5]
+                text-white
                 text-[18px]
                 font-semibold
-                text-white
-                transition
-                hover:bg-[#69BEBB]
               "
             >
               <Pencil size={20} />
-
               Aller à la page de stock
             </button>
           </motion.div>
