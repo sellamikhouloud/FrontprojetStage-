@@ -18,6 +18,7 @@ import DateContainer from "../components/Containers/DateContainer";
 import InfoCard from "../components/Containers/AfficherContainer";
 import InfoHeader from "../components/Containers/InfoBanner";
 import Button from "../components/Button/Button";
+import PopuphistoriqueDistribution from "../components/Popups/PopupHistoriqueDistribution";
 
 import ConfirmationForm from "../components/Forms/ConfirmationForm";
 
@@ -26,6 +27,7 @@ import SuccessImage from "../assets/Success.svg";
 
 export default function AjoutDistribution() {
   const enfant = {
+    id: 1,
     enfant: "Aïcha Mint Mohamed",
     mere: "Meriem",
     sexe: "Fille",
@@ -66,20 +68,6 @@ export default function AjoutDistribution() {
     quantity: 1.5,
     unit: "L",
   },
-  {
-    id: 4,
-    icon: Sucre,
-    title: "Sucre",
-    quantity: 1,
-    unit: "kg",
-  },
-  {
-    id: 5,
-    icon: Sel,
-    title: "Sel",
-    quantity: 1,
-    unit: "kg",
-  },
 ];
  const [showNewProduct, setShowNewProduct] = useState(false);
  const [date, setDate] = useState(new Date("2026-06-18"));
@@ -91,6 +79,21 @@ const navigate = useNavigate();
     unit: "",
     quantity: "",
   });
+  const [showHistorique, setShowHistorique] = useState(false);
+ const distributionHistory = [
+  {
+    id: 1,
+    enfant: enfant.enfant,
+    code: enfant.code,
+    distribution: "Distribution 2",
+    date: "12/06/2026",
+    produits: products.map((p) => ({
+      nom: p.title,
+      quantite: `${p.quantity} ${p.unit}`,
+    })),
+  },
+
+];
 
 return (
   <div className="min-h-screen bg-white">
@@ -150,12 +153,12 @@ return (
     >
         {/* Header */}
         <div className="mb-0 lg:mb-6">
-        <PageHeader
-          leftTitle="Annuler"
-          rightTitle="Voir historique des distributions"
-          onBack={() => window.history.back()}
-          onRightClick={() => {}}
-        />
+       <PageHeader
+  leftTitle="Annuler"
+  rightTitle="Voir historique des distributions"
+  onBack={() => window.history.back()}
+  onRightClick={() => setShowHistorique(true)}
+/>
         </div>
 
         {/* Family Card */}
@@ -286,24 +289,25 @@ return (
   <Popup
     title="Distribution enregistrée avec succès"
     image={SuccessImage}
-    primaryButtonText="Voir le détail de la distribution"
+    primaryButtonText="Voir la fiche famille"
     secondaryButtonText="Revenir à l'accueil"
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
-
-      // Navigate to distribution details
-      // navigate(`/distribution/${id}`);
+      navigate(`/famille/${enfant.id}`);
     }}
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
-
-      // Navigate to home
-      // navigate("/");
+      navigate("/dashboard");
     }}
   />
 )}
 
       </main>
+      <PopuphistoriqueDistribution
+  open={showHistorique}
+  onClose={() => setShowHistorique(false)}
+  Distribution={distributionHistory}
+/>
     </div>
   );
 }

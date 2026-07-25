@@ -33,7 +33,7 @@ const PopuphistoriqueDistribution = ({
             inset-0
             z-50
 
-            bg-white
+            bg-[#9A9A9A]/60
 
             flex
             items-start

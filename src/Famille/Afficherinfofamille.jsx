@@ -71,7 +71,7 @@ const { id } = useParams();
   const visites = [
     {
       label: "Nombre de visites",
-      value: "6",
+      value: "2",
     },
     {
       label: "Date de la dernière visite",
@@ -282,140 +282,6 @@ const visiteList = [
     ],
   },
 
-  {
-    id: 3,
-    numeroVisite: 3,
-    enfant: "Khadijetou Mohamed",
-    mere: "Aminata",
-    sexe: "Fille",
-    region: "Kaédi",
-    dateNaissance: "05/03/2026",
-    code: "GDK-2026-005",
-    date: "10/07/2026",
-    enregistrePar: "Infirmier",
-
-    nourrisson: {
-      poids: 720,
-      taille: 41,
-      muac: 123,
-    },
-
-    mereMesure: {
-      poids: 60,
-      taille: 165,
-      muac: 255,
-    },
-
-    statuts: [
-      { type: "good", text: "Nourrisson normal" },
-      { type: "mere", text: "Mère normale" },
-    ],
-
-    observationNourrisson:
-      "Croissance normale.",
-    observationMere:
-      "Aucun problème détecté.",
-    evaluationFamiliale:
-      "Environnement favorable.",
-
-    visite: "Visite 3",
-    poids: "720",
-    taille: "41",
-    badges: [
-      { type: "good", text: "Nourrisson normal" },
-      { type: "mere", text: "Mère normale" },
-    ],
-  },
-
-  {
-    id: 4,
-    numeroVisite: 4,
-    enfant: "Abdoulaye Diallo",
-    mere: "Hawa",
-    sexe: "Garçon",
-    region: "Boghé",
-    dateNaissance: "12/02/2026",
-    code: "GDK-2026-006",
-    date: "15/08/2026",
-    enregistrePar: "Coordinateur",
-
-    nourrisson: {
-      poids: 690,
-      taille: 40,
-      muac: 115,
-    },
-
-    mereMesure: {
-      poids: 52,
-      taille: 160,
-      muac: 232,
-    },
-
-    statuts: [
-      { type: "mam", text: "MAM nourrisson" },
-      { type: "risk", text: "Mère à risque" },
-    ],
-
-    observationNourrisson:
-      "Suivi nutritionnel recommandé.",
-    observationMere:
-      "Complément alimentaire conseillé.",
-    evaluationFamiliale:
-      "Visites régulières nécessaires.",
-
-    visite: "Visite 4",
-    poids: "690",
-    taille: "40",
-    badges: [
-      { type: "mam", text: "MAM nourrisson" },
-      { type: "risk", text: "Mère à risque" },
-    ],
-  },
-
-  {
-    id: 5,
-    numeroVisite: 5,
-    enfant: "Mariem Ould Salem",
-    mere: "Khadija",
-    sexe: "Fille",
-    region: "Nouakchott",
-    dateNaissance: "18/01/2026",
-    code: "GDK-2026-007",
-    date: "18/09/2026",
-    enregistrePar: "Sage-femme",
-
-    nourrisson: {
-      poids: 810,
-      taille: 44,
-      muac: 128,
-    },
-
-    mereMesure: {
-      poids: 63,
-      taille: 167,
-      muac: 260,
-    },
-
-    statuts: [
-      { type: "good", text: "Nourrisson normal" },
-      { type: "mere", text: "Mère normale" },
-    ],
-
-    observationNourrisson:
-      "Développement satisfaisant.",
-    observationMere:
-      "Bonne santé générale.",
-    evaluationFamiliale:
-      "Famille stable et autonome.",
-
-    visite: "Visite 5",
-    poids: "810",
-    taille: "44",
-    badges: [
-      { type: "good", text: "Nourrisson normal" },
-      { type: "mere", text: "Mère normale" },
-    ],
-  },
 ];
 const [openFinSuivi, setOpenFinSuivi] = useState(false);
 const [openSuccess, setOpenSuccess] = useState(false);

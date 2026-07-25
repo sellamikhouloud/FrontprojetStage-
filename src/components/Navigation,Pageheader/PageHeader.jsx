@@ -51,7 +51,18 @@ const PageHeader = ({
 
       {/* Partie droite */}
       {showRight && (
-        <div className="flex items-center gap-2 min-w-0">
+        <div
+          onClick={onRightClick}
+          className="
+            flex
+            items-center
+            gap-2
+            min-w-0
+            cursor-pointer
+            hover:opacity-80
+            transition
+          "
+        >
           <span
             className="
               text-[14px]
@@ -68,13 +79,9 @@ const PageHeader = ({
           <img
             src={UpRight}
             alt="Voir"
-            onClick={onRightClick}
             className="
               w-3 h-3
               sm:w-4 sm:h-4
-              cursor-pointer
-              hover:opacity-80
-              transition
               shrink-0
             "
           />
