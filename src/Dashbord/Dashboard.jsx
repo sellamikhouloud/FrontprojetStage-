@@ -1,5 +1,7 @@
 import Sidebar from "../components/Sidebar/Sidebar";
 
+import PopupStockBas from "../components/Popups/PopupStockBas";
+
 import WelcomeCard from "../components/DashbordCard/WelcomeCard";
 import AlertBanner from "../components/AlertComposant/AlertBanner";
 
@@ -72,6 +74,8 @@ const alerts = [
     leftborder: "#F2B94B",
   },
 ];
+
+const [showBas, setShowBas] = useState(false);
 
 /* ==========================
     Family Status
@@ -149,6 +153,33 @@ const products = [
     id: 4,
     name: "Riz",
     quantity: "150 Kg",
+  },
+];
+
+const lowStockProducts = [
+  {
+    id: 1,
+    name: "Farine",
+    quantity: 25,
+    unit: "Kg",
+  },
+  {
+    id: 2,
+    name: "Huile",
+    quantity: 18,
+    unit: "L",
+  },
+  {
+    id: 3,
+    name: "Sucre",
+    quantity: 12,
+    unit: "Kg",
+  },
+  {
+    id: 4,
+    name: "Riz",
+    quantity: 15,
+    unit: "Kg",
   },
 ];
 
@@ -254,20 +285,21 @@ const handleAlertClick = (alert) => {
     setShowMas(true);
   } else if (alert.title === "Visites en retard") {
     setShowRetard(true);
+  } else if (alert.title === "Stock bas") {
+    setShowBas(true);
   } else {
     console.log(alert);
   }
 };
 
   return (
- <div className="flex h-screen overflow-hidden bg-white">
-    {/* Sidebar */}
-    <div className="ml-5 flex-shrink-0">
-   
-      <Sidebar role="admin" />
-   </div>
+    <div className="flex h-screen overflow-hidden bg-white">
+        {/* Sidebar */}
+      
+          <Sidebar role="admin" />
+      
 
-  <main className="flex-1 overflow-y-auto px-5 pt-18 py-5 md:pt-0 pb-8 lg:p-10 bg-white">
+      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
 
 
         {/* ================= MOBILE HEADER ================= */}
@@ -307,10 +339,10 @@ const handleAlertClick = (alert) => {
             flex
             flex-col
             gap-[8px]
-            pt-3
-            pb-3
             lg:grid
             lg:grid-cols-3
+            pt-3
+            pb-3
           "
         >
 
@@ -532,7 +564,6 @@ const handleAlertClick = (alert) => {
 
       </main>
 
-    </div>
     {showHistorique && (
   <PopupDistribution
     title="Distributions ce mois"
@@ -557,6 +588,15 @@ const handleAlertClick = (alert) => {
   open={showMas}
   onClose={() => setShowMas(false)}
   familleMas={familleMas}
+/>
+
+<PopupStockBas
+  isOpen={showBas}
+  onClose={() => setShowBas(false)}
+  products={lowStockProducts}
+  onGoToStock={() => {
+    setShowBas(false);
+  }}
 />
 
   </div>
