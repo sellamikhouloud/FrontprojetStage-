@@ -58,25 +58,26 @@ const PopupDetailDistribution = ({
           transition={{ duration: 0.2 }}
           onClick={(e) => e.stopPropagation()}
           className="
-            w-full
-            min-h-screen
+             w-full
+    min-h-screen
 
-            sm:min-h-0
-            sm:w-[952px]
-            sm:max-h-[90vh]
+    sm:min-h-0
+    sm:w-[952px]
+    sm:max-h-[90vh]
 
-            overflow-y-auto
+    overflow-y-auto
+    scrollbar-hide
 
-            bg-white
+    bg-white
 
-            rounded-none
-            sm:rounded-[20px]
+    rounded-none
+    sm:rounded-[20px]
 
-            border-0
-            sm:border
+    border-0
+    sm:border
 
-            p-4
-            sm:p-6
+    p-4
+    sm:p-6
           "
           style={{
             borderColor: "#4E9F8A",
@@ -196,6 +197,7 @@ const PopupDetailDistribution = ({
             />
           </div>
         </motion.div>
+
       </div>
     </AnimatePresence>
   );

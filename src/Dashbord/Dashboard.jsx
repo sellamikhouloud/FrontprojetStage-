@@ -318,12 +318,13 @@ const newDonorsThisMonth = 18;
 
 
           <DistributionCard
-            title={distributionTitle}
-            products={products}
-            dividerColor="#73C8C5"
-            viewAllText="Voir tous"
-            onClick={()=>console.log("Distribution")}
-          />
+  title={distributionTitle}
+  products={products}
+  dividerColor="#73C8C5"
+  viewAllText="Voir tous"
+  onClick={() => navigate("/list-distributions")}
+  //i did not fix this yet 
+/>
 
 
           <VisitsCard

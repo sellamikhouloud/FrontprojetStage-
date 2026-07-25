@@ -2,6 +2,8 @@ import PageHeader from '../Navigation,Pageheader/PageHeader';
 import Button from '../Button/Button';
 import Edit from '../../assets/Edit 2.svg';
 import { Plus } from 'lucide-react';
+import EditStockPopup from "./EditStockPopup";
+import { useState } from "react";
 
 const products = [
   { title: 'Lait', quantity: 38, unit: 'boîtes' },
@@ -14,7 +16,9 @@ const products = [
   { title: 'Pâtes alimentaires', quantity: 7, unit: 'Kg' },
 ];
 
+
 const StockPopup = ({ onClose }) => {
+  const [showEditPopup, setShowEditPopup] = useState(false);
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-[#9A9A9A80] p-4'>
       <div
@@ -94,14 +98,24 @@ const StockPopup = ({ onClose }) => {
         </div>
 
         <div className='mt-4'>
-          <Button
-            title="Modifier les seuils d'alertes nutritionnelles"
-            variant='modifier'
-            icon={Edit}
-            noWrapperPadding={true}
-          />
+         <Button
+  title="Modifier les seuils d'alertes nutritionnelles"
+  variant="modifier"
+  icon={Edit}
+  noWrapperPadding={true}
+  onClick={() => setShowEditPopup(true)}
+/>
         </div>
       </div>
+      {showEditPopup && (
+  <EditStockPopup
+    onClose={() => setShowEditPopup(false)}
+    onSave={(products) => {
+      console.log(products);
+      setShowEditPopup(false);
+    }}
+  />
+)}
     </div>
   );
 };

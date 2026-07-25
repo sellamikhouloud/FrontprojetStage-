@@ -13,6 +13,8 @@ import  ListeDonateur from "./Donateurs/ListeDonateur";
 import ModifierCoordinateur from "./Coordinateurs/FicheCoordinateur";
 import AjoutDonateur from "./Donateurs/AjoutDonateur";
 import FicheDonateur from "./Donateurs/FicheDonateur";
+import AjoutDistribution from "./Distributions/AjoutDistribution";
+import DistributionPage from "./Distributions/ListeDistribution";
 
 function App() {
   return (
@@ -60,6 +62,15 @@ function App() {
         <Route 
           path="/fiche-donateur" element={<FicheDonateur />}
         />
+
+        <Route
+          path="/ajout-distribution" element={<AjoutDistribution />}
+        />
+
+         <Route
+          path="/liste-distributions" element={<DistributionPage />}
+        />
+
 
       </Routes>
     </BrowserRouter>
