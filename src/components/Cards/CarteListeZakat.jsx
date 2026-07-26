@@ -45,7 +45,7 @@ const CardListZakat = ({
 
           <span className="text-[#94A3B8]">•</span>
 
-          <span className="text-[16px] text-[#111827]">{zakat}</span>
+          <span className="text-[16px] text-[#111827] font-semibold">{zakat}</span>
         </div>
 
         {/* Ligne 3 */}
@@ -59,9 +59,9 @@ const CardListZakat = ({
             Montant
           </span>
 
-          <span className="ml-2 text-[15px] text-[#111827]">
-            {valeur}
-          </span>
+         <span className="ml-2 text-[15px] font-semibold text-[#111827]">
+    {valeur}
+  </span>
         </div>
       </div>
 
@@ -87,12 +87,12 @@ const CardListZakat = ({
 
             <span className="text-[#94A3B8]">•</span>
 
-            <span className="text-[17px] text-[#111827]">
+            <span className="text-[17px] text-[#111827] font-semibold">
               {zakat}
             </span>
           </div>
 
-          <span className="text-[17px] font-semibold text-[#111827]">
+          <span className="text-[17px] font-semibold text-[#111827] ">
             {date}
           </span>
         </div>
@@ -108,7 +108,7 @@ const CardListZakat = ({
             {montant}
           </span>
 
-          <span className="text-[#111827]">{valeur}</span>
+          <span className="text-[#111827] font-semibold">{valeur}</span>
         </div>
       </div>
     </div>
