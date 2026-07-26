@@ -20,13 +20,13 @@ export default function DistributionPage() {
   const [showStockPopup, setShowStockPopup] = useState(false);
   const navigate = useNavigate();
 const [filters, setFilters] = useState({
-  statutZakat: "",
+
   dateDebut: null,
   dateFin: null,
 });
 
 const [appliedFilters, setAppliedFilters] = useState({
-  statutZakat: "",
+  
   dateDebut: null,
   dateFin: null,
 });
