@@ -15,6 +15,7 @@ import AjoutDonateur from "./Donateurs/AjoutDonateur";
 import FicheDonateur from "./Donateurs/FicheDonateur";
 import AjoutDistribution from "./Distributions/AjoutDistribution";
 import DistributionPage from "./Distributions/ListeDistribution";
+import ZakatPage from "./Zakat/ListeZakat";
 
 function App() {
   return (
@@ -63,12 +64,17 @@ function App() {
           path="/fiche-donateur" element={<FicheDonateur />}
         />
 
+      {/* Distribution */}
         <Route
           path="/ajout-distribution" element={<AjoutDistribution />}
         />
 
          <Route
           path="/liste-distributions" element={<DistributionPage />}
+        />
+        {/* Zakat*/}
+         <Route
+          path="/liste-zakat" element={<ZakatPage />}
         />
 
 
