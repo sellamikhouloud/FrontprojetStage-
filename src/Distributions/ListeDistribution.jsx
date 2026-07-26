@@ -12,6 +12,7 @@ import PopupDetailDistributionModifier from "../components/Popups/PopupdetailsDi
 import CardListDistribution from "../components/Cards/CarteListeDistribution";
 import StockCard from "../components/Cards/StockCard";
 import StockPopup from "../components/Popups/StockPopup";
+import NoResultImage from "../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 
 export default function DistributionPage() {
@@ -20,13 +21,13 @@ export default function DistributionPage() {
   const [showStockPopup, setShowStockPopup] = useState(false);
   const navigate = useNavigate();
 const [filters, setFilters] = useState({
-
+  
   dateDebut: null,
   dateFin: null,
 });
 
 const [appliedFilters, setAppliedFilters] = useState({
-  
+ 
   dateDebut: null,
   dateFin: null,
 });
@@ -277,6 +278,16 @@ if (isFilterOpen && isMobile) {
         </div>
 {(appliedFilters.dateDebut || appliedFilters.dateFin) &&
   filterTagsContent}
+
+  {filtered.length === 0 && (
+  <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
+    <img
+      src={NoResultImage}
+      alt="Aucun résultat"
+      className="w-56 sm:w-72 md:w-96 h-auto"
+    />
+  </div>
+)}
         <div className="flex gap-6">
 
           {/* Liste */}
