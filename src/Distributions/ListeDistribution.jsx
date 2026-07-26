@@ -240,12 +240,17 @@ if (isFilterOpen && isMobile) {
       <Sidebar role="admin" />
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-        <NavigationHeader
-          title="Stock de produit"
-          type="add"
-          actionTitle="ajuster le stock et voir tous "
-          onAction={() => setShowStockPopup(true)}
-        />
+          <NavigationHeader
+  title="Liste des distributions"
+
+  type="share"
+  actionTitle="Exporter la liste des distributions"
+  onAction={() => console.log("Exporter")}
+
+  secondType="add"
+  secondActionTitle="Ajouter une distribution"
+  onSecondAction={() => navigate("/ajout-distribution")}
+/>
        
 
          {/* Stock cards */}
