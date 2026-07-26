@@ -219,11 +219,16 @@ if (isFilterOpen && isMobile) {
 
  
 
-       <NavigationHeader
+<NavigationHeader
   title="Liste des Zakat"
-  type="add"
-  actionTitle="Ajouter une distribution"
-  onAction={() => navigate("")}
+
+  type="share"
+  actionTitle="Exporter la liste des Zakat"
+  onAction={() => console.log("Exporter")}
+
+  secondType="add"
+  secondActionTitle="Ajouter une distribution"
+  onSecondAction={() => navigate("")}
 />
         <div className="my-6">
           <SearchBar
