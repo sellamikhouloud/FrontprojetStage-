@@ -58,3 +58,38 @@ NavigationHeader :  Composant d'en-tête de navigation affichant un titre et une
 StockPopup : composant popup permettant de consulter le stock des produits nutritionnels, d'afficher leurs quantités disponibles et d'accéder à la modification des seuils d'alertes nutritionnelles.
 
 EditStockPopup : composant popup permettant de modifier les seuils d'alertes nutritionnelles des produits en saisissant de nouvelles valeurs et en les enregistrant.
+
+
+
+DateSelect : utiliser comme choicecontainer mais ici on selectionne une date depuis la calendrier .
+
+MesureInput : utiliser dans page  ajouter visite pour entrer les mesures comme poids taille ...ect 
+
+PopupHistoriquevisite : pour voir l'historique des visites dans la page ajouter une visite
+
+PopupHistoriqueDistribution : pour voir l'historique des distributions dans la page ajouter une disribution 
+
+PopupDistributionfamille: pour voir les distributions d'une famille depuis la fiche famille 
+
+Popupvisitefamille: pour voir les visites d'une famille depuis la fiche famille 
+
+PopupdetailsDistributions : pour voir les datails d'une distribution donc quand on clique sur la carte distribution de la famille "fiche famille " on
+voit les details de cette disribution meme qaund on clique sur la carte distribution dans la page liste disributions 
+
+Popupdetailvisite : pour voir les datails d'une visite donc quand on clique sur la carte visite de la famille "fiche famille " on
+voit les details de cette visite meme qaund on clique sur la carte visite dans la page liste visites.
+
+
+PopupdetailsDistributionModifier : on cliquant sur le boutton modifier du pop up details distribution on peut modifier les informations d'une disribution
+
+PopupdetailvisiteModifier : on cliquant sur le boutton modifier du pop up details visite on peut modifier les informations d'une visite
+
+PopupMas : utiliser dans dashbord pour voir les alertes avec l'etar Mas 
+
+Popupvisiteretard : utiliser dans dashbord pour voir les visites retard 
+
+Popupdistributions : utiliser dans dashbord pour afficher les distributions d'un mois 
+
+
+
+
