@@ -71,12 +71,16 @@ export default function ListeCoordinateurs() {
   onBack={() => navigate("/liste-famille")}
 />
           <NavigationHeader
-            title="Liste des coordinateurs"
-            type="add"
-            actionTitle="Ajouter un coordinateur"
-            onAction={() => navigate("/ajout-coordinateur")}
-          />
-
+  title="Liste des coordinateurs"
+  type="share"
+  actionTitle="Exporter la liste des coordinateurs"
+  onAction={() => {
+    // Fonction d'export
+  }}
+  secondType="add"
+  secondActionTitle="Ajouter un coordinateur"
+  onSecondAction={() => navigate("/ajout-coordinateur")}
+/>
           <div className="my-6">
             <SearchBar
               value={search}
