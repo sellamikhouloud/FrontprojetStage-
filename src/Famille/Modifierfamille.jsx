@@ -80,13 +80,13 @@ const { id } = useParams();
     value: "Mariam Diallo",
   },
 ]);
-  const [programme, setProgramme] = useState([
+const [programme, setProgramme] = useState([
   {
     label: "Date d'entrée dans le programme",
-    value: "16/05/2026",
+    value: new Date("2026-05-16"),
+    type: "date",
   },
 ]);
-
   const handleNourrissonChange = (index, value) => {
   setNourrisson((prev) =>
     prev.map((item, i) =>
