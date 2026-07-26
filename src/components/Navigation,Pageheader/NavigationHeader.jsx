@@ -14,9 +14,13 @@ const NavigationHeader = ({
   actionTitle = "",
   onAction,
 
-  secondType = "none",
-  secondActionTitle = "",
-  onSecondAction,
+ secondType = "none",
+secondActionTitle = "",
+onSecondAction,
+
+thirdType = "none",
+thirdActionTitle = "",
+onThirdAction,
 }) => {
   const renderAction = (currentType, currentTitle, currentAction) => {
     switch (currentType) {
@@ -209,16 +213,18 @@ const NavigationHeader = ({
       </h1>
 
       {/* Actions Desktop */}
-      <div className="hidden md:flex items-center gap-10 shrink-0">
-        {renderAction(type, actionTitle, onAction)}
-        {renderAction(secondType, secondActionTitle, onSecondAction)}
-      </div>
+    <div className="hidden md:flex items-center gap-10 shrink-0">
+  {renderAction(type, actionTitle, onAction)}
+  {renderAction(secondType, secondActionTitle, onSecondAction)}
+  {renderAction(thirdType, thirdActionTitle, onThirdAction)}
+</div>
 
       {/* Actions Mobile */}
       <div className="flex flex-col items-end gap-3 md:hidden shrink-0">
-        {renderAction(secondType, secondActionTitle, onSecondAction)}
-        {renderAction(type, actionTitle, onAction)}
-      </div>
+  {renderAction(type, actionTitle, onAction)}
+  {renderAction(secondType, secondActionTitle, onSecondAction)}
+  {renderAction(thirdType, thirdActionTitle, onThirdAction)}
+</div>
     </div>
   );
 };
