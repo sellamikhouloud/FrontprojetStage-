@@ -355,12 +355,16 @@ if  (isFilterOpen && isMobile)  {
    
 
   <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-        <NavigationHeader
+         <NavigationHeader
   title="Liste des familles"
-  type="add"
-  actionTitle="Ajouter une famille"
+  type="share"
+  actionTitle="Exporter la liste des familles"
   onAction={() => {
-    console.log("Button clicked");
+    // Ouvrir le menu PDF / Excel
+  }}
+  secondType="add"
+  secondActionTitle="Ajouter une famille"
+  onSecondAction={() => {
     navigate("/information-mere");
   }}
 />
