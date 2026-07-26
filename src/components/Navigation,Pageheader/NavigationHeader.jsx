@@ -4,11 +4,12 @@ import Add from "../../assets/add.svg";
 import Edit1 from "../../assets/Edit 1.svg";
 import Edit2 from "../../assets/Edit 2.svg";
 import DocumentAdd from "../../assets/Document add.svg";
+import Share from "../../assets/Share.svg";
 
 const NavigationHeader = ({
   title,
 
-  // none | edit | add | save | export
+  // none | edit | add | save | export | share
   type = "none",
   actionTitle = "",
   onAction,
@@ -35,7 +36,6 @@ const NavigationHeader = ({
               lg:text-[18px]
               font-medium
               whitespace-nowrap
-              shrink-0
               cursor-pointer
               transition-all
               duration-150
@@ -77,7 +77,6 @@ const NavigationHeader = ({
               lg:text-[18px]
               font-medium
               whitespace-nowrap
-              shrink-0
               cursor-pointer
               transition-all
               duration-150
@@ -119,7 +118,6 @@ const NavigationHeader = ({
               lg:text-[18px]
               font-medium
               whitespace-nowrap
-              shrink-0
               cursor-pointer
               transition-all
               duration-150
@@ -145,9 +143,47 @@ const NavigationHeader = ({
           </button>
         );
 
+      case "share":
+        return (
+          <button
+            onClick={currentAction}
+            className="
+              group
+              flex
+              items-center
+              gap-2
+              text-[#1E1E1E]
+              text-[13px]
+              sm:text-[16px]
+              lg:text-[18px]
+              font-medium
+              whitespace-nowrap
+              cursor-pointer
+              transition-all
+              duration-150
+              hover:opacity-70
+              active:scale-95
+            "
+          >
+            <span>{currentTitle}</span>
+
+            <img
+              src={Share}
+              alt="Partager"
+              className="
+                w-5
+                h-5
+                transition-transform
+                duration-150
+                group-active:scale-90
+              "
+            />
+          </button>
+        );
+
       case "save":
         return (
-          <div className="shrink-0">
+          <div>
             <Button
               title={currentTitle}
               icon={Edit2}
@@ -166,16 +202,22 @@ const NavigationHeader = ({
   };
 
   return (
-    <div className="w-full flex items-center justify-between gap-3 sm:gap-4 mb-6">
+    <div className="w-full flex items-start justify-between gap-4 mb-6">
       {/* Titre */}
       <h1 className="flex-1 text-[15px] sm:text-[18px] lg:text-[20px] font-bold text-[#1E1E1E] leading-tight">
         {title}
       </h1>
 
-      {/* Actions */}
-      <div className="flex items-center gap-6 shrink-0">
+      {/* Actions Desktop */}
+      <div className="hidden md:flex items-center gap-10 shrink-0">
         {renderAction(type, actionTitle, onAction)}
         {renderAction(secondType, secondActionTitle, onSecondAction)}
+      </div>
+
+      {/* Actions Mobile */}
+      <div className="flex flex-col items-end gap-3 md:hidden shrink-0">
+        {renderAction(secondType, secondActionTitle, onSecondAction)}
+        {renderAction(type, actionTitle, onAction)}
       </div>
     </div>
   );
