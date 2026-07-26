@@ -66,15 +66,20 @@ export default function ListeDonateur() {
   {/* Contenu */}
  <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
 
-         <NavigationHeader
+        <NavigationHeader
   title="Liste des donateurs"
-  type="add"
-  actionTitle="Ajouter un donateur"
-  onAction={() => navigate("/ajout-donateur")}
 
-  secondType="export"
-  secondActionTitle="Importer un fichier"
-  onSecondAction={() => console.log("Importer")}
+  type="share"
+  actionTitle="Exporter la liste des donateurs"
+  onAction={() => console.log("Exporter")}
+
+  secondType="add"
+  secondActionTitle="Ajouter un donateur"
+  onSecondAction={() => navigate("/ajout-donateur")}
+
+  thirdType="export"
+  thirdActionTitle="Importer un fichier"
+  onThirdAction={() => console.log("Importer")}
 />
           <div className="my-6">
             <SearchBar
