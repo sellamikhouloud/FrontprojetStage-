@@ -220,10 +220,66 @@ onThirdAction,
 </div>
 
       {/* Actions Mobile */}
-      <div className="flex flex-col items-end gap-3 md:hidden shrink-0">
-  {renderAction(type, actionTitle, onAction)}
-  {renderAction(secondType, secondActionTitle, onSecondAction)}
-  {renderAction(thirdType, thirdActionTitle, onThirdAction)}
+    <div className="flex flex-col items-end gap-3 md:hidden shrink-0">
+  {/* Ajouter */}
+  {(type === "add" || secondType === "add" || thirdType === "add") &&
+    renderAction(
+      type === "add"
+        ? type
+        : secondType === "add"
+        ? secondType
+        : thirdType,
+      type === "add"
+        ? actionTitle
+        : secondType === "add"
+        ? secondActionTitle
+        : thirdActionTitle,
+      type === "add"
+        ? onAction
+        : secondType === "add"
+        ? onSecondAction
+        : onThirdAction
+    )}
+
+  {/* Exporter (share) */}
+  {(type === "share" || secondType === "share" || thirdType === "share") &&
+    renderAction(
+      type === "share"
+        ? type
+        : secondType === "share"
+        ? secondType
+        : thirdType,
+      type === "share"
+        ? actionTitle
+        : secondType === "share"
+        ? secondActionTitle
+        : thirdActionTitle,
+      type === "share"
+        ? onAction
+        : secondType === "share"
+        ? onSecondAction
+        : onThirdAction
+    )}
+
+  {/* Importer */}
+  {(type === "export" || secondType === "export" || thirdType === "export") &&
+    renderAction(
+      type === "export"
+        ? type
+        : secondType === "export"
+        ? secondType
+        : thirdType,
+      type === "export"
+        ? actionTitle
+        : secondType === "export"
+        ? secondActionTitle
+        : thirdActionTitle,
+      type === "export"
+        ? onAction
+        : secondType === "export"
+        ? onSecondAction
+        : onThirdAction
+    )}
 </div>
     </div>
   );
