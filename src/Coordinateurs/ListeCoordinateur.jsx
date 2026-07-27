@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
 import SearchBar from "../components/Filter/Searchbar";
-import CardDonateur from "../components/Cards/carteDonateur";
+import CardCoordinateur from "../components/Cards/carteCoordinateur";
 import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import NoResultImage from "../assets/no result picture.svg";
 
@@ -13,48 +13,43 @@ export default function ListeCoordinateurs() {
 
   const [search, setSearch] = useState("");
 
-  const [coordinateurs] = useState([
-    {
-      id: 1,
-      name: "Amadou Ba",
-      email: "amadouba@gmail.com",
-      date: "12/05/2025",
-      code: "GDK-2026-003",
-      status: "Actif",
-    },
-    {
-      id: 2,
-      name: "Fatima Ahmed",
-      email: "fatima@gmail.com",
-      date: "10/05/2025",
-      code: "GDK-2026-004",
-      status: "Actif",
-    },
-    {
-      id: 3,
-      name: "Mohamed Ali",
-      email: "mohamed@gmail.com",
-      date: "08/05/2025",
-      code: "GDK-2026-005",
-      status: "Inactif",
-    },
+ const [coordinateurs] = useState([
+  {
+    id: 1,
+    name: "Amadou Ba",
+    village: "Lexeiba",
+    familles: 12,
+    code: "GDK-2026-003",
+    status: "Actif",
+  },
+  {
+    id: 2,
+    name: "Fatima Ahmed",
+    village: "Rosso",
+    familles: 8,
+    code: "GDK-2026-004",
+    status: "Actif",
+  },
+  {
+    id: 3,
+    name: "Mohamed Ali",
+    village: "Kaédi",
+    familles: 20,
+    code: "GDK-2026-005",
+    status: "Inactif",
+  },
+]);
+const filteredCoordinateurs = coordinateurs.filter((item) => {
+  const keyword = search.trim().toLowerCase();
 
-
-    
-
-    
-
-     
-  ]);
-
-  const filteredCoordinateurs = coordinateurs.filter((item) => {
-    const keyword = search.toLowerCase();
-
-    return (
-      item.name.toLowerCase().includes(keyword) ||
-      item.code.toLowerCase().includes(keyword)
-    );
-  });
+  return (
+    item.name.toLowerCase().includes(keyword) ||
+    item.code.toLowerCase().includes(keyword) ||
+    item.village.toLowerCase().includes(keyword) ||
+    item.familles.toString().includes(keyword) ||
+    item.status.toLowerCase() === keyword
+  );
+});
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -70,7 +65,7 @@ export default function ListeCoordinateurs() {
   showRight={false}
   onBack={() => navigate("/liste-famille")}
 />
-          <NavigationHeader
+         <NavigationHeader
   title="Liste des coordinateurs"
   type="share"
   actionTitle="Exporter la liste des coordinateurs"
@@ -81,6 +76,7 @@ export default function ListeCoordinateurs() {
   secondActionTitle="Ajouter un coordinateur"
   onSecondAction={() => navigate("/ajout-coordinateur")}
 />
+
           <div className="my-6">
             <SearchBar
               value={search}
@@ -109,13 +105,13 @@ export default function ListeCoordinateurs() {
     onClick={() => navigate("/fiche-coordinateur")}
     className="cursor-pointer"
   >
-        <CardDonateur
-          name={coordinateur.name}
-          email={coordinateur.email}
-          date={coordinateur.date}
-          code={coordinateur.code}
-          status={coordinateur.status}
-        />
+     <CardCoordinateur
+  name={coordinateur.name}
+  village={coordinateur.village}
+  familles={coordinateur.familles}
+  code={coordinateur.code}
+  status={coordinateur.status}
+/>
       </div>
     ))}
   </div>
