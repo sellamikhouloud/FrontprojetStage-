@@ -70,7 +70,7 @@ export default function AjoutDistribution() {
   },
 ];
  const [showNewProduct, setShowNewProduct] = useState(false);
- const [date, setDate] = useState(new Date("2026-06-18"));
+ const [date, setDate] = useState(new Date());
  const [confirmed, setConfirmed] = useState(false);
  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 const navigate = useNavigate();

@@ -106,6 +106,7 @@ const navigate = useNavigate();
   value={dateNaissance}
   onChange={setDateNaissance}
   noPadding
+  defaultToToday={false}
 />
 
 <Input
