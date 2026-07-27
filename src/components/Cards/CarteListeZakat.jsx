@@ -49,20 +49,20 @@ const CardListZakat = ({
         </div>
 
         {/* Ligne 3 */}
-        <div className="mt-2">
-          <span
-            className="text-[15px] font-medium"
-            style={{
-              color: isGirl ? "#EF4444" : "#528583",
-            }}
-          >
-            Montant
-          </span>
-
-         <span className="ml-2 text-[15px] font-semibold text-[#111827]">
-    {valeur}
+       <div className="mt-2 flex items-center gap-2">
+  <span
+    className="text-[15px] font-semibold"
+    style={{
+      color: isGirl ? "#EF4444" : "#4E9F8A",
+    }}
+  >
+    {montant || "Montant"}
   </span>
-        </div>
+
+  <span className="text-[15px] font-semibold text-[#202124]">
+    {valeur || "-"}
+  </span>
+</div>
       </div>
 
       {/* ================= DESKTOP ================= */}
@@ -98,18 +98,20 @@ const CardListZakat = ({
         </div>
 
         {/* Deuxième ligne */}
-        <div className="mt-2 flex items-center gap-2 text-[16px]">
-          <span
-            className="font-medium"
-            style={{
-              color: isGirl ? "#EF4444" : "#528583",
-            }}
-          >
-            {montant}
-          </span>
+       <div className="mt-2 flex items-center gap-2 text-[16px]">
+  <span
+    className="font-semibold"
+    style={{
+      color: isGirl ? "#EF4444" : "#4E9F8A",
+    }}
+  >
+    {montant || "Montant"}
+  </span>
 
-          <span className="text-[#111827] font-semibold">{valeur}</span>
-        </div>
+  <span className="font-semibold text-[#202124]">
+    {valeur || "-"}
+  </span>
+</div>
       </div>
     </div>
   );
