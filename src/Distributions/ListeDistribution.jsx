@@ -167,7 +167,7 @@ const filtersContent = (
     />
 
     <DateSelect
-      placeholder="Tapez pour choisir la date fin d'une periode "
+      placeholder="Tapez pour choisir la date de fin d'une periode "
       value={filters.dateFin}
       onChange={(date) =>
         setFilters({
@@ -240,17 +240,12 @@ if (isFilterOpen && isMobile) {
       <Sidebar role="admin" />
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-          <NavigationHeader
-  title="Liste des distributions"
-
-  type="share"
-  actionTitle="Exporter la liste des distributions"
-  onAction={() => console.log("Exporter")}
-
-  secondType="add"
-  secondActionTitle="Ajouter une distribution"
-  onSecondAction={() => navigate("/ajout-distribution")}
-/>
+        <NavigationHeader
+          title="Stock de produit"
+          type="add"
+          actionTitle="ajuster le stock et voir tous "
+          onAction={() => setShowStockPopup(true)}
+        />
        
 
          {/* Stock cards */}
@@ -269,9 +264,14 @@ if (isFilterOpen && isMobile) {
 
        <NavigationHeader
   title="Liste des distributions"
-  type="add"
-  actionTitle="Ajouter une distribution"
-  onAction={() => navigate("/ajout-distribution")}
+
+  type="share"
+  actionTitle="Exporter la liste des distributions"
+  onAction={() => console.log("Exporter")}
+
+  secondType="add"
+  secondActionTitle="Ajouter une distribution"
+  onSecondAction={() => navigate("/ajout-distribution")}
 />
         <div className="my-6">
           <SearchBar
