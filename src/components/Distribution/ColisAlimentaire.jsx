@@ -1,7 +1,7 @@
 import ProductItem from "./ProductItem";
-import Button from "./Button/Button";
+import Button from "../Button/Button";
 
-import Plus from "../assets/BlackPlus.svg";
+import Plus from "../../assets/BlackPlus.svg";
 import { useState } from "react";
 import NewProductCard from "./NewProductCard";
 

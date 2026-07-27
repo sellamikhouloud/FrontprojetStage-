@@ -1,4 +1,4 @@
-import DistributionItem from "../DistributionItem";
+import DistributionItem from "../Distribution/DistributionItem";
 
 const DistributionCard = ({
   title,
