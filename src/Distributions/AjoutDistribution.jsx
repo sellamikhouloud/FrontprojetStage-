@@ -2,6 +2,7 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import Card from "../components/Cards/Card";
 import CardPopup from "../components/Cards/Card2";
+import SelectorWithAction from "../components/Forms/SelectorWithAction";
 import LaitInfantile from "../components/Distribution/LaitInfantile";
 
 import ColisAlimentaire from "../components/Distribution/ColisAlimentaire";
@@ -18,7 +19,8 @@ import DateContainer from "../components/Containers/DateContainer";
 import InfoCard from "../components/Containers/AfficherContainer";
 import InfoHeader from "../components/Containers/InfoBanner";
 import Button from "../components/Button/Button";
-import PopuphistoriqueDistribution from "../components/Popups/PopupHistoriqueDistribution";
+
+import PopupListeFamilles from "../components/Popups/PopupListeFamilles";
 
 import ConfirmationForm from "../components/Forms/ConfirmationForm";
 
@@ -26,25 +28,7 @@ import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
 
 export default function AjoutDistribution() {
-  const enfant = {
-    id: 1,
-    enfant: "Aïcha Mint Mohamed",
-    mere: "Meriem",
-    sexe: "Fille",
-    region: "Lexeiba",
-    naissance: "12 mars 2026",
-    code: "GDK-2026-003",
-    badges: [
-      {
-        type: "mam",
-        text: "MAM nourrisson",
-      },
-      {
-        type: "mere",
-        text: "Mère normale",
-      },
-    ],
-  };
+ 
 
   const products = [
   {
@@ -79,32 +63,52 @@ const navigate = useNavigate();
     unit: "",
     quantity: "",
   });
-  const [showHistorique, setShowHistorique] = useState(false);
- const distributionHistory = [
+ 
+
+const listeDesFamilles = [
   {
     id: 1,
-    enfant: enfant.enfant,
-    code: enfant.code,
-    distribution: "Distribution 2",
-    date: "12/06/2026",
-    produits: products.map((p) => ({
-      nom: p.title,
-      quantite: `${p.quantity} ${p.unit}`,
-    })),
+    enfant: "Aïcha Mint Mohamed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    naissance: "12 mars 2026",
+    code: "GDK-2026-003",
+    badges: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
   },
-   {
+  {
     id: 2,
-    enfant: enfant.enfant,
-    code: enfant.code,
-    distribution: "Distribution 2",
-    date: "30/06/2026",
-    produits: products.map((p) => ({
-      nom: p.title,
-      quantite: `${p.quantity} ${p.unit}`,
-    })),
+    enfant: "Aïcha Mint Mohamed",
+    sexe: "Garçon",
+    region: "Lexeiba",
+    naissance: "22 mars 2025",
+    code: "GDK-2026-003",
+    badges: [
+      { type: "mas", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
   },
-
+  {
+    id: 3,
+    enfant: "Aïcha Mint Mohamed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    naissance: "12 mars 2026",
+    code: "GDK-2026-003",
+    badges: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
 ];
+
+const [openFamilles, setOpenFamilles] = useState(false);
+const [selectedFamille, setSelectedFamille] = useState(null);
+const handleSearch = () => {
+  setOpenFamilles(true);
+};
 
 return (
   <div className="min-h-screen bg-white">
@@ -164,40 +168,49 @@ return (
     >
         {/* Header */}
         <div className="mb-0 lg:mb-6">
-       <PageHeader
+      <PageHeader
   leftTitle="Annuler"
-  rightTitle="Voir historique des distributions"
+  showRight={false}
   onBack={() => window.history.back()}
-  onRightClick={() => setShowHistorique(true)}
 />
         </div>
+       {!selectedFamille && (
+ <SelectorWithAction
+  label="Choisir la famille concerne"
+  description="Cliquer pour rechercher la famille concerne par la distribution"
+  onAction={handleSearch}
+/>
+)}
 
         {/* Family Card */}
-       {/* Mobile */}
-<div className="block lg:hidden mt-4">
-  <CardPopup
-    enfant={enfant.enfant}
-    sexe={enfant.sexe}
-    region={enfant.region}
-    naissance={enfant.naissance}
-    code={enfant.code}
-    badges={enfant.badges}
-  />
-</div>
+      {selectedFamille && (
+  <>
+    {/* Mobile */}
+    <div className="block lg:hidden mt-4">
+      <CardPopup
+        enfant={selectedFamille.enfant}
+        sexe={selectedFamille.sexe}
+        region={selectedFamille.region}
+        naissance={selectedFamille.naissance}
+        code={selectedFamille.code}
+        badges={selectedFamille.badges}
+      />
+    </div>
 
-{/* Desktop */}
-<div className="hidden lg:block">
-  <Card
-    enfant={enfant.enfant}
-    mere={enfant.mere}
-    sexe={enfant.sexe}
-    region={enfant.region}
-    naissance={enfant.naissance}
-    code={enfant.code}
-    badges={enfant.badges}
-  />
-</div>
-
+    {/* Desktop */}
+    <div className="hidden lg:block">
+      <Card
+        enfant={selectedFamille.enfant}
+        mere={selectedFamille.mere}
+        sexe={selectedFamille.sexe}
+        region={selectedFamille.region}
+        naissance={selectedFamille.naissance}
+        code={selectedFamille.code}
+        badges={selectedFamille.badges}
+      />
+    </div>
+  </>
+)}
         {/* Rest of page */}
       {/* Main content */}
 <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
@@ -314,10 +327,14 @@ return (
 )}
 
       </main>
-      <PopuphistoriqueDistribution
-  open={showHistorique}
-  onClose={() => setShowHistorique(false)}
-  Distribution={distributionHistory}
+  <PopupListeFamilles
+  open={openFamilles}
+  onClose={() => setOpenFamilles(false)}
+  familles={listeDesFamilles}
+  onSelectFamille={(famille) => {
+    setSelectedFamille(famille);
+    setOpenFamilles(false);
+  }}
 />
     </div>
   );
