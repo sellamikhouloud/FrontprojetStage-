@@ -23,7 +23,10 @@ const EditableInfoCard = ({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "mousedown",
+      handleClickOutside
+    );
 
     return () => {
       document.removeEventListener(
@@ -34,7 +37,7 @@ const EditableInfoCard = ({
   }, []);
 
   return (
-    <div className="w-full" ref={containerRef}>
+    <div className="w-full min-w-0" ref={containerRef}>
       {/* Titre */}
       <div className="flex justify-between items-center mb-1">
         <h2 className="text-[18px] font-semibold">
@@ -43,38 +46,44 @@ const EditableInfoCard = ({
       </div>
 
       {/* Conteneur */}
-      <div className="border-2 border-dashed border-[#84D6D0] rounded-[15px] px-4 py-2">
+      <div className="border-2 border-dashed border-[#84D6D0] rounded-[15px] px-4 py-2 overflow-hidden">
         {data.map((item, index) => (
           <div
             key={index}
-            className="relative flex justify-between items-center py-1 gap-4"
+            className="relative flex justify-between items-center gap-4 py-1 min-w-0"
           >
             {/* Label */}
-            <span className="text-[#4E9F8A] font-medium">
+            <span className="text-[#4E9F8A] font-medium shrink-0">
               {item.label}
             </span>
 
             {/* ================= DATE ================= */}
             {item.type === "date" ? (
-              <div className="relative w-[220px]">
+              <div className="relative w-[220px] max-w-full min-w-0">
                 <div
                   onClick={() =>
                     editable &&
                     setOpenedIndex(
-                      openedIndex === index ? null : index
+                      openedIndex === index
+                        ? null
+                        : index
                     )
                   }
-                  className="text-right cursor-pointer text-[#202124]"
+                  className="w-full text-right cursor-pointer text-[#202124] truncate overflow-hidden whitespace-nowrap"
                 >
                   {item.value
-                    ? item.value.toLocaleDateString("fr-FR")
+                    ? item.value.toLocaleDateString(
+                        "fr-FR"
+                      )
                     : "Choisir une date"}
                 </div>
 
                 {openedIndex === index && (
                   <div
                     className="absolute right-0 mt-3 z-50 bg-white rounded-[20px] shadow-lg"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) =>
+                      e.stopPropagation()
+                    }
                   >
                     <DatePicker
                       inline
@@ -109,10 +118,13 @@ const EditableInfoCard = ({
                           </button>
 
                           <span className="text-[14px] font-medium text-[#374151] capitalize">
-                            {date.toLocaleString("fr-FR", {
-                              month: "long",
-                              year: "numeric",
-                            })}
+                            {date.toLocaleString(
+                              "fr-FR",
+                              {
+                                month: "long",
+                                year: "numeric",
+                              }
+                            )}
                           </span>
 
                           <button
@@ -130,15 +142,17 @@ const EditableInfoCard = ({
               </div>
             ) : item.options ? (
               /* ================= OPTIONS ================= */
-              <div className="relative w-[220px]">
+              <div className="relative w-[220px] max-w-full min-w-0">
                 <div
                   onClick={() =>
                     editable &&
                     setOpenedIndex(
-                      openedIndex === index ? null : index
+                      openedIndex === index
+                        ? null
+                        : index
                     )
                   }
-                  className="text-right cursor-pointer text-[#202124]"
+                  className="w-full text-right cursor-pointer text-[#202124] truncate overflow-hidden whitespace-nowrap"
                 >
                   {item.value}
                 </div>
@@ -146,7 +160,9 @@ const EditableInfoCard = ({
                 {openedIndex === index && (
                   <div
                     className="absolute right-0 mt-2 w-full bg-white border border-[#E5E7EB] rounded-xl shadow-lg z-50"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) =>
+                      e.stopPropagation()
+                    }
                   >
                     <Options
                       options={item.options}
@@ -160,29 +176,35 @@ const EditableInfoCard = ({
               </div>
             ) : (
               /* ================= INPUT ================= */
-              <div className="flex items-center justify-end gap-2 w-[220px]">
-  <input
-    type="text"
-    value={item.value}
-    onChange={(e) => onChange(index, e.target.value)}
-    disabled={!editable}
-    className="
-      flex-1
-      text-right
-      bg-transparent
-      border-none
-      outline-none
-      text-[#202124]
-      disabled:cursor-default
-    "
-  />
+                            <div className="flex items-center justify-end gap-2 w-[220px] max-w-full min-w-0 overflow-hidden">
+                <input
+                  type="text"
+                  value={item.value}
+                  onChange={(e) =>
+                    onChange(index, e.target.value)
+                  }
+                  disabled={!editable}
+                  className="
+                    flex-1
+                    min-w-0
+                    text-right
+                    bg-transparent
+                    border-none
+                    outline-none
+                    text-[#202124]
+                    truncate
+                    overflow-hidden
+                    whitespace-nowrap
+                    disabled:cursor-default
+                  "
+                />
 
-  {item.unit && (
-    <span className="text-[#6B7280] whitespace-nowrap">
-      {item.unit}
-    </span>
-  )}
-</div>
+                {item.unit && (
+                  <span className="text-[#6B7280] whitespace-nowrap shrink-0">
+                    {item.unit}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         ))}
