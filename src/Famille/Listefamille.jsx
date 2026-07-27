@@ -309,14 +309,41 @@ const filterTagsContent = (
     }, 500);
   }, []);
 
-  const filteredFamilies = familles.filter((famille) => {
-    const keyword = search.toLowerCase();
+ const filteredFamilies = familles.filter((famille) => {
+  const keyword = search.trim().toLowerCase();
 
-    return (
-      famille.enfant.toLowerCase().includes(keyword) ||
-      famille.code.toLowerCase().includes(keyword)
-    );
-  });
+  const normalizedKeyword = keyword.replace(/^0/, "");
+
+  const matchSexe =
+    famille.sexe.toLowerCase() === normalizedKeyword;
+
+  // Date
+  const naissance = famille.naissance.toLowerCase();
+
+  const [jour, mois, annee] = naissance.split(" ");
+
+  const jourSansZero = jour.replace(/^0/, "");
+
+  const matchDate = [
+    naissance,                              // 05 avril 2025
+    `${jourSansZero} ${mois} ${annee}`,     // 5 avril 2025
+    jour,                                   // 05
+    jourSansZero,                           // 5
+    mois,                                   // avril
+    annee,                                  // 2025
+    `${jour} ${mois}`,                      // 05 avril
+    `${jourSansZero} ${mois}`,              // 5 avril
+  ].some((value) =>
+    value.includes(normalizedKeyword)
+  );
+
+  return (
+    famille.enfant.toLowerCase().includes(normalizedKeyword) ||
+    famille.code.toLowerCase().includes(normalizedKeyword) ||
+    matchSexe ||
+    matchDate
+  );
+});
 if  (isFilterOpen && isMobile)  {
   return (
     <div className="min-h-screen bg-white p-6 md:hidden">
@@ -355,7 +382,7 @@ if  (isFilterOpen && isMobile)  {
    
 
   <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-         <NavigationHeader
+        <NavigationHeader
   title="Liste des familles"
   type="share"
   actionTitle="Exporter la liste des familles"
