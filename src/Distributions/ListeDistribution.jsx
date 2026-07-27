@@ -156,7 +156,7 @@ const filtersContent = (
   <div className="space-y-4">
 
     <DateSelect
-      placeholder="Tapez pour choisir la date debut"
+      placeholder="Tapez pour choisir la date debut d'une periode"
       value={filters.dateDebut}
       onChange={(date) =>
         setFilters({
@@ -167,7 +167,7 @@ const filtersContent = (
     />
 
     <DateSelect
-      placeholder="Tapez pour choisir la date fin"
+      placeholder="Tapez pour choisir la date fin d'une periode "
       value={filters.dateFin}
       onChange={(date) =>
         setFilters({
