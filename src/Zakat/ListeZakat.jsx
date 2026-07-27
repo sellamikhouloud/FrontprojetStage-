@@ -8,6 +8,7 @@ import Button from "../components/Button/Button";
 import FilterTag from "../components/Filter/FilterTag";
 import CardListZakat from "../components/Cards/CarteListeZakat";
 import SelectInput  from "../components/Containers/ChoiceContainer";
+import PopupDetailZakat from "../components/Popups/PopupdetailsZakat";
 import NoResultImage from "../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -33,61 +34,35 @@ const motifOptions = [
   "Autre",
 ];
  const zakats = [
-  {
-    id: 1,
-    nom: "Aïcha Mint Mohamed",
-    code: "GDK-2026-003",
-    sexe: "Garçon",
-    motif: "Naissance",
-    zakat: "Zakat 1",
-    date: "12/06/2026",
-    montant: "Montant",
-    valeur: "1500 MRU / 420 Euros",
-  },
-  {
-    id: 2,
-    nom: "Aïcha Mint Mohamed",
-    code: "GDK-2026-004",
-    sexe: "Fille",
-    motif: "Décès",
-    zakat: "Zakat 2",
-    date: "12/06/2026",
-    montant: "Montant",
-    valeur: "1500 MRU / 420 Euros",
-  },
-  {
-    id: 3,
-    nom: "Mohamed Ould Ahmed",
-    code: "GDK-2026-005",
-    sexe: "Garçon",
-    motif: "Déménagement",
-    zakat: "Zakat 3",
-    date: "17/05/2026",
-    montant: "Montant",
-    valeur: "2000 MRU / 470 Euros",
-  },
-  {
-    id: 4,
-    nom: "Fatimata Mint Sidi",
-    code: "GDK-2026-006",
-    sexe: "Garçon",
-    motif: "Autre",
-    zakat: "Zakat 4",
-    date: "12/06/2026",
-    montant: "Montant",
-    valeur: "3500 MRU / 700 Euros",
-  },
-  {
-    id: 5,
-    nom: "Meriem Mint Ahmed",
-    code: "GDK-2026-007",
-    sexe: "Fille",
-    motif: "Naissance",
-    zakat: "Zakat 5",
-    date: "12/09/2025",
-    montant: "Montant",
-    valeur: "5500 MRU / 1000 Euros",
-  },
+{
+  id: 1,
+  numero: "001",
+
+  enfant: "Aïcha Mint Mohamed",
+  mere: "Fatimetou Mint Ahmed",
+
+  nom: "Aïcha Mint Mohamed",
+  code: "GDK-2026-003",
+  sexe: "Garçon",
+
+  region: "Nouakchott",
+  dateNaissance: "12/05/2023",
+
+  causePrincipale: "Vulnérabilité extrême",
+
+  zakat: "Zakat 1",
+
+  date: "12/06/2026",
+
+  montant: "1500",
+  euro: "42 Euros",
+
+  modePaiement: "Espèces",
+  enregistrePar: "Administrateur",
+
+  observations: "Aucune observation.",
+  precisions: "Distribution effectuée."
+}
 ];
 const filtered = zakats.filter((item) => {
   const keyword = search.toLowerCase();
@@ -123,6 +98,9 @@ const filterTagsContent = (
     )}
   </div>
 );
+
+const [selectedZakat, setSelectedZakat] = useState(null);
+const [showDetailPopup, setShowDetailPopup] = useState(false);
 
 const [isMobile, setIsMobile] = useState(
   window.innerWidth < 768
@@ -218,7 +196,6 @@ if (isFilterOpen && isMobile) {
        
 
  
-
 <NavigationHeader
   title="Liste des Zakat"
 
@@ -256,14 +233,18 @@ if (isFilterOpen && isMobile) {
           <div className="flex-1 space-y-3">
 
             {filtered.map((item) => (
-            <CardListZakat
+          <CardListZakat
   nom={item.nom}
   code={item.code}
   sexe={item.sexe}
   zakat={item.zakat}
   date={item.date}
-  montant={item.montant}
-  valeur={item.valeur}
+  montant="Montant"
+  valeur={`${item.montant} MRU / ${item.euro}`}
+  onClick={() => {
+    setSelectedZakat(item);
+    setShowDetailPopup(true);
+  }}
 />
             ))}
 
@@ -281,7 +262,17 @@ if (isFilterOpen && isMobile) {
 
       </main>
      
-  
+  <PopupDetailZakat
+  open={showDetailPopup}
+  zakat={selectedZakat}
+  onClose={() => {
+    setShowDetailPopup(false);
+    setSelectedZakat(null);
+  }}
+  onEdit={(zakat) => {
+    console.log("Modifier :", zakat);
+  }}
+/>
     </div>
    
   );
