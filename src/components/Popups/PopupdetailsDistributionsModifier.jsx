@@ -29,7 +29,23 @@ const updateField = (setter, data) => (index, value) => {
   updated[index].value = value;
   setter(updated);
 };
+const splitValueUnit = (text) => {
+  const valeur = text?.toString().trim() || "";
 
+  const match = valeur.match(/^([\d.,]+)\s*(.+)$/);
+
+  if (match) {
+    return {
+      value: match[1],
+      unit: match[2],
+    };
+  }
+
+  return {
+    value: valeur,
+    unit: "",
+  };
+};
 useEffect(() => {
   if (!distribution) return;
 
@@ -38,20 +54,41 @@ useEffect(() => {
     { label: "Distribution n°", value: distribution.numeroDistribution },
     { label: "Enregistrée par", value: distribution.enregistrePar },
   ]);
-
-  setLaitInfo([
-    { label: "Type", value: distribution.typeLait },
-    { label: "Nombre de boîtes", value: distribution.nombreBoites },
-    { label: "Poids total", value: distribution.poidsTotal },
-  ]);
+const poids = splitValueUnit(distribution.poidsTotal);
+const boites = splitValueUnit(distribution.nombreBoites);
+ setLaitInfo([
+  {
+    label: "Type",
+    value: distribution.typeLait,
+    options: [
+      "1er âge (0 à 6 mois)",
+      "2ème âge (6 à 12 mois)",
+    ],
+  },
+  {
+    label: "Nombre de boîtes",
+    value: boites.value,
+    unit: boites.unit || "boîtes",
+  },
+  {
+    label: "Poids total",
+    value: poids.value,
+    unit: poids.unit,
+  },
+]);
 
  setColisInfo(
   (distribution.produits || [])
     .filter((item) => !item.nom.toLowerCase().includes("lait"))
-    .map((item) => ({
-      label: item.nom,
-      value: item.quantite,
-    }))
+    .map((item) => {
+      const { value, unit } = splitValueUnit(item.quantite);
+
+      return {
+        label: item.nom,
+        value,
+        unit,
+      };
+    })
 );
 }, [distribution]);
 
@@ -64,8 +101,8 @@ const handleSave = () => {
     enregistrePar: generalInfo[2]?.value,
 
     typeLait: laitInfo[0]?.value,
-    nombreBoites: laitInfo[1]?.value,
-    poidsTotal: laitInfo[2]?.value,
+   nombreBoites: `${laitInfo[1]?.value} ${laitInfo[1]?.unit}`,
+    poidsTotal: `${laitInfo[2]?.value} ${laitInfo[2]?.unit}`,
 
   produits: [
   {
@@ -73,9 +110,11 @@ const handleSave = () => {
     quantite: distribution.produits[0].quantite,
   },
   ...colisInfo.map((item) => ({
-    nom: item.label,
-    quantite: item.value,
-  })),
+  nom: item.label,
+  quantite: item.unit
+    ? `${item.value} ${item.unit}`
+    : item.value,
+})),
 ],
   };
 
@@ -227,3 +266,4 @@ setTimeout(() => {
 };
 
 export default PopupDetailDistributionModifier;
+
