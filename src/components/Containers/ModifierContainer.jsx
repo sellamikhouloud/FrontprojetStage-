@@ -160,23 +160,29 @@ const EditableInfoCard = ({
               </div>
             ) : (
               /* ================= INPUT ================= */
-              <input
-                type="text"
-                value={item.value}
-                onChange={(e) =>
-                  onChange(index, e.target.value)
-                }
-                disabled={!editable}
-                className="
-                  w-[220px]
-                  text-right
-                  bg-transparent
-                  border-none
-                  outline-none
-                  text-[#202124]
-                  disabled:cursor-default
-                "
-              />
+              <div className="flex items-center justify-end gap-2 w-[220px]">
+  <input
+    type="text"
+    value={item.value}
+    onChange={(e) => onChange(index, e.target.value)}
+    disabled={!editable}
+    className="
+      flex-1
+      text-right
+      bg-transparent
+      border-none
+      outline-none
+      text-[#202124]
+      disabled:cursor-default
+    "
+  />
+
+  {item.unit && (
+    <span className="text-[#6B7280] whitespace-nowrap">
+      {item.unit}
+    </span>
+  )}
+</div>
             )}
           </div>
         ))}
