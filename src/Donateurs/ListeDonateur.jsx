@@ -13,7 +13,7 @@ export default function ListeDonateur() {
 
   const [search, setSearch] = useState("");
 
-  const [coordinateurs] = useState([
+  const [Donateurs] = useState([
     {
       id: 1,
       name: "Amadou Ba",
@@ -33,7 +33,7 @@ export default function ListeDonateur() {
     {
       id: 3,
       name: "Mohamed Ali",
-      email: "mohamed@gmail.com",
+      email: "kohamed@gmail.com",
       date: "08/05/2025",
       code: "GDK-2026-005",
       status: "Inactif",
@@ -47,14 +47,44 @@ export default function ListeDonateur() {
      
   ]);
 
-  const filteredCoordinateurs = coordinateurs.filter((item) => {
-    const keyword = search.toLowerCase();
+  const filteredDonateurs = Donateurs.filter((item) => {
+  const keyword = search.trim().toLowerCase();
 
-    return (
-      item.name.toLowerCase().includes(keyword) ||
-      item.code.toLowerCase().includes(keyword)
-    );
-  });
+  
+  const normalizedKeyword = keyword.replace(/^0/, "");
+
+  
+  const date = item.date.toLowerCase();
+
+  const [jour, mois, annee] = date.split("/");
+
+  const jourSansZero = jour.replace(/^0/, "");
+  const moisSansZero = mois.replace(/^0/, "");
+
+  const matchDate = [
+    date,                                // 12/05/2025
+    `${jourSansZero}/${mois}/${annee}`,  // 5/05/2025
+    `${jour}/${moisSansZero}/${annee}`,  // 05/5/2025
+    `${jourSansZero}/${moisSansZero}/${annee}`, // 5/5/2025
+    jour,                                // 05
+    jourSansZero,                        // 5
+    mois,                                // 05
+    moisSansZero,                        // 5
+    annee,                               // 2025
+    `${jour}/${mois}`,                   // 05/05
+    `${jourSansZero}/${moisSansZero}`,   // 5/5
+  ].some((value) =>
+    value.includes(normalizedKeyword)
+  );
+
+  return (
+    item.name.toLowerCase().includes(normalizedKeyword) ||
+    item.email.toLowerCase().includes(normalizedKeyword) ||
+    item.code.toLowerCase().includes(normalizedKeyword) ||
+    item.status.toLowerCase() === normalizedKeyword ||
+    matchDate
+  );
+});
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -91,7 +121,7 @@ export default function ListeDonateur() {
             />
           </div>
 
-        {filteredCoordinateurs.length === 0 && (
+        {filteredDonateurs.length === 0 && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
@@ -101,9 +131,9 @@ export default function ListeDonateur() {
   </div>
 )}
 
-{filteredCoordinateurs.length > 0 && (
+{filteredDonateurs.length > 0 && (
    <div className="space-y-3">
-    {filteredCoordinateurs.map((coordinateur) => (
+    {filteredDonateurs.map((coordinateur) => (
       <div
   key={coordinateur.id}
   className="cursor-pointer"
@@ -126,3 +156,4 @@ export default function ListeDonateur() {
    
   );
 }
+
