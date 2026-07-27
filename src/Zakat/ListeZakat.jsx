@@ -194,7 +194,15 @@ if (isFilterOpen && isMobile) {
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
        
+<NavigationHeader
+ 
 
+ 
+
+  secondType="add"
+  secondActionTitle="Alimenter le solde"
+  onSecondAction={() => navigate("")}
+/>
  
 <NavigationHeader
   title="Liste des Zakat"
@@ -204,7 +212,7 @@ if (isFilterOpen && isMobile) {
   onAction={() => console.log("Exporter")}
 
   secondType="add"
-  secondActionTitle="Ajouter une distribution"
+  secondActionTitle="Ajouter une zakat"
   onSecondAction={() => navigate("")}
 />
         <div className="my-6">
