@@ -28,6 +28,9 @@ import SelectProductsPopup from "../components/Popups/SelectProductsPopup";
 
 import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
+import { useLocation } from "react-router-dom";
+
+
 
 export default function AjoutDistribution() {
  
@@ -44,11 +47,20 @@ export default function AjoutDistribution() {
   ];
 
   // products devient un état, pour pouvoir y ajouter les produits sélectionnés
-  const [products, setProducts] = useState([]);
+  
  const [showNewProduct, setShowNewProduct] = useState(false);
- const [date, setDate] = useState(new Date());
- const [confirmed, setConfirmed] = useState(false);
+
+
  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+ 
+ const location = useLocation();
+const draft = location.state?.draft;
+
+const [selectedFamille, setSelectedFamille] = useState(draft?.selectedFamille || null);
+const [products, setProducts] = useState(draft?.products || []);
+const [date, setDate] = useState(draft?.date ? new Date(draft.date) : new Date());
+const [confirmed, setConfirmed] = useState(draft?.confirmed || false);
+
 const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
     name: "",
@@ -98,7 +110,7 @@ const listeDesFamilles = [
 ];
 
 const [openFamilles, setOpenFamilles] = useState(false);
-const [selectedFamille, setSelectedFamille] = useState(null);
+
 const [openOptions, setOpenOptions] = useState(false);
 
 const familyOptions = [
@@ -121,12 +133,16 @@ const handleUpdateQuantity = (id, newQuantity) => {
 const handleRemoveProduct = (id) => {
   setProducts((prev) => prev.filter((product) => product.id !== id));
 };
-
 const handleOptionSelect = (value) => {
   if (value === "changer") {
     setOpenFamilles(true);
   } else if (value === "voir") {
-    navigate(`/famille/${selectedFamille.id}`);
+    navigate(`/famille/${selectedFamille.id}`, {
+      state: {
+        from: "/ajout-distribution",
+        draft: { selectedFamille, products, date, confirmed },
+      },
+    });
   }
 };
 return (

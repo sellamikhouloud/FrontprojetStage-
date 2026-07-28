@@ -381,7 +381,7 @@ const handleAlertClick = (alert) => {
           <FamilyStatusCard
               title={familyStatusTitle}
               stats={familyStats}
-             onClick={() => navigate("/liste-famille")}
+             onClick={() => navigate(`/famille/${id}`, { state: { from: "/dashboard" } })}
            />
 
 

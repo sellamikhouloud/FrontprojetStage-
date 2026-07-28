@@ -9,6 +9,7 @@ import FilterTag from "../components/Filter/FilterTag";
 import CardListZakat from "../components/Cards/CarteListeZakat";
 import SelectInput  from "../components/Containers/ChoiceContainer";
 import PopupDetailZakat from "../components/Popups/PopupdetailsZakat";
+import PopupModifierZakat from "../components/Popups/PopupdetailsZakatModifier";
 import NoResultImage from "../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +17,8 @@ export default function ZakatPage() {
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
+
+
   const navigate = useNavigate();
 const [filters, setFilters] = useState({
   motif: "",
@@ -102,6 +105,7 @@ const filterTagsContent = (
 const [selectedZakat, setSelectedZakat] = useState(null);
 const [showDetailPopup, setShowDetailPopup] = useState(false);
 
+const [openModifier, setOpenModifier] = useState(false);
 const [isMobile, setIsMobile] = useState(
   window.innerWidth < 768
 );
@@ -270,16 +274,29 @@ if (isFilterOpen && isMobile) {
 
       </main>
      
-  <PopupDetailZakat
-  open={showDetailPopup}
-  zakat={selectedZakat}
-  onClose={() => {
-    setShowDetailPopup(false);
-    setSelectedZakat(null);
-  }}
-  onEdit={(zakat) => {
-    console.log("Modifier :", zakat);
-  }}
+ <PopupDetailZakat
+    open={showDetailPopup}
+    zakat={selectedZakat}
+    onClose={() => setShowDetailPopup(false)}
+    onEdit={(zakat) => {
+        setShowDetailPopup(false);
+        setSelectedZakat(zakat);
+        setOpenModifier(true);
+    }}
+/>
+
+<PopupModifierZakat
+    open={openModifier}
+    zakat={selectedZakat}
+    onClose={() => {
+        setOpenModifier(false);
+        setShowDetailPopup(true);
+    }}
+    onSave={(updated) => {
+        console.log(updated);
+        setOpenModifier(false);
+        setShowDetailPopup(true);
+    }}
 />
     </div>
    

@@ -305,8 +305,8 @@ const filterTagsContent = (
         },
       ]);
 
-      setLoading(false);
-    }, 500);
+     
+    });
   }, []);
 
  const filteredFamilies = familles.filter((famille) => {
@@ -412,11 +412,7 @@ if  (isFilterOpen && isMobile)  {
 
           </div>
 
-          {loading && (
-            <p className="text-center text-gray-500">
-              Chargement...
-            </p>
-          )}
+         
 
           {error && (
             <p className="text-center text-red-500">
@@ -446,8 +442,8 @@ if  (isFilterOpen && isMobile)  {
   className="hidden md:block cursor-pointer"
   onClick={() =>
     navigate(`/famille/${famille.id}`, {
-      state: famille,
-    })
+  state: { from: "/liste-famille" },
+})
   }
 >
   <Card

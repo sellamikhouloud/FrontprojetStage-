@@ -12,7 +12,7 @@ import MotherPhoto from "../assets/photo mere.svg";
 import successImage from "../assets/Success.svg"; 
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 import OMSGraphs from "../components/OMSGraphs";
 
@@ -23,6 +23,7 @@ import poidsTaille from "../assets/oms/poids-taille.png";
 
 
 const FamilyProfile = () => {
+  const location = useLocation();
     const navigate = useNavigate();
 const { id } = useParams();
   const nourrisson = [
@@ -391,6 +392,11 @@ const omsGraphs = [
     alt: "Poids pour la taille",
   },
 ]; 
+const handleBack = () => {
+  navigate(location.state?.from || "/dashboard", {
+    state: { draft: location.state?.draft },
+  });
+};
 
 return (
   <div className="flex h-screen overflow-hidden bg-white">
@@ -440,14 +446,21 @@ return (
      <PageHeader
   leftTitle="Revenir"
   showRight={false}
-  onBack={() => navigate("/liste-famille")}
+  onBack={handleBack} 
 />
 
        <NavigationHeader
   title="Fiche famille"
   type="edit"
   actionTitle="Modifier la fiche famille"
-  onAction={() => navigate(`/famille/${id}/modifier`)}
+  onAction={() =>
+  navigate(`/famille/${id}/modifier`, {
+    state: {
+      from: location.state?.from,
+      draft: location.state?.draft,   // ✅ add this
+    },
+  })
+}
 />
 
         {/* ==================== HAUT ==================== */}
