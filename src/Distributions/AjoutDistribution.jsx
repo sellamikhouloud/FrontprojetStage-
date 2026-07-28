@@ -2,6 +2,7 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import Card from "../components/Cards/Card";
 import CardPopup from "../components/Cards/Card2";
+import OptionsMenu from "../components/Containers/OptionsMenu";
 import SelectorWithAction from "../components/Forms/SelectorWithAction";
 import LaitInfantile from "../components/Distribution/LaitInfantile";
 
@@ -98,6 +99,13 @@ const listeDesFamilles = [
 
 const [openFamilles, setOpenFamilles] = useState(false);
 const [selectedFamille, setSelectedFamille] = useState(null);
+const [openOptions, setOpenOptions] = useState(false);
+
+const familyOptions = [
+  { label: "Changer la famille", value: "changer" },
+  { label: "Voir la fiche famille", value: "voir" },
+];
+
 const handleSearch = () => {
   setOpenFamilles(true);
 };
@@ -114,6 +122,13 @@ const handleRemoveProduct = (id) => {
   setProducts((prev) => prev.filter((product) => product.id !== id));
 };
 
+const handleOptionSelect = (value) => {
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    navigate(`/famille/${selectedFamille.id}`);
+  }
+};
 return (
   <div className="min-h-screen bg-white">
 
@@ -186,12 +201,18 @@ return (
 />
 )}
 
+       
+
         {/* Family Card */}
-      {selectedFamille && (
-  <>
-    {/* Mobile */}
-    <div className="block lg:hidden mt-4">
-      <CardPopup
+        {selectedFamille && (
+          <>
+            {/* Mobile */}
+            <div className="relative block lg:hidden mt-4">
+              <div
+                className="cursor-pointer"
+                onClick={() => setOpenOptions((prev) => !prev)}
+              >
+                 <CardPopup
         enfant={selectedFamille.enfant}
         sexe={selectedFamille.sexe}
         region={selectedFamille.region}
@@ -199,11 +220,24 @@ return (
         code={selectedFamille.code}
         badges={selectedFamille.badges}
       />
-    </div>
-
-    {/* Desktop */}
-    <div className="hidden lg:block">
-      <Card
+              </div>
+ 
+              <OptionsMenu
+                  open={openOptions}
+                 onClose={() => setOpenOptions(false)}
+                  options={familyOptions}
+                  onSelect={handleOptionSelect}
+               />
+    
+            </div>
+ 
+            {/* Desktop */}
+            <div className="relative hidden lg:block">
+              <div
+                className="cursor-pointer"
+                onClick={() => setOpenOptions((prev) => !prev)}
+              >
+                 <Card
         enfant={selectedFamille.enfant}
         mere={selectedFamille.mere}
         sexe={selectedFamille.sexe}
@@ -212,9 +246,17 @@ return (
         code={selectedFamille.code}
         badges={selectedFamille.badges}
       />
-    </div>
-  </>
-)}
+              </div>
+ 
+               <OptionsMenu
+                  open={openOptions}
+                  onClose={() => setOpenOptions(false)}
+                  options={familyOptions}
+                  onSelect={handleOptionSelect}
+                />
+            </div>
+          </>
+        )}
         {/* Rest of page */}
       {/* Main content */}
 <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
@@ -332,6 +374,8 @@ return (
 )}
 
       </main>
+
+      
   <PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
