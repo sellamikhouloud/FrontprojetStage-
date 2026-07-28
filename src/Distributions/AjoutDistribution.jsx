@@ -23,6 +23,7 @@ import Button from "../components/Button/Button";
 import PopupListeFamilles from "../components/Popups/PopupListeFamilles";
 
 import ConfirmationForm from "../components/Forms/ConfirmationForm";
+import SelectProductsPopup from "../components/Popups/SelectProductsPopup";
 
 import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
@@ -30,29 +31,19 @@ import SuccessImage from "../assets/Success.svg";
 export default function AjoutDistribution() {
  
 
-  const products = [
-  {
-    id: 1,
-    icon: Cereales,
-    title: "Céréales",
-    quantity: 5,
-    unit: "kg",
-  },
-  {
-    id: 2,
-    icon: Legumineuses,
-    title: "Légumineuses",
-    quantity: 2,
-    unit: "kg",
-  },
-  {
-    id: 3,
-    icon: Huile,
-    title: "Huile alimentaire",
-    quantity: 1.5,
-    unit: "L",
-  },
-];
+  const stockProducts = [
+    { id: 1, icon: Cereales, title: "Céréales", quantity: 50, unit: "kg" },
+    { id: 2, icon: Legumineuses, title: "Légumineuses", quantity: 30, unit: "kg" },
+    { id: 3, icon: Huile, title: "Huile alimentaire", quantity: 20, unit: "L" },
+    { id: 4, icon: Sucre, title: "Sucre", quantity: 15, unit: "kg" },
+    { id: 5, icon: Sel, title: "Sel", quantity: 10, unit: "kg" },
+    { id: 6, icon: Huile, title: "ggg", quantity: 20, unit: "L" },
+    { id: 7, icon: Sucre, title: "Riz", quantity: 15, unit: "kg" },
+    { id: 8, icon: Sel, title: "Pate", quantity: 10, unit: "kg" },
+  ];
+
+  // products devient un état, pour pouvoir y ajouter les produits sélectionnés
+  const [products, setProducts] = useState([]);
  const [showNewProduct, setShowNewProduct] = useState(false);
  const [date, setDate] = useState(new Date());
  const [confirmed, setConfirmed] = useState(false);
@@ -63,6 +54,7 @@ const navigate = useNavigate();
     unit: "",
     quantity: "",
   });
+   const [showStockPopup, setShowStockPopup] = useState(false);
  
 
 const listeDesFamilles = [
@@ -108,6 +100,18 @@ const [openFamilles, setOpenFamilles] = useState(false);
 const [selectedFamille, setSelectedFamille] = useState(null);
 const handleSearch = () => {
   setOpenFamilles(true);
+};
+const handleUpdateQuantity = (id, newQuantity) => {
+  setProducts((prev) =>
+    prev.map((product) =>
+      product.id === id
+        ? { ...product, quantity: newQuantity }
+        : product
+    )
+  );
+};
+const handleRemoveProduct = (id) => {
+  setProducts((prev) => prev.filter((product) => product.id !== id));
 };
 
 return (
@@ -161,7 +165,7 @@ return (
         lg:px-10
 
         pb-8
-        lg:pb-10
+        lg:pb-2
 
         lg:ml-24
       "
@@ -283,11 +287,12 @@ return (
 
   {/* RIGHT COLUMN */}
   <div>
-  <ColisAlimentaire
-    products={products}
-    onAddProduct={() => {}}
-  />
-
+ <ColisAlimentaire
+  products={products}
+  onAddProduct={() => setShowStockPopup(true)}
+  onUpdateQuantity={handleUpdateQuantity}
+  onRemoveProduct={handleRemoveProduct}
+/>
   {/* Mobile only */}
   <div className="mt-4 lg:hidden">
     <ConfirmationForm
@@ -336,6 +341,21 @@ return (
     setOpenFamilles(false);
   }}
 />
+{showStockPopup && (
+  <SelectProductsPopup
+    stockProducts={stockProducts.filter(
+      (stockProduct) =>
+        !products.some((p) => p.id === stockProduct.id)
+    )}
+    onClose={() => setShowStockPopup(false)}
+    onConfirm={(selected) => {
+      setProducts((prev) => [
+        ...prev,
+        ...selected.map((p) => ({ ...p, quantity: 0 })),
+      ]);
+    }}
+  />
+)}
     </div>
   );
 }
