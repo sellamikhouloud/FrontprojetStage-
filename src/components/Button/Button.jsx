@@ -155,6 +155,11 @@ const Button = ({
       text-white
       hover:bg-[#DC2626]
     `,
+
+    gris : `
+      bg-[#91A09F]
+      text-white
+    `
   };
 
   const wrapper =
