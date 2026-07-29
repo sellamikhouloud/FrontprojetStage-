@@ -8,6 +8,7 @@ const EditableInfoCard = ({
   data = [],
   editable = true,
   onChange,
+  onPopupClick,
 }) => {
   const [openedIndex, setOpenedIndex] = useState(null);
 
@@ -140,7 +141,29 @@ const EditableInfoCard = ({
                   </div>
                 )}
               </div>
-            ) : item.options ? (
+
+
+            ) 
+          : item.popup ? (
+  <div className="relative w-[220px] max-w-full min-w-0">
+    <div
+      onClick={() => editable && onPopupClick?.(index)}
+      className="
+        w-full
+        text-right
+        cursor-pointer
+        text-[#202124]
+        truncate
+        overflow-hidden
+        whitespace-nowrap
+      "
+    >
+      {item.value}
+    </div>
+  </div>
+)
+            
+            : item.options ? (
               /* ================= OPTIONS ================= */
               <div className="relative w-[220px] max-w-full min-w-0">
                 <div
