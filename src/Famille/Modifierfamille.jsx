@@ -11,16 +11,39 @@ import MotherPhoto from "../assets/photo mere.svg";
 import EditableInfoCard from "../components/Containers/ModifierContainer";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
+import PopupListeCoordinateurs from "../components/Popups/PopupListeCoordinateurs";
+
 
 
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 
 const Modifyfamilly = () => {
-    
+
 const navigate = useNavigate();
 const location = useLocation(); 
 const { id } = useParams();
+
+const coordinateurs = [
+  {
+    id: 1,
+    name: "Ahmed Mohamed",
+   code: "GDK-2026-003",
+    village: "Rosso",
+    familles: 35,
+    status: "Actif",
+  },
+  {
+    id: 2,
+    name: "Mariam Diallo",
+    code: "GDK-2026-004",
+    village: "Lexeiba",
+    familles: 28,
+    status: "Actif",
+  },
+];
+const [openCoordinateur, setOpenCoordinateur] = useState(false);
+
  const [nourrisson, setNourrisson] = useState([
   {
     label: "Date de naissance",
@@ -163,6 +186,7 @@ const [superviseur, setSuperviseur] = useState([
   {
     label: "Nom du coordinateur",
     value: "Kshfhd Qdjshf",
+    popup: true,
   },
 ]);
 const [openDistribution, setOpenDistribution] = useState(false);
@@ -468,6 +492,7 @@ return (
   data={superviseur}
   editable={true}
   onChange={handleSuperviseurChange}
+  onPopupClick={() => setOpenCoordinateur(true)}
 />
   </div>
 </div>
@@ -515,6 +540,26 @@ return (
     onClick={() => setOpenFinSuivi(true)}
   />
 </div>
+
+<PopupListeCoordinateurs
+  open={openCoordinateur}
+  onClose={() => setOpenCoordinateur(false)}
+  coordinateurs={coordinateurs}
+  onSelectCoordinateur={(coordinateur) => {
+    setSuperviseur((prev) =>
+      prev.map((item, index) =>
+        index === 0
+          ? {
+              ...item,
+              value: coordinateur.name,
+            }
+          : item
+      )
+    );
+
+    setOpenCoordinateur(false);
+  }}
+/>
       </main>
     </div>
   
@@ -522,6 +567,10 @@ return (
 };
 
 export default Modifyfamilly ;
+
+
+
+
 
 
 
