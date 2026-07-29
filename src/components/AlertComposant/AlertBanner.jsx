@@ -8,16 +8,19 @@ const AlertBanner = ({
   bgColor,
   iconBgColor,
   borderColor,
-  leftBorder,
+  hasLeftBorder = false,
   onClick,
 }) => {
   return (
     <button
       onClick={onClick}
       className="
+        relative
         w-full
+        h-[66px]
         rounded-[20px]
         border
+        overflow-hidden
         flex
         items-center
         justify-between
@@ -33,9 +36,20 @@ const AlertBanner = ({
       style={{
         backgroundColor: bgColor,
         borderColor: borderColor,
-        borderLeft: leftBorder,
       }}
     >
+      {/* Left Border */}
+      {hasLeftBorder && (
+        <div
+          className="absolute left-0 top-0 h-full w-[6px]"
+          style={{
+            backgroundColor: borderColor,
+            borderTopLeftRadius: "20px",
+            borderBottomLeftRadius: "20px",
+          }}
+        />
+      )}
+
       {/* Icon */}
       <div
         className="
@@ -87,7 +101,7 @@ const AlertBanner = ({
         >
           {count !== undefined ? (
             <>
-              <span>{count}</span> {subtitle}
+              <span className="font-semibold">{count}</span> {subtitle}
             </>
           ) : (
             subtitle
