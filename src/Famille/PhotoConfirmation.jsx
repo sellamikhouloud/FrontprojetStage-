@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import Popup from "../components/Popups/SuccessPopup.jsx";
 import CoordinateurSelector from "../components/Containers/CoordinateurSelector.jsx";
 import PopupListeCoordinateurs from "../components/Popups/PopupListeCoordinateurs.jsx";
+import ErrorMessage from "../components/Forms/ErrorMessage.jsx";
 
 
 import successImage from "../assets/Success.svg"; 
@@ -21,18 +22,41 @@ import ArrowRight from "../assets/right-arrow.png";
 
 export default function PhotoConfirmation() {
   const [dateProgramme, setDateProgramme] = useState(null);
-  const [coordinateur, setCoordinateur] = useState("");
   const [relecture, setRelecture] = useState("");
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);
   const [openCoordinateurs, setOpenCoordinateurs] = useState(false);
   const [selectedCoordinateur, setSelectedCoordinateur] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const listeDesCoordinateurs = [
-  { id: 1, name: "Ahmed Ould Sidi", code: "COORD-001", village: "Lexeiba", familles: 24, status: "Actif" },
-  { id: 2, name: "Fatimetou Mint Cheikh", code: "COORD-002", village: "Boghé", familles: 18, status: "Actif" },
-  { id: 3, name: "Mohamed Ould Ahmed", code: "COORD-003", village: "Kaédi", familles: 31, status: "Actif" },
-];
+    { id: 1, name: "Ahmed Ould Sidi", code: "COORD-001", village: "Lexeiba", familles: 24, status: "Actif" },
+    { id: 2, name: "Fatimetou Mint Cheikh", code: "COORD-002", village: "Boghé", familles: 18, status: "Actif" },
+    { id: 3, name: "Mohamed Ould Ahmed", code: "COORD-003", village: "Kaédi", familles: 31, status: "Actif" },
+  ];
+
+  const clearError = (field) => {
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const updated = { ...prev };
+      delete updated[field];
+      return updated;
+    });
+  };
+
+  const handleSave = () => {
+    const newErrors = {};
+
+    if (!selectedCoordinateur) {
+      newErrors.coordinateur = "Veuillez sélectionner un coordinateur";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length === 0) {
+      setShowPopup(true);
+    }
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -58,7 +82,7 @@ export default function PhotoConfirmation() {
           <PageHeader
             leftTitle="Annuler"
             showRight={false}
-            onBack={() => window.history.back()}
+            onBack={() => navigate("/liste-famille")}
           />
 
           {/* Title */}
@@ -158,12 +182,13 @@ export default function PhotoConfirmation() {
           />
 
           {/* Coordinator */}
-         
-          <CoordinateurSelector
-           selectedCoordinateur={selectedCoordinateur}
-           onOpenPopup={() => setOpenCoordinateurs(true)}
-           />
-           
+          <div className="flex flex-col gap-1">
+            <CoordinateurSelector
+              selectedCoordinateur={selectedCoordinateur}
+              onOpenPopup={() => setOpenCoordinateurs(true)}
+            />
+            <ErrorMessage message={errors.coordinateur} />
+          </div>
 
           {/* Review */}
          <div
@@ -218,7 +243,7 @@ export default function PhotoConfirmation() {
   title="Enregistrer"
   variant="primary"
   noWrapperPadding
-  onClick={() => setShowPopup(true)}
+  onClick={handleSave}
 />
 {showPopup && (
   <Popup
@@ -238,6 +263,7 @@ export default function PhotoConfirmation() {
   onSelectCoordinateur={(coordinateur) => {
     setSelectedCoordinateur(coordinateur);
     setOpenCoordinateurs(false);
+    clearError("coordinateur");
   }}
 />
         </div>
