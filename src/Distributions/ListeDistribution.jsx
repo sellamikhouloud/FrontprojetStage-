@@ -68,16 +68,62 @@ const [appliedFilters, setAppliedFilters] = useState({
 ];
 
 const [products, setProducts] = useState([
-  { nom: "Lait", quantity: 38, unite: "boîtes" },
-  { nom: "Céréales", quantity: 38, unite: "Kg" },
-  { nom: "Huile", quantity: 38, unite: "Litres" },
-  { nom: "Sucre", quantity: 38, unite: "Kg" },
-  { nom: "Sel iodé", quantity: 38, unite: "Kg" },
-  { nom: "Légumineuses", quantity: 38, unite: "Kg" },
-  { nom: "Lait", quantity: 38, unite: "boîtes" },
-  { nom: "Légumineuses", quantity: 38, unite: "Kg" },
-  { nom: "Huile", quantity: 38, unite: "Litres" },
+  {
+    nom: "Lait",
+    quantity: 38,
+    unite: "boîtes",
+    threshold: 1,
+  },
+  {
+    nom: "Céréales",
+    quantity: 38,
+    unite: "Kg",
+    threshold: 1,
+  },
+  {
+    nom: "Huile",
+    quantity: 38,
+    unite: "Litres",
+    threshold: 1,
+  },
+  {
+    nom: "Sucre",
+    quantity: 38,
+    unite: "Kg",
+    threshold: 1,
+  },
+  {
+    nom: "Sel iodé",
+    quantity: 38,
+    unite: "Kg",
+    threshold: 1,
+  },
+  {
+    nom: "Légumineuses",
+    quantity: 38,
+    unite: "Kg",
+    threshold: 1,
+  },
+  {
+    nom: "Lait",
+    quantity: 38,
+    unite: "boîtes",
+    threshold: 1,
+  },
+  {
+    nom: "Légumineuses",
+    quantity: 38,
+    unite: "Kg",
+    threshold: 1,
+  },
+  {
+    nom: "Huile",
+    quantity: 38,
+    unite: "Litres",
+    threshold: 1,
+  },
 ]);
+
 const filtered = distributions.filter((item) => {
   const keyword = search.toLowerCase();
 
