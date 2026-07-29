@@ -74,7 +74,7 @@ function App() {
         />
         {/* Zakat*/}
          <Route
-          path="/liste-zakat" element={<ZakatPage />}
+          path="/zakat" element={<ZakatPage />}
         />
 
 
