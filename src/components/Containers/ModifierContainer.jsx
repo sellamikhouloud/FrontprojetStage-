@@ -46,7 +46,7 @@ const EditableInfoCard = ({
       </div>
 
       {/* Conteneur */}
-      <div className="border-2 border-dashed border-[#84D6D0] rounded-[15px] px-4 py-2 overflow-hidden">
+     <div className="border-2 border-dashed border-[#84D6D0] rounded-[15px] px-4 py-2 overflow-visible">
         {data.map((item, index) => (
           <div
             key={index}

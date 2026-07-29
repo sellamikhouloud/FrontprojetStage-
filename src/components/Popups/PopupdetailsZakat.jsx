@@ -13,6 +13,8 @@ const PopupDetailZakat = ({
   zakat,
   onEdit,
 }) => {
+
+ 
   if (!open || !zakat) return null;
 
   return (

@@ -1,42 +1,28 @@
 import ProductItem from "./ProductItem";
 import Button from "../Button/Button";
-
 import Plus from "../../assets/BlackPlus.svg";
-import { useState } from "react";
-import NewProductCard from "./NewProductCard";
 
 const ColisAlimentaire = ({
   title = "Colis Alimentaire",
   products = [],
   onAddProduct,
+  onUpdateQuantity,
+  onRemoveProduct,
 }) => {
-
-const [newProducts, setNewProducts] = useState([]);
-
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    unit: "",
-    quantity: "",
-  });
-
   return (
-    <div
-      className="
-        w-full
-        rounded-[20px]
-        border
-        border-[#E5E7EB]
-        bg-[#F9FAFB]
-        p-5
-      "
-    >
-      {/* Title */}
+    <div className="w-full rounded-[20px] border border-[#E5E7EB] bg-[#F9FAFB] p-5">
       <h2 className="text-[20px] font-bold text-[#202124] mb-5">
         {title}
       </h2>
 
-      {/* Products */}
-      <div className="flex flex-col gap-3">
+      <div
+        className="
+           flex flex-col gap-3
+           lg:max-h-[328px]
+           lg:overflow-y-auto
+           pr-1
+        "
+      >
         {products.map((product) => (
           <ProductItem
             key={product.id}
@@ -44,59 +30,29 @@ const [newProducts, setNewProducts] = useState([]);
             title={product.title}
             quantity={product.quantity}
             unit={product.unit}
+            onQuantityChange={(newQuantity) =>
+              onUpdateQuantity(product.id, newQuantity)
+            }
+            onRemove={() => onRemoveProduct(product.id)}
           />
         ))}
       </div>
 
-      {/* Button */}
-      
       <div className="mt-5">
-  <Button
-  icon={Plus}
-  title="Ajouter un autre produit"
-  variant="ajouter"
-  noPadding
-  onClick={() =>
-    setNewProducts([
-      ...newProducts,
-      {
-        id: Date.now(),
-        name: "",
-        unit: "",
-        quantity: "",
-      },
-    ])
-  }
-  className="
-    w-full
-    h-[56px]
-    rounded-[20px]
-  "
-/>
-</div>
-
-     {newProducts.map((product) => (
-  <NewProductCard
-    key={product.id}
-    product={product}
-    setProduct={(updatedProduct) =>
-      setNewProducts(
-        newProducts.map((p) =>
-          p.id === product.id ? updatedProduct : p
-        )
-      )
-    }
-    onClose={() =>
-      setNewProducts(
-        newProducts.filter((p) => p.id !== product.id)
-      )
-    }
-  />
-))}
-
+        <Button
+          icon={Plus}
+          title={
+            products.length === 0
+              ? "Ajouter les produits à distribuer"
+              : "Ajouter un autre produit"
+          }
+          variant="ajouter"
+          noPadding
+          onClick={onAddProduct}
+          className="w-full h-[56px] rounded-[20px]"
+        />
       </div>
-
-    
+    </div>
   );
 };
 

@@ -11,13 +11,15 @@ import MotherPhoto from "../assets/photo mere.svg";
 import EditableInfoCard from "../components/Containers/ModifierContainer";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
-import { useNavigate, useParams } from "react-router-dom";
+
+
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 
 const Modifyfamilly = () => {
     
 const navigate = useNavigate();
-
+const location = useLocation(); 
 const { id } = useParams();
  const [nourrisson, setNourrisson] = useState([
   {
@@ -369,7 +371,13 @@ return (
   onAction={() => {
     // TODO: Save to your API here
 
-    navigate(`/famille/${id}`);
+    
+    navigate(`/famille/${id}`, {
+  state: {
+    from: location.state?.from,
+    draft: location.state?.draft,
+  },
+});
   }}
 />
         {/* ==================== HAUT ==================== */}

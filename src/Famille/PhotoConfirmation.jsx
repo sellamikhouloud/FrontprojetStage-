@@ -9,6 +9,9 @@ import StepIndicator from "../components/Progress/StepIndicator.jsx";
 import Button from "../components/Button/Button.jsx";
 import { useNavigate } from "react-router-dom";
 import Popup from "../components/Popups/SuccessPopup.jsx";
+import CoordinateurSelector from "../components/Containers/CoordinateurSelector.jsx";
+import PopupListeCoordinateurs from "../components/Popups/PopupListeCoordinateurs.jsx";
+
 
 import successImage from "../assets/Success.svg"; 
 import blackCamera from "../assets/blackCamera.svg";
@@ -22,6 +25,14 @@ export default function PhotoConfirmation() {
   const [relecture, setRelecture] = useState("");
   const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(false);
+  const [openCoordinateurs, setOpenCoordinateurs] = useState(false);
+  const [selectedCoordinateur, setSelectedCoordinateur] = useState(null);
+
+  const listeDesCoordinateurs = [
+  { id: 1, name: "Ahmed Ould Sidi", code: "COORD-001", village: "Lexeiba", familles: 24, status: "Actif" },
+  { id: 2, name: "Fatimetou Mint Cheikh", code: "COORD-002", village: "Boghé", familles: 18, status: "Actif" },
+  { id: 3, name: "Mohamed Ould Ahmed", code: "COORD-003", village: "Kaédi", familles: 31, status: "Actif" },
+];
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -147,13 +158,12 @@ export default function PhotoConfirmation() {
           />
 
           {/* Coordinator */}
-          <Input
-            label="Coordinateur à affecter"
-            placeholder="Saisir l'identifiant du coordinateur"
-            value={coordinateur}
-            onChange={(e) => setCoordinateur(e.target.value)}
-            noPadding
-          />
+         
+          <CoordinateurSelector
+           selectedCoordinateur={selectedCoordinateur}
+           onOpenPopup={() => setOpenCoordinateurs(true)}
+           />
+           
 
           {/* Review */}
          <div
@@ -221,6 +231,15 @@ export default function PhotoConfirmation() {
     onSecondaryClick={() => navigate("/dashboard")}
   />
 )}
+<PopupListeCoordinateurs
+  open={openCoordinateurs}
+  onClose={() => setOpenCoordinateurs(false)}
+  coordinateurs={listeDesCoordinateurs}
+  onSelectCoordinateur={(coordinateur) => {
+    setSelectedCoordinateur(coordinateur);
+    setOpenCoordinateurs(false);
+  }}
+/>
         </div>
       </main>
     </div>

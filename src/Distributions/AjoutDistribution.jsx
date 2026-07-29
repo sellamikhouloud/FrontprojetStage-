@@ -2,6 +2,7 @@ import Sidebar from "../components/Sidebar/Sidebar";
 import PageHeader from "../components/Navigation,Pageheader/PageHeader";
 import Card from "../components/Cards/Card";
 import CardPopup from "../components/Cards/Card2";
+import OptionsMenu from "../components/Containers/OptionsMenu";
 import SelectorWithAction from "../components/Forms/SelectorWithAction";
 import LaitInfantile from "../components/Distribution/LaitInfantile";
 
@@ -23,46 +24,50 @@ import Button from "../components/Button/Button";
 import PopupListeFamilles from "../components/Popups/PopupListeFamilles";
 
 import ConfirmationForm from "../components/Forms/ConfirmationForm";
+import SelectProductsPopup from "../components/Popups/SelectProductsPopup";
 
 import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
+import { useLocation } from "react-router-dom";
+
+
 
 export default function AjoutDistribution() {
  
 
-  const products = [
-  {
-    id: 1,
-    icon: Cereales,
-    title: "Céréales",
-    quantity: 5,
-    unit: "kg",
-  },
-  {
-    id: 2,
-    icon: Legumineuses,
-    title: "Légumineuses",
-    quantity: 2,
-    unit: "kg",
-  },
-  {
-    id: 3,
-    icon: Huile,
-    title: "Huile alimentaire",
-    quantity: 1.5,
-    unit: "L",
-  },
-];
+  const stockProducts = [
+    { id: 1, icon: Cereales, title: "Céréales", quantity: 50, unit: "kg" },
+    { id: 2, icon: Legumineuses, title: "Légumineuses", quantity: 30, unit: "kg" },
+    { id: 3, icon: Huile, title: "Huile alimentaire", quantity: 20, unit: "L" },
+    { id: 4, icon: Sucre, title: "Sucre", quantity: 15, unit: "kg" },
+    { id: 5, icon: Sel, title: "Sel", quantity: 10, unit: "kg" },
+    { id: 6, icon: Huile, title: "ggg", quantity: 20, unit: "L" },
+    { id: 7, icon: Sucre, title: "Riz", quantity: 15, unit: "kg" },
+    { id: 8, icon: Sel, title: "Pate", quantity: 10, unit: "kg" },
+  ];
+
+  // products devient un état, pour pouvoir y ajouter les produits sélectionnés
+  
  const [showNewProduct, setShowNewProduct] = useState(false);
- const [date, setDate] = useState(new Date());
- const [confirmed, setConfirmed] = useState(false);
+
+
  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+ 
+ const location = useLocation();
+const draft = location.state?.draft;
+
+const [selectedFamille, setSelectedFamille] = useState(draft?.selectedFamille || null);
+const [products, setProducts] = useState(draft?.products || []);
+const [date, setDate] = useState(draft?.date ? new Date(draft.date) : new Date());
+const [confirmed, setConfirmed] = useState(draft?.confirmed || false);
+
 const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
     name: "",
     unit: "",
     quantity: "",
   });
+   const [showStockPopup, setShowStockPopup] = useState(false);
  
 
 const listeDesFamilles = [
@@ -105,11 +110,41 @@ const listeDesFamilles = [
 ];
 
 const [openFamilles, setOpenFamilles] = useState(false);
-const [selectedFamille, setSelectedFamille] = useState(null);
+
+const [openOptions, setOpenOptions] = useState(false);
+
+const familyOptions = [
+  { label: "Changer la famille", value: "changer" },
+  { label: "Voir la fiche famille", value: "voir" },
+];
+
 const handleSearch = () => {
   setOpenFamilles(true);
 };
-
+const handleUpdateQuantity = (id, newQuantity) => {
+  setProducts((prev) =>
+    prev.map((product) =>
+      product.id === id
+        ? { ...product, quantity: newQuantity }
+        : product
+    )
+  );
+};
+const handleRemoveProduct = (id) => {
+  setProducts((prev) => prev.filter((product) => product.id !== id));
+};
+const handleOptionSelect = (value) => {
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    navigate(`/famille/${selectedFamille.id}`, {
+      state: {
+        from: "/ajout-distribution",
+        draft: { selectedFamille, products, date, confirmed },
+      },
+    });
+  }
+};
 return (
   <div className="min-h-screen bg-white">
 
@@ -161,7 +196,7 @@ return (
         lg:px-10
 
         pb-8
-        lg:pb-10
+        lg:pb-2
 
         lg:ml-24
       "
@@ -182,12 +217,18 @@ return (
 />
 )}
 
+       
+
         {/* Family Card */}
-      {selectedFamille && (
-  <>
-    {/* Mobile */}
-    <div className="block lg:hidden mt-4">
-      <CardPopup
+        {selectedFamille && (
+          <>
+            {/* Mobile */}
+            <div className="relative block lg:hidden mt-4">
+              <div
+                className="cursor-pointer"
+                onClick={() => setOpenOptions((prev) => !prev)}
+              >
+                 <CardPopup
         enfant={selectedFamille.enfant}
         sexe={selectedFamille.sexe}
         region={selectedFamille.region}
@@ -195,11 +236,24 @@ return (
         code={selectedFamille.code}
         badges={selectedFamille.badges}
       />
-    </div>
-
-    {/* Desktop */}
-    <div className="hidden lg:block">
-      <Card
+              </div>
+ 
+              <OptionsMenu
+                  open={openOptions}
+                 onClose={() => setOpenOptions(false)}
+                  options={familyOptions}
+                  onSelect={handleOptionSelect}
+               />
+    
+            </div>
+ 
+            {/* Desktop */}
+            <div className="relative hidden lg:block">
+              <div
+                className="cursor-pointer"
+                onClick={() => setOpenOptions((prev) => !prev)}
+              >
+                 <Card
         enfant={selectedFamille.enfant}
         mere={selectedFamille.mere}
         sexe={selectedFamille.sexe}
@@ -208,9 +262,17 @@ return (
         code={selectedFamille.code}
         badges={selectedFamille.badges}
       />
-    </div>
-  </>
-)}
+              </div>
+ 
+               <OptionsMenu
+                  open={openOptions}
+                  onClose={() => setOpenOptions(false)}
+                  options={familyOptions}
+                  onSelect={handleOptionSelect}
+                />
+            </div>
+          </>
+        )}
         {/* Rest of page */}
       {/* Main content */}
 <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
@@ -283,11 +345,12 @@ return (
 
   {/* RIGHT COLUMN */}
   <div>
-  <ColisAlimentaire
-    products={products}
-    onAddProduct={() => {}}
-  />
-
+ <ColisAlimentaire
+  products={products}
+  onAddProduct={() => setShowStockPopup(true)}
+  onUpdateQuantity={handleUpdateQuantity}
+  onRemoveProduct={handleRemoveProduct}
+/>
   {/* Mobile only */}
   <div className="mt-4 lg:hidden">
     <ConfirmationForm
@@ -327,6 +390,8 @@ return (
 )}
 
       </main>
+
+      
   <PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
@@ -336,6 +401,21 @@ return (
     setOpenFamilles(false);
   }}
 />
+{showStockPopup && (
+  <SelectProductsPopup
+    stockProducts={stockProducts.filter(
+      (stockProduct) =>
+        !products.some((p) => p.id === stockProduct.id)
+    )}
+    onClose={() => setShowStockPopup(false)}
+    onConfirm={(selected) => {
+      setProducts((prev) => [
+        ...prev,
+        ...selected.map((p) => ({ ...p, quantity: 0 })),
+      ]);
+    }}
+  />
+)}
     </div>
   );
 }

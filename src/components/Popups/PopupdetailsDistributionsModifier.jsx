@@ -17,7 +17,15 @@ const PopupDetailDistributionModifier = ({
   onEdit,
   onDelete,
 }) => {
- 
+ const parseDate = (date) => {
+  if (!date) return null;
+
+  const parts = date.split("/");
+
+  if (parts.length !== 3) return null;
+
+  return new Date(parts[2], parts[1] - 1, parts[0]);
+};
   const [showBanner, setShowBanner] = useState(false);
 const [generalInfo, setGeneralInfo] = useState([]);
 const [laitInfo, setLaitInfo] = useState([]);
@@ -49,11 +57,21 @@ const splitValueUnit = (text) => {
 useEffect(() => {
   if (!distribution) return;
 
-  setGeneralInfo([
-    { label: "Date", value: distribution.date },
-    { label: "Distribution n°", value: distribution.numeroDistribution },
-    { label: "Enregistrée par", value: distribution.enregistrePar },
-  ]);
+ setGeneralInfo([
+  {
+    label: "Date",
+    value: parseDate(distribution.date),
+    type: "date",
+  },
+  {
+    label: "Distribution n°",
+    value: distribution.numeroDistribution,
+  },
+  {
+    label: "Enregistrée par",
+    value: distribution.enregistrePar,
+  },
+]);
 const poids = splitValueUnit(distribution.poidsTotal);
 const boites = splitValueUnit(distribution.nombreBoites);
  setLaitInfo([
@@ -96,7 +114,7 @@ const handleSave = () => {
   const updatedDistribution = {
     ...distribution,
 
-    date: generalInfo[0]?.value,
+   date: formatDate(generalInfo[0]?.value),
     numeroDistribution: generalInfo[1]?.value,
     enregistrePar: generalInfo[2]?.value,
 
@@ -125,6 +143,12 @@ setTimeout(() => {
   onEdit?.(updatedDistribution);
   onClose();
 }, 1500);
+};
+
+const formatDate = (date) => {
+  if (!date) return "";
+
+  return date.toLocaleDateString("fr-FR");
 };
   if (!open || !distribution) return null;
 
@@ -266,4 +290,3 @@ setTimeout(() => {
 };
 
 export default PopupDetailDistributionModifier;
-
