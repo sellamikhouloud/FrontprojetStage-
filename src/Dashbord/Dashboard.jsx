@@ -44,34 +44,34 @@ const alerts = [
     id: 1,
     icon: AttentionIcon,
     title: "Stock bas",
-    subtitle: "Produits",
-    cpt: 3,
+    subtitle: "produits à vérifier",
+    count: 3,
     bgColor: "#FFF7F7",
     iconBgColor: "#FDE8E8",
     borderColor: "#EB5757",
-    leftborder: "#EB5757",
+    hasLeftBorder: true,
   },
   {
     id: 2,
     icon: AttentionIcon,
-    title: "Malnutrition aiguë sévère",
-    subtitle: "Nourrissons",
-    cpt: 5,
+    title: "Malnutrition Aiguë Sévère",
+    subtitle: "nourrissons",
+    count: 2,
     bgColor: "#FFF7F7",
     iconBgColor: "#FDE8E8",
     borderColor: "#EB5757",
-    leftborder: "#EB5757",
+    hasLeftBorder: false,
   },
   {
     id: 3,
     icon: RetardIcon,
     title: "Visites en retard",
-    subtitle: "Visites",
-    cpt: 8,
+    subtitle: "visites en retard",
+    count: 5,
     bgColor: "#FFFBF1",
     iconBgColor: "#FFF0CC",
     borderColor: "#F2B94B",
-    leftborder: "#F2B94B",
+    hasLeftBorder: false,
   },
 ];
 
@@ -252,7 +252,6 @@ const familleRetard = [
     ],
   },
   
-  // ...more entries
 ];
 
 const [showMas, setShowMas] = useState(false); 
@@ -270,7 +269,6 @@ const familleMas = [
       { type: "mere", text: "Mère normale" },
     ],
   },
-  // ...more entries
 ];
 
   /* ==========================
@@ -281,14 +279,22 @@ const familleMas = [
 
   const handleSettings = () => {};
 const handleAlertClick = (alert) => {
-  if (alert.title === "Malnutrition aiguë sévère") {
-    setShowMas(true);
-  } else if (alert.title === "Visites en retard") {
-    setShowRetard(true);
-  } else if (alert.title === "Stock bas") {
-    setShowBas(true);
-  } else {
-    console.log(alert);
+  switch (alert.id) {
+    case 1:
+      setShowBas(true);
+      break;
+
+    case 2:
+      setShowMas(true);
+      break;
+
+    case 3:
+      setShowRetard(true);
+      break;
+
+    default:
+      console.log(alert);
+      break;
   }
 };
 
@@ -346,18 +352,18 @@ const handleAlertClick = (alert) => {
           "
         >
 
-          {alerts.map((alert)=>(
+          {alerts.map((alert) => (
             <AlertBanner
               key={alert.id}
               icon={alert.icon}
               title={alert.title}
               subtitle={alert.subtitle}
+              count={alert.count}
               bgColor={alert.bgColor}
               iconBgColor={alert.iconBgColor}
               borderColor={alert.borderColor}
-              leftborder={alert.leftborder}
-              cpt={alert.cpt}
-              onClick={()=>handleAlertClick(alert)}
+              hasLeftBorder={alert.hasLeftBorder}
+              onClick={() => handleAlertClick(alert)}
             />
           ))}
 
