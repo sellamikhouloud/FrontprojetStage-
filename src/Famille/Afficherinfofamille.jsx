@@ -14,12 +14,12 @@ import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
-import OMSGraphs from "../components/OMSGraphs";
+import OMSGraphs from "../components/OMSGraphs/OMSGraphs.jsx";
 
-import poidsAge from "../assets/oms/poids-age.png";
-import tailleAge from "../assets/oms/taille-age.png";
-import muacAge from "../assets/oms/muac-age.png";
-import poidsTaille from "../assets/oms/poids-taille.png";
+import PoidsAgeChart from "../components/OMSGraphs/PoidsAgeChart";
+import TailleAgeChart from "../components/OMSGraphs/TailleAgeChart";
+import PoidsTailleChart from "../components/OMSGraphs/PoidsTailleChart";
+import MuacAgeChart from "../components/OMSGraphs/MuacAgeChart";
 
 
 const FamilyProfile = () => {
@@ -368,30 +368,91 @@ const visiteList = [
 ];
 const [openFinSuivi, setOpenFinSuivi] = useState(false);
 const [openSuccess, setOpenSuccess] = useState(false);
+const DONNEES_POIDS = [
+  { age: 0, poids: 3.1 },
+  { age: 1, poids: 3.6 },
+  { age: 2, poids: 4.2 },
+  { age: 3, poids: 4.8 },
+  { age: 4, poids: 5.4 },
+  { age: 5, poids: 6.0 },
+  { age: 6, poids: 6.6 },
+  { age: 7, poids: 7.3 },
+  { age: 8, poids: 8.0 },
+  { age: 9, poids: 8.7 },
+  { age: 10, poids: 9.4 },
+  { age: 11, poids: 10.1 },
+];
+
+// Données de test — Taille pour l'âge
+const DONNEES_TAILLE = [
+  { age: 0, taille: 57.5 },
+  { age: 1, taille: 60.5 },
+  { age: 2, taille: 63 },
+  { age: 3, taille: 65.5 },
+  { age: 4, taille: 68 },
+  { age: 5, taille: 71 },
+  { age: 6, taille: 73.5 },
+  { age: 7, taille: 75.5 },
+  { age: 8, taille: 77.5 },
+  { age: 9, taille: 79.5 },
+  { age: 10, taille: 81 },
+  { age: 11, taille: 82 },
+  { age: 12, taille: 83 },
+];
+
+// Données de test — Poids pour la taille
+const DONNEES_POIDS_TAILLE = [
+  { taille: 45, poids: 2.5 },
+  { taille: 50, poids: 3.0 },
+  { taille: 55, poids: 3.5 },
+  { taille: 60, poids: 4.0 },
+  { taille: 65, poids: 4.5 },
+  { taille: 70, poids: 5.1 },
+  { taille: 75, poids: 5.7 },
+  { taille: 80, poids: 6.4 },
+  { taille: 85, poids: 7.2 },
+  { taille: 90, poids: 8.0 },
+  { taille: 95, poids: 8.7 },
+  { taille: 100, poids: 9.4 },
+  { taille: 105, poids: 10.0 },
+];
+
+const DONNEES_MUAC = [
+  { age: 0, muac: 110 },
+  { age: 1, muac: 111 },
+  { age: 2, muac: 112 },
+  { age: 3, muac: 113.5 },
+  { age: 4, muac: 115 },
+  { age: 5, muac: 116 },
+  { age: 6, muac: 117 },
+  { age: 7, muac: 118.5 },
+  { age: 8, muac: 119.5 },
+  { age: 9, muac: 120.5 },
+  { age: 10, muac: 121.5 },
+  { age: 11, muac: 123 },
+  { age: 12, muac: 124.5 },
+];
 
 
-const omsGraphs = [
+const graphs = [
   {
     id: 1,
-    image: poidsAge,
-    alt: "Poids pour l'âge",
+    component: <PoidsAgeChart data={DONNEES_POIDS} />,
   },
   {
     id: 2,
-    image: tailleAge,
-    alt: "Taille pour l'âge",
+    component: <TailleAgeChart data={DONNEES_TAILLE} />,
   },
   {
     id: 3,
-    image: muacAge,
-    alt: "MUAC pour l'âge",
+    component: <PoidsTailleChart data={DONNEES_POIDS_TAILLE} />,
   },
   {
     id: 4,
-    image: poidsTaille,
-    alt: "Poids pour la taille",
+    component: <MuacAgeChart data={DONNEES_MUAC} />,
   },
-]; 
+];
+
 const handleBack = () => {
   navigate(location.state?.from || "/dashboard", {
     state: { draft: location.state?.draft },
@@ -594,7 +655,7 @@ return (
 
 {/* ==================== Courbes OMS ==================== */}
 <div className="mt-4">
-  <OMSGraphs graphs={omsGraphs} />
+ <OMSGraphs graphs={graphs} />
 </div> 
 
 <div className="mt-8 w-full">
