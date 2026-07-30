@@ -31,10 +31,10 @@ const [appliedFilters, setAppliedFilters] = useState({
   
 });
 const motifOptions = [
-  "Tous",
-  "Naissance",
-  "Décès",
-  "Déménagement",
+  "Tapez pour choisir la cause principale",
+  "Veuvage",
+  "Situation d'urgence",
+  "Vulnérabilité extreme",
   "Autre",
 ];
  const zakats = [
