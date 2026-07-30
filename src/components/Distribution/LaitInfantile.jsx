@@ -1,12 +1,17 @@
-import { useState } from "react";
 import SelectInput from "../Containers/ChoiceContainer";
-import TextInput from "../Containers/ContainerEcriture";
 import CounterInput from "../Forms/CounterInput";
+import ErrorMessage from "../Forms/ErrorMessage";
 
-const LaitInfantile = () => {
-  const [boxes, setBoxes] = useState(4);
-  const [grammage, setGrammage] = useState("");
-
+const LaitInfantile = ({
+  type,
+  onTypeChange,
+  grammage,
+  onGrammageChange,
+  boxes,
+  onIncrement,
+  onDecrement,
+  errors = {},
+}) => {
   return (
     <div
       className="
@@ -25,101 +30,111 @@ const LaitInfantile = () => {
 
       {/* Type */}
       <div className="mb-1">
-
-
-      <div className="w-full flex">
-  <div className="flex-1">
-    <SelectInput
-      noPadding
-      placeholder="Tapez pour choisir le type de lait"
-      options={[
-        { value: "premier", label: "1er âge" },
-        { value: "deuxieme", label: "2ème âge" },
-      ]}
-    />
-  </div>
-</div>
-
+        <div className="w-full flex">
+          <div className="flex-1">
+            <div className="flex flex-col gap-2">
+              <SelectInput
+                noPadding
+                value={type}
+                onChange={onTypeChange}
+                placeholder="Tapez pour choisir le type de lait"
+                error={errors.laitType}
+                options={[
+                  { value: "premier", label: "1er âge" },
+                  { value: "deuxieme", label: "2ème âge" },
+                ]}
+              />
+              <ErrorMessage
+                message={errors.laitType ? "Veuillez choisir un type de lait" : null}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-     {/* Grammage */}
-<div className="mb-1">
-  <label className="block mb-2 text-[16px] font-medium text-[#202124]">
-    Grammage d'une boîte
-  </label>
+      {/* Grammage */}
+      <div className="mb-1">
+        <label className="block mb-2 text-[16px] font-medium text-[#202124]">
+          Grammage d'une boîte
+        </label>
 
-  <div className="w-full flex">
-    <div className="flex-1">
-      <div
-        className="
-          w-full
-          h-[45px]
-          rounded-[15px]
-          border
-          border-[#4E9F8A]
-          bg-white
-          px-4
-          flex
-          items-center
-          gap-2
-        "
-      >
-        <input
-          type="text"
-          inputMode="numeric"
-          value={grammage}
-          onChange={(e) => {
-            const raw = e.target.value;
-            if (/^\d*$/.test(raw)) {
-              setGrammage(raw);
-            }
-          }}
-          placeholder="Ex : 400"
-          className="
-            flex-1
-            w-full
-            text-[14px]
-            sm:text-[15px]
-            lg:text-[16px]
-            text-black
-            placeholder:text-gray-400
-            bg-transparent
-            focus:outline-none
-          "
-        />
-        <span
-          className="
-            text-[14px]
-            sm:text-[15px]
-            lg:text-[16px]
-            font-medium
-            text-[#4E9F8A]
-            select-none
-          "
-        >
-          g
-        </span>
+        <div className="w-full flex">
+          <div className="flex-1">
+            <div className="flex flex-col gap-2">
+              <div
+                className={`
+                  w-full
+                  h-[45px]
+                  rounded-[15px]
+                  border
+                  bg-white
+                  px-4
+                  flex
+                  items-center
+                  gap-2
+                  ${errors.grammage ? "border-[#EF4444]" : "border-[#4E9F8A]"}
+                `}
+              >
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={grammage}
+                  onChange={(e) => {
+                    const raw = e.target.value;
+                    if (/^\d*$/.test(raw)) {
+                      onGrammageChange(raw);
+                    }
+                  }}
+                  placeholder="Ex : 400"
+                  className="
+                    flex-1
+                    w-full
+                    text-[14px]
+                    sm:text-[15px]
+                    lg:text-[16px]
+                    text-black
+                    placeholder:text-gray-400
+                    bg-transparent
+                    focus:outline-none
+                  "
+                />
+                <span
+                  className="
+                    text-[14px]
+                    sm:text-[15px]
+                    lg:text-[16px]
+                    font-medium
+                    text-[#4E9F8A]
+                    select-none
+                  "
+                >
+                  g
+                </span>
+              </div>
+              <ErrorMessage
+                message={errors.grammage ? "Veuillez saisir un grammage valide" : null}
+              />
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
 
-    {/* Counter */}
-<div>
-  <label className="block mb-1 text-[16px] font-medium text-[#202124]">
-    Nombre de boîtes
-  </label>
+      {/* Counter */}
+      <div>
+        <label className="block mb-1 text-[16px] font-medium text-[#202124]">
+          Nombre de boîtes
+        </label>
 
-  <div className="w-full flex justify-center">
-    <CounterInput
-      value={boxes}
-      onIncrement={() => setBoxes((v) => v + 1)}
-      onDecrement={() => setBoxes((v) => Math.max(0, v - 1))}
-      mobileWidth="w-[60px]"
-      desktopWidth="lg:w-[70px]"
-    />
-  </div>
-</div>
+        <div className="w-full flex justify-center">
+          <CounterInput
+            value={boxes}
+            onIncrement={onIncrement}
+            onDecrement={onDecrement}
+            mobileWidth="w-[60px]"
+            desktopWidth="lg:w-[70px]"
+          />
+        </div>
+      </div>
     </div>
   );
 };
