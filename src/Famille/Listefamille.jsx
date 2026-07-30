@@ -81,8 +81,9 @@ const filtersContent = (
       }
       options={[
         "En attente",
-        "Suivie",
-        "Terminée",
+        "Active",
+        "Alerte",
+        "Sortie",
       ]}
       noPadding
     />
