@@ -77,10 +77,11 @@ const filtered = zakats.filter((item) => {
  
   
 
+ 
  const matchMotif =
   !appliedFilters.motif ||
   appliedFilters.motif === "Tous" ||
-  item.motif === appliedFilters.motif;
+  item.causePrincipale === appliedFilters.motif;
 
 return matchSearch && matchMotif;
   
