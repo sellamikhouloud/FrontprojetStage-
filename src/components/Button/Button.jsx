@@ -159,7 +159,16 @@ const Button = ({
     gris : `
       bg-[#91A09F]
       text-white
-    `
+    `,
+
+
+   telecharger: `
+  bg-white
+  text-[#00694C]
+  border
+  border-[#00694C]
+  hover:bg-[#F4FBF8]
+`,
   };
 
   const wrapper =
@@ -270,3 +279,4 @@ const Button = ({
 };
 
 export default Button;
+
