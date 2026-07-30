@@ -215,7 +215,7 @@ if (isFilterOpen && isMobile) {
 
   secondType="add"
   secondActionTitle="Ajouter une zakat"
-  onSecondAction={() => navigate("")}
+  onSecondAction={() => navigate("/ajout-zakat")}
 />
         <div className="my-6">
           <SearchBar
