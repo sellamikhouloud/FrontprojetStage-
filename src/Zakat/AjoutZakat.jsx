@@ -10,7 +10,7 @@ import SelectInput from "../components/Containers/ChoiceContainer";
 import TextArea from "../components/Containers/Textarea";
 import ErrorMessage from "../components/Forms/ErrorMessage";
 
-// import MotifSelection from "../components/Zakat/MotifSelection";
+
 
 import { useNavigate } from "react-router-dom";
 import DateContainer from "../components/Containers/DateContainer";
