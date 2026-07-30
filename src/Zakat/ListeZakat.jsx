@@ -31,7 +31,6 @@ const [appliedFilters, setAppliedFilters] = useState({
   
 });
 const motifOptions = [
-  "Tapez pour choisir la cause principale",
   "Veuvage",
   "Situation d'urgence",
   "Vulnérabilité extreme",
