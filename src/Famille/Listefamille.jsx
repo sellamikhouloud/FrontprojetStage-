@@ -118,8 +118,8 @@ const filtersContent = (
         })
       }
       options={[
-        "Oui",
-        "Non",
+        "a bénéficié",
+        "n’a pas bénéficié",
       ]}
       noPadding
     />
