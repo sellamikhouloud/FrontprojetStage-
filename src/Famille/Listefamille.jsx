@@ -22,6 +22,10 @@ export default function FamiliesPage() {
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
 
+   // Simulation du rôle
+  const role = "admin";
+  // const role = "coordinateur";
+
 useEffect(() => {
   const handleResize = () => {
     setIsMobile(window.innerWidth < 768);
@@ -379,23 +383,27 @@ if  (isFilterOpen && isMobile)  {
      <div className="flex h-screen overflow-hidden bg-white">
     {/* Sidebar */}
    
-      <Sidebar role="admin" />
+     <Sidebar role={role} />
    
 
   <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-        <NavigationHeader
-  title="Liste des familles"
-  type="share"
-  actionTitle="Exporter la liste des familles"
-  onAction={() => {
-    // Ouvrir le menu PDF / Excel
-  }}
-  secondType="add"
-  secondActionTitle="Ajouter une famille"
-  onSecondAction={() => {
-    navigate("/information-mere");
-  }}
-/>
+      {role === "admin" ? (
+  <NavigationHeader
+    title="Liste des familles"
+    type="share"
+    actionTitle="Exporter la liste des familles"
+    onAction={() => {}}
+    secondType="add"
+    secondActionTitle="Ajouter une famille"
+    onSecondAction={() => {
+      navigate("/information-mere");
+    }}
+  />
+) : (
+  <NavigationHeader
+    title="Liste des familles"
+  />
+)}
 
           <div className="my-6">
             <SearchBar
