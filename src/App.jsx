@@ -16,6 +16,8 @@ import FicheDonateur from "./Donateurs/FicheDonateur";
 import AjoutDistribution from "./Distributions/AjoutDistribution";
 import DistributionPage from "./Distributions/ListeDistribution";
 import ZakatPage from "./Zakat/ListeZakat";
+import AjoutZakat from "./Zakat/AjoutZakat";
+import AjoutVisite from "./Visites/AjoutVisite";
 
 function App() {
   return (
@@ -75,6 +77,14 @@ function App() {
         {/* Zakat*/}
          <Route
           path="/zakat" element={<ZakatPage />}
+        />
+         <Route
+          path="/ajout-zakat" element={<AjoutZakat />}
+        />
+
+        {/* Visite*/}
+         <Route
+          path="/ajout-visite" element={<AjoutVisite />}
         />
 
 

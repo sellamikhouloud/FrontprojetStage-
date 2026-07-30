@@ -20,7 +20,7 @@ const SelectorWithAction = ({
       "
     >
       <div className="flex flex-col gap-1">
-        <span className="font-bold text-[#374151] text-[18px] lg:text-[22px]">
+        <span className="font-bold text-[#000000] text-[18px] lg:text-[22px]">
           {label}
         </span>
 
