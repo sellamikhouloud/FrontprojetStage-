@@ -1,6 +1,7 @@
 import ProductItem from "./ProductItem";
 import Button from "../Button/Button";
 import Plus from "../../assets/BlackPlus.svg";
+import ErrorMessage from "../Forms/ErrorMessage";
 
 const ColisAlimentaire = ({
   title = "Colis Alimentaire",
@@ -8,6 +9,7 @@ const ColisAlimentaire = ({
   onAddProduct,
   onUpdateQuantity,
   onRemoveProduct,
+  errors = {},
 }) => {
   return (
     <div className="w-full rounded-[20px] border border-[#E5E7EB] bg-[#F9FAFB] p-5">
@@ -24,17 +26,20 @@ const ColisAlimentaire = ({
         "
       >
         {products.map((product) => (
-          <ProductItem
-            key={product.id}
-            icon={product.icon}
-            title={product.title}
-            quantity={product.quantity}
-            unit={product.unit}
-            onQuantityChange={(newQuantity) =>
-              onUpdateQuantity(product.id, newQuantity)
-            }
-            onRemove={() => onRemoveProduct(product.id)}
-          />
+          <div key={product.id} className="flex flex-col gap-1">
+            <ProductItem
+              icon={product.icon}
+              title={product.title}
+              quantity={product.quantity}
+              unit={product.unit}
+              error={Boolean(errors[product.id])}
+              onQuantityChange={(newQuantity) =>
+                onUpdateQuantity(product.id, newQuantity)
+              }
+              onRemove={() => onRemoveProduct(product.id)}
+            />
+            <ErrorMessage message={errors[product.id] || null} />
+          </div>
         ))}
       </div>
 
