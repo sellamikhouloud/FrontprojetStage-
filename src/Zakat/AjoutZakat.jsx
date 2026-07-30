@@ -6,8 +6,10 @@ import OptionsMenu from "../components/Containers/OptionsMenu";
 import SelectorWithAction from "../components/Forms/SelectorWithAction";
 import { useState } from "react";
 
-// A creer plus tard : composants specifiques a la zakat
-// import InfosVersement from "../components/Zakat/InfosVersement";
+import SelectInput from "../components/Containers/ChoiceContainer";
+import TextArea from "../components/Containers/Textarea";
+import ErrorMessage from "../components/Forms/ErrorMessage";
+
 // import MotifSelection from "../components/Zakat/MotifSelection";
 
 import { useNavigate } from "react-router-dom";
@@ -34,6 +36,72 @@ export default function AjoutZakat() {
   );
   const [date, setDate] = useState(draft?.date ? new Date(draft.date) : new Date());
   const [confirmed, setConfirmed] = useState(draft?.confirmed || false);
+
+  const [montant, setMontant] = useState(draft?.montant || "");
+  const [modePaiement, setModePaiement] = useState(draft?.modePaiement || null);
+
+  const TAUX_MRU_EUR = 0.0249; // from database apres
+  const montantEnEur = montant
+    ? (parseFloat(montant) * TAUX_MRU_EUR).toFixed(2)
+    : "0.00";
+
+  const [causePrincipale, setCausePrincipale] = useState(draft?.causePrincipale || null);
+  const [precisions, setPrecisions] = useState(draft?.precisions || "");
+  const [observations, setObservations] = useState(draft?.observations || "");
+
+  // --- ERROR HANDLING ---
+  const [errors, setErrors] = useState({
+    famille: false,
+    montant: false,
+    modePaiement: false,
+    causePrincipale: false,
+    confirmed: false, 
+  });
+
+  const validateForm = () => {
+    const newErrors = {
+      famille: !selectedFamille,
+      montant: !montant || parseFloat(montant) <= 0,
+      modePaiement: !modePaiement,
+      causePrincipale: !causePrincipale,
+      confirmed: !confirmed,  
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(Boolean);
+  };
+
+  const handleSave = () => {
+    if (!validateForm()) return;
+    setShowSuccessPopup(true);
+  };
+
+  // Chaque onChange nettoie son propre message d'erreur immediatement
+  const handleMontantChange = (raw) => {
+    if (/^\d*$/.test(raw)) {
+      setMontant(raw);
+      if (raw && parseFloat(raw) > 0) {
+        setErrors((prev) => ({ ...prev, montant: false }));
+      }
+    }
+  };
+
+  const handleModePaiementChange = (value) => {
+    setModePaiement(value);
+    setErrors((prev) => ({ ...prev, modePaiement: false }));
+  };
+
+  const handleCausePrincipaleChange = (value) => {
+    setCausePrincipale(value);
+    setErrors((prev) => ({ ...prev, causePrincipale: false }));
+  };
+
+  const handleConfirmedChange = (e) => {
+  const isChecked = e.target.checked;
+  setConfirmed(isChecked);
+  if (isChecked) {
+    setErrors((prev) => ({ ...prev, confirmed: false }));
+  }
+};
 
   const navigate = useNavigate();
 
@@ -166,11 +234,18 @@ export default function AjoutZakat() {
         </div>
 
         {!selectedFamille && (
-          <SelectorWithAction
-            label="Choisir la famille concerne"
-            description="Cliquer pour rechercher la famille concerne par la distribution"
-            onAction={handleSearch}
-          />
+          <>
+          <div className="flex flex-col gap-2">
+            <SelectorWithAction
+              label="Choisir la famille concerne"
+              description="Cliquer pour rechercher la famille concerne par la distribution"
+              onAction={handleSearch}
+            />
+            <ErrorMessage
+              message={errors.famille ? "Veuillez sélectionner une famille" : null}
+            />
+            </div>
+          </>
         )}
 
         {/* Family Card */}
@@ -231,9 +306,12 @@ export default function AjoutZakat() {
         <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-4">
-            {/* Last zakat */}
+            {selectedFamille && (
+          <>
+            
             <InfoHeader title="Dernière zakat" value="15/05/2026" />
-
+          </>
+          )}
             {/* Date + Zakat number */}
             <div className="flex flex-col gap-0">
               <h3
@@ -247,9 +325,19 @@ export default function AjoutZakat() {
                 Date Zakat
               </h3>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-end">
+              <div
+  className={`
+    grid
+    grid-cols-1
+    ${selectedFamille ? "lg:grid-cols-2" : "lg:grid-cols-1"}
+    gap-3
+    lg:gap-2
+    items-end
+  `}
+>
                 <DateContainer value={date} onChange={setDate} noPadding />
-
+{selectedFamille && (
+          <>
                 <div className="w-full">
                   <div
                     className="
@@ -267,45 +355,235 @@ export default function AjoutZakat() {
                     <p className="text-[14px] leading-[20px] text-[#374151]">
                       Zakat numero 03
                     </p>
+
+                  </div>
+                </div>
+                </>
+                )}
+              </div>
+            </div>
+
+            {/* Informations du versement */}
+            <div
+              className="
+                rounded-[20px]
+                border
+                border-[#E5E7EB]
+                bg-[#F9FAFB]
+                px-4
+                py-4
+              "
+            >
+              {/* Title */}
+              <h2 className="text-[20px] font-bold text-[#346A5C] mb-2">
+                Informations du versement
+              </h2>
+
+              {/* Montant */}
+              
+              <div className="mb-1">
+                <label className="block mb-2 text-[16px] font-medium text-[#000000]">
+                  Montant (MRU)
+                </label>
+
+                <div className="w-full flex">
+                  <div className="flex-1">
+                    <div className="flex flex-col gap-2">
+                    <div
+                      className={`
+                        w-full
+                        h-[45px]
+                        rounded-[15px]
+                        border
+                        bg-white
+                        px-4
+                        flex
+                        items-center
+                        gap-2
+                        ${errors.montant ? "border-[#EF4444]" : "border-[#4E9F8A]"}
+                      `}
+                    >
+                       
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={montant}
+                        onChange={(e) => handleMontantChange(e.target.value)}
+                        placeholder="Ex : 5000"
+                        className="
+                          flex-1
+                          w-full
+                          text-[14px]
+                          sm:text-[15px]
+                          lg:text-[16px]
+                          text-black
+                          placeholder:text-gray-400
+                          bg-transparent
+                          focus:outline-none
+                        "
+                      />
+                      <span
+                        className="
+                          text-[14px]
+                          sm:text-[15px]
+                          lg:text-[16px]
+                          font-medium
+                          text-[#4E9F8A]
+                          select-none
+                        "
+                      >
+                        MRU
+                      </span>
+                    </div>
+
+                    {!errors.montant && (
+                      <p className="mt-1 text-[12px] text-gray-400">
+                        ≈ {montantEnEur} EUR (Taux du jour)
+                      </p>
+                    )}
+                    <ErrorMessage
+                      message={errors.montant ? "Veuillez saisir un montant valide" : null}
+                    />
+                    </div>
+                     
+                  </div>
+                </div>
+              </div>
+
+              {/* Mode de paiement */}
+              <div className="mt-3">
+                <label className="block mb-0 text-[16px] font-medium text-[#000000]">
+                  Mode de paiement
+                </label>
+
+                <div className="w-full flex">
+                  <div className="flex-1">
+                    <div className="flex flex-col gap-2">
+                    <SelectInput
+                      noPadding
+                      value={modePaiement}
+                      onChange={handleModePaiementChange}
+                      placeholder="Tapez pour choisir le mode de paiment"
+                      error={errors.modePaiement}
+                      options={[
+                        { value: "especes", label: "Espèces" },
+                        { value: "bankily", label: "Transfert mobile (Bankily)" },
+                      ]}
+                    />
+                    <ErrorMessage
+                      message={
+                        errors.modePaiement ? "Veuillez choisir un mode de paiement" : null
+                      }
+                    />
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* TODO: composant "Informations du versement" (equivalent LaitInfantile) */}
-            {/* <InfosVersement /> */}
-
             {/* Temporary confirmation */}
             <div className="hidden lg:block">
-              <ConfirmationForm
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-                error={!confirmed}
-                errorMessage="Veuillez confirmer la remise avant d'enregistrer"
-              />
+             <ConfirmationForm
+  checked={confirmed}
+  onChange={handleConfirmedChange}
+  error={errors.confirmed}
+  errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+/>
             </div>
           </div>
 
           {/* RIGHT COLUMN */}
-          <div>
-            {/* TODO: composant "Motif de selection" + "Observations complementaires" (equivalent ColisAlimentaire) */}
-            {/* <MotifSelection
-              causePrincipale={causePrincipale}
-              onChangeCause={setCausePrincipale}
-              precisions={precisions}
-              onChangePrecisions={setPrecisions}
-              observations={observations}
-              onChangeObservations={setObservations}
-            /> */}
+          <div className="flex flex-col gap-4">
+            {/* Motif de selection */}
+            <div
+              className="
+                rounded-[20px]
+                border
+                border-[#E5E7EB]
+                bg-[#F9FAFB]
+                px-4
+                py-4
+              "
+            >
+              {/* Title */}
+              <h2 className="text-[20px] font-bold text-[#346A5C] mb-2">
+                Motif de sélection
+              </h2>
+
+              {/* Cause principale */}
+              <div className="mb-4">
+                <label className="block mb-0 text-[16px] font-medium text-[#000000]">
+                  Cause principale
+                </label>
+
+                <div className="w-full flex">
+                  <div className="flex-1">
+                    <div className="flex flex-col gap-2">
+                    <SelectInput
+                      noPadding
+                      value={causePrincipale}
+                      onChange={handleCausePrincipaleChange}
+                      placeholder="Tapez pour choisir la cause principale"
+                      error={errors.causePrincipale}
+                      options={[
+                        { value: "veuvage", label: "Veuvage" },
+                        { value: "urgence", label: "Situation d'urgence" },
+                        { value: "vulnerabilite", label: "Vulnérabilité extrême" },
+                        { value: "autre", label: "Autre" },
+                      ]}
+                    />
+                    <ErrorMessage
+                      message={
+                        errors.causePrincipale ? "Veuillez choisir une cause principale" : null
+                      }
+                    />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Precisions */}
+              <TextArea
+                label="Précisions (optionnel)"
+                placeholder="Tapez ici si il y a des précisions"
+                value={precisions}
+                onChange={(e) => setPrecisions(e.target.value)}
+                height="h-[99px]"
+              />
+            </div>
+
+            {/* Observations complementaires */}
+            <div
+              className="
+                rounded-[20px]
+                border
+                border-[#E5E7EB]
+                bg-[#F9FAFB]
+                px-4
+                py-4
+              "
+            >
+              <h2 className="text-[20px] font-bold text-[#346A5C] mb-2">
+                Observations complémentaires
+              </h2>
+
+              <TextArea
+                label=""
+                placeholder="Tapez ici si il y a des observations complémentaires"
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+                height="h-[98px]"
+              />
+            </div>
 
             {/* Mobile only */}
             <div className="mt-4 lg:hidden">
-              <ConfirmationForm
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-                error={!confirmed}
-                errorMessage="Veuillez confirmer la remise avant d'enregistrer"
-              />
+             <ConfirmationForm
+  checked={confirmed}
+  onChange={handleConfirmedChange}
+  error={errors.confirmed}
+  errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+/>
             </div>
           </div>
         </div>
@@ -316,7 +594,7 @@ export default function AjoutZakat() {
             title="Enregistrer"
             variant="save"
             noPadding
-            onClick={() => setShowSuccessPopup(true)}
+            onClick={handleSave}
           />
         </div>
 
@@ -345,6 +623,7 @@ export default function AjoutZakat() {
         onSelectFamille={(famille) => {
           setSelectedFamille(famille);
           setOpenFamilles(false);
+          setErrors((prev) => ({ ...prev, famille: false }));
         }}
       />
     </div>
