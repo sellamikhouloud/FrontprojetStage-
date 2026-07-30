@@ -26,6 +26,12 @@ const FamilyProfile = () => {
   const location = useLocation();
     const navigate = useNavigate();
 const { id } = useParams();
+
+  
+// Simulation du rôle
+ const role = "admin";
+  //  const role = "coordinateur";
+  
   const nourrisson = [
     { label: "Date de naissance", value: "15/05/2026" },
     { label: "Sexe", value: "Masculin" },
@@ -512,16 +518,17 @@ return (
 
        <NavigationHeader
   title="Fiche famille"
-  type="edit"
-  actionTitle="Modifier la fiche famille"
-  onAction={() =>
-  navigate(`/famille/${id}/modifier`, {
-    state: {
-      from: location.state?.from,
-      draft: location.state?.draft,   // ✅ add this
-    },
-  })
-}
+  {...(role === "admin" && {
+    type: "edit",
+    actionTitle: "Modifier la fiche famille",
+    onAction: () =>
+      navigate(`/famille/${id}/modifier`, {
+        state: {
+          from: location.state?.from,
+          draft: location.state?.draft,
+        },
+      }),
+  })}
 />
 
         {/* ==================== HAUT ==================== */}
