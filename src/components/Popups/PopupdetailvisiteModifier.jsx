@@ -49,6 +49,9 @@ const [muacNourrisson, setMuacNourrisson] = useState(
 const [poidsMere, setPoidsMere] = useState(
   visite?.mereMesure?.poids || ""
 );
+const [tailleMere, setTailleMere] = useState(
+  visite?.mereMesure?.taille || ""
+);
 
 const [muacMere, setMuacMere] = useState(
   visite?.mereMesure?.muac || ""
@@ -64,11 +67,12 @@ const handleSave = () => {
       taille: tailleNourrisson,
       muac: muacNourrisson,
     },
-    mereMesure: {
-      ...visite.mereMesure,
-      poids: poidsMere,
-      muac: muacMere,
-    },
+   mereMesure: {
+  ...visite.mereMesure,
+  poids: poidsMere,
+  taille: tailleMere,
+  muac: muacMere,
+},
     observationNourrisson,
     observationMere,
     evaluationFamiliale,
@@ -91,8 +95,9 @@ useEffect(() => {
   setTailleNourrisson(visite.nourrisson?.taille || "");
   setMuacNourrisson(visite.nourrisson?.muac || "");
 
-  setPoidsMere(visite.mereMesure?.poids || "");
-  setMuacMere(visite.mereMesure?.muac || "");
+ setPoidsMere(visite.mereMesure?.poids || "");
+setTailleMere(visite.mereMesure?.taille || "");
+setMuacMere(visite.mereMesure?.muac || "");
 
   setObservationNourrisson(visite.observationNourrisson || "");
   setObservationMere(visite.observationMere || "");
@@ -297,14 +302,14 @@ useEffect(() => {
     ))}
   </div>
 </div>
-             <ModifierMesure
+          <ModifierMesure
   title="Mesure mère"
   poids={poidsMere}
+  taille={tailleMere}
   muac={muacMere}
-  taille=""
   setPoids={setPoidsMere}
+  setTaille={setTailleMere}
   setMuac={setMuacMere}
-  setTaille={() => {}}
 />
 
           <ContainerEcritureModifier
@@ -349,3 +354,4 @@ useEffect(() => {
 };
 
 export default PopupDetailVisiteModifier;
+
