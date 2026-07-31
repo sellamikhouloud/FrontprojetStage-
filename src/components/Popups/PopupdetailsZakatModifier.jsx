@@ -32,37 +32,39 @@ const PopupModifierZakat = ({
       return new Date(parts[2], parts[1] - 1, parts[0]);
     };
 
-    setInfos([
-      {
-        label: "Date",
-        value: parseDate(zakat.date),
-        type: "date",
-      },
-      {
-        label: "Zakat n°",
-        value: zakat.numero,
-      },
-      {
-        label: "Montant versé",
-        value: zakat.montant,
-        unit: "MRU",
-      },
-      {
-        label: "Mode de paiement",
-        value: zakat.modePaiement,
-        options: [
-          "Espèces",
-          "Bankily",
-          "Masrivi",
-          "Chèque",
-        ],
-      },
-      {
-        label: "Enregistrée par",
-        value: zakat.enregistrePar,
-      },
-    ]);
-
+  setInfos([
+  {
+    label: "Date",
+    value: parseDate(zakat.date),
+    type: "date",
+  },
+  {
+    label: "Zakat n°",
+    value: zakat.numero,
+    editable: false, // <-- ajouter
+  },
+  {
+    label: "Montant versé",
+    value: zakat.montant,
+    type: "number",
+    unit: "MRU",
+  },
+  {
+    label: "Mode de paiement",
+    value: zakat.modePaiement,
+    options: [
+      "Espèces",
+      "Bankily",
+      "Masrivi",
+      "Chèque",
+    ],
+  },
+  {
+    label: "Enregistrée par",
+    value: zakat.enregistrePar,
+    editable: false, 
+  },
+]);
     setObservations(zakat.observations || "");
     setCause(zakat.causePrincipale || "");
     setPrecisions(zakat.precisions || "");
