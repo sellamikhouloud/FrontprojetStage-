@@ -58,14 +58,18 @@ const [openCoordinateur, setOpenCoordinateur] = useState(false);
       "Féminin",
     ],
   },
-  {
-    label: "Poids de naissance",
-    value: "500 g",
-  },
-  {
-    label: "Taille de naissance",
-    value: "35 cm",
-  },
+ {
+  label: "Poids de naissance",
+  value: "500",
+  type: "number",
+  unit: "g",
+},
+{
+  label: "Taille de naissance",
+  value: "35",
+  type: "number",
+  unit: "cm",
+},
 ]);
 
  const [mere, setMere] = useState([
@@ -78,9 +82,10 @@ const [openCoordinateur, setOpenCoordinateur] = useState(false);
     ],
   },
   {
-    label: "Téléphone",
-    value: "24123456",
-  },
+  label: "Téléphone",
+  value: "24123456",
+  type: "phone",
+},
   {
     label: "Date de naissance",
     value: new Date("1990-05-15"),
@@ -96,10 +101,11 @@ const [openCoordinateur, setOpenCoordinateur] = useState(false);
       "Veuve",
     ],
   },
-  {
-    label: "Nombre d'enfants à charge",
-    value: "2",
-  },
+ {
+  label: "Nombre d'enfants à charge",
+  value: "2",
+  type: "number",
+},
   {
     label: "Référent médical",
     value: "Mariam Diallo",
@@ -567,6 +573,13 @@ return (
 };
 
 export default Modifyfamilly ;
+
+
+
+
+
+
+
 
 
 
