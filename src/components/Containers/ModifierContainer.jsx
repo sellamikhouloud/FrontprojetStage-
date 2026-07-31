@@ -246,7 +246,7 @@ const EditableInfoCard = ({
     e.preventDefault();
   }
 }}
-                  disabled={!editable}
+                disabled={!editable || item.editable === false}
                   className="
                     flex-1
                     min-w-0
@@ -277,3 +277,4 @@ const EditableInfoCard = ({
 };
 
 export default EditableInfoCard;
+
