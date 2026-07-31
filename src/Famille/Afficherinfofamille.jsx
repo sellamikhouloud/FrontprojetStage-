@@ -13,7 +13,7 @@ import successImage from "../assets/Success.svg";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-
+import PopupZakatFamille from "../components/Popups/PopupZakatfamille";
 import OMSGraphs from "../components/OMSGraphs/OMSGraphs.jsx";
 
 import PoidsAgeChart from "../components/OMSGraphs/PoidsAgeChart";
@@ -92,6 +92,49 @@ const superviseur = [
 ];
 const [openDistribution, setOpenDistribution] = useState(false);
 const [openVisites, setOpenVisites] = useState(false);
+const [openZakat, setOpenZakat] = useState(false);
+
+const zakatList = [
+  {
+    id: 1,
+    numero: "Zakat n°1",
+    date: "15/05/2026",
+    montant: "500 MRU",
+
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem Mint Ahmed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "12 mars 2025",
+    code: "GDK-2026-003",
+
+    enregistrePar: "Coordinateur",
+    modePaiement: "Bankily",
+    observations: "Observation...",
+    causePrincipale: "Cause principale",
+    precisions: "Précisions...",
+  },
+
+  {
+    id: 2,
+    numero: "Zakat n°2",
+    date: "20/06/2026",
+    montant: "750 MRU",
+
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem Mint Ahmed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "12 mars 2025",
+    code: "GDK-2026-003",
+
+    enregistrePar: "Coordinateur",
+    modePaiement: "Espèces",
+    observations: "",
+    causePrincipale: "",
+    precisions: "",
+  },
+];
 const distributionList = [
   {
     id: 1,
@@ -475,6 +518,12 @@ return (
   Distribution={distributionList}
 />
 
+<PopupZakatFamille
+  open={openZakat}
+  onClose={() => setOpenZakat(false)}
+  zakats={zakatList}
+/>
+
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
@@ -601,10 +650,12 @@ return (
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
   {/* Colonne gauche */}
   <div className="flex flex-col gap-4">
-    <InfoCard
-      title="Zakat aid"
-      data={zakat}
-    />
+  <InfoCard
+  title="Zakat aid"
+  action="Voir tous"
+  onActionClick={() => setOpenZakat(true)}
+  data={zakat}
+/>
   </div>
 
   {/* Colonne droite */}
@@ -704,3 +755,4 @@ return (
 };
 
 export default FamilyProfile;
+
