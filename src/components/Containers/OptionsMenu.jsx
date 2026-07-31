@@ -1,21 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Options from "./Options";
 
-/**
- * Small anchored dropdown menu — no backdrop, no blur.
- * Fully generic: pass whatever `options` + `onSelect` you need.
- * Must be rendered inside a `relative` wrapper around whatever it should
- * anchor to (a card, a button, an avatar, etc).
- *
- * Props:
- * - open        : boolean, controls visibility
- * - onClose     : called on outside click or after an option is selected
- * - options     : [{ label, value }]  (passed straight to <Options />)
- * - onSelect    : (value) => void
- * - position    : Tailwind classes for anchor placement (default: top-right corner)
- * - width       : Tailwind width class (default: "w-[220px]")
- * - className   : extra classes appended to the menu panel
- */
 const OptionsMenu = ({
   open,
   onClose,
@@ -23,6 +8,7 @@ const OptionsMenu = ({
   onSelect,
   position = "top-3 right-3",
   width = "w-[220px]",
+  maxHeight = null,
   className = "",
 }) => {
   const handleSelect = (value) => {
@@ -61,7 +47,12 @@ const OptionsMenu = ({
               ${className}
             `}
           >
-            <Options options={options} handleSelect={handleSelect} />
+            <div
+              className={maxHeight ? "overflow-y-auto" : ""}
+              style={maxHeight ? { maxHeight } : undefined}
+            >
+              <Options options={options} handleSelect={handleSelect} />
+            </div>
           </motion.div>
         </>
       )}
