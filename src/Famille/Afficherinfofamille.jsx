@@ -26,12 +26,9 @@ const FamilyProfile = () => {
   const location = useLocation();
     const navigate = useNavigate();
 const { id } = useParams();
+const isMobile = window.innerWidth < 768;
+  const statut = "Active"; // ou "Active"
 
-  
-// Simulation du rôle
- const role = "admin";
-  //  const role = "coordinateur";
-  
   const nourrisson = [
     { label: "Date de naissance", value: "15/05/2026" },
     { label: "Sexe", value: "Masculin" },
@@ -487,26 +484,33 @@ return (
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
-  onConfirm={(motif) => {
-    console.log("Motif :", motif);
+ onConfirm={async (motif) => {
+  console.log("Motif :", motif);
 
-    // Ici API
+  // await sortirFamille(id, motif);
 
-    
-      setOpenSuccess(true);
-  }}
+  if (isMobile) {
+    setOpenSuccess(true);
+  } else {
+    setOpenFinSuivi(false);
+
+    // Recharger la fiche
+  }
+}}
 />
 
 {openSuccess && (
   <Popup
-    title="Fin de suivi avec succès"
-    image={successImage}
-    primaryButtonText="Voir la fiche de la famille"
-   onPrimaryClick={() => {
-  setOpenSuccess(false);
-  setOpenFinSuivi(false);
-}}
-  />
+  title="Fin de suivi avec succès"
+  image={successImage}
+  primaryButtonText="Voir la fiche de la famille"
+  onPrimaryClick={() => {
+    setOpenSuccess(false);
+    setOpenFinSuivi(false);
+
+    // ici tu recharges la fiche si besoin
+  }}
+/>
 )}
       {/* Contenu */}
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
@@ -516,19 +520,18 @@ return (
   onBack={handleBack} 
 />
 
-       <NavigationHeader
+     <NavigationHeader
   title="Fiche famille"
-  {...(role === "admin" && {
-    type: "edit",
-    actionTitle: "Modifier la fiche famille",
-    onAction: () =>
-      navigate(`/famille/${id}/modifier`, {
-        state: {
-          from: location.state?.from,
-          draft: location.state?.draft,
-        },
-      }),
-  })}
+  type="edit"
+  actionTitle="Modifier la fiche famille"
+  onAction={() =>
+    navigate(`/famille/${id}/modifier`, {
+      state: {
+        from: location.state?.from,
+        draft: location.state?.draft,
+      },
+    })
+  }
 />
 
         {/* ==================== HAUT ==================== */}
@@ -563,8 +566,8 @@ return (
       <div className="flex flex-col gap-2">
 
  <StatusBadge
-  type="mereActive"
-  text="Active"
+  type={statut === "Sortie" ? "sortie" : "mereActive"}
+  text={statut}
   className="w-full h-[40px] rounded-[10px]"
 />
 
@@ -665,14 +668,35 @@ return (
  <OMSGraphs graphs={graphs} />
 </div> 
 
-<div className="mt-8 w-full">
-  <Button
-    title="Sortir du programme"
-    variant="primary"
-    noPadding
-    onClick={() => setOpenFinSuivi(true)}
-  />
-</div>
+{statut === "Active" && (
+  <div className="mt-8 w-full">
+    <Button
+      title="Sortir du programme"
+      variant="primary"
+      noPadding
+      onClick={() => setOpenFinSuivi(true)}
+    />
+  </div>
+)}
+
+{statut === "Sortie" && (
+  <div className="mt-8">
+    <InfoCard
+      title="Statut sortie"
+      data={[
+        {
+          label: "Date de sortie",
+          value: "15/05/2026",
+        },
+        {
+          label: "Motif de sortie",
+          value:
+            "Enfant sorti du programme après amélioration de son état nutritionnel.",
+        },
+      ]}
+    />
+  </div>
+)}
       </main>
     </div>
   
