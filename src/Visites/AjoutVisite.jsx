@@ -5,17 +5,11 @@ import CardPopup from "../components/Cards/Card2";
 import OptionsMenu from "../components/Containers/OptionsMenu";
 import SelectorWithAction from "../components/Forms/SelectorWithAction";
 import { useState } from "react";
-import AlertBox from "../components/AlertComposant/AlertBox"
-
-// A creer plus tard : composants specifiques a la visite
-// import AlerteVisiteEnRetard from "../components/Visite/AlerteVisiteEnRetard";
-
-// import StatutCalcule from "../components/Visite/StatutCalcule";
-// import MesuresNourrisson from "../components/Visite/MesuresNourrisson";
-// import MesuresMere from "../components/Visite/MesuresMere";
-// import ObservationsCliniquesNourrisson from "../components/Visite/ObservationsCliniquesNourrisson";
-// import ObservationsCliniquesMere from "../components/Visite/ObservationsCliniquesMere";
-// import EvaluationVisuelle from "../components/Visite/EvaluationVisuelle";
+import AlertBox from "../components/AlertComposant/AlertBox";
+import MesureInput from "../components/Containers/MesureInput";
+import TextArea from "../components/Containers/Textarea";
+import SelectInput from "../components/Containers/ChoiceContainer";
+import ErrorMessage from "../components/Forms/ErrorMessage";
 
 import { useNavigate } from "react-router-dom";
 import DateContainer from "../components/Containers/DateContainer";
@@ -27,6 +21,23 @@ import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 
+const MOIS_OPTIONS = [
+  { label: "Janvier", value: "janvier" },
+  { label: "Février", value: "fevrier" },
+  { label: "Mars", value: "mars" },
+  { label: "Avril", value: "avril" },
+  { label: "Mai", value: "mai" },
+  { label: "Juin", value: "juin" },
+  { label: "Juillet", value: "juillet" },
+  { label: "Août", value: "aout" },
+  { label: "Septembre", value: "septembre" },
+  { label: "Octobre", value: "octobre" },
+  { label: "Novembre", value: "novembre" },
+  { label: "Décembre", value: "decembre" },
+];
+
+const POSITION_OPTIONS = ["Debout", "Couché"];
+
 export default function AjoutVisite() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
@@ -37,6 +48,114 @@ export default function AjoutVisite() {
     draft?.selectedFamille || null
   );
   const [date, setDate] = useState(draft?.date ? new Date(draft.date) : new Date());
+  const [mois, setMois] = useState(draft?.mois || null);
+  const [openMois, setOpenMois] = useState(false);
+  const [numeroCycle, setNumeroCycle] = useState(draft?.numeroCycle || "");
+
+  // --- Mesures nourrisson ---
+  const [poidsNourrisson, setPoidsNourrisson] = useState(draft?.poidsNourrisson || "");
+  const [tailleNourrisson, setTailleNourrisson] = useState(draft?.tailleNourrisson || "");
+  const [muacNourrisson, setMuacNourrisson] = useState(draft?.muacNourrisson || "");
+  const [observationsNourrisson, setObservationsNourrisson] = useState(
+    draft?.observationsNourrisson || ""
+  );
+  const [positionNourrisson, setPositionNourrisson] = useState(
+    draft?.positionNourrisson !== undefined ? draft.positionNourrisson : null
+  );
+
+  // --- Mesures mère ---
+  const [poidsMere, setPoidsMere] = useState(draft?.poidsMere || "");
+  const [tailleMere, setTailleMere] = useState(draft?.tailleMere || "");
+  const [muacMere, setMuacMere] = useState(draft?.muacMere || "");
+  const [observationsMere, setObservationsMere] = useState(
+    draft?.observationsMere || ""
+  );
+
+  const [evaluationVisuelle, setEvaluationVisuelle] = useState(
+    draft?.evaluationVisuelle || ""
+  );
+
+  // --- ERROR HANDLING ---
+  const [errors, setErrors] = useState({
+    famille: false,
+    mois: false,
+    numeroCycle: false,
+    poidsNourrisson: false,
+    tailleNourrisson: false,
+    muacNourrisson: false,
+    positionNourrisson: false,
+    poidsMere: false,
+    tailleMere: false,
+    muacMere: false,
+  });
+
+  const validateForm = () => {
+    const newErrors = {
+      famille: !selectedFamille,
+      mois: !mois,
+      numeroCycle: !numeroCycle,
+      poidsNourrisson: !poidsNourrisson,
+      tailleNourrisson: !tailleNourrisson,
+      muacNourrisson: !muacNourrisson,
+      positionNourrisson: positionNourrisson === null,
+      poidsMere: !poidsMere,
+      tailleMere: !tailleMere,
+      muacMere: !muacMere,
+    };
+    setErrors(newErrors);
+    return !Object.values(newErrors).some(Boolean);
+  };
+
+  const handleSave = () => {
+    if (!validateForm()) return;
+    setShowSuccessPopup(true);
+  };
+
+  // --- Handlers qui nettoient l'erreur au fur et à mesure ---
+  const handleMoisChange = (value) => {
+    setMois(value);
+    setErrors((prev) => ({ ...prev, mois: false }));
+  };
+
+  const handleNumeroCycleChange = (value) => {
+    setNumeroCycle(value);
+    if (value) setErrors((prev) => ({ ...prev, numeroCycle: false }));
+  };
+
+  const handlePoidsNourrissonChange = (value) => {
+    setPoidsNourrisson(value);
+    if (value) setErrors((prev) => ({ ...prev, poidsNourrisson: false }));
+  };
+
+  const handleTailleNourrissonChange = (value) => {
+    setTailleNourrisson(value);
+    if (value) setErrors((prev) => ({ ...prev, tailleNourrisson: false }));
+  };
+
+  const handleMuacNourrissonChange = (value) => {
+    setMuacNourrisson(value);
+    if (value) setErrors((prev) => ({ ...prev, muacNourrisson: false }));
+  };
+
+  const handlePositionNourrissonChange = (selected) => {
+    setPositionNourrisson(selected === "Debout");
+    setErrors((prev) => ({ ...prev, positionNourrisson: false }));
+  };
+
+  const handlePoidsMereChange = (value) => {
+    setPoidsMere(value);
+    if (value) setErrors((prev) => ({ ...prev, poidsMere: false }));
+  };
+
+  const handleTailleMereChange = (value) => {
+    setTailleMere(value);
+    if (value) setErrors((prev) => ({ ...prev, tailleMere: false }));
+  };
+
+  const handleMuacMereChange = (value) => {
+    setMuacMere(value);
+    if (value) setErrors((prev) => ({ ...prev, muacMere: false }));
+  };
 
   const navigate = useNavigate();
 
@@ -51,6 +170,7 @@ export default function AjoutVisite() {
       badges: [
         { type: "mam", text: "MAM nourrisson" },
         { type: "mere", text: "Mère normale" },
+        { type: "retard", text: "Visite en retard" },
       ],
     },
     {
@@ -63,6 +183,7 @@ export default function AjoutVisite() {
       badges: [
         { type: "mas", text: "MAS nourrisson" },
         { type: "mere", text: "Mère normale" },
+        { type: "retard", text: "Visite en retard" },
       ],
     },
     {
@@ -98,7 +219,22 @@ export default function AjoutVisite() {
       navigate(`/famille/${selectedFamille.id}`, {
         state: {
           from: "/ajout-visite",
-          draft: { selectedFamille, date },
+          draft: {
+            selectedFamille,
+            date,
+            mois,
+            numeroCycle,
+            poidsNourrisson,
+            tailleNourrisson,
+            muacNourrisson,
+            positionNourrisson,
+            observationsNourrisson,
+            poidsMere,
+            tailleMere,
+            muacMere,
+            observationsMere,
+            evaluationVisuelle,
+          },
         },
       });
     }
@@ -118,7 +254,7 @@ export default function AjoutVisite() {
           z-50
         "
       >
-        <Sidebar role="admin" />
+        <Sidebar role="coordinator" />
       </div>
 
       {/* Mobile sidebar (hamburger) */}
@@ -168,28 +304,30 @@ export default function AjoutVisite() {
           />
         </div>
 
-        {/* TODO: composant "Alerte visite en retard" (bandeau orange, specifique a cette page) */}
-        {/* <AlerteVisiteEnRetard derniereVisite="15/05/2026" /> */}
-        <AlertBox variant="warning">
-  <div className="flex items-center justify-between w-full">
-    <span className="font-semibold text-[#CC8409]">Visite en retard</span>
-    <span className="text-[13px] text-[#CC8409]">
-      Dernière visite le 15/05/2026 (il y a 36 jours).
-    </span>
-  </div>
-</AlertBox>
+        <div className="mb-4">
+           {selectedFamille?.badges?.some((b) => b.type === "retard") && (
+    <AlertBox variant="warning">
+      <div className="flex items-center justify-between w-full">
+        <span className="font-semibold text-[#CC8409]">Visite en retard</span>
+        <span className="text-[13px] text-[#CC8409]">
+          Dernière visite le 15/05/2026 (il y a 36 jours).
+        </span>
+      </div>
+    </AlertBox>
+  )}
+        </div>
 
-        
-        {/* Main content */}
-        <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-          {/* LEFT COLUMN */}
-          <div className="flex flex-col gap-4">
-            {!selectedFamille && (
-          <SelectorWithAction
-            label="Choisir la famille concerne"
-            description="Cliquer pour rechercher la famille concerne par la distribution"
-            onAction={handleSearch}
-          />
+        {!selectedFamille && (
+          <div className="flex flex-col gap-2">
+            <SelectorWithAction
+              label="Choisir la famille concerne"
+              description="Cliquer pour rechercher la famille concerne par la distribution"
+              onAction={handleSearch}
+            />
+            <ErrorMessage
+              message={errors.famille ? "Veuillez sélectionner une famille" : null}
+            />
+          </div>
         )}
 
         {/* Family Card */}
@@ -246,6 +384,10 @@ export default function AjoutVisite() {
           </>
         )}
 
+        {/* Main content */}
+        <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* LEFT COLUMN */}
+          <div className="flex flex-col gap-4">
             {/* Date + Visite number */}
             <div className="flex flex-col gap-0">
               <h3
@@ -259,9 +401,120 @@ export default function AjoutVisite() {
                 Date de la visite
               </h3>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-end">
-                <DateContainer value={date} onChange={setDate} noPadding />
+              
+              <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
+  <div className="flex flex-col gap-1">
+    <DateContainer value={date} onChange={setDate} noPadding hideLabelSpace />
+  </div>
 
+  {/* Mois - dropdown */}
+  <div className="flex flex-col gap-1">
+    <div className="relative w-full">
+      <button
+  type="button"
+  onClick={() => setOpenMois((prev) => !prev)}
+  className={`
+    h-[45px]
+    w-full
+    rounded-[15px]
+    border
+    ${mois ? "border-[#4E9F8A]" : "border-[#E5E7EB]"}
+    bg-white
+    px-4
+    flex
+    items-center
+    justify-between
+    text-left
+  `}
+>
+        <span
+          className={`text-[14px] leading-[20px] ${
+            mois ? "text-[#374151]" : "text-[#9CA3AF]"
+          }`}
+        >
+          {mois
+            ? MOIS_OPTIONS.find((m) => m.value === mois)?.label
+            : "Selectionner le MOIS"}
+        </span>
+      </button>
+
+      <OptionsMenu
+        open={openMois}
+        onClose={() => setOpenMois(false)}
+        options={MOIS_OPTIONS}
+        onSelect={handleMoisChange}
+        position="top-[52px] left-0"
+        width="w-full"
+        maxHeight="200px"
+      />
+    </div>
+    <ErrorMessage
+      message={errors.mois ? "Veuillez sélectionner un mois" : null}
+    />
+  </div>
+</div>
+
+              <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
+                {/* Numero de cycle - saisie numerique */}
+              
+<div className="flex flex-col gap-1 w-full">
+  <div
+    className={`
+      h-[45px]
+      w-full
+      rounded-[15px]
+      border
+      ${numeroCycle ? "border-[#4E9F8A]" : "border-[#E5E7EB]"}
+      bg-white
+      px-4
+      flex
+      items-center
+      gap-2
+    `}
+  >
+    <span
+      className="
+        text-[14px]
+        leading-[20px]
+        font-medium
+        text-[#4E9F8A]
+        select-none
+        shrink-0
+      "
+    >
+      Cycle N°
+    </span>
+
+    <input
+      type="number"
+      inputMode="numeric"
+      placeholder="--"
+      value={numeroCycle}
+      onChange={(e) => handleNumeroCycleChange(e.target.value)}
+      className="
+        flex-1
+        w-full
+        min-w-0
+        bg-transparent
+        text-[14px]
+        leading-[20px]
+        text-[#374151]
+        placeholder:text-[#9CA3AF]
+        outline-none
+        [appearance:textfield]
+        [&::-webkit-outer-spin-button]:appearance-none
+        [&::-webkit-inner-spin-button]:appearance-none
+      "
+    />
+  </div>
+  <ErrorMessage
+    message={
+      errors.numeroCycle ? "Veuillez saisir le numéro de cycle" : null
+    }
+  />
+</div>
+
+                {/* Visite numero - affichage seulement */}
                 <div className="w-full">
                   <div
                     className="
@@ -284,26 +537,178 @@ export default function AjoutVisite() {
               </div>
             </div>
 
-            {/* TODO: composant "Mesures nourrisson" (Poids / Taille / MUAC + badges P/A, T/A, P/T) */}
-            {/* <MesuresNourrisson /> */}
+            {/* Mesures + Observations nourrisson */}
+            <div
+              className="
+                rounded-[20px]
+                border
+                border-[#E5E7EB]
+                bg-[#F9FAFB]
+                px-4
+                py-4
+              "
+            >
+              <h2 className="text-[18px] font-bold text-[#202124] mb-4">
+                Mesures nourrisson
+              </h2>
 
-            {/* TODO: composant "Observations cliniques nourrisson" */}
-            {/* <ObservationsCliniquesNourrisson /> */}
+              {/* Champs de saisie */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="flex flex-col gap-1">
+                  <MesureInput
+                    label="Poids"
+                    unit="g"
+                    value={poidsNourrisson}
+                    onChange={(e) => handlePoidsNourrissonChange(e.target.value)}
+                  />
+                  <ErrorMessage message={errors.poidsNourrisson ? "Requis" : null} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <MesureInput
+                    label="Taille"
+                    unit="cm"
+                    value={tailleNourrisson}
+                    onChange={(e) => handleTailleNourrissonChange(e.target.value)}
+                  />
+                  <ErrorMessage message={errors.tailleNourrisson ? "Requis" : null} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <MesureInput
+                    label="MUAC"
+                    unit="mm"
+                    value={muacNourrisson}
+                    onChange={(e) => handleMuacNourrissonChange(e.target.value)}
+                  />
+                  <ErrorMessage message={errors.muacNourrisson ? "Requis" : null} />
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-col gap-1">
+                <SelectInput
+                  label=""
+                  placeholder="Position lors de la prise des mesures"
+                  options={POSITION_OPTIONS}
+                  value={
+                    positionNourrisson === null
+                      ? ""
+                      : positionNourrisson
+                      ? "Debout"
+                      : "Couché"
+                  }
+                  onChange={handlePositionNourrissonChange}
+                  error={errors.positionNourrisson}
+                  noPadding
+                />
+                <ErrorMessage
+                  message={
+                    errors.positionNourrisson
+                      ? "Veuillez préciser la position lors de la prise des mesures"
+                      : null
+                  }
+                />
+              </div>
+
+              <h2 className="text-[18px] font-semibold text-[#000000] mb-2 mt-6">
+                Observations cliniques nourrisson
+              </h2>
+
+              <TextArea
+                label=""
+                placeholder="Tapez ici si il y a des observations"
+                value={observationsNourrisson}
+                onChange={(e) => setObservationsNourrisson(e.target.value)}
+                height="h-[98px]"
+                bgColor="bg-white"
+              />
+            </div>
           </div>
 
           {/* RIGHT COLUMN */}
           <div className="flex flex-col gap-4">
-            {/* TODO: composant "Statut calcule" (badges MAM nourrisson / Mere normale) */}
-            {/* <StatutCalcule /> */}
+            {/* MesuresMere et observation */}
+            <div
+              className="
+                rounded-[20px]
+                border
+                border-[#E5E7EB]
+                bg-[#F9FAFB]
+                px-4
+                py-4
+              "
+            >
+              <h2 className="text-[18px] font-bold text-[#000000] mb-4">
+                Mesures mère
+              </h2>
 
-            {/* TODO: composant "Mesures mere" (Poids / MUAC) */}
-            {/* <MesuresMere /> */}
+              {/* Champs de saisie */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="flex flex-col gap-1">
+                  <MesureInput
+                    label="Poids"
+                    unit="g"
+                    value={poidsMere}
+                    onChange={(e) => handlePoidsMereChange(e.target.value)}
+                  />
+                  <ErrorMessage message={errors.poidsMere ? "Requis" : null} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <MesureInput
+                    label="Taille"
+                    unit="cm"
+                    value={tailleMere}
+                    onChange={(e) => handleTailleMereChange(e.target.value)}
+                  />
+                  <ErrorMessage message={errors.tailleMere ? "Requis" : null} />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <MesureInput
+                    label="MUAC"
+                    unit="mm"
+                    value={muacMere}
+                    onChange={(e) => handleMuacMereChange(e.target.value)}
+                  />
+                  <ErrorMessage message={errors.muacMere ? "Requis" : null} />
+                </div>
+              </div>
 
-            {/* TODO: composant "Observations cliniques mere" */}
-            {/* <ObservationsCliniquesMere /> */}
+              <h2 className="text-[18px] font-semibold text-[#000000] mb-2 mt-6">
+                Observations cliniques mère
+              </h2>
 
-            {/* TODO: composant "Evaluation visuelle de la situation familiale" */}
-            {/* <EvaluationVisuelle /> */}
+              <TextArea
+                label=""
+                placeholder="Tapez ici si il y a des observations"
+                value={observationsMere}
+                onChange={(e) => setObservationsMere(e.target.value)}
+                height="h-[110px]"
+                bgColor="bg-white"
+              />
+            </div>
+
+            {/* Evaluation visuelle */}
+            <div
+              className="
+                rounded-[20px]
+                border
+                border-[#E5E7EB]
+                bg-[#F9FAFB]
+                px-4
+                py-4
+              "
+            >
+              <h2 className="text-[18px] font-bold text-[#000000] mb-2">
+                Evaluation visuelle de la situation familiale
+              </h2>
+
+              <TextArea
+                label=""
+                placeholder="Tapez ici si il y a des observations"
+                value={evaluationVisuelle}
+                onChange={(e) => setEvaluationVisuelle(e.target.value)}
+                height="h-[115px]"
+                bgColor="bg-white"
+              />
+            </div>
           </div>
         </div>
 
@@ -313,7 +718,7 @@ export default function AjoutVisite() {
             title="Enregistrer"
             variant="save"
             noPadding
-            onClick={() => setShowSuccessPopup(true)}
+            onClick={handleSave}
           />
         </div>
 
@@ -342,6 +747,7 @@ export default function AjoutVisite() {
         onSelectFamille={(famille) => {
           setSelectedFamille(famille);
           setOpenFamilles(false);
+          setErrors((prev) => ({ ...prev, famille: false }));
         }}
       />
     </div>
