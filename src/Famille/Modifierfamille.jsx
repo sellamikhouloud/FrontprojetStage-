@@ -12,7 +12,7 @@ import EditableInfoCard from "../components/Containers/ModifierContainer";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
 import PopupListeCoordinateurs from "../components/Popups/PopupListeCoordinateurs";
-
+import successImage from "../assets/Success.svg";
 
 
 import { useNavigate, useParams, useLocation } from "react-router-dom";
@@ -23,7 +23,11 @@ const Modifyfamilly = () => {
 const navigate = useNavigate();
 const location = useLocation(); 
 const { id } = useParams();
+const statut = "Sortie"; // ou "Sortie" pour tester
 
+const isMobile = window.innerWidth < 768;
+
+const [openSuccess, setOpenSuccess] = useState(false);
 const coordinateurs = [
   {
     id: 1,
@@ -378,14 +382,34 @@ return (
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
-  onConfirm={(motif) => {
-    console.log("Motif :", motif);
+  onConfirm={async (motif) => {
+  console.log("Motif :", motif);
 
-    // Ici API
+  // await sortirFamille(id, motif);
 
+  if (isMobile) {
+    setOpenSuccess(true);
+  } else {
     setOpenFinSuivi(false);
-  }}
+
+    // Ici tu recharges les données de la famille
+  }
+}}
 />
+
+{openSuccess && (
+  <Popup
+    title="Fin de suivi avec succès"
+    image={successImage}
+    primaryButtonText="Voir la fiche de la famille"
+    onPrimaryClick={() => {
+      setOpenSuccess(false);
+      setOpenFinSuivi(false);
+
+      // Ici tu recharges la fiche si nécessaire
+    }}
+  />
+)}
       {/* Contenu */}
     <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
         <PageHeader
@@ -442,8 +466,8 @@ return (
       <div className="flex flex-col gap-3">
 
  <StatusBadge
-  type="mereActive"
-  text="Active"
+  type={statut === "Sortie" ? "sortie" : "mereActive"}
+  text={statut}
   className="w-full h-[40px] rounded-[10px]"
 />
 
@@ -538,14 +562,34 @@ return (
   </div>
 
 </div>
-<div className="mt-8 w-full">
-  <Button
-    title="Sortir du programme"
-    variant="primary"
-    noPadding
-    onClick={() => setOpenFinSuivi(true)}
-  />
-</div>
+{statut === "Active" && (
+  <div className="mt-8 w-full">
+    <Button
+      title="Sortir du programme"
+      variant="primary"
+      noPadding
+      onClick={() => setOpenFinSuivi(true)}
+    />
+  </div>
+)}
+
+{statut === "Sortie" && (
+  <div className="mt-8">
+    <InfoCard
+      title="Statut sortie"
+      data={[
+        {
+          label: "Date de sortie",
+          value: "15/05/2026",
+        },
+        {
+          label: "Motif de sortie",
+          value: "Enfant sorti du programme après amélioration.",
+        },
+      ]}
+    />
+  </div>
+)}
 
 <PopupListeCoordinateurs
   open={openCoordinateur}
@@ -573,6 +617,9 @@ return (
 };
 
 export default Modifyfamilly ;
+
+
+
 
 
 
