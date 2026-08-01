@@ -130,18 +130,18 @@ const PopupZakatFamille = ({
               {zakats.length ? (
                 zakats.map((item) => (
                   <CardListZakat
-                    key={item.id}
-                    sexe={item.sexe}
-                    
-                    zakat={item.numero}
-                    date={item.date}
-                    montant="Montant"
-                    valeur={item.montant}
-                    onClick={() => {
-                      setSelectedZakat(item);
-                      setOpenDetail(true);
-                    }}
-                  />
+  key={item.id}
+  sexe={item.sexe}
+  showNomCode={false}
+  zakat={item.numero}
+  date={item.date}
+  montant="Montant"
+  valeur={item.montant}
+  onClick={() => {
+    setSelectedZakat(item);
+    setOpenDetail(true);
+  }}
+/>
                 ))
               ) : (
                 <div className="py-10 text-center text-gray-500">
