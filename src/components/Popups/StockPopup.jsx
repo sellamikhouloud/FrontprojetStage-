@@ -16,7 +16,12 @@ const StockPopup = ({
   const [products, setProducts] = useState([]);
 
   const [pendingIndex, setPendingIndex] = useState(null);
-  const [backupProducts, setBackupProducts] = useState([]);
+
+  const [incrementValue, setIncrementValue] =
+    useState("");
+
+  const [backupProducts, setBackupProducts] =
+    useState([]);
 
   const timerRef = useRef(null);
 
@@ -29,15 +34,17 @@ const StockPopup = ({
     unit: "Kg",
   });
 
+  const [productError, setProductError] = useState("");
+
   useEffect(() => {
-const formattedProducts = initialProducts.map(
-  (product) => ({
-    title: product.title || product.nom,
-    quantity: product.quantity,
-    unit: product.unit || product.unite,
-    threshold: product.threshold,
-  })
-);
+    const formattedProducts = initialProducts.map(
+      (product) => ({
+        title: product.title || product.nom,
+        quantity: product.quantity,
+        unit: product.unit || product.unite,
+        threshold: product.threshold,
+      })
+    );
 
     setProducts(formattedProducts);
   }, [initialProducts]);
@@ -49,14 +56,16 @@ const formattedProducts = initialProducts.map(
     };
   }, []);
 
-  const saveToDistributionPage = (updatedProducts) => {
+  const saveToDistributionPage = (
+    updatedProducts
+  ) => {
     onSaveProducts?.(
       updatedProducts.map((product) => ({
-  nom: product.title,
-  quantity: product.quantity,
-  unite: product.unit,
-  threshold: product.threshold,
-}))
+        nom: product.title,
+        quantity: product.quantity,
+        unite: product.unit,
+        threshold: product.threshold,
+      }))
     );
   };
 
@@ -66,66 +75,87 @@ const formattedProducts = initialProducts.map(
 
     setBackupProducts(products);
 
-    const updated = products.map((product, i) =>
-      i === index
-        ? {
-            ...product,
-            quantity:
-              Number(product.quantity) + 1,
-          }
-        : product
-    );
-
-    setProducts(updated);
     setPendingIndex(index);
 
-    timerRef.current = setTimeout(() => {
-      saveToDistributionPage(updated);
-      setPendingIndex(null);
-    }, 60000);
+    setIncrementValue("");
   };
 
   const handleConfirm = () => {
-    if (timerRef.current)
-      clearTimeout(timerRef.current);
+    if (
+      incrementValue === "" ||
+      Number(incrementValue) <= 0
+    )
+      return;
 
-    saveToDistributionPage(products);
-    setPendingIndex(null);
-  };
-
-  const handleCancel = () => {
-    if (timerRef.current)
-      clearTimeout(timerRef.current);
-
-    setProducts(backupProducts);
-    setPendingIndex(null);
-  };
-
-  const handleAddProduct = () => {
-    if (!newProduct.title.trim()) return;
-
-    const updated = [
-      ...products,
-{
-  title: newProduct.title,
-  quantity: Number(newProduct.quantity),
-  unit: newProduct.unit,
-  threshold: 1,
-},
-    ];
+    const updated = products.map(
+      (product, i) =>
+        i === pendingIndex
+          ? {
+              ...product,
+              quantity:
+                Number(product.quantity) +
+                Number(incrementValue),
+            }
+          : product
+    );
 
     setProducts(updated);
 
     saveToDistributionPage(updated);
 
-    setNewProduct({
-      title: "",
-      quantity: 0,
-      unit: "Kg",
-    });
+    setPendingIndex(null);
 
-    setShowAddProduct(false);
+    setIncrementValue("");
   };
+
+  const handleCancel = () => {
+    setProducts(backupProducts);
+
+    setPendingIndex(null);
+
+    setIncrementValue("");
+  };
+
+  const handleAddProduct = () => {
+  const title = newProduct.title.trim();
+
+  if (!title) return;
+
+  const alreadyExists = products.some(
+    (product) =>
+      product.title.trim().toLowerCase() ===
+      title.toLowerCase()
+  );
+
+  if (alreadyExists) {
+    setProductError("Ce produit existe déjà.");
+    return;
+  }
+
+  setProductError("");
+
+  const updated = [
+    ...products,
+    {
+      title,
+      quantity: Number(newProduct.quantity),
+      unit: newProduct.unit,
+      threshold: 1,
+    },
+  ];
+
+  setProducts(updated);
+
+  saveToDistributionPage(updated);
+
+  setNewProduct({
+    title: "",
+    quantity: 0,
+    unit: "Kg",
+  });
+
+  setShowAddProduct(false);
+};
 
   return (
     <AnimatePresence>
@@ -134,15 +164,11 @@ const formattedProducts = initialProducts.map(
           fixed
           inset-0
           z-50
-
           bg-[#9A9A9A]/60
-
           flex
           items-start
           sm:items-center
-
           justify-center
-
           overflow-y-auto
         "
       >
@@ -154,32 +180,21 @@ const formattedProducts = initialProducts.map(
           onClick={(e) => e.stopPropagation()}
           className="
             w-full
-
             min-h-screen
-
             sm:min-h-0
             sm:max-w-[550px]
             sm:h-[90vh]
-
             bg-white
-
             rounded-none
             sm:rounded-[20px]
-
             shadow-none
             sm:shadow-[0_10px_30px_rgba(0,0,0,0.08)]
-
             flex
             flex-col
-
             overflow-hidden
           "
         >
-
-          {/* Header */}
-
           <div className="px-5 pt-5 pb-5">
-
             <PageHeader
               leftTitle="Fermer"
               showRight={false}
@@ -189,10 +204,8 @@ const formattedProducts = initialProducts.map(
             <h2 className="mt-3 text-center text-[22px] sm:text-[20px] font-semibold text-[#202124]">
               Stock de produits
             </h2>
-
           </div>
-
-          {/* Products */}
+                    {/* Products */}
 
           <div
             className="
@@ -217,26 +230,27 @@ const formattedProducts = initialProducts.map(
                   justify-between
                 "
               >
+                {/* Product name */}
                 <span className="text-[15px] font-medium">
                   {product.title}
                 </span>
 
+                {/* Right side */}
                 <div className="flex items-center gap-2">
 
+                  {/* Quantity */}
                   <div className="flex items-end gap-1">
-
                     <span className="text-[#4E9F8A] font-bold text-[18px]">
                       {product.quantity}
                     </span>
 
                     <span>{product.unit}</span>
-
                   </div>
 
+                  {/* Increment */}
+                  {pendingIndex !== index ? (
                   <button
-                    onClick={() =>
-                      handleIncrement(index)
-                    }
+                    onClick={() => handleIncrement(index)}
                     className="
                       w-7
                       h-7
@@ -248,51 +262,70 @@ const formattedProducts = initialProducts.map(
                       justify-center
                     "
                   >
-                    <Plus
-                      size={15}
-                      color="white"
-                    />
+                    <Plus size={15} color="white" />
                   </button>
+                ) : (
+                  <>
+                    {/* Confirm */}
+                    <button
+                      onClick={handleConfirm}
+                      className="
+                        w-7
+                        h-7
+                        rounded-[8px]
+                        bg-[#4E9F8A]
+                        hover:bg-[#418978]
+                        flex
+                        items-center
+                        justify-center
+                      "
+                    >
+                      <Check size={15} color="white" />
+                    </button>
 
-                  {pendingIndex === index && (
-                    <>
-                      <button
-                        onClick={handleConfirm}
-                        className="
-                          w-7
-                          h-7
-                          rounded-[8px]
-                          bg-[#4E9F8A]
-                          flex
-                          items-center
-                          justify-center
-                        "
-                      >
-                        <Check
-                          size={15}
-                          color="white"
-                        />
-                      </button>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      autoFocus
+                      placeholder=""
+                      value={incrementValue}
+                      onChange={(e) =>
+                        setIncrementValue(
+                          e.target.value.replace(/\D/g, "")
+                        )
+                      }
+                      className="
+                        w-14
+                        h-7
+                        rounded-[8px]
+                        border
+                        border-[#84D6D0]
+                        text-center
+                        text-[13px]
+                        outline-none
+                        focus:border-[#4E9F8A]
+                      "
+                    />
 
-                      <button
-                        onClick={handleCancel}
-                        className="
-                          h-7
-                          px-2
-                          rounded-[8px]
-                          bg-[#EF4444]
-                          text-white
-                          text-[11px]
-                          flex
-                          items-center
-                          gap-1
-                        "
-                      >
-                        <X size={12} />
-                        Annuler
-                      </button>
-                    </>
-                  )}
+                    {/* Cancel */}
+                    <button
+                      onClick={handleCancel}
+                      className="
+                        w-7
+                        h-7
+                        rounded-[8px]
+                        bg-[#EF4444]
+                        hover:bg-[#dc2626]
+                        flex
+                        items-center
+                        justify-center
+                      "
+                    >
+                      <X size={15} color="white" />
+                    </button>
+                  </>
+                )}
 
                 </div>
 
@@ -301,7 +334,8 @@ const formattedProducts = initialProducts.map(
           </div>
 
           {/* Bottom section */}
-                    <div className="bg-white px-5 py-4 shrink-0">
+
+          <div className="bg-white px-5 py-4 shrink-0">
 
             {!showAddProduct ? (
               <Button
@@ -325,18 +359,21 @@ const formattedProducts = initialProducts.map(
                     overflow-hidden
                   "
                 >
-                  {/* Product name */}
+
+                  {/*Product name */}
 
                   <input
                     type="text"
                     placeholder="Tapez le nom"
                     value={newProduct.title}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setNewProduct({
                         ...newProduct,
                         title: e.target.value,
-                      })
-                    }
+                      });
+
+                      setProductError("");
+                    }}
                     className="
                       flex-1
                       h-full
@@ -389,16 +426,24 @@ const formattedProducts = initialProducts.map(
                       outline-none
                       cursor-pointer
                       text-[15px]
-                      pr-3
-                    "
-                  >
+                      pr-3 "
+                    >
                     <option>Kg</option>
                     <option>Litres</option>
                     <option>boîtes</option>
                     <option>Sacs</option>
                     <option>Pièces</option>
                   </select>
+
                 </div>
+                 
+                {/* Warning Message */}
+
+                {productError && (
+                  <p className="text-[#DC2626] text-[13px] mt-1 ml-1">
+                    {productError}
+                  </p>
+                )}
 
                 <div className="flex flex-col sm:flex-row gap-2">
 
@@ -429,6 +474,7 @@ const formattedProducts = initialProducts.map(
                   </div>
 
                 </div>
+
               </div>
             )}
 
@@ -443,25 +489,25 @@ const formattedProducts = initialProducts.map(
             </div>
 
           </div>
-
-        </motion.div>
+                  </motion.div>
       </div>
 
       {showEditPopup && (
-<EditStockPopup
-  products={products}
-  onClose={() => setShowEditPopup(false)}
-  onSave={(updatedThresholds) => {
-    setProducts((prev) =>
-      prev.map((product, index) => ({
-        ...product,
-        threshold: updatedThresholds[index].threshold,
-      }))
-    );
+        <EditStockPopup
+          products={products}
+          onClose={() => setShowEditPopup(false)}
+          onSave={(updatedThresholds) => {
+            setProducts((prev) =>
+              prev.map((product, index) => ({
+                ...product,
+                threshold:
+                  updatedThresholds[index].threshold,
+              }))
+            );
 
-    setShowEditPopup(false);
-  }}
-/>
+            setShowEditPopup(false);
+          }}
+        />
       )}
 
     </AnimatePresence>
