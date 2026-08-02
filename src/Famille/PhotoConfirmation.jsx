@@ -47,9 +47,10 @@ export default function PhotoConfirmation() {
   const handleSave = () => {
     const newErrors = {};
 
-    if (!selectedCoordinateur) {
-      newErrors.coordinateur = "Veuillez sélectionner un coordinateur";
-    }
+    if (isAdmin && !selectedCoordinateur) {
+    newErrors.coordinateur = "Veuillez sélectionner un coordinateur";
+  }
+
 
     setErrors(newErrors);
 
@@ -58,11 +59,16 @@ export default function PhotoConfirmation() {
     }
   };
 
+  // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
+const role = "admin";
+//const role = "coordinateur"; 
+const isAdmin = role === "admin";
+
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
       <div className="hidden md:block">
-        <Sidebar role="admin" />
+       <Sidebar role={role} />
       </div>
 
       {/* Main Content */}
@@ -181,14 +187,16 @@ export default function PhotoConfirmation() {
             noPadding
           />
 
-          {/* Coordinator */}
-          <div className="flex flex-col gap-1">
-            <CoordinateurSelector
-              selectedCoordinateur={selectedCoordinateur}
-              onOpenPopup={() => setOpenCoordinateurs(true)}
-            />
-            <ErrorMessage message={errors.coordinateur} />
-          </div>
+         {/* Coordinator — réservé à l'admin */}
+{isAdmin && (
+  <div className="flex flex-col gap-1">
+    <CoordinateurSelector
+      selectedCoordinateur={selectedCoordinateur}
+      onOpenPopup={() => setOpenCoordinateurs(true)}
+    />
+    <ErrorMessage message={errors.coordinateur} />
+  </div>
+)}
 
           {/* Review */}
          <div

@@ -44,7 +44,6 @@ export default function InformationMere() {
     if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
     if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
     if (!dateNaissance) newErrors.dateNaissance = "Veuillez sélectionner la date de naissance";
-    if (!telephone.trim()) newErrors.telephone = "Veuillez saisir le numéro de téléphone";
     if (!situation.trim()) newErrors.situation = "Veuillez choisir la situation familiale";
     if (enfants === 0) newErrors.enfants = "Veuillez indiquer le nombre d'enfants";
 
@@ -54,12 +53,16 @@ export default function InformationMere() {
       navigate("/information-nourrisson");
     }
   };
+    // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
+const role = "admin";
+// const role = "coordinateur"; 
+const isAdmin = role === "admin";
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
       <div className="hidden md:block">
-        <Sidebar role="admin" />
+       <Sidebar role={role} />
       </div>
 
       {/* Main Content */}
@@ -165,7 +168,7 @@ export default function InformationMere() {
               }}
               noPadding
             />
-            <ErrorMessage message={errors.telephone} />
+            
           </div>
 
           <div className="flex flex-col gap-1">

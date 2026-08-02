@@ -8,10 +8,14 @@ import ChoiceContainer from "../components/Containers/ChoiceContainer.jsx";
 import StepIndicator from "../components/Progress/StepIndicator.jsx";
 import Navigation from "../components/Navigation,Pageheader/Navigation.jsx";
 import ErrorMessage from "../components/Forms/ErrorMessage.jsx";
+import Input from "../components/Containers/ContainerEcriture.jsx";
 
 import bunny from "../assets/images/bunny.svg";
 
 export default function InformationNourrisson() {
+  
+  const [nom, setNom] = useState("");
+  const [prenom, setPrenom] = useState("");
   const [dateNaissance, setDateNaissance] = useState(null);
   const [poids, setPoids] = useState("");
   const [sexe, setSexe] = useState("");
@@ -31,7 +35,8 @@ export default function InformationNourrisson() {
   const handleNext = () => {
     const newErrors = {};
 
-    
+    if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
+    if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
     if (!poids.trim()) newErrors.poids = "Veuillez saisir le poids de naissance";
     if (!sexe.trim()) newErrors.sexe = "Veuillez choisir le sexe";
     if (!taille.trim()) newErrors.taille = "Veuillez saisir la taille de naissance";
@@ -43,11 +48,15 @@ export default function InformationNourrisson() {
     }
   };
 
+    // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
+const role = "admin";
+// const role = "coordinateur"; 
+const isAdmin = role === "admin";
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
       <div className="hidden md:block">
-        <Sidebar role="admin" />
+        <Sidebar role={role} />
       </div>
 
       {/* Main Content */}
@@ -95,6 +104,34 @@ export default function InformationNourrisson() {
                 lg:h-[196px]
               "
             />
+          </div>
+
+           <div className="flex flex-col gap-1">
+            <Input
+              label="Nom"
+              placeholder="Saisir le nom"
+              value={nom}
+              onChange={(e) => {
+                setNom(e.target.value);
+                clearError("nom");
+              }}
+              noPadding
+            />
+            <ErrorMessage message={errors.nom} />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <Input
+              label="Prénom"
+              placeholder="Saisir le prénom"
+              value={prenom}
+              onChange={(e) => {
+                setPrenom(e.target.value);
+                clearError("prenom");
+              }}
+              noPadding
+            />
+            <ErrorMessage message={errors.prenom} />
           </div>
 
           {/* Date */}
