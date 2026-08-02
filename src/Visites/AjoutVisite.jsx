@@ -305,60 +305,60 @@ export default function AjoutVisite() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Desktop fixed sidebar */}
-      <div
-        className="
-          hidden
-          lg:flex
-          fixed
-          inset-y-0
-          left-4
-          items-center
-          z-50
-        "
-      >
-        <Sidebar role="coordinator" />
-      </div>
+  <div className="min-h-screen bg-white lg:flex">
+  {/* Desktop sidebar — in flex flow, but pinned via sticky */}
+  <div
+    className="
+      hidden
+      lg:flex
+      lg:sticky
+      lg:top-0
+      lg:h-screen
+      lg:items-center
+      lg:py-0
+      lg:pl-0
+      lg:shrink-0
+    "
+  >
+    <Sidebar role="admin" />
+  </div>
 
-      {/* Mobile sidebar (hamburger) */}
-      <div className="lg:hidden">
-        <Sidebar role="admin" />
-      </div>
+  {/* Mobile sidebar (hamburger) — unchanged */}
+  <div className="lg:hidden">
+    <Sidebar role="admin" />
+  </div>
 
-      {/* Mobile fixed white header */}
-      <div
-        className="
-          fixed
-          top-0
-          left-0
-          right-0
-          h-20
-          bg-white
-          z-40
-          lg:hidden
-        "
-      />
+  {/* Mobile fixed white header — unchanged */}
+  <div
+    className="
+      fixed
+      top-0
+      left-0
+      right-0
+      h-20
+      bg-white
+      z-40
+      lg:hidden
+    "
+  />
 
-      {/* Page content */}
-      <main
-        className="
-          flex-1
-          overflow-y-auto
-          bg-white
+  {/* Page content */}
+  <main
+    className="
+      flex-1
+      overflow-y-auto
+      bg-white
 
-          pt-20
-          lg:pt-4
+      pt-20
+      lg:pt-4
 
-          px-4
-          lg:px-10
+      px-4
+      lg:px-10
 
-          pb-8
-          lg:pb-2
-
-          lg:ml-24
-        "
-      >
+      pb-8
+      lg:pb-2
+    "
+  >
         {/* Header */}
         <div className="mb-3 lg:mb-6">
           <PageHeader
