@@ -1,10 +1,19 @@
-export default function StockCard({ nom, quantity, unite }) {
+export default function StockCard({
+  nom,
+  quantity,
+  unite,
+  statut,
+  showStatusColor = true,
+  onClick,
+}) {
+  const isEnAttente = showStatusColor && statut === "en_attente";
+
   return (
     <div
-      className="
+      onClick={onClick}
+      className={`
         min-w-[90px] md:min-w-[140px]
         h-[90px]
-        bg-[#F8FBFC]
         rounded-xl
         px-[15px]
         py-[20px]
@@ -14,7 +23,11 @@ export default function StockCard({ nom, quantity, unite }) {
         justify-center
         gap-[10px]
         flex-shrink-0
-      "
+        ${onClick ? "cursor-pointer" : ""}
+      `}
+      style={{
+        backgroundColor: isEnAttente ? "rgba(250, 207, 133, 0.5)" : "#F8FBFC",
+      }}
     >
       {/* Nom */}
       <p className="text-[18px] font-medium text-black text-center leading-none">

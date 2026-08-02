@@ -12,6 +12,7 @@ import PopupDetailDistributionModifier from "../components/Popups/PopupdetailsDi
 import CardListDistribution from "../components/Cards/CarteListeDistribution";
 import StockCard from "../components/Cards/StockCard";
 import StockPopup from "../components/Popups/StockPopup";
+import PopupValidationProduit from "../components/Popups/PopupValidationProduit";
 import NoResultImage from "../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -20,6 +21,8 @@ export default function DistributionPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
   const navigate = useNavigate();
+  const [showValidation, setShowValidation] = useState(false);
+const [produitSelectionne, setProduitSelectionne] = useState(null);
 const [filters, setFilters] = useState({
   
   dateDebut: null,
@@ -66,63 +69,91 @@ const [appliedFilters, setAppliedFilters] = useState({
     ],
   },
 ];
-
 const [products, setProducts] = useState([
   {
     nom: "Lait",
     quantity: 38,
     unite: "boîtes",
     threshold: 1,
+    statut: "valide",
+
   },
   {
     nom: "Céréales",
     quantity: 38,
     unite: "Kg",
     threshold: 1,
+    statut: "en_attente",
+    date: "12/06/2026",
+    enregistrePar: "nom Coor",
   },
   {
     nom: "Huile",
     quantity: 38,
     unite: "Litres",
     threshold: 1,
+    statut: "valide",
   },
   {
     nom: "Sucre",
     quantity: 38,
     unite: "Kg",
     threshold: 1,
+    statut: "valide",
   },
   {
     nom: "Sel iodé",
     quantity: 38,
     unite: "Kg",
     threshold: 1,
+    statut: "en_attente",
+    date: "12/06/2026",
+    enregistrePar: "nom Coor",
   },
   {
     nom: "Légumineuses",
     quantity: 38,
     unite: "Kg",
     threshold: 1,
+    statut: "valide",
   },
   {
     nom: "Lait",
     quantity: 38,
     unite: "boîtes",
     threshold: 1,
+    statut: "valide",
   },
   {
     nom: "Légumineuses",
     quantity: 38,
     unite: "Kg",
     threshold: 1,
+    statut: "en_attente",
+    date: "12/06/2026",
+    enregistrePar: "nom Coor",
   },
   {
     nom: "Huile",
     quantity: 38,
     unite: "Litres",
     threshold: 1,
+    statut: "valide",
   },
 ]);
+const handleCardClick = (item, index) => {
+  if (item.statut === "en_attente") {
+    setProduitSelectionne({
+      id: index,
+      nom: item.nom,
+      quantite: item.quantity,
+      unite: item.unite,
+      date: item.date,
+      enregistrePar: item.enregistrePar,
+    });
+    setShowValidation(true);
+  }
+};
 
 const filtered = distributions.filter((item) => {
   const keyword = search.toLowerCase();
@@ -303,6 +334,8 @@ if (isFilterOpen && isMobile) {
         nom={item.nom}
         quantity={item.quantity}
         unite={item.unite}
+        statut={item.statut}
+        onClick={() => handleCardClick(item, index)}
       />
     ))}
   </div>
@@ -411,6 +444,31 @@ if (isFilterOpen && isMobile) {
     onSaveProducts={setProducts}
   />
 )}
+
+<PopupValidationProduit
+  open={showValidation}
+  produit={produitSelectionne}
+  onClose={() => {
+    setShowValidation(false);
+    setProduitSelectionne(null);
+  }}
+  onValider={({ id, quantite }) => {
+    setProducts((prev) =>
+      prev.map((p, i) =>
+        i === id
+          ? { ...p, statut: "valide", quantity: quantite || p.quantity }
+          : p
+      )
+    );
+    setProduitSelectionne(null);
+  }}
+  onRefuser={({ id }) => {
+    setProducts((prev) =>
+      prev.map((p, i) => (i === id ? { ...p, statut: "refuse" } : p))
+    );
+    setProduitSelectionne(null);
+  }}
+/>
       </main>
      
   
