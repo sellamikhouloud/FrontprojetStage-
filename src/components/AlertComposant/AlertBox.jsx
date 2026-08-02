@@ -61,20 +61,8 @@ const AlertBox = ({
       {/* SUCCESS */}
       {variant === "success" ? (
         <div className="flex items-center gap-3">
-          <img
-            src={style.icon}
-            alt=""
-            className="w-5 h-5 shrink-0"
-          />
-
-          <div
-            className={`
-              flex-1
-              text-[14px]
-              leading-[22px]
-              ${style.text}
-            `}
-          >
+          <img src={style.icon} alt="" className="w-5 h-5 shrink-0" />
+          <div className={`flex-1 text-[14px] leading-[22px] ${style.text}`}>
             {children || message}
           </div>
         </div>
@@ -84,44 +72,19 @@ const AlertBox = ({
           {title && style.iconWithTitle && (
             <div className="flex items-center gap-3 mb-3">
               {style.icon && (
-                <img
-                  src={style.icon}
-                  alt=""
-                  className="w-5 h-5 shrink-0"
-                />
+                <img src={style.icon} alt="" className="w-5 h-5 shrink-0" />
               )}
-
-              <h3
-                className={`
-                  font-bold
-                  ${titleColor}
-                `}
-              >
-                {title}
-              </h3>
+              <h3 className={`font-bold ${titleColor}`}>{title}</h3>
             </div>
           )}
 
           {/* INFO TITLE */}
           {title && !style.iconWithTitle && (
             <>
-              <h3
-                className={`
-                  font-bold
-                  ${titleColor}
-                `}
-              >
-                {title}
-              </h3>
-
+              <h3 className={`font-bold ${titleColor}`}>{title}</h3>
               {variant === "info" && date && (
                 <div className="flex items-center gap-2 mt-2 mb-3">
-                  <img
-                    src={Calendar}
-                    alt=""
-                    className="w-4 h-4"
-                  />
-
+                  <img src={Calendar} alt="" className="w-4 h-4" />
                   <span className="text-[13px] font-medium text-black">
                     {date}
                   </span>
@@ -130,37 +93,38 @@ const AlertBox = ({
             </>
           )}
 
-          {/* CONTENT */}
-          {!title && style.icon ? (
-            <div className="flex items-center gap-3">
-              <img
-                src={style.icon}
-                alt=""
-                className="w-5 h-5 shrink-0"
-              />
+          
+         {/* CONTENT */}
+{!title && style.icon ? (
+  <div className="flex items-center gap-4">
+    <img
+      src={style.icon}
+      alt=""
+      className="w-5 h-5 shrink-0"
+    />
 
-              <div
-                className={`
-                  flex-1
-                  text-[14px]
-                  leading-[22px]
-                  ${style.text}
-                `}
-              >
-                {children || message}
-              </div>
-            </div>
-          ) : (
-            <div
-              className={`
-                text-[14px]
-                leading-6
-                ${style.text}
-              `}
-            >
-              {children || message}
-            </div>
-          )}
+    <div
+      className={`
+        flex-1
+        text-[14px]
+        leading-[22px]
+        ${style.text}
+      `}
+    >
+      {children || message}
+    </div>
+  </div>
+) : (
+  <div
+    className={`
+      text-[14px]
+      leading-6
+      ${style.text}
+    `}
+  >
+    {children || message}
+  </div>
+)}
         </>
       )}
     </div>

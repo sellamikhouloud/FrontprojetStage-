@@ -4,23 +4,18 @@ import Add from "../../assets/add.svg";
 import Edit1 from "../../assets/Edit 1.svg";
 import Edit2 from "../../assets/Edit 2.svg";
 import DocumentAdd from "../../assets/Document add.svg";
-import Share from "../../assets/Share.svg";
 
 const NavigationHeader = ({
   title,
 
-  // none | edit | add | save | export | share
+  // none | edit | add | save | export
   type = "none",
   actionTitle = "",
   onAction,
 
- secondType = "none",
-secondActionTitle = "",
-onSecondAction,
-
-thirdType = "none",
-thirdActionTitle = "",
-onThirdAction,
+  secondType = "none",
+  secondActionTitle = "",
+  onSecondAction,
 }) => {
   const renderAction = (currentType, currentTitle, currentAction) => {
     switch (currentType) {
@@ -40,6 +35,7 @@ onThirdAction,
               lg:text-[18px]
               font-medium
               whitespace-nowrap
+              shrink-0
               cursor-pointer
               transition-all
               duration-150
@@ -81,6 +77,7 @@ onThirdAction,
               lg:text-[18px]
               font-medium
               whitespace-nowrap
+              shrink-0
               cursor-pointer
               transition-all
               duration-150
@@ -122,6 +119,7 @@ onThirdAction,
               lg:text-[18px]
               font-medium
               whitespace-nowrap
+              shrink-0
               cursor-pointer
               transition-all
               duration-150
@@ -147,47 +145,9 @@ onThirdAction,
           </button>
         );
 
-      case "share":
-        return (
-          <button
-            onClick={currentAction}
-            className="
-              group
-              flex
-              items-center
-              gap-2
-              text-[#1E1E1E]
-              text-[13px]
-              sm:text-[16px]
-              lg:text-[18px]
-              font-medium
-              whitespace-nowrap
-              cursor-pointer
-              transition-all
-              duration-150
-              hover:opacity-70
-              active:scale-95
-            "
-          >
-            <span>{currentTitle}</span>
-
-            <img
-              src={Share}
-              alt="Partager"
-              className="
-                w-5
-                h-5
-                transition-transform
-                duration-150
-                group-active:scale-90
-              "
-            />
-          </button>
-        );
-
       case "save":
         return (
-          <div>
+          <div className="shrink-0">
             <Button
               title={currentTitle}
               icon={Edit2}
@@ -206,81 +166,17 @@ onThirdAction,
   };
 
   return (
-    <div className="w-full flex items-start justify-between gap-4 mb-6">
+    <div className="w-full flex items-center justify-between gap-3 sm:gap-4 mb-4">
       {/* Titre */}
       <h1 className="flex-1 text-[15px] sm:text-[18px] lg:text-[20px] font-bold text-[#1E1E1E] leading-tight">
         {title}
       </h1>
 
-      {/* Actions Desktop */}
-    <div className="hidden md:flex items-center gap-10 shrink-0">
-  {renderAction(type, actionTitle, onAction)}
-  {renderAction(secondType, secondActionTitle, onSecondAction)}
-  {renderAction(thirdType, thirdActionTitle, onThirdAction)}
-</div>
-
-      {/* Actions Mobile */}
-    <div className="flex flex-col items-end gap-3 md:hidden shrink-0">
-  {/* Ajouter */}
-  {(type === "add" || secondType === "add" || thirdType === "add") &&
-    renderAction(
-      type === "add"
-        ? type
-        : secondType === "add"
-        ? secondType
-        : thirdType,
-      type === "add"
-        ? actionTitle
-        : secondType === "add"
-        ? secondActionTitle
-        : thirdActionTitle,
-      type === "add"
-        ? onAction
-        : secondType === "add"
-        ? onSecondAction
-        : onThirdAction
-    )}
-
-  {/* Exporter (share) */}
-  {(type === "share" || secondType === "share" || thirdType === "share") &&
-    renderAction(
-      type === "share"
-        ? type
-        : secondType === "share"
-        ? secondType
-        : thirdType,
-      type === "share"
-        ? actionTitle
-        : secondType === "share"
-        ? secondActionTitle
-        : thirdActionTitle,
-      type === "share"
-        ? onAction
-        : secondType === "share"
-        ? onSecondAction
-        : onThirdAction
-    )}
-
-  {/* Importer */}
-  {(type === "export" || secondType === "export" || thirdType === "export") &&
-    renderAction(
-      type === "export"
-        ? type
-        : secondType === "export"
-        ? secondType
-        : thirdType,
-      type === "export"
-        ? actionTitle
-        : secondType === "export"
-        ? secondActionTitle
-        : thirdActionTitle,
-      type === "export"
-        ? onAction
-        : secondType === "export"
-        ? onSecondAction
-        : onThirdAction
-    )}
-</div>
+      {/* Actions */}
+      <div className="flex items-center gap-6 shrink-0">
+        {renderAction(type, actionTitle, onAction)}
+        {renderAction(secondType, secondActionTitle, onSecondAction)}
+      </div>
     </div>
   );
 };

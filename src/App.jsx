@@ -18,6 +18,8 @@ import DistributionPage from "./Distributions/ListeDistribution";
 import ZakatPage from "./Zakat/ListeZakat";
 import AjoutZakat from "./Zakat/AjoutZakat";
 import AjoutVisite from "./Visites/AjoutVisite";
+import Galerie from "./Galerie/Galerie";
+
 
 function App() {
   return (
@@ -85,6 +87,11 @@ function App() {
         {/* Visite*/}
          <Route
           path="/ajout-visite" element={<AjoutVisite />}
+        />
+
+        {/* Galerie */}
+        <Route
+          path="/galerie" element={<Galerie />}
         />
 
 

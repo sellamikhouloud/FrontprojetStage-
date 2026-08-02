@@ -160,9 +160,7 @@ export default function AjoutVisite() {
     return !Object.values(newErrors).some(Boolean);
   };
 
-  // 🔧 handleSave utilise pour l'instant des DONNÉES FACTICES pour tester le rendu du popup.
-  // Une fois le backend prêt, remplace le contenu de la fonction par l'appel API réel (voir
-  // commentaire "VERSION API RÉELLE" juste en dessous).
+
   const handleSave = () => {
     if (!validateForm()) return;
 
@@ -175,44 +173,7 @@ export default function AjoutVisite() {
     setShowSuccessPopup(true);
   };
 
-  /* VERSION API RÉELLE — à activer une fois l'endpoint backend prêt :
-
-  const handleSave = async () => {
-    if (!validateForm()) return;
-
-    try {
-      const response = await fetch("/api/visites", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          familleId: selectedFamille?.id,
-          date,
-          mois,
-          numeroCycle,
-          poidsNourrisson,
-          tailleNourrisson,
-          muacNourrisson,
-          positionNourrisson,
-          observationsNourrisson,
-          poidsMere,
-          tailleMere,
-          muacMere,
-          observationsMere,
-          evaluationVisuelle,
-        }),
-      });
-
-      const data = await response.json();
-      // data attendu: { zScores, statutNourrisson, statutMere }
-      setResultatVisite(data);
-      setShowSuccessPopup(true);
-    } catch (error) {
-      console.error("Erreur lors de l'enregistrement de la visite :", error);
-      // TODO: afficher un message d'erreur à l'utilisateur si besoin
-    }
-  };
-
-  */
+ 
 
   // --- Handlers qui nettoient l'erreur au fur et à mesure ---
   const handleMoisChange = (value) => {
@@ -399,7 +360,7 @@ export default function AjoutVisite() {
         "
       >
         {/* Header */}
-        <div className="mb-0 lg:mb-6">
+        <div className="mb-3 lg:mb-6">
           <PageHeader
             leftTitle="Annuler"
             showRight={false}
@@ -409,14 +370,14 @@ export default function AjoutVisite() {
 
         <div className="mb-4">
           {selectedFamille?.badges?.some((b) => b.type === "retard") && (
-            <AlertBox variant="warning">
-              <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-[#CC8409]">Visite en retard</span>
-                <span className="text-[13px] text-[#CC8409]">
-                  Dernière visite le 15/05/2026 (il y a 36 jours).
-                </span>
-              </div>
-            </AlertBox>
+           <AlertBox variant="warning">
+  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-0 sm:gap-0">
+    <span className="font-bold text-[#78350F]">Visite en retard</span>
+    <span className="text-[13px] text-[#92400E]">
+      Dernière visite le 15/05/2026 (il y a 36 jours).
+    </span>
+  </div>
+</AlertBox>
           )}
         </div>
 

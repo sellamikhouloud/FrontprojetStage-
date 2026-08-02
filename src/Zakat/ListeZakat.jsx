@@ -11,6 +11,8 @@ import SelectInput  from "../components/Containers/ChoiceContainer";
 import PopupDetailZakat from "../components/Popups/PopupdetailsZakat";
 import PopupModifierZakat from "../components/Popups/PopupdetailsZakatModifier";
 import  PopupAlimenterSolde from "../components/Popups/PopupAlimenterSolde";
+import  SoldeCard from "../components/Cards/SoldeCard";
+import  RepartitionAides from "../components/Cards/RepartitionAides";
 import NoResultImage from "../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -201,11 +203,34 @@ if (isFilterOpen && isMobile) {
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
        
 <NavigationHeader
+  title="Statistiques des zakats"
   secondType="add"
   secondActionTitle="Alimenter le solde"
   onSecondAction={() => setOpenAlimenterSolde(true)}
 />
- 
+ <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
+  <SoldeCard
+    soldeDisponible="34 000"
+    soldeEnEuros="850"
+    entreesMois="52 000"
+    entreesMoisEnEuros="1 300"
+    sortiesMois="18 000"
+    sortiesMoisEnEuros="450"
+    famillesAidees="12"
+    versementsRealises="35"
+    tauxActuel="0.022"
+  />
+
+  <RepartitionAides
+    data={[
+      { label: "Veuvage", percentage: 45 },
+      { label: "Urgence", percentage: 25 },
+      { label: "Vulnérabilité", percentage: 20 },
+      { label: "Autre", percentage: 10 },
+    ]}
+  />
+</div>
+
 <NavigationHeader
   title="Liste des Zakat"
 
