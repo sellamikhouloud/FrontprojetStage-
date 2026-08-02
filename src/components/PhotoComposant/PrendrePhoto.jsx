@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Camera, AlertTriangle } from "lucide-react";
-import Photo from "../assets/Galerie.svg";
+import Photo from "../../assets/Galerie.svg";
 
 export default function PrendrePhoto() {
     const inputRef = useRef(null);

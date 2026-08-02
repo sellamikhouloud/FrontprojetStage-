@@ -1,18 +1,22 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import AlertBox from "../AlertComposant/AlertBox";
-import ContainerEcriture from "./ContainerEcriture";
-import ChoiceContainer from "./ChoiceContainer";
-import DateContainer from "./DateContainer";
-import Button from "../Button";
-import ImagePreview from "../ImagePreview";
-import PopupPhoto from "./PopupPhoto";
+import ContainerEcriture from "../Containers/ContainerEcriture";
+import ChoiceContainer from "../Containers/ChoiceContainer";
+import DateContainer from "../Containers/DateContainer";
+import Button from "../Button/Button";
+import ImagePreview from "../PhotoComposant/ImagePreview";
+import PopupPhoto from "../Popups/PopupPhoto";
 
-import quitter from "../assets/quitter.svg";
-import testImage from "../assets/icon.svg";
-import GreenCamera from "../assets/GreenCamera.svg";
+import quitter from "../../assets/quitter.svg";
+import testImage from "../../assets/Icon.svg";
+import GreenCamera from "../../assets/GreenCamera.svg";
 
-const AjouterPhoto = ({ onClose = () => {} }) => {
+const AjouterPhoto = ({
+  initialImage,
+  onClose = () => {},
+  onSave = () => {},
+}) => {
   const villages = [
     "Danguérémou (Chiteybeu)",
     "Niéléba (Awoycheu)",
@@ -26,57 +30,132 @@ const AjouterPhoto = ({ onClose = () => {} }) => {
   const [titre, setTitre] = useState("");
   const [description, setDescription] = useState("");
   const [village, setVillage] = useState("");
-  const [date, setDate] = useState("");
-  const [image, setImage] = useState(testImage);
-  const [showPopupPhoto, setShowPopupPhoto] = useState(false);
+
+  // FIX DATE
+  const [date, setDate] = useState(null);
+
+  const [image, setImage] = useState(
+    initialImage || testImage
+  );
+
+  const [showPopupPhoto, setShowPopupPhoto] =
+    useState(false);
+
+
+  useEffect(() => {
+    if (initialImage) {
+      setImage(initialImage);
+    }
+  }, [initialImage]);
+
 
   const handleImageSelected = (file) => {
     setImage(URL.createObjectURL(file));
   };
 
+
   const handleSave = () => {
-    console.log({
-      titre,
+    const newPhoto = {
+      title: titre,
       village,
       date,
       description,
       image,
-    });
+      status: "pending",
+    };
+
+    onSave(newPhoto);
   };
+
 
   return (
     <>
       <div
         className="
-          w-[900px]
-          h-[580px]
+          w-full
+          h-screen
+
+          lg:w-[900px]
+          lg:h-[580px]
+
           bg-white
-          rounded-[20px]
-          shadow-xl
+
+          rounded-none
+          lg:rounded-[20px]
+
+          shadow-none
+          lg:shadow-xl
+
           flex
-          overflow-hidden
+          flex-col
+          lg:flex-row
+
+          overflow-y-auto
+          lg:overflow-hidden
         "
       >
-        {/* LEFT SIDE */}
+
+        {/* IMAGE */}
         <div
           className="
-            w-[420px]
-            h-full
-            flex
-            flex-col
-            p-6
+            order-1
+            lg:order-2
+
+            w-full
+            lg:flex-1
+
+            h-[280px]
+            lg:h-full
+
+            shrink-0
           "
         >
-          {/* Fermer */}
+          <ImagePreview
+            image={image}
+            buttonTitle="Changer"
+            buttonIcon={GreenCamera}
+            buttonVariant="changer"
+            onButtonClick={() =>
+              setShowPopupPhoto(true)
+            }
+          />
+        </div>
+
+
+        {/* FORM */}
+        <div
+          className="
+            order-2
+            lg:order-1
+
+            w-full
+            lg:w-[420px]
+
+            flex
+            flex-col
+
+            p-5
+            lg:p-6
+
+            flex-1
+          "
+        >
+
+          {/* Close */}
           <button
             onClick={onClose}
             className="
               flex
               items-center
-              gap-[10px]
-              text-[16px]
+              gap-2
+
+              text-[15px]
+              lg:text-[16px]
+
               font-medium
-              mb-2
+
+              mb-4
+              lg:mb-5
             "
           >
             <img
@@ -88,23 +167,31 @@ const AjouterPhoto = ({ onClose = () => {} }) => {
             Fermer
           </button>
 
+
           {/* Alert */}
           <div className="mb-5">
             <AlertBox
               variant="success"
-              message="Aucune photo de nourrisson. Les photos illustrent le programme dans sa globalité et jamais un bénéficiaire identifiable."
+              message="
+              Aucune photo de nourrisson. Les photos illustrent le programme dans sa globalité et jamais un bénéficiaire identifiable.
+              "
             />
           </div>
 
-          {/* Form */}
+
+          {/* Title */}
           <ContainerEcriture
             noPadding
             label="Titre de la photo"
             placeholder="Entrer le titre"
             value={titre}
-            onChange={(e) => setTitre(e.target.value)}
+            onChange={(e) =>
+              setTitre(e.target.value)
+            }
           />
 
+
+          {/* Village */}
           <ChoiceContainer
             noPadding
             label="Village"
@@ -114,23 +201,30 @@ const AjouterPhoto = ({ onClose = () => {} }) => {
             onChange={setVillage}
           />
 
+
+          {/* Date */}
           <DateContainer
             noPadding
             label="Date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={setDate}
           />
 
+
+          {/* Description */}
           <ContainerEcriture
             noPadding
             label="Description"
             placeholder="Entrer une description"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) =>
+              setDescription(e.target.value)
+            }
           />
 
+
           {/* Save */}
-          <div className="mt-auto pt-5">
+          <div className="mt-8 lg:mt-auto pt-5">
             <Button
               noPadding
               title="Enregistrer"
@@ -138,25 +232,18 @@ const AjouterPhoto = ({ onClose = () => {} }) => {
               onClick={handleSave}
             />
           </div>
+
         </div>
 
-        {/* RIGHT SIDE */}
-        <div className="flex-1 h-full">
-          <ImagePreview
-            image={image}
-            buttonTitle="Changer"
-            buttonIcon={GreenCamera}
-            buttonVariant="changer"
-            onButtonClick={() => setShowPopupPhoto(true)}
-          />
-        </div>
       </div>
 
-      {/* Popup */}
+
       {showPopupPhoto && (
         <PopupPhoto
           title="Changer la photo"
-          onClose={() => setShowPopupPhoto(false)}
+          onClose={() =>
+            setShowPopupPhoto(false)
+          }
           onImageSelected={handleImageSelected}
         />
       )}

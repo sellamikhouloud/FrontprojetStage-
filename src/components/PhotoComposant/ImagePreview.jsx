@@ -8,9 +8,17 @@ const ImagePreview = ({
   buttonVariant = "changer",
 }) => {
   return (
-    <div className="relative w-[480px] h-[580px] overflow-hidden">
+    <div
+      className="
+        relative
+        w-full
+        h-full
+        overflow-hidden
+        bg-[#F8F8F8]
+      "
+    >
       {/* Button */}
-      <div className="absolute top-6 left-6 z-10">
+      <div className="absolute top-3 left-6 z-10">
         <Button
           title={buttonTitle}
           icon={buttonIcon}
@@ -24,7 +32,11 @@ const ImagePreview = ({
       <img
         src={image}
         alt="Preview"
-        className="w-full h-full object-cover"
+        className="
+          w-full
+          h-full
+          object-contain
+        "
       />
     </div>
   );

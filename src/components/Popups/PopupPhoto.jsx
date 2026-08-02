@@ -6,14 +6,15 @@ import camera from "../../assets/camera.svg";
 import galerie from "../../assets/galerie2.svg";
 
 import PhotoOption from "../PhotoComposant/PhotoOption";
+import Button from "../Button/Button";
 
 const PopupPhoto = ({
   open = true,
   title = "Ajouter une photo",
   onClose,
   onImageSelected,
+  onStartAddPhoto,
 }) => {
-
   const [showWebcam, setShowWebcam] = useState(false);
 
   const videoRef = useRef(null);
@@ -22,24 +23,16 @@ const PopupPhoto = ({
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
-
-
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current
-        .getTracks()
-        .forEach((track) => track.stop());
-
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
   };
 
-
   useEffect(() => {
     return () => stopCamera();
   }, []);
-
-
 
   const handleClose = () => {
     stopCamera();
@@ -47,231 +40,140 @@ const PopupPhoto = ({
     onClose?.();
   };
 
-
-
   const handleCameraMobile = () => {
     cameraInputRef.current?.click();
   };
 
-
-
   const handleCameraDesktop = async () => {
-
     try {
-
       const stream =
         await navigator.mediaDevices.getUserMedia({
           video: true,
         });
 
-
       streamRef.current = stream;
-
       setShowWebcam(true);
 
-
       setTimeout(() => {
-
-        if(videoRef.current){
-
+        if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.play();
-
         }
-
-      },100);
-
-
-    } catch(error){
-
+      }, 100);
+    } catch (error) {
       console.error(error);
       alert("Camera access denied");
-
     }
-
   };
 
-
-
   const handleCamera = async () => {
-
     const isMobile =
       /Android|iPhone|iPad|iPod/i.test(
         navigator.userAgent
       );
 
-
-    if(isMobile){
-
+    if (isMobile) {
       handleCameraMobile();
-
-    }else{
-
+    } else {
       await handleCameraDesktop();
-
     }
-
   };
-
-
 
   const handleGallery = () => {
     galleryInputRef.current?.click();
   };
 
-
-
   const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
 
-    const file =
-      e.target.files?.[0];
-
-
-    if(!file) return;
-
+    if (!file) return;
 
     onImageSelected?.(file);
-
+    onStartAddPhoto?.();
     handleClose();
-
   };
-
-
 
   const takePhoto = () => {
+    if (!videoRef.current) return;
 
-    if(!videoRef.current) return;
+    const canvas = document.createElement("canvas");
 
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
 
-    const canvas =
-      document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
 
+    ctx.drawImage(videoRef.current, 0, 0);
 
-    canvas.width =
-      videoRef.current.videoWidth;
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) return;
 
+        const file = new File([blob], "photo.jpg", {
+          type: "image/jpeg",
+        });
 
-    canvas.height =
-      videoRef.current.videoHeight;
-
-
-    const ctx =
-      canvas.getContext("2d");
-
-
-    ctx.drawImage(
-      videoRef.current,
-      0,
-      0
+        onImageSelected?.(file);
+        onStartAddPhoto?.();
+        handleClose();
+      },
+      "image/jpeg"
     );
-
-
-
-    canvas.toBlob((blob)=>{
-
-      if(!blob) return;
-
-
-      const file =
-        new File(
-          [blob],
-          "photo.jpg",
-          {
-            type:"image/jpeg"
-          }
-        );
-
-
-      onImageSelected?.(file);
-
-      handleClose();
-
-
-    },"image/jpeg");
-
   };
 
-
-
-
   return (
-
     <AnimatePresence>
-
       {open && (
-
         <div
           className="
             fixed
             inset-0
             z-50
-
-            bg-[#9A9A9A]/60
+            bg-black/30
 
             flex
-            items-start
-            sm:items-center
-
+            items-end
+            lg:items-center
             justify-center
-
-            overflow-y-auto
           "
         >
-
-
           <motion.div
-
             initial={{
-              opacity:0,
-              scale:0.96
+              opacity: 0,
+              y: 60,
             }}
-
             animate={{
-              opacity:1,
-              scale:1
+              opacity: 1,
+              y: 0,
             }}
-
             exit={{
-              opacity:0,
-              scale:0.96
+              opacity: 0,
+              y: 60,
             }}
-
             transition={{
-              duration:0.2
+              duration: 0.25,
             }}
-
-            onClick={(e)=>e.stopPropagation()}
-
+            onClick={(e) => e.stopPropagation()}
             className="
               w-full
 
-              min-h-screen
-
-              sm:min-h-0
-
-              sm:w-[520px]
-
-              sm:max-h-[90vh]
-
-              overflow-y-auto
+              lg:w-[520px]
 
               bg-white
 
-              rounded-none
-              sm:rounded-[18px]
+              rounded-t-[28px]
+              lg:rounded-[18px]
 
-              border-0
-              sm:border
-              sm:border-[#4E9F8A]
+              shadow-2xl
 
-              shadow-none
-              sm:shadow-2xl
+              max-h-[90vh]
+              overflow-y-auto
             "
-
           >
-
-
-            {/* Hidden inputs */}
+            {/* Mobile Handle */}
+            <div className="lg:hidden flex justify-center pt-3 pb-2">
+              <div className="w-16 h-1 rounded-full bg-gray-300" />
+            </div>
 
             <input
               ref={cameraInputRef}
@@ -282,7 +184,6 @@ const PopupPhoto = ({
               className="hidden"
             />
 
-
             <input
               ref={galleryInputRef}
               type="file"
@@ -291,94 +192,68 @@ const PopupPhoto = ({
               className="hidden"
             />
 
-
-
             {/* Header */}
+            <div className="px-5 lg:px-6 pt-2 lg:pt-6 pb-4">
 
-            <div
-              className="
-                px-5
-                sm:px-6
-
-                pt-5
-
-                pb-3
-              "
-            >
-
+              {/* Desktop only */}
               <button
                 onClick={handleClose}
-
                 className="
-                  flex
+                  hidden
+                  lg:flex
+
                   items-center
                   gap-2
 
-                  text-[16px]
-                  sm:text-[18px]
-
+                  text-[18px]
                   font-medium
                 "
               >
-
                 <img
                   src={quitter}
                   alt="Fermer"
                   className="w-5 h-5"
                 />
-
                 Fermer
-
               </button>
-
-
 
               <h2
                 className="
-                  mt-5
+                  text-left
+                  lg:text-center
 
-                  text-center
+                  mt-2
+                  lg:mt-5
 
-                  text-[22px]
-                  sm:text-[24px]
+                  text-[30px]
+                  lg:text-[24px]
 
                   font-semibold
-
                   text-[#1E1E1E]
                 "
               >
-
                 {title}
-
               </h2>
 
+              <p
+                className="
+                  mt-2
 
+                  text-[15px]
+                  text-[#8B8B8B]
+
+                  lg:hidden
+                "
+              >
+                Choisissez une source pour votre photo de terrain
+              </p>
             </div>
 
-
-
-
-
             {/* Content */}
-
-            <div
-              className="
-                px-5
-                sm:px-6
-
-                pb-6
-
-                mt-4
-
-                space-y-6
-              "
-            >
-
+            <div className="px-5 lg:px-6 pb-5 space-y-5">
 
               {!showWebcam ? (
-
                 <>
-
                   <PhotoOption
                     icon={camera}
                     title="Prendre une photo"
@@ -389,8 +264,6 @@ const PopupPhoto = ({
                     onClick={handleCamera}
                   />
 
-
-
                   <PhotoOption
                     icon={galerie}
                     title="Choisir depuis la galerie"
@@ -400,16 +273,9 @@ const PopupPhoto = ({
                     background="#F2F6FF"
                     onClick={handleGallery}
                   />
-
                 </>
-
-
               ) : (
-
-
                 <div className="space-y-4">
-
-
                   <video
                     ref={videoRef}
                     autoPlay
@@ -417,59 +283,36 @@ const PopupPhoto = ({
                     muted
                     className="
                       w-full
-
                       aspect-video
-
                       rounded-2xl
-
                       bg-black
                     "
                   />
 
-
-
-                  <button
+                  <Button
+                    title="Prendre la photo"
+                    variant="primary"
                     onClick={takePhoto}
-
-                    className="
-                      w-full
-                      h-12
-
-                      bg-[#4E9F8A]
-
-                      text-white
-
-                      rounded-xl
-
-                      font-medium
-                    "
-                  >
-
-                    Prendre la photo
-
-                  </button>
-
-
+                  />
                 </div>
-
-
               )}
-
 
             </div>
 
+            {/* Mobile Cancel */}
+            <div className="lg:hidden pb-6">
+              <Button
+                title="Annuler"
+                variant="annuler"
+                onClick={handleClose}
+              />
+            </div>
 
           </motion.div>
-
-
         </div>
-
       )}
-
     </AnimatePresence>
-
   );
 };
-
 
 export default PopupPhoto;

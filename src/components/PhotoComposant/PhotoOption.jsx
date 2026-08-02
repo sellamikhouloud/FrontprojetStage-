@@ -1,4 +1,4 @@
-import ArrowRight from "../assets/arrow-right.svg";
+import ArrowRight from "../../assets/arrow-right.svg";
 
 const PhotoOption = ({
     icon,

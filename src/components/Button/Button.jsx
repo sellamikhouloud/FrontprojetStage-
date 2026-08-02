@@ -159,6 +159,14 @@ const Button = ({
     gris : `
       bg-[#91A09F]
       text-white
+    `,
+    annuler : `
+      border
+      text-[16px]
+      text-bold
+      rounded-[20px]
+      h-[46px]
+      w-full
     `
   };
 

@@ -1,6 +1,6 @@
 import { useRef } from "react";
-import PhotoOption from "./PhotoOption";
-import CameraIcon from "../assets/camera.svg";
+import PhotoOption from "../PhotoComposant/PhotoOption";
+import CameraIcon from "../../assets/camera.svg";
 
 function PhotoSelector() {
   const cameraInputRef = useRef(null);

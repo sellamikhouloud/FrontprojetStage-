@@ -1,124 +1,153 @@
-import { useState } from "react";
-
 import AlertBox from "../AlertComposant/AlertBox";
-import Button from "../Button";
-import ImagePreview from "../ImagePreview";
+import ImagePreview from "../PhotoComposant/ImagePreview";
 
-import quitter from "../assets/quitter.svg";
-import testImage from "../assets/icon.svg";
-import Supprimer from "../assets/Delete.svg";
-import Refused from "../assets/Refuse.svg";
+import quitter from "../../assets/quitter.svg";
+import Refused from "../../assets/Refuse.svg";
+import testImage from "../../assets/icon.svg";
 
-const PhotoRefuse = ({ onClose = () => {} }) => {
-  const [image] = useState(testImage);
+const PhotoRefusee = ({
+  photo,
+  onClose = () => {},
+}) => {
+  const image = photo?.image || testImage;
 
   return (
     <div
       className="
-        w-[900px]
-        h-[580px]
+        w-screen
+        h-screen
         bg-white
-        rounded-[20px]
-        shadow-xl
         flex
-        overflow-hidden
+        flex-col
+
+        md:w-[900px]
+        md:h-[580px]
+        md:flex-row
+        md:rounded-[20px]
+        md:shadow-xl
+        md:overflow-hidden
       "
     >
-      {/* LEFT */}
-      <div
-        className="
-          w-[420px]
-          h-full
-          flex
-          flex-col
-          p-6
-        "
-      >
-        {/* Fermer */}
-        <button
-          onClick={onClose}
-          className="
-            flex
-            items-center
-            gap-[10px]
-            text-[16px]
-            font-medium
-            mb-6
-          "
-        >
-          <img
-            src={quitter}
-            alt="Fermer"
-            className="w-5 h-5"
-          />
-          Fermer
-        </button>
-
-        {/* Photo informations */}
-        <div className="mb-6">
-          <AlertBox
-            variant="info"
-            title="Inventaire logistique – Guidikhama"
-            date="12 mars 2026"
-            message="Contrôle de l'inventaire des fournitures médicales au centre de santé de Guidikhama. Vérification de la disponibilité des médicaments essentiels, des kits de dépistage nutritionnel et du matériel de soins avant les activités communautaires."
-          />
-        </div>
-
-        {/* Refus */}
-        <div className="flex justify-between items-center mb-4">
-          <span
+      {/* ================= MOBILE ================= */}
+      <div className="md:hidden flex flex-col h-full overflow-y-auto">
+        {/* Close */}
+        <div className="px-4 pt-5 pb-3">
+          <button
+            onClick={onClose}
             className="
-              text-[13px]
-              uppercase
-              text-[#6F7975]
+              flex
+              items-center
+              gap-2
+              text-[15px]
               font-medium
             "
           >
-            Refusée par l'administrateur
-          </span>
-
-          <span
-            className="
-              text-[13px]
-              text-[#6F7975]
-            "
-          >
-            20 juin 2026
-          </span>
+            <img
+              src={quitter}
+              alt="Fermer"
+              className="w-4 h-4"
+            />
+            Fermer
+          </button>
         </div>
 
-        {/* Motif */}
-        <div className="mb-6">
+        {/* Image */}
+        <div className="px-4">
+          <div className="rounded-[24px] overflow-hidden">
+            <ImagePreview
+              image={image}
+              buttonTitle="Refusée"
+              buttonIcon={Refused}
+              buttonVariant="refusee"
+            />
+          </div>
+        </div>
+
+        {/* Information */}
+        <div className="p-4 space-y-4">
+          <AlertBox
+            variant="info"
+            title={photo?.title || ""}
+            location={photo?.village || ""}
+            date={photo?.date || ""}
+            message={photo?.description || ""}
+            padding="p-5"
+          />
+
           <AlertBox
             variant="warning"
             title="Motif de refus :"
-            titleColor = "text-[#8A4D00]"
-            message="Visage d'un personnel identifiable en arrière-plan. Veuillez recadrer ou utiliser une autre prise de vue."
-          />
-        </div>
-
-        {/* Delete button */}
-        <div>
-          <Button
-            noPadding
-            title="Supprimer"
-            variant="supprimer"
-            icon={Supprimer}
+            titleColor="text-[#8A4D00]"
+            message={photo?.motifRefus || ""}
+            padding="p-5"
           />
         </div>
       </div>
 
-      {/* RIGHT */}
-      <div className="flex-1 h-full">
-        <ImagePreview
-          image={image}
-          buttonTitle="Refusée"
-          buttonIcon={Refused}
-          buttonVariant="refusee"
-        />
+      {/* ================= DESKTOP ================= */}
+      <div className="hidden md:flex w-full h-full">
+        {/* LEFT */}
+        <div
+          className="
+            w-[420px]
+            h-full
+            flex
+            flex-col
+            p-6
+          "
+        >
+          {/* Close */}
+          <button
+            onClick={onClose}
+            className="
+              flex
+              items-center
+              gap-[10px]
+              text-[16px]
+              font-medium
+              mb-6
+            "
+          >
+            <img
+              src={quitter}
+              alt="Fermer"
+              className="w-5 h-5"
+            />
+            Fermer
+          </button>
+
+          {/* Photo informations */}
+          <div className="mb-6">
+            <AlertBox
+              variant="info"
+              title={photo?.title || ""}
+              location={photo?.village || ""}
+              date={photo?.date || ""}
+              message={photo?.description || ""}
+            />
+          </div>
+
+          {/* Refusal reason */}
+          <AlertBox
+            variant="warning"
+            title="Motif de refus :"
+            titleColor="text-[#8A4D00]"
+            message={photo?.motifRefus || ""}
+          />
+        </div>
+
+        {/* RIGHT */}
+        <div className="flex-1 h-full">
+          <ImagePreview
+            image={image}
+            buttonTitle="Refusée"
+            buttonIcon={Refused}
+            buttonVariant="refusee"
+          />
+        </div>
       </div>
     </div>
   );
 };
 
-export default PhotoRefuse;
+export default PhotoRefusee;

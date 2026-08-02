@@ -1,6 +1,6 @@
-import icon from "../assets/icon.svg";
-import Warning from "../assets/warning.svg";
-import Calendar from "../assets/BlackCalendar.svg";
+import icon from "../../assets/Icon.svg";
+import Warning from "../../assets/warning.svg";
+import Calendar from "../../assets/BlackCalendar.svg";
 
 const variants = {
   success: {
