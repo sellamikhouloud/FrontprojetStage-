@@ -161,14 +161,20 @@ const Button = ({
       text-white
     `,
 
+    telecharger: `
+    bg-white
+    text-[#00694C]
+    border
+    border-[#00694C]
+    hover:bg-[#F4FBF8]
+  `,
 
-   telecharger: `
-  bg-white
-  text-[#00694C]
-  border
-  border-[#00694C]
-  hover:bg-[#F4FBF8]
-`,
+    annuler : `
+    font-bold
+    text-[16px]
+    rounded-[20px]
+    border
+    `
   };
 
   const wrapper =
