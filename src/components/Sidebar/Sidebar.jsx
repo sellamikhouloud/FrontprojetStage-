@@ -104,7 +104,7 @@ export default function Sidebar({
         >
           <div className="w-full">
             {expanded && (
-              <p className="text-white font-bold mb-8">
+              <p className="text-white font-bold mb-6">
                 Navigation
               </p>
             )}
@@ -113,7 +113,7 @@ export default function Sidebar({
               className={`
                 flex
                 flex-col
-                gap-8
+                gap-7
                 ${expanded ? "items-start" : "items-center"}
               `}
             >

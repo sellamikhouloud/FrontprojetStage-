@@ -25,7 +25,7 @@ export default function SidebarItem({
             className="
               w-5 h-5
               lg:w-6 lg:h-6
-              xl:w-6 xl:h-6
+              xl:w-5 xl:h-5
             "
           />
 
@@ -37,7 +37,7 @@ export default function SidebarItem({
                 font-semibold
                 text-[14px]
                 lg:text-[15px]
-                xl:text-[15px]
+                xl:text-[13px]
               "
             >
               {item.label}
