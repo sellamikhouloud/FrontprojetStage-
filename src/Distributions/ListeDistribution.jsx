@@ -142,7 +142,7 @@ const [products, setProducts] = useState([
   },
 ]);
 const handleCardClick = (item, index) => {
-  if (item.statut === "en_attente") {
+  if (role === "admin" && item.statut === "en_attente") {
     setProduitSelectionne({
       id: index,
       nom: item.nom,
@@ -311,10 +311,17 @@ if (isFilterOpen && isMobile) {
     </div>
   );
 }
+
+   // Simulation du rôle
+  const role = "admin";
+  //const role = "coordinateur";
+
+  const isAdmin = role === "admin";
+
   return (
     <div className="flex h-screen bg-white overflow-hidden">
 
-      <Sidebar role="admin" />
+      <Sidebar  role={role} />
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
         <NavigationHeader
@@ -335,7 +342,9 @@ if (isFilterOpen && isMobile) {
         quantity={item.quantity}
         unite={item.unite}
         statut={item.statut}
-        onClick={() => handleCardClick(item, index)}
+
+        showStatusColor={isAdmin}
+        onClick={isAdmin ? () => handleCardClick(item, index) : undefined}
       />
     ))}
   </div>
