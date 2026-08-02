@@ -90,6 +90,16 @@ Popupvisiteretard : utiliser dans dashbord pour voir les visites retard
 
 Popupdistributions : utiliser dans dashbord pour afficher les distributions d'un mois 
 
+-- Galerie Page --
 
+GalleryHeader : composant d'en-tête de la page Galerie permettant d'afficher le titre de la page, une barre de recherche et le bouton d'ajout d'une nouvelle photo.
+
+GalleryFilters : composant contenant les filtres permettant d'afficher les photos selon leur statut (Toutes, Validées, En attente, Refusées).
+
+GalleryGrid : composant affichant la galerie sous forme d'une grille responsive de cartes photos.
+
+GalleryCard : composant représentant une photo dans la galerie avec son aperçu, son titre et son statut. Un clic sur la carte ouvre la fenêtre correspondante selon le statut de la photo.
+
+StatusBadge : composant permettant d'afficher le statut d'une photo (Validée, En attente, Refusée) avec son icône et son style associé.
 
 
