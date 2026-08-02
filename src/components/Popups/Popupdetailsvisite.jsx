@@ -193,23 +193,21 @@ const PopupDetailVisite = ({
 <div
   className="
     w-full
-    h-[90px]
     rounded-[20px]
     border
     border-[#E6ECEA]
     bg-[#F8FBFC]
     px-[15px]
-    py-[7px]
+    py-3
     flex
     flex-col
-    justify-between
   "
 >
-  <h3 className="text-[18px] font-semibold text-center text-[#202124]">
+  <h3 className="text-[18px] font-semibold text-center text-[#202124] mb-3">
     Statut calculé
   </h3>
 
- <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3">
+  <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3">
     {visite.statuts?.map((badge, index) => (
      <StatusBadge
   key={index}

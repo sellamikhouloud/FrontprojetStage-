@@ -11,16 +11,43 @@ import MotherPhoto from "../assets/photo mere.svg";
 import EditableInfoCard from "../components/Containers/ModifierContainer";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
+import PopupListeCoordinateurs from "../components/Popups/PopupListeCoordinateurs";
+import successImage from "../assets/Success.svg";
 
 
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 
 const Modifyfamilly = () => {
-    
+
 const navigate = useNavigate();
 const location = useLocation(); 
 const { id } = useParams();
+const statut = "Sortie"; // ou "Sortie" pour tester
+
+const isMobile = window.innerWidth < 768;
+
+const [openSuccess, setOpenSuccess] = useState(false);
+const coordinateurs = [
+  {
+    id: 1,
+    name: "Ahmed Mohamed",
+   code: "GDK-2026-003",
+    village: "Rosso",
+    familles: 35,
+    status: "Actif",
+  },
+  {
+    id: 2,
+    name: "Mariam Diallo",
+    code: "GDK-2026-004",
+    village: "Lexeiba",
+    familles: 28,
+    status: "Actif",
+  },
+];
+const [openCoordinateur, setOpenCoordinateur] = useState(false);
+
  const [nourrisson, setNourrisson] = useState([
   {
     label: "Date de naissance",
@@ -35,14 +62,18 @@ const { id } = useParams();
       "Féminin",
     ],
   },
-  {
-    label: "Poids de naissance",
-    value: "500 g",
-  },
-  {
-    label: "Taille de naissance",
-    value: "35 cm",
-  },
+ {
+  label: "Poids de naissance",
+  value: "500",
+  type: "number",
+  unit: "g",
+},
+{
+  label: "Taille de naissance",
+  value: "35",
+  type: "number",
+  unit: "cm",
+},
 ]);
 
  const [mere, setMere] = useState([
@@ -55,9 +86,10 @@ const { id } = useParams();
     ],
   },
   {
-    label: "Téléphone",
-    value: "24123456",
-  },
+  label: "Téléphone",
+  value: "24123456",
+  type: "phone",
+},
   {
     label: "Date de naissance",
     value: new Date("1990-05-15"),
@@ -73,10 +105,11 @@ const { id } = useParams();
       "Veuve",
     ],
   },
-  {
-    label: "Nombre d'enfants à charge",
-    value: "2",
-  },
+ {
+  label: "Nombre d'enfants à charge",
+  value: "2",
+  type: "number",
+},
   {
     label: "Référent médical",
     value: "Mariam Diallo",
@@ -163,6 +196,7 @@ const [superviseur, setSuperviseur] = useState([
   {
     label: "Nom du coordinateur",
     value: "Kshfhd Qdjshf",
+    popup: true,
   },
 ]);
 const [openDistribution, setOpenDistribution] = useState(false);
@@ -348,14 +382,34 @@ return (
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
-  onConfirm={(motif) => {
-    console.log("Motif :", motif);
+  onConfirm={async (motif) => {
+  console.log("Motif :", motif);
 
-    // Ici API
+  // await sortirFamille(id, motif);
 
+  if (isMobile) {
+    setOpenSuccess(true);
+  } else {
     setOpenFinSuivi(false);
-  }}
+
+    // Ici tu recharges les données de la famille
+  }
+}}
 />
+
+{openSuccess && (
+  <Popup
+    title="Fin de suivi avec succès"
+    image={successImage}
+    primaryButtonText="Voir la fiche de la famille"
+    onPrimaryClick={() => {
+      setOpenSuccess(false);
+      setOpenFinSuivi(false);
+
+      // Ici tu recharges la fiche si nécessaire
+    }}
+  />
+)}
       {/* Contenu */}
     <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
         <PageHeader
@@ -412,8 +466,8 @@ return (
       <div className="flex flex-col gap-3">
 
  <StatusBadge
-  type="mereActive"
-  text="Active"
+  type={statut === "Sortie" ? "sortie" : "mereActive"}
+  text={statut}
   className="w-full h-[40px] rounded-[10px]"
 />
 
@@ -468,6 +522,7 @@ return (
   data={superviseur}
   editable={true}
   onChange={handleSuperviseurChange}
+  onPopupClick={() => setOpenCoordinateur(true)}
 />
   </div>
 </div>
@@ -507,14 +562,54 @@ return (
   </div>
 
 </div>
-<div className="mt-8 w-full">
-  <Button
-    title="Sortir du programme"
-    variant="primary"
-    noPadding
-    onClick={() => setOpenFinSuivi(true)}
-  />
-</div>
+{statut === "Active" && (
+  <div className="mt-8 w-full">
+    <Button
+      title="Sortir du programme"
+      variant="primary"
+      noPadding
+      onClick={() => setOpenFinSuivi(true)}
+    />
+  </div>
+)}
+
+{statut === "Sortie" && (
+  <div className="mt-8">
+    <InfoCard
+      title="Statut sortie"
+      data={[
+        {
+          label: "Date de sortie",
+          value: "15/05/2026",
+        },
+        {
+          label: "Motif de sortie",
+          value: "Enfant sorti du programme après amélioration.",
+        },
+      ]}
+    />
+  </div>
+)}
+
+<PopupListeCoordinateurs
+  open={openCoordinateur}
+  onClose={() => setOpenCoordinateur(false)}
+  coordinateurs={coordinateurs}
+  onSelectCoordinateur={(coordinateur) => {
+    setSuperviseur((prev) =>
+      prev.map((item, index) =>
+        index === 0
+          ? {
+              ...item,
+              value: coordinateur.name,
+            }
+          : item
+      )
+    );
+
+    setOpenCoordinateur(false);
+  }}
+/>
       </main>
     </div>
   
@@ -522,6 +617,20 @@ return (
 };
 
 export default Modifyfamilly ;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

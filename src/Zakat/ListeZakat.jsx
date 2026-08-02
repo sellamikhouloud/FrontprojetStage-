@@ -31,10 +31,9 @@ const [appliedFilters, setAppliedFilters] = useState({
   
 });
 const motifOptions = [
-  "Tous",
-  "Naissance",
-  "Décès",
-  "Déménagement",
+  "Veuvage",
+  "Situation d'urgence",
+  "Vulnérabilité extreme",
   "Autre",
 ];
  const zakats = [
@@ -78,10 +77,11 @@ const filtered = zakats.filter((item) => {
  
   
 
+ 
  const matchMotif =
   !appliedFilters.motif ||
   appliedFilters.motif === "Tous" ||
-  item.motif === appliedFilters.motif;
+  item.causePrincipale === appliedFilters.motif;
 
 return matchSearch && matchMotif;
   
@@ -215,7 +215,7 @@ if (isFilterOpen && isMobile) {
 
   secondType="add"
   secondActionTitle="Ajouter une zakat"
-  onSecondAction={() => navigate("")}
+  onSecondAction={() => navigate("/ajout-zakat")}
 />
         <div className="my-6">
           <SearchBar

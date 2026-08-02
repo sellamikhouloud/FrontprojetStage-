@@ -160,14 +160,15 @@ const Button = ({
       bg-[#91A09F]
       text-white
     `,
-    annuler : `
-      border
-      text-[16px]
-      text-bold
-      rounded-[20px]
-      h-[46px]
-      w-full
-    `
+
+
+   telecharger: `
+  bg-white
+  text-[#00694C]
+  border
+  border-[#00694C]
+  hover:bg-[#F4FBF8]
+`,
   };
 
   const wrapper =
@@ -278,3 +279,4 @@ const Button = ({
 };
 
 export default Button;
+

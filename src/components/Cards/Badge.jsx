@@ -31,7 +31,11 @@ const StatusBadge = ({
     background: "#B5ECC980",
     text: "#22C55E",
   },
-
+sortie: {
+  border: "#969696",
+  background: "#BEBEBE80",
+  text: "#4B5563",
+},
     // Mère normale (fond vert clair utiliser dans fiche famille meme que status mere )
   mereNormal: {
     border: "#22C55E",
@@ -95,5 +99,6 @@ sm:min-h-[36px]
 };
 
 export default StatusBadge;
+
 
 

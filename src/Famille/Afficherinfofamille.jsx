@@ -13,19 +13,22 @@ import successImage from "../assets/Success.svg";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import PopupZakatFamille from "../components/Popups/PopupZakatfamille";
+import OMSGraphs from "../components/OMSGraphs/OMSGraphs.jsx";
 
-import OMSGraphs from "../components/OMSGraphs";
-
-import poidsAge from "../assets/oms/poids-age.png";
-import tailleAge from "../assets/oms/taille-age.png";
-import muacAge from "../assets/oms/muac-age.png";
-import poidsTaille from "../assets/oms/poids-taille.png";
+import PoidsAgeChart from "../components/OMSGraphs/PoidsAgeChart";
+import TailleAgeChart from "../components/OMSGraphs/TailleAgeChart";
+import PoidsTailleChart from "../components/OMSGraphs/PoidsTailleChart";
+import MuacAgeChart from "../components/OMSGraphs/MuacAgeChart";
 
 
 const FamilyProfile = () => {
   const location = useLocation();
     const navigate = useNavigate();
 const { id } = useParams();
+const isMobile = window.innerWidth < 768;
+  const statut = "Active"; // ou "Active"
+
   const nourrisson = [
     { label: "Date de naissance", value: "15/05/2026" },
     { label: "Sexe", value: "Masculin" },
@@ -89,6 +92,49 @@ const superviseur = [
 ];
 const [openDistribution, setOpenDistribution] = useState(false);
 const [openVisites, setOpenVisites] = useState(false);
+const [openZakat, setOpenZakat] = useState(false);
+
+const zakatList = [
+  {
+    id: 1,
+    numero: "Zakat n°1",
+    date: "15/05/2026",
+    montant: "500 MRU",
+
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem Mint Ahmed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "12 mars 2025",
+    code: "GDK-2026-003",
+
+    enregistrePar: "Coordinateur",
+    modePaiement: "Bankily",
+    observations: "Observation...",
+    causePrincipale: "Cause principale",
+    precisions: "Précisions...",
+  },
+
+  {
+    id: 2,
+    numero: "Zakat n°2",
+    date: "20/06/2026",
+    montant: "750 MRU",
+
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem Mint Ahmed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "12 mars 2025",
+    code: "GDK-2026-003",
+
+    enregistrePar: "Coordinateur",
+    modePaiement: "Espèces",
+    observations: "",
+    causePrincipale: "",
+    precisions: "",
+  },
+];
 const distributionList = [
   {
     id: 1,
@@ -368,30 +414,91 @@ const visiteList = [
 ];
 const [openFinSuivi, setOpenFinSuivi] = useState(false);
 const [openSuccess, setOpenSuccess] = useState(false);
+const DONNEES_POIDS = [
+  { age: 0, poids: 3.1 },
+  { age: 1, poids: 3.6 },
+  { age: 2, poids: 4.2 },
+  { age: 3, poids: 4.8 },
+  { age: 4, poids: 5.4 },
+  { age: 5, poids: 6.0 },
+  { age: 6, poids: 6.6 },
+  { age: 7, poids: 7.3 },
+  { age: 8, poids: 8.0 },
+  { age: 9, poids: 8.7 },
+  { age: 10, poids: 9.4 },
+  { age: 11, poids: 10.1 },
+];
+
+// Données de test — Taille pour l'âge
+const DONNEES_TAILLE = [
+  { age: 0, taille: 57.5 },
+  { age: 1, taille: 60.5 },
+  { age: 2, taille: 63 },
+  { age: 3, taille: 65.5 },
+  { age: 4, taille: 68 },
+  { age: 5, taille: 71 },
+  { age: 6, taille: 73.5 },
+  { age: 7, taille: 75.5 },
+  { age: 8, taille: 77.5 },
+  { age: 9, taille: 79.5 },
+  { age: 10, taille: 81 },
+  { age: 11, taille: 82 },
+  { age: 12, taille: 83 },
+];
+
+// Données de test — Poids pour la taille
+const DONNEES_POIDS_TAILLE = [
+  { taille: 45, poids: 2.5 },
+  { taille: 50, poids: 3.0 },
+  { taille: 55, poids: 3.5 },
+  { taille: 60, poids: 4.0 },
+  { taille: 65, poids: 4.5 },
+  { taille: 70, poids: 5.1 },
+  { taille: 75, poids: 5.7 },
+  { taille: 80, poids: 6.4 },
+  { taille: 85, poids: 7.2 },
+  { taille: 90, poids: 8.0 },
+  { taille: 95, poids: 8.7 },
+  { taille: 100, poids: 9.4 },
+  { taille: 105, poids: 10.0 },
+];
+
+const DONNEES_MUAC = [
+  { age: 0, muac: 110 },
+  { age: 1, muac: 111 },
+  { age: 2, muac: 112 },
+  { age: 3, muac: 113.5 },
+  { age: 4, muac: 115 },
+  { age: 5, muac: 116 },
+  { age: 6, muac: 117 },
+  { age: 7, muac: 118.5 },
+  { age: 8, muac: 119.5 },
+  { age: 9, muac: 120.5 },
+  { age: 10, muac: 121.5 },
+  { age: 11, muac: 123 },
+  { age: 12, muac: 124.5 },
+];
 
 
-const omsGraphs = [
+const graphs = [
   {
     id: 1,
-    image: poidsAge,
-    alt: "Poids pour l'âge",
+    component: <PoidsAgeChart data={DONNEES_POIDS} />,
   },
   {
     id: 2,
-    image: tailleAge,
-    alt: "Taille pour l'âge",
+    component: <TailleAgeChart data={DONNEES_TAILLE} />,
   },
   {
     id: 3,
-    image: muacAge,
-    alt: "MUAC pour l'âge",
+    component: <PoidsTailleChart data={DONNEES_POIDS_TAILLE} />,
   },
   {
     id: 4,
-    image: poidsTaille,
-    alt: "Poids pour la taille",
+    component: <MuacAgeChart data={DONNEES_MUAC} />,
   },
-]; 
+];
+
 const handleBack = () => {
   navigate(location.state?.from || "/dashboard", {
     state: { draft: location.state?.draft },
@@ -411,6 +518,12 @@ return (
   Distribution={distributionList}
 />
 
+<PopupZakatFamille
+  open={openZakat}
+  onClose={() => setOpenZakat(false)}
+  zakats={zakatList}
+/>
+
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
@@ -420,26 +533,33 @@ return (
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
-  onConfirm={(motif) => {
-    console.log("Motif :", motif);
+ onConfirm={async (motif) => {
+  console.log("Motif :", motif);
 
-    // Ici API
+  // await sortirFamille(id, motif);
 
-    
-      setOpenSuccess(true);
-  }}
+  if (isMobile) {
+    setOpenSuccess(true);
+  } else {
+    setOpenFinSuivi(false);
+
+    // Recharger la fiche
+  }
+}}
 />
 
 {openSuccess && (
   <Popup
-    title="Fin de suivi avec succès"
-    image={successImage}
-    primaryButtonText="Voir la fiche de la famille"
-   onPrimaryClick={() => {
-  setOpenSuccess(false);
-  setOpenFinSuivi(false);
-}}
-  />
+  title="Fin de suivi avec succès"
+  image={successImage}
+  primaryButtonText="Voir la fiche de la famille"
+  onPrimaryClick={() => {
+    setOpenSuccess(false);
+    setOpenFinSuivi(false);
+
+    // ici tu recharges la fiche si besoin
+  }}
+/>
 )}
       {/* Contenu */}
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
@@ -449,18 +569,18 @@ return (
   onBack={handleBack} 
 />
 
-       <NavigationHeader
+     <NavigationHeader
   title="Fiche famille"
   type="edit"
   actionTitle="Modifier la fiche famille"
   onAction={() =>
-  navigate(`/famille/${id}/modifier`, {
-    state: {
-      from: location.state?.from,
-      draft: location.state?.draft,   // ✅ add this
-    },
-  })
-}
+    navigate(`/famille/${id}/modifier`, {
+      state: {
+        from: location.state?.from,
+        draft: location.state?.draft,
+      },
+    })
+  }
 />
 
         {/* ==================== HAUT ==================== */}
@@ -495,8 +615,8 @@ return (
       <div className="flex flex-col gap-2">
 
  <StatusBadge
-  type="mereActive"
-  text="Active"
+  type={statut === "Sortie" ? "sortie" : "mereActive"}
+  text={statut}
   className="w-full h-[40px] rounded-[10px]"
 />
 
@@ -530,10 +650,12 @@ return (
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
   {/* Colonne gauche */}
   <div className="flex flex-col gap-4">
-    <InfoCard
-      title="Zakat aid"
-      data={zakat}
-    />
+  <InfoCard
+  title="Zakat aid"
+  action="Voir tous"
+  onActionClick={() => setOpenZakat(true)}
+  data={zakat}
+/>
   </div>
 
   {/* Colonne droite */}
@@ -594,17 +716,38 @@ return (
 
 {/* ==================== Courbes OMS ==================== */}
 <div className="mt-4">
-  <OMSGraphs graphs={omsGraphs} />
+ <OMSGraphs graphs={graphs} />
 </div> 
 
-<div className="mt-8 w-full">
-  <Button
-    title="Sortir du programme"
-    variant="primary"
-    noPadding
-    onClick={() => setOpenFinSuivi(true)}
-  />
-</div>
+{statut === "Active" && (
+  <div className="mt-8 w-full">
+    <Button
+      title="Sortir du programme"
+      variant="primary"
+      noPadding
+      onClick={() => setOpenFinSuivi(true)}
+    />
+  </div>
+)}
+
+{statut === "Sortie" && (
+  <div className="mt-8">
+    <InfoCard
+      title="Statut sortie"
+      data={[
+        {
+          label: "Date de sortie",
+          value: "15/05/2026",
+        },
+        {
+          label: "Motif de sortie",
+          value:
+            "Enfant sorti du programme après amélioration de son état nutritionnel.",
+        },
+      ]}
+    />
+  </div>
+)}
       </main>
     </div>
   
@@ -612,3 +755,4 @@ return (
 };
 
 export default FamilyProfile;
+

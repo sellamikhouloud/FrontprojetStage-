@@ -7,7 +7,8 @@ const DateContainer = ({
   value,
   onChange,
   noPadding = false,
-  defaultToToday = true, // 👈 true par défaut maintenant : appliqué partout automatiquement
+  defaultToToday = true,
+  hideLabelSpace = false, 
 }) => {
   const displayValue = value || (defaultToToday ? new Date() : null);
 
@@ -20,9 +21,11 @@ const DateContainer = ({
       `}
     >
       <div className="flex flex-col gap-2 w-full">
-        <label className="text-[14px] lg:text-[16px] font-semibold text-[#000000]">
-          {label}
-        </label>
+        {(!hideLabelSpace || label) && (
+          <label className="text-[14px] lg:text-[16px] font-semibold text-[#000000]">
+            {label}
+          </label>
+        )}
 
         <div className="relative w-full">
           <DatePicker

@@ -4,11 +4,27 @@ const MesureInput = ({
   value,
   onChange,
   placeholder = "----",
-  type = "text",
+  allowDecimal = true,
 }) => {
+  const handleChange = (e) => {
+    let raw = e.target.value;
+
+   
+    const regex = allowDecimal ? /[^0-9.]/g : /[^0-9]/g;
+    raw = raw.replace(regex, "");
+
+    if (allowDecimal) {
+      const parts = raw.split(".");
+      if (parts.length > 2) {
+        raw = parts[0] + "." + parts.slice(1).join("");
+      }
+    }
+
+    onChange({ ...e, target: { ...e.target, value: raw } });
+  };
+
   return (
     <div className="flex flex-col w-full max-w-[220px]">
-      {/* Titre */}
       <label
         className="
           mb-2
@@ -23,7 +39,6 @@ const MesureInput = ({
         {label}
       </label>
 
-      {/* Champ */}
       <div
         className="
           flex
@@ -43,9 +58,10 @@ const MesureInput = ({
         "
       >
         <input
-          type={type}
+          type="text"
+          inputMode="decimal"
           value={value}
-          onChange={onChange}
+          onChange={handleChange}
           placeholder={placeholder}
           className="
             flex-1

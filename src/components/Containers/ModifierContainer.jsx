@@ -8,6 +8,7 @@ const EditableInfoCard = ({
   data = [],
   editable = true,
   onChange,
+  onPopupClick,
 }) => {
   const [openedIndex, setOpenedIndex] = useState(null);
 
@@ -140,7 +141,29 @@ const EditableInfoCard = ({
                   </div>
                 )}
               </div>
-            ) : item.options ? (
+
+
+            ) 
+          : item.popup ? (
+  <div className="relative w-[220px] max-w-full min-w-0">
+    <div
+      onClick={() => editable && onPopupClick?.(index)}
+      className="
+        w-full
+        text-right
+        cursor-pointer
+        text-[#202124]
+        truncate
+        overflow-hidden
+        whitespace-nowrap
+      "
+    >
+      {item.value}
+    </div>
+  </div>
+)
+            
+            : item.options ? (
               /* ================= OPTIONS ================= */
               <div className="relative w-[220px] max-w-full min-w-0">
                 <div
@@ -178,12 +201,52 @@ const EditableInfoCard = ({
               /* ================= INPUT ================= */
                             <div className="flex items-center justify-end gap-2 w-[220px] max-w-full min-w-0 overflow-hidden">
                 <input
-                  type="text"
+  type={
+    item.type === "number"
+      ? "number"
+      : item.type === "phone"
+      ? "text"
+      : "text"
+  }
+  inputMode={
+    item.type === "number" || item.type === "phone"
+      ? "numeric"
+      : "text"
+  }
+  min={item.type === "number" ? 0 : undefined}
                   value={item.value}
-                  onChange={(e) =>
-                    onChange(index, e.target.value)
+                 onChange={(e) => {
+  let value = e.target.value;
+
+  // Téléphone : uniquement des chiffres
+  if (item.type === "phone") {
+    value = value.replace(/\D/g, "");
+    onChange(index, value);
+    return;
+  }
+
+  // Valeurs numériques positives
+  if (item.type === "number") {
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      onChange(index, value);
+    }
+    return;
+  }
+
+  onChange(index, value);
+}
                   }
-                  disabled={!editable}
+
+
+                  onKeyDown={(e) => {
+  if (
+    item.type === "number" &&
+    ["e", "E", "+", "-"].includes(e.key)
+  ) {
+    e.preventDefault();
+  }
+}}
+                disabled={!editable || item.editable === false}
                   className="
                     flex-1
                     min-w-0
@@ -214,3 +277,4 @@ const EditableInfoCard = ({
 };
 
 export default EditableInfoCard;
+

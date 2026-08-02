@@ -17,7 +17,6 @@ import Sel from "../assets/Sel.svg";
 
 import { useNavigate } from "react-router-dom";
 import DateContainer from "../components/Containers/DateContainer";
-import InfoCard from "../components/Containers/AfficherContainer";
 import InfoHeader from "../components/Containers/InfoBanner";
 import Button from "../components/Button/Button";
 
@@ -25,16 +24,13 @@ import PopupListeFamilles from "../components/Popups/PopupListeFamilles";
 
 import ConfirmationForm from "../components/Forms/ConfirmationForm";
 import SelectProductsPopup from "../components/Popups/SelectProductsPopup";
+import ErrorMessage from "../components/Forms/ErrorMessage";
 
 import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 
-
-
 export default function AjoutDistribution() {
- 
-
   const stockProducts = [
     { id: 1, icon: Cereales, title: "Céréales", quantity: 50, unit: "kg" },
     { id: 2, icon: Legumineuses, title: "Légumineuses", quantity: 30, unit: "kg" },
@@ -46,178 +42,288 @@ export default function AjoutDistribution() {
     { id: 8, icon: Sel, title: "Pate", quantity: 10, unit: "kg" },
   ];
 
-  // products devient un état, pour pouvoir y ajouter les produits sélectionnés
-  
- const [showNewProduct, setShowNewProduct] = useState(false);
+  const [showNewProduct, setShowNewProduct] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+  const location = useLocation();
+  const draft = location.state?.draft;
 
- const [showSuccessPopup, setShowSuccessPopup] = useState(false);
- 
- const location = useLocation();
-const draft = location.state?.draft;
+  const [selectedFamille, setSelectedFamille] = useState(draft?.selectedFamille || null);
+  const [products, setProducts] = useState(draft?.products || []);
+  const [date, setDate] = useState(draft?.date ? new Date(draft.date) : new Date());
+  const [confirmed, setConfirmed] = useState(draft?.confirmed || false);
 
-const [selectedFamille, setSelectedFamille] = useState(draft?.selectedFamille || null);
-const [products, setProducts] = useState(draft?.products || []);
-const [date, setDate] = useState(draft?.date ? new Date(draft.date) : new Date());
-const [confirmed, setConfirmed] = useState(draft?.confirmed || false);
+  // Lait infantile - état remonté ici pour permettre la validation
+  const [laitType, setLaitType] = useState(draft?.laitType || null);
+  const [grammage, setGrammage] = useState(draft?.grammage || "");
+  const [boxes, setBoxes] = useState(draft?.boxes ?? 0);
 
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
     name: "",
     unit: "",
     quantity: "",
   });
-   const [showStockPopup, setShowStockPopup] = useState(false);
- 
+  const [showStockPopup, setShowStockPopup] = useState(false);
 
-const listeDesFamilles = [
-  {
-    id: 1,
-    enfant: "Aïcha Mint Mohamed",
-    sexe: "Fille",
-    region: "Lexeiba",
-    naissance: "12 mars 2026",
-    code: "GDK-2026-003",
-    badges: [
-      { type: "mam", text: "MAM nourrisson" },
-      { type: "mere", text: "Mère normale" },
-    ],
-  },
-  {
-    id: 2,
-    enfant: "Aïcha Mint Mohamed",
-    sexe: "Garçon",
-    region: "Lexeiba",
-    naissance: "22 mars 2025",
-    code: "GDK-2026-003",
-    badges: [
-      { type: "mas", text: "MAS nourrisson" },
-      { type: "mere", text: "Mère normale" },
-    ],
-  },
-  {
-    id: 3,
-    enfant: "Aïcha Mint Mohamed",
-    sexe: "Fille",
-    region: "Lexeiba",
-    naissance: "12 mars 2026",
-    code: "GDK-2026-003",
-    badges: [
-      { type: "mam", text: "MAM nourrisson" },
-      { type: "mere", text: "Mère normale" },
-    ],
-  },
-];
+  // --- ERROR HANDLING (meme principe que AjoutZakat) ---
+  const [errors, setErrors] = useState({
+    famille: false,
+    laitType: false,
+    grammage: false,
+    confirmed: false,
+    distribution: false,
+    produits: {},
+  });
 
-const [openFamilles, setOpenFamilles] = useState(false);
-
-const [openOptions, setOpenOptions] = useState(false);
-
-const familyOptions = [
-  { label: "Changer la famille", value: "changer" },
-  { label: "Voir la fiche famille", value: "voir" },
-];
-
-const handleSearch = () => {
-  setOpenFamilles(true);
-};
-const handleUpdateQuantity = (id, newQuantity) => {
-  setProducts((prev) =>
-    prev.map((product) =>
-      product.id === id
-        ? { ...product, quantity: newQuantity }
-        : product
-    )
-  );
-};
-const handleRemoveProduct = (id) => {
-  setProducts((prev) => prev.filter((product) => product.id !== id));
-};
-const handleOptionSelect = (value) => {
-  if (value === "changer") {
-    setOpenFamilles(true);
-  } else if (value === "voir") {
-    navigate(`/famille/${selectedFamille.id}`, {
-      state: {
-        from: "/ajout-distribution",
-        draft: { selectedFamille, products, date, confirmed },
-      },
+  const validateForm = () => {
+    const produitsErrors = {};
+    products.forEach((product) => {
+      if (!product.quantity || product.quantity <= 0) {
+        produitsErrors[product.id] = "Veuillez indiquer une quantité";
+      } else if (
+        product.maxQuantity !== undefined &&
+        product.quantity > product.maxQuantity
+      ) {
+        produitsErrors[product.id] = `Quantité supérieure au stock disponible (${product.maxQuantity} ${product.unit || ""})`;
+      }
     });
-  }
-};
-return (
-  <div className="min-h-screen bg-white">
 
-    {/* Desktop fixed sidebar */}
-    <div
-      className="
-        hidden
-        lg:flex
-        fixed
-        inset-y-0
-        left-4
-        items-center
-        z-50
-      "
-    >
-      <Sidebar role="admin" />
-    </div>
+    const newErrors = {
+      famille: !selectedFamille,
+      laitType: boxes > 0 && !laitType,
+      grammage: boxes > 0 && (!grammage || parseFloat(grammage) <= 0),
+      confirmed: !confirmed,
+      distribution: products.length === 0 && boxes === 0,
+      produits: produitsErrors,
+    };
+    setErrors(newErrors);
 
-    {/* Mobile sidebar (hamburger) */}
-    <div className="lg:hidden">
-      <Sidebar role="admin" />
-    </div>
+    const hasFieldError = [
+      newErrors.famille,
+      newErrors.laitType,
+      newErrors.grammage,
+      newErrors.confirmed,
+      newErrors.distribution,
+    ].some(Boolean);
+    const hasProduitError = Object.keys(produitsErrors).length > 0;
 
-    {/* Mobile fixed white header */}
-    <div
-      className="
-        fixed
-        top-0
-        left-0
-        right-0
-        h-20
-        bg-white
-        z-40
-        lg:hidden
-      "
-    />
+    return !hasFieldError && !hasProduitError;
+  };
 
-    {/* Page content */}
-    <main
-      className="
-        flex-1
-        overflow-y-auto
-        bg-white
+  const handleSave = () => {
+    if (!validateForm()) return;
+    setShowSuccessPopup(true);
+  };
 
-        pt-20
-        lg:pt-4
+  const handleLaitTypeChange = (value) => {
+    setLaitType(value);
+    setErrors((prev) => ({ ...prev, laitType: false }));
+  };
 
-        px-4
-        lg:px-10
+  const handleGrammageChange = (raw) => {
+    setGrammage(raw);
+    if (raw && parseFloat(raw) > 0) {
+      setErrors((prev) => ({ ...prev, grammage: false }));
+    }
+  };
 
-        pb-8
-        lg:pb-2
+  const handleConfirmedChange = (e) => {
+    const isChecked = e.target.checked;
+    setConfirmed(isChecked);
+    if (isChecked) {
+      setErrors((prev) => ({ ...prev, confirmed: false }));
+    }
+  };
 
-        lg:ml-24
-      "
-    >
+  const handleDecrementBoxes = () => {
+    setBoxes((v) => {
+      const newValue = Math.max(0, v - 1);
+      if (newValue === 0) {
+        // Pas de boîte = pas besoin de type de lait ni de grammage
+        setErrors((prev) => ({ ...prev, laitType: false, grammage: false }));
+      }
+      return newValue;
+    });
+  };
+
+  const listeDesFamilles = [
+    {
+      id: 1,
+      enfant: "Aïcha Mint Mohamed",
+      sexe: "Fille",
+      region: "Lexeiba",
+      naissance: "12 mars 2026",
+      code: "GDK-2026-003",
+      badges: [
+        { type: "mam", text: "MAM nourrisson" },
+        { type: "mere", text: "Mère normale" },
+      ],
+    },
+    {
+      id: 2,
+      enfant: "Aïcha Mint Mohamed",
+      sexe: "Garçon",
+      region: "Lexeiba",
+      naissance: "22 mars 2025",
+      code: "GDK-2026-003",
+      badges: [
+        { type: "mas", text: "MAS nourrisson" },
+        { type: "mere", text: "Mère normale" },
+      ],
+    },
+    {
+      id: 3,
+      enfant: "Aïcha Mint Mohamed",
+      sexe: "Fille",
+      region: "Lexeiba",
+      naissance: "12 mars 2026",
+      code: "GDK-2026-003",
+      badges: [
+        { type: "mam", text: "MAM nourrisson" },
+        { type: "mere", text: "Mère normale" },
+      ],
+    },
+  ];
+
+  const [openFamilles, setOpenFamilles] = useState(false);
+  const [openOptions, setOpenOptions] = useState(false);
+
+  const familyOptions = [
+    { label: "Changer la famille", value: "changer" },
+    { label: "Voir la fiche famille", value: "voir" },
+  ];
+
+  const handleSearch = () => {
+    setOpenFamilles(true);
+  };
+
+  const handleUpdateQuantity = (id, newQuantity) => {
+    setProducts((prev) =>
+      prev.map((product) =>
+        product.id === id ? { ...product, quantity: newQuantity } : product
+      )
+    );
+
+    setErrors((prev) => {
+      const product = products.find((p) => p.id === id);
+      if (!product) return prev;
+
+      const updatedProduits = { ...prev.produits };
+
+      if (!newQuantity || newQuantity <= 0) {
+        updatedProduits[id] = "Veuillez indiquer une quantité";
+      } else if (
+        product.maxQuantity !== undefined &&
+        newQuantity > product.maxQuantity
+      ) {
+        updatedProduits[id] = `Quantité supérieure au stock disponible (${product.maxQuantity} ${product.unit || ""})`;
+      } else {
+        delete updatedProduits[id];
+      }
+
+      return { ...prev, produits: updatedProduits };
+    });
+  };
+
+  const handleRemoveProduct = (id) => {
+    setProducts((prev) => prev.filter((product) => product.id !== id));
+    setErrors((prev) => {
+      const updatedProduits = { ...prev.produits };
+      delete updatedProduits[id];
+      return { ...prev, produits: updatedProduits };
+    });
+  };
+
+  const handleOptionSelect = (value) => {
+    if (value === "changer") {
+      setOpenFamilles(true);
+    } else if (value === "voir") {
+      navigate(`/famille/${selectedFamille.id}`, {
+        state: {
+          from: "/ajout-distribution",
+          draft: { selectedFamille, products, date, confirmed, laitType, grammage, boxes },
+        },
+      });
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Desktop fixed sidebar */}
+      <div
+        className="
+          hidden
+          lg:flex
+          fixed
+          inset-y-0
+          left-4
+          items-center
+          z-50
+        "
+      >
+        <Sidebar role="admin" />
+      </div>
+
+      {/* Mobile sidebar (hamburger) */}
+      <div className="lg:hidden">
+        <Sidebar role="admin" />
+      </div>
+
+      {/* Mobile fixed white header */}
+      <div
+        className="
+          fixed
+          top-0
+          left-0
+          right-0
+          h-20
+          bg-white
+          z-40
+          lg:hidden
+        "
+      />
+
+      {/* Page content */}
+      <main
+        className="
+          flex-1
+          overflow-y-auto
+          bg-white
+
+          pt-20
+          lg:pt-4
+
+          px-4
+          lg:px-10
+
+          pb-8
+          lg:pb-2
+
+          lg:ml-24
+        "
+      >
         {/* Header */}
         <div className="mb-0 lg:mb-6">
-      <PageHeader
-  leftTitle="Annuler"
-  showRight={false}
-  onBack={() => window.history.back()}
-/>
+          <PageHeader
+            leftTitle="Annuler"
+            showRight={false}
+            onBack={() => window.history.back()}
+          />
         </div>
-       {!selectedFamille && (
- <SelectorWithAction
-  label="Choisir la famille concerne"
-  description="Cliquer pour rechercher la famille concerne par la distribution"
-  onAction={handleSearch}
-/>
-)}
 
-       
+        {!selectedFamille && (
+          <div className="flex flex-col gap-2">
+            <SelectorWithAction
+              label="Choisir la famille concerne"
+              description="Cliquer pour rechercher la famille concerne par la distribution"
+              onAction={handleSearch}
+            />
+            <ErrorMessage
+              message={errors.famille ? "Veuillez sélectionner une famille" : null}
+            />
+          </div>
+        )}
 
         {/* Family Card */}
         {selectedFamille && (
@@ -228,194 +334,216 @@ return (
                 className="cursor-pointer"
                 onClick={() => setOpenOptions((prev) => !prev)}
               >
-                 <CardPopup
-        enfant={selectedFamille.enfant}
-        sexe={selectedFamille.sexe}
-        region={selectedFamille.region}
-        naissance={selectedFamille.naissance}
-        code={selectedFamille.code}
-        badges={selectedFamille.badges}
-      />
+                <CardPopup
+                  enfant={selectedFamille.enfant}
+                  sexe={selectedFamille.sexe}
+                  region={selectedFamille.region}
+                  naissance={selectedFamille.naissance}
+                  code={selectedFamille.code}
+                  badges={selectedFamille.badges}
+                />
               </div>
- 
+
               <OptionsMenu
-                  open={openOptions}
-                 onClose={() => setOpenOptions(false)}
-                  options={familyOptions}
-                  onSelect={handleOptionSelect}
-               />
-    
+                open={openOptions}
+                onClose={() => setOpenOptions(false)}
+                options={familyOptions}
+                onSelect={handleOptionSelect}
+              />
             </div>
- 
+
             {/* Desktop */}
             <div className="relative hidden lg:block">
               <div
                 className="cursor-pointer"
                 onClick={() => setOpenOptions((prev) => !prev)}
               >
-                 <Card
-        enfant={selectedFamille.enfant}
-        mere={selectedFamille.mere}
-        sexe={selectedFamille.sexe}
-        region={selectedFamille.region}
-        naissance={selectedFamille.naissance}
-        code={selectedFamille.code}
-        badges={selectedFamille.badges}
-      />
-              </div>
- 
-               <OptionsMenu
-                  open={openOptions}
-                  onClose={() => setOpenOptions(false)}
-                  options={familyOptions}
-                  onSelect={handleOptionSelect}
+                <Card
+                  enfant={selectedFamille.enfant}
+                  mere={selectedFamille.mere}
+                  sexe={selectedFamille.sexe}
+                  region={selectedFamille.region}
+                  naissance={selectedFamille.naissance}
+                  code={selectedFamille.code}
+                  badges={selectedFamille.badges}
                 />
+              </div>
+
+              <OptionsMenu
+                open={openOptions}
+                onClose={() => setOpenOptions(false)}
+                options={familyOptions}
+                onSelect={handleOptionSelect}
+              />
             </div>
           </>
         )}
-        {/* Rest of page */}
-      {/* Main content */}
-<div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
 
-  {/* LEFT COLUMN */}
-  <div className="flex flex-col gap-4">
+        {/* Main content */}
+        <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
+          {/* LEFT COLUMN */}
+          <div className="flex flex-col gap-4">
+            {selectedFamille && (
+              <InfoHeader title="Dernière distribution" value="15/05/2026" />
+            )}
 
-    {/* Last distribution */}
-    <InfoHeader
-      title="Dernière distribution"
-      value="15/05/2026"
-    />
+            {/* Date + Distribution number */}
+            <div className="flex flex-col gap-0">
+              <h3
+                className="
+                  text-[16px]
+                  lg:text-[18px]
+                  font-semibold
+                  text-[#202124]
+                "
+              >
+                Date de la distribution
+              </h3>
 
-   {/* Date + Distribution number */}
-<div className="flex flex-col gap-0">
-  <h3
-    className="
-      text-[16px]
-      lg:text-[18px]
-      font-semibold
-      text-[#202124]
-    "
-  >
-    Date de la distribution
-  </h3>
+              <div
+                className={`
+                  grid
+                  grid-cols-1
+                  ${selectedFamille ? "lg:grid-cols-2" : "lg:grid-cols-1"}
+                  gap-3
+                  lg:gap-2
+                  items-end
+                `}
+              >
+                <DateContainer value={date} onChange={setDate} noPadding />
 
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-end">
-    <DateContainer
-      value={date}
-      onChange={setDate}
-      noPadding
-    />
+                {selectedFamille && (
+                  <div className="w-full">
+                    <div
+                      className="
+                        h-[45px]
+                        rounded-[15px]
+                        border
+                        border-[#4E9F8A]
+                        bg-white
+                        px-4
+                        pr-12
+                        flex
+                        items-center
+                      "
+                    >
+                      <p className="text-[14px] leading-[20px] text-[#374151]">
+                        Distribution numéro 03
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
-    <div className="w-full">
-      <div
-        className="
-          h-[45px]
-          rounded-[15px]
-          border
-          border-[#4E9F8A]
-          bg-white
-          px-4
-          pr-12
-          flex
-          items-center
-        "
-      >
-        <p className="text-[14px] leading-[20px] text-[#374151]">
-          Distribution numéro 03
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
+            {/* Milk */}
+            <LaitInfantile
+              type={laitType}
+              onTypeChange={handleLaitTypeChange}
+              grammage={grammage}
+              onGrammageChange={handleGrammageChange}
+              boxes={boxes}
+              onIncrement={() => {
+                setBoxes((v) => v + 1);
+                setErrors((prev) => ({ ...prev, distribution: false }));
+              }}
+              onDecrement={handleDecrementBoxes}
+              errors={errors}
+            />
 
-    {/* Milk */}
-    <LaitInfantile />
+            {/* Temporary confirmation */}
+            <div className="hidden lg:block">
+              <ConfirmationForm
+                checked={confirmed}
+                onChange={handleConfirmedChange}
+                error={errors.confirmed}
+                errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+              />
+            </div>
+          </div>
 
-    {/* Temporary confirmation */}
-  <div className="hidden lg:block">
-  <ConfirmationForm
-    checked={confirmed}
-    onChange={(e) => setConfirmed(e.target.checked)}
-    error={!confirmed}
-    errorMessage="Veuillez confirmer la remise avant d'enregistrer"
-  />
-</div>
+          {/* RIGHT COLUMN */}
+          <div>
+            <ColisAlimentaire
+              products={products}
+              onAddProduct={() => setShowStockPopup(true)}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveProduct={handleRemoveProduct}
+              errors={errors.produits}
+            />
+            <ErrorMessage
+              message={
+                errors.distribution
+                  ? "Veuillez ajouter au moins un colis alimentaire ou du lait infantile"
+                  : null
+              }
+            />
+            {/* Mobile only */}
+            <div className="mt-4 lg:hidden">
+              <ConfirmationForm
+                checked={confirmed}
+                onChange={handleConfirmedChange}
+                error={errors.confirmed}
+                errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+              />
+            </div>
+          </div>
+        </div>
 
-  </div>
+        {/* Save button */}
+        <div className="mt-2">
+          <Button
+            title="Enregistrer"
+            variant="save"
+            noPadding
+            onClick={handleSave}
+          />
+        </div>
 
-  {/* RIGHT COLUMN */}
-  <div>
- <ColisAlimentaire
-  products={products}
-  onAddProduct={() => setShowStockPopup(true)}
-  onUpdateQuantity={handleUpdateQuantity}
-  onRemoveProduct={handleRemoveProduct}
-/>
-  {/* Mobile only */}
-  <div className="mt-4 lg:hidden">
-    <ConfirmationForm
-      checked={confirmed}
-      onChange={(e) => setConfirmed(e.target.checked)}
-      error={!confirmed}
-      errorMessage="Veuillez confirmer la remise avant d'enregistrer"
-    />
-  </div>
-</div>
-</div>
-
-{/* Save button */}
-<div className="mt-2">
-  <Button
-    title="Enregistrer"
-    variant="save"
-    noPadding
-    onClick={() => setShowSuccessPopup(true)}
-  />
-</div>
-{showSuccessPopup && (
-  <Popup
-    title="Distribution enregistrée avec succès"
-    image={SuccessImage}
-    primaryButtonText="Voir la fiche famille"
-    secondaryButtonText="Revenir à l'accueil"
-    onPrimaryClick={() => {
-      setShowSuccessPopup(false);
-      navigate(`/famille/${enfant.id}`);
-    }}
-    onSecondaryClick={() => {
-      setShowSuccessPopup(false);
-      navigate("/dashboard");
-    }}
-  />
-)}
-
+        {showSuccessPopup && (
+          <Popup
+            title="Distribution enregistrée avec succès"
+            image={SuccessImage}
+            primaryButtonText="Voir la fiche famille"
+            secondaryButtonText="Revenir à l'accueil"
+            onPrimaryClick={() => {
+              setShowSuccessPopup(false);
+              navigate(`/famille/${selectedFamille?.id}`);
+            }}
+            onSecondaryClick={() => {
+              setShowSuccessPopup(false);
+              navigate("/dashboard");
+            }}
+          />
+        )}
       </main>
 
-      
-  <PopupListeFamilles
-  open={openFamilles}
-  onClose={() => setOpenFamilles(false)}
-  familles={listeDesFamilles}
-  onSelectFamille={(famille) => {
-    setSelectedFamille(famille);
-    setOpenFamilles(false);
-  }}
-/>
-{showStockPopup && (
-  <SelectProductsPopup
-    stockProducts={stockProducts.filter(
-      (stockProduct) =>
-        !products.some((p) => p.id === stockProduct.id)
-    )}
-    onClose={() => setShowStockPopup(false)}
-    onConfirm={(selected) => {
-      setProducts((prev) => [
-        ...prev,
-        ...selected.map((p) => ({ ...p, quantity: 0 })),
-      ]);
-    }}
-  />
-)}
+      <PopupListeFamilles
+        open={openFamilles}
+        onClose={() => setOpenFamilles(false)}
+        familles={listeDesFamilles}
+        onSelectFamille={(famille) => {
+          setSelectedFamille(famille);
+          setOpenFamilles(false);
+          setErrors((prev) => ({ ...prev, famille: false }));
+        }}
+      />
+
+      {showStockPopup && (
+        <SelectProductsPopup
+          stockProducts={stockProducts.filter(
+            (stockProduct) => !products.some((p) => p.id === stockProduct.id)
+          )}
+          onClose={() => setShowStockPopup(false)}
+          onConfirm={(selected) => {
+            setProducts((prev) => [
+              ...prev,
+              ...selected.map((p) => ({ ...p, maxQuantity: p.quantity, quantity: 0 })),
+            ]);
+            setErrors((prev) => ({ ...prev, distribution: false }));
+          }}
+        />
+      )}
     </div>
   );
 }

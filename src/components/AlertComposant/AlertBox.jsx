@@ -11,6 +11,7 @@ const variants = {
     text: "text-[#000000E5]",
     icon: icon,
     iconWithTitle: false,
+    radius: "rounded-[25px]",
   },
 
   info: {
@@ -20,15 +21,17 @@ const variants = {
     text: "text-[#6F7975]",
     icon: null,
     iconWithTitle: false,
+    radius: "rounded-[25px]",
   },
 
   warning: {
     bg: "bg-[#FFFBEB]",
     border: "border-[#FDE68A]",
-    padding: "pt-[14px] pb-[14px] pl-[18px] pr-[18px]",
-    text: "text-[#CC8409]",
+    padding: "pt-[10px] pb-[10px] pl-[16px] pr-[16px]",
+    text: "text-[#78350F]",
     icon: Warning,
     iconWithTitle: true,
+    radius: "rounded-[10px]",
   },
 };
 
@@ -46,9 +49,9 @@ const AlertBox = ({
     <div
       className={`
         w-full
-        rounded-[25px]
         border
 
+        ${style.radius}
         ${style.padding}
         ${style.bg}
         ${style.border}
@@ -129,11 +132,11 @@ const AlertBox = ({
 
           {/* CONTENT */}
           {!title && style.icon ? (
-            <div className="flex items-start gap-3">
+            <div className="flex items-center gap-3">
               <img
                 src={style.icon}
                 alt=""
-                className="w-5 h-5 shrink-0 mt-1"
+                className="w-5 h-5 shrink-0"
               />
 
               <div

@@ -5,6 +5,7 @@ const TextArea = ({
   onChange,
   width = "w-full",
   height = "h-[150px]",
+  bgColor = "",
 }) => {
   return (
     <div className={`${width} flex flex-col`}>
@@ -30,6 +31,8 @@ const TextArea = ({
         className={`
           ${height}
           w-full
+
+          ${bgColor}
 
           rounded-[15px]
           border

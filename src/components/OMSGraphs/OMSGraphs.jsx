@@ -1,5 +1,5 @@
 import { useState } from "react";
-import quitter from "../assets/quitter.svg";
+import quitter from "../../assets/quitter.svg";
 
 export default function OMSGraphs({ graphs = [] }) {
   const [open, setOpen] = useState(false);
@@ -21,7 +21,7 @@ export default function OMSGraphs({ graphs = [] }) {
         </h2>
 
         <button
-  onClick={() => setOpen(true)}
+  onClick={() => graphs.length > 0 && setOpen(true)}
   className="text-[14px] text-gray-600 hover:underline"
 >
   Voir tous
@@ -29,24 +29,19 @@ export default function OMSGraphs({ graphs = [] }) {
       </div>
 
       {/* Desktop */}
-      <div className="hidden lg:grid grid-cols-3 gap-3">
-        {graphs.slice(0, 3).map((graph) => (
-          <img
-            key={graph.id}
-            src={graph.image}
-            alt={graph.alt}
-            className="w-full rounded-[10px] object-contain"
-          />
-        ))}
+      <div className="hidden lg:grid grid-cols-2 gap-3">
+       {graphs.slice(0, 2).map((graph) => (
+  <div key={graph.id} className="w-full">
+    {graph.component}
+  </div>
+))}
       </div>
 
       {/* Mobile */}
       <div className="lg:hidden">
-        <img
-          src={graphs[0]?.image}
-          alt={graphs[0]?.alt}
-          className="w-full rounded-[10px] object-contain"
-        />
+        <div className="w-full">
+  {graphs[0]?.component}
+</div>
       </div>
 
       {/* Popup */}
@@ -106,32 +101,21 @@ export default function OMSGraphs({ graphs = [] }) {
             </div>
 
             {/* Desktop popup */}
-            <div className="hidden lg:grid grid-cols-2 gap-6 justify-items-center">
-              {graphs.map((graph) => (
-                <img
-                  key={graph.id}
-                  src={graph.image}
-                  alt={graph.alt}
-                  className="
-                    w-[360px]
-                    h-auto
-                    rounded-[10px]
-                    object-contain
-                  "
-                />
-              ))}
+            <div className="hidden lg:grid grid-cols-2 gap-3 justify-items-center">
+             {graphs.map((graph) => (
+  <div key={graph.id} className="w-full">
+    {graph.component}
+  </div>
+))}
             </div>
 
             {/* Mobile popup */}
             <div className="lg:hidden flex flex-col gap-4">
               {graphs.map((graph) => (
-                <img
-                  key={graph.id}
-                  src={graph.image}
-                  alt={graph.alt}
-                  className="w-full rounded-[10px] object-contain"
-                />
-              ))}
+  <div key={graph.id}>
+    {graph.component}
+  </div>
+))}
             </div>
           </div>
         </div>

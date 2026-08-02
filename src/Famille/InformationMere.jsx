@@ -79,7 +79,7 @@ export default function InformationMere() {
           <PageHeader
             leftTitle="Annuler"
             showRight={false}
-            onBack={() => window.history.back()}
+            onBack={() => navigate("/liste-famille")}
           />
 
           {/* Page Title */}

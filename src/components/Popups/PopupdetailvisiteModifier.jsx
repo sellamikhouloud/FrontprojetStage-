@@ -49,6 +49,9 @@ const [muacNourrisson, setMuacNourrisson] = useState(
 const [poidsMere, setPoidsMere] = useState(
   visite?.mereMesure?.poids || ""
 );
+const [tailleMere, setTailleMere] = useState(
+  visite?.mereMesure?.taille || ""
+);
 
 const [muacMere, setMuacMere] = useState(
   visite?.mereMesure?.muac || ""
@@ -64,11 +67,12 @@ const handleSave = () => {
       taille: tailleNourrisson,
       muac: muacNourrisson,
     },
-    mereMesure: {
-      ...visite.mereMesure,
-      poids: poidsMere,
-      muac: muacMere,
-    },
+   mereMesure: {
+  ...visite.mereMesure,
+  poids: poidsMere,
+  taille: tailleMere,
+  muac: muacMere,
+},
     observationNourrisson,
     observationMere,
     evaluationFamiliale,
@@ -91,8 +95,9 @@ useEffect(() => {
   setTailleNourrisson(visite.nourrisson?.taille || "");
   setMuacNourrisson(visite.nourrisson?.muac || "");
 
-  setPoidsMere(visite.mereMesure?.poids || "");
-  setMuacMere(visite.mereMesure?.muac || "");
+ setPoidsMere(visite.mereMesure?.poids || "");
+setTailleMere(visite.mereMesure?.taille || "");
+setMuacMere(visite.mereMesure?.muac || "");
 
   setObservationNourrisson(visite.observationNourrisson || "");
   setObservationMere(visite.observationMere || "");
@@ -253,23 +258,21 @@ useEffect(() => {
 <div
   className="
     w-full
-    h-[90px]
     rounded-[20px]
     border
     border-[#E6ECEA]
     bg-[#F8FBFC]
     px-[15px]
-    py-[7px]
+    py-3
     flex
     flex-col
-    justify-between
   "
 >
-  <h3 className="text-[18px] font-semibold text-center text-[#202124]">
+  <h3 className="text-[18px] font-semibold text-center text-[#202124] mb-3">
     Statut calculé
   </h3>
 
- <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3">
+  <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3">
     {visite.statuts?.map((badge, index) => (
      <StatusBadge
   key={index}
@@ -299,14 +302,14 @@ useEffect(() => {
     ))}
   </div>
 </div>
-             <ModifierMesure
+          <ModifierMesure
   title="Mesure mère"
   poids={poidsMere}
+  taille={tailleMere}
   muac={muacMere}
-  taille=""
   setPoids={setPoidsMere}
+  setTaille={setTailleMere}
   setMuac={setMuacMere}
-  setTaille={() => {}}
 />
 
           <ContainerEcritureModifier
@@ -351,3 +354,4 @@ useEffect(() => {
 };
 
 export default PopupDetailVisiteModifier;
+
