@@ -127,7 +127,7 @@ export default function Sidebar({
               ))}
 
               {actions.length > 0 && expanded && (
-                <p className="text-white font-bold mt-6">
+                <p className="text-white font-bold">
                   Action rapide
                 </p>
               )}
