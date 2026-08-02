@@ -159,27 +159,32 @@ const Galerie = () => {
           showRefusee
             ? "hidden lg:flex"
             : "flex"
-        } h-screen overflow-hidden bg-white`}
+        } h-screen bg-white overflow-hidden`}
       >
         <Sidebar role="coordinator" />
 
-        <main className="flex-1">
-          <GalleryHeader
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        {/* Fixed Header */}
+        <GalleryHeader
             onAdd={() => setShowPopupPhoto(true)}
             searchValue={searchValue}
             setSearchValue={setSearchValue}
-          />
+        />
 
-          <GalleryFilters
+        {/* Fixed Filters */}
+        <GalleryFilters
             selectedFilter={selectedFilter}
             setSelectedFilter={setSelectedFilter}
-          />
+        />
 
-          <GalleryGrid
+        {/* Scrollable Gallery */}
+        <div className="flex-1 overflow-y-auto">
+            <GalleryGrid
             photos={filteredPhotos}
             selectedFilter={selectedFilter}
             onPhotoClick={handlePhotoClick}
-          />
+            />
+        </div>
         </main>
       </div>
     {/* ================= POPUP PHOTO ================= */}
