@@ -10,6 +10,8 @@ import MesureInput from "../components/Containers/MesureInput";
 import TextArea from "../components/Containers/Textarea";
 import SelectInput from "../components/Containers/ChoiceContainer";
 import ErrorMessage from "../components/Forms/ErrorMessage";
+import StatusBadge from "../components/Cards/Badge";
+import ZScoreBox from "../components/Containers/ZScoreBox";
 
 import { useNavigate } from "react-router-dom";
 import DateContainer from "../components/Containers/DateContainer";
@@ -75,6 +77,58 @@ export default function AjoutVisite() {
     draft?.evaluationVisuelle || ""
   );
 
+  // --- Résultat renvoyé par le backend après enregistrement ---
+  // (statuts MAS/MAM/Normal, Mère normale/à risque, et z-scores : calculés côté backend, pas côté front)
+  // Forme attendue : { zScores: { pa, ta, pt }, statutNourrisson: { type, label }, statutMere: { type, label } }
+  const [resultatVisite, setResultatVisite] = useState(null);
+
+  const successExtraContent = resultatVisite && (
+    <div className="flex flex-col gap-4 border-t border-[#E5E7EB] pt-4 w-full">
+      {/* Z-scores nourrisson */}
+      <div>
+        <p className="text-[13px] font-semibold text-[#202124] mb-2">
+          Z-scores nourrisson
+        </p>
+        <div className="flex gap-2">
+          <ZScoreBox label="P/A" value={resultatVisite.zScores?.pa} />
+          <ZScoreBox label="T/A" value={resultatVisite.zScores?.ta} />
+          <ZScoreBox label="P/T" value={resultatVisite.zScores?.pt} />
+        </div>
+      </div>
+
+      {/* Statuts nourrisson + mère, côte à côte */}
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-[#202124] mb-2">
+            Statut nourrisson
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {resultatVisite.statutNourrisson && (
+              <StatusBadge
+                type={resultatVisite.statutNourrisson.type}
+                text={resultatVisite.statutNourrisson.label}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-[#202124] mb-2">
+            Statut mère
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {resultatVisite.statutMere && (
+              <StatusBadge
+                type={resultatVisite.statutMere.type}
+                text={resultatVisite.statutMere.label}
+              />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   // --- ERROR HANDLING ---
   const [errors, setErrors] = useState({
     famille: false,
@@ -106,10 +160,59 @@ export default function AjoutVisite() {
     return !Object.values(newErrors).some(Boolean);
   };
 
+  // 🔧 handleSave utilise pour l'instant des DONNÉES FACTICES pour tester le rendu du popup.
+  // Une fois le backend prêt, remplace le contenu de la fonction par l'appel API réel (voir
+  // commentaire "VERSION API RÉELLE" juste en dessous).
   const handleSave = () => {
     if (!validateForm()) return;
+
+    // 🔧 DONNÉES FACTICES POUR TEST UI — à retirer une fois l'API branchée
+    setResultatVisite({
+      zScores: { pa: -0.8, ta: -2.4, pt: -2.1 },
+      statutNourrisson: { type: "mam", label: "MAM nourrisson" },
+      statutMere: { type: "mereNormal", label: "Mère normale" },
+    });
     setShowSuccessPopup(true);
   };
+
+  /* VERSION API RÉELLE — à activer une fois l'endpoint backend prêt :
+
+  const handleSave = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const response = await fetch("/api/visites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          familleId: selectedFamille?.id,
+          date,
+          mois,
+          numeroCycle,
+          poidsNourrisson,
+          tailleNourrisson,
+          muacNourrisson,
+          positionNourrisson,
+          observationsNourrisson,
+          poidsMere,
+          tailleMere,
+          muacMere,
+          observationsMere,
+          evaluationVisuelle,
+        }),
+      });
+
+      const data = await response.json();
+      // data attendu: { zScores, statutNourrisson, statutMere }
+      setResultatVisite(data);
+      setShowSuccessPopup(true);
+    } catch (error) {
+      console.error("Erreur lors de l'enregistrement de la visite :", error);
+      // TODO: afficher un message d'erreur à l'utilisateur si besoin
+    }
+  };
+
+  */
 
   // --- Handlers qui nettoient l'erreur au fur et à mesure ---
   const handleMoisChange = (value) => {
@@ -305,16 +408,16 @@ export default function AjoutVisite() {
         </div>
 
         <div className="mb-4">
-           {selectedFamille?.badges?.some((b) => b.type === "retard") && (
-    <AlertBox variant="warning">
-      <div className="flex items-center justify-between w-full">
-        <span className="font-semibold text-[#CC8409]">Visite en retard</span>
-        <span className="text-[13px] text-[#CC8409]">
-          Dernière visite le 15/05/2026 (il y a 36 jours).
-        </span>
-      </div>
-    </AlertBox>
-  )}
+          {selectedFamille?.badges?.some((b) => b.type === "retard") && (
+            <AlertBox variant="warning">
+              <div className="flex items-center justify-between w-full">
+                <span className="font-semibold text-[#CC8409]">Visite en retard</span>
+                <span className="text-[13px] text-[#CC8409]">
+                  Dernière visite le 15/05/2026 (il y a 36 jours).
+                </span>
+              </div>
+            </AlertBox>
+          )}
         </div>
 
         {!selectedFamille && (
@@ -401,118 +504,116 @@ export default function AjoutVisite() {
                 Date de la visite
               </h3>
 
-              
               <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
-  <div className="flex flex-col gap-1">
-    <DateContainer value={date} onChange={setDate} noPadding hideLabelSpace />
-  </div>
+                <div className="flex flex-col gap-1">
+                  <DateContainer value={date} onChange={setDate} noPadding hideLabelSpace />
+                </div>
 
-  {/* Mois - dropdown */}
-  <div className="flex flex-col gap-1">
-    <div className="relative w-full">
-      <button
-  type="button"
-  onClick={() => setOpenMois((prev) => !prev)}
-  className={`
-    h-[45px]
-    w-full
-    rounded-[15px]
-    border
-    ${mois ? "border-[#4E9F8A]" : "border-[#E5E7EB]"}
-    bg-white
-    px-4
-    flex
-    items-center
-    justify-between
-    text-left
-  `}
->
-        <span
-          className={`text-[14px] leading-[20px] ${
-            mois ? "text-[#374151]" : "text-[#9CA3AF]"
-          }`}
-        >
-          {mois
-            ? MOIS_OPTIONS.find((m) => m.value === mois)?.label
-            : "Selectionner le MOIS"}
-        </span>
-      </button>
+                {/* Mois - dropdown */}
+                <div className="flex flex-col gap-1">
+                  <div className="relative w-full">
+                    <button
+                      type="button"
+                      onClick={() => setOpenMois((prev) => !prev)}
+                      className={`
+                        h-[45px]
+                        w-full
+                        rounded-[15px]
+                        border
+                        ${mois ? "border-[#4E9F8A]" : "border-[#E5E7EB]"}
+                        bg-white
+                        px-4
+                        flex
+                        items-center
+                        justify-between
+                        text-left
+                      `}
+                    >
+                      <span
+                        className={`text-[14px] leading-[20px] ${
+                          mois ? "text-[#374151]" : "text-[#9CA3AF]"
+                        }`}
+                      >
+                        {mois
+                          ? MOIS_OPTIONS.find((m) => m.value === mois)?.label
+                          : "Selectionner le MOIS"}
+                      </span>
+                    </button>
 
-      <OptionsMenu
-        open={openMois}
-        onClose={() => setOpenMois(false)}
-        options={MOIS_OPTIONS}
-        onSelect={handleMoisChange}
-        position="top-[52px] left-0"
-        width="w-full"
-        maxHeight="200px"
-      />
-    </div>
-    <ErrorMessage
-      message={errors.mois ? "Veuillez sélectionner un mois" : null}
-    />
-  </div>
-</div>
+                    <OptionsMenu
+                      open={openMois}
+                      onClose={() => setOpenMois(false)}
+                      options={MOIS_OPTIONS}
+                      onSelect={handleMoisChange}
+                      position="top-[52px] left-0"
+                      width="w-full"
+                      maxHeight="200px"
+                    />
+                  </div>
+                  <ErrorMessage
+                    message={errors.mois ? "Veuillez sélectionner un mois" : null}
+                  />
+                </div>
+              </div>
 
               <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
                 {/* Numero de cycle - saisie numerique */}
-              
-<div className="flex flex-col gap-1 w-full">
-  <div
-    className={`
-      h-[45px]
-      w-full
-      rounded-[15px]
-      border
-      ${numeroCycle ? "border-[#4E9F8A]" : "border-[#E5E7EB]"}
-      bg-white
-      px-4
-      flex
-      items-center
-      gap-2
-    `}
-  >
-    <span
-      className="
-        text-[14px]
-        leading-[20px]
-        font-medium
-        text-[#4E9F8A]
-        select-none
-        shrink-0
-      "
-    >
-      Cycle N°
-    </span>
+                <div className="flex flex-col gap-1 w-full">
+                  <div
+                    className={`
+                      h-[45px]
+                      w-full
+                      rounded-[15px]
+                      border
+                      ${numeroCycle ? "border-[#4E9F8A]" : "border-[#E5E7EB]"}
+                      bg-white
+                      px-4
+                      flex
+                      items-center
+                      gap-2
+                    `}
+                  >
+                    <span
+                      className="
+                        text-[14px]
+                        leading-[20px]
+                        font-medium
+                        text-[#4E9F8A]
+                        select-none
+                        shrink-0
+                      "
+                    >
+                      Cycle N°
+                    </span>
 
-    <input
-      type="number"
-      inputMode="numeric"
-      placeholder="--"
-      value={numeroCycle}
-      onChange={(e) => handleNumeroCycleChange(e.target.value)}
-      className="
-        flex-1
-        w-full
-        min-w-0
-        bg-transparent
-        text-[14px]
-        leading-[20px]
-        text-[#374151]
-        placeholder:text-[#9CA3AF]
-        outline-none
-        [appearance:textfield]
-        [&::-webkit-outer-spin-button]:appearance-none
-        [&::-webkit-inner-spin-button]:appearance-none
-      "
-    />
-  </div>
-  <ErrorMessage
-    message={
-      errors.numeroCycle ? "Veuillez saisir le numéro de cycle" : null
-    }
-  />
-</div>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="--"
+                      value={numeroCycle}
+                      onChange={(e) => handleNumeroCycleChange(e.target.value)}
+                      className="
+                        flex-1
+                        w-full
+                        min-w-0
+                        bg-transparent
+                        text-[14px]
+                        leading-[20px]
+                        text-[#374151]
+                        placeholder:text-[#9CA3AF]
+                        outline-none
+                        [appearance:textfield]
+                        [&::-webkit-outer-spin-button]:appearance-none
+                        [&::-webkit-inner-spin-button]:appearance-none
+                      "
+                    />
+                  </div>
+                  <ErrorMessage
+                    message={
+                      errors.numeroCycle ? "Veuillez saisir le numéro de cycle" : null
+                    }
+                  />
+                </div>
 
                 {/* Visite numero - affichage seulement */}
                 <div className="w-full">
@@ -726,14 +827,17 @@ export default function AjoutVisite() {
           <Popup
             title="Visite enregistrée avec succès"
             image={SuccessImage}
-            primaryButtonText="Voir la fiche famille"
+            extraContent={successExtraContent}
+            primaryButtonText="Ajouter une distribution"
             secondaryButtonText="Revenir à l'accueil"
             onPrimaryClick={() => {
               setShowSuccessPopup(false);
-              navigate(`/famille/${selectedFamille?.id}`);
+              setResultatVisite(null);
+              navigate("/ajout-distribution");
             }}
             onSecondaryClick={() => {
               setShowSuccessPopup(false);
+              setResultatVisite(null);
               navigate("/dashboard");
             }}
           />
