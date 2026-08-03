@@ -163,6 +163,14 @@ const handleProgrammeChange = (index, value) => {
   );
 };
 
+const handleStatutSortieChange = (index, value) => {
+  setStatutSortie((prev) =>
+    prev.map((item, i) =>
+      i === index ? { ...item, value } : item
+    )
+  );
+};
+
   const zakat = [
     {
       label: "Nombre d'aides",
@@ -197,6 +205,21 @@ const [superviseur, setSuperviseur] = useState([
     label: "Nom du coordinateur",
     value: "Kshfhd Qdjshf",
     popup: true,
+  },
+]);
+
+
+
+const [statutSortie, setStatutSortie] = useState([
+  {
+    label: "Date de sortie",
+    value: new Date("2026-05-15"),
+    type: "date",
+  },
+  {
+    label: "Motif de sortie",
+    value: "Enfant sorti du programme après amélioration.",
+    type: "textarea",
   },
 ]);
 const [openDistribution, setOpenDistribution] = useState(false);
@@ -575,18 +598,11 @@ return (
 
 {statut === "Sortie" && (
   <div className="mt-8">
-    <InfoCard
+    <EditableInfoCard
       title="Statut sortie"
-      data={[
-        {
-          label: "Date de sortie",
-          value: "15/05/2026",
-        },
-        {
-          label: "Motif de sortie",
-          value: "Enfant sorti du programme après amélioration.",
-        },
-      ]}
+      data={statutSortie}
+      editable={true}
+      onChange={handleStatutSortieChange}
     />
   </div>
 )}
@@ -617,6 +633,16 @@ return (
 };
 
 export default Modifyfamilly ;
+
+
+
+
+
+
+
+
+
+
 
 
 
