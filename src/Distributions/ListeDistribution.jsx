@@ -392,7 +392,7 @@ const grammage =
        <NavigationHeader
   title="Liste des distributions"
 
-  type="share"
+  type="export"
   actionTitle="Exporter la liste des distributions"
   onAction={() => console.log("Exporter")}
 
