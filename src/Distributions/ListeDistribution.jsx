@@ -8,7 +8,7 @@ import Button from "../components/Button/Button";
 import FilterTag from "../components/Filter/FilterTag";
 import DateSelect from "../components/Containers/DateSelect.jsx";
 import PopupDetailDistribution from "../components/Popups/PopupdetailsDistributions";
-import PopupDetailDistributionModifier from "../components/Popups/PopupdetailsDistributionsModifier";
+
 import CardListDistribution from "../components/Cards/CarteListeDistribution";
 import StockCard from "../components/Cards/StockCard";
 import StockPopup from "../components/Popups/StockPopup";
@@ -182,7 +182,7 @@ const filtered = distributions.filter((item) => {
 });
 const [selectedDistribution, setSelectedDistribution] = useState(null);
 const [isPopupOpen, setIsPopupOpen] = useState(false);
-const [isEditPopupOpen, setIsEditPopupOpen] = useState(false);
+
 const filterTagsContent = (
   <div className="flex flex-wrap gap-2 my-4">
     {appliedFilters.dateDebut && (
@@ -312,6 +312,45 @@ if (isFilterOpen && isMobile) {
   );
 }
 
+// Transforme les données "plates" d'une distribution existante
+// vers le format attendu par AjoutDistribution (products, laitType, grammage, boxes...)
+const mapDistributionToEditData = (distribution) => {
+  // Produits (colis alimentaire) : "5 kg" → { quantity: 5, unit: "kg" }
+  const products = (distribution.produits || [])
+    .filter((p) => !p.nom?.toLowerCase().includes("lait")) // le lait est géré séparément
+    .map((p, index) => {
+      const match = p.quantite?.match(/([\d.]+)\s*([a-zA-Zé]+)/);
+      const quantity = match ? parseFloat(match[1]) : 0;
+      const unit = match ? match[2] : "";
+
+      return {
+        id: index + 1, // ⚠️ idéalement un vrai id backend, pas un index généré
+        title: p.nom,
+        quantity,
+        unit,
+        maxQuantity: quantity, // pas de vraie limite de stock connue ici
+        icon: null, // ⚠️ pas d'icône disponible depuis ces données — à mapper si tu as un stock avec icônes
+      };
+    });
+
+  // Lait infantile
+  const boxesMatch = distribution.nombreBoites?.match(/(\d+)/);
+  const boxes = boxesMatch ? parseInt(boxesMatch[1], 10) : 0;
+
+  const poidsTotalMatch = distribution.poidsTotal?.match(/([\d.]+)/);
+const poidsTotal = poidsTotalMatch ? parseFloat(poidsTotalMatch[1]) : 0;
+
+const grammage =
+  boxes > 0 && poidsTotal > 0
+    ? String(Math.round(poidsTotal / boxes))
+    : "";
+
+  const laitType = distribution.typeLait || null;
+
+  return { products, laitType, grammage, boxes };
+};
+
+
    // Simulation du rôle
   const role = "admin";
   //const role = "coordinateur";
@@ -419,12 +458,33 @@ if (isFilterOpen && isMobile) {
     setIsPopupOpen(false);
     setSelectedDistribution(null);
   }}
- onEdit={(distribution) => {
-  setSelectedDistribution(distribution);
-
+  onEdit={(distribution) => {
   setIsPopupOpen(false);
 
-  setIsEditPopupOpen(true);
+  const { products, laitType, grammage, boxes } = mapDistributionToEditData(distribution);
+
+  navigate("/ajout-distribution", {
+    state: {
+      distributionAModifier: {
+        ...distribution,
+        selectedFamille: {
+          id: distribution.id,
+          enfant: distribution.enfant,
+          mere: distribution.mere,
+          sexe: distribution.sexe,
+          region: distribution.region,
+          naissance: distribution.dateNaissance,
+          code: distribution.code,
+          badges: distribution.badges || [],
+        },
+        products,
+        laitType,
+        grammage,
+        boxes,
+        confirmed: true, // une distribution déjà enregistrée était forcément confirmée
+      },
+    },
+  });
 }}
   onDelete={(distribution) => {
     console.log("Supprimer", distribution);
@@ -432,19 +492,6 @@ if (isFilterOpen && isMobile) {
   }}
 />
 
-<PopupDetailDistributionModifier
-  open={isEditPopupOpen}
-  distribution={selectedDistribution}
-  onClose={() => {
-    setIsEditPopupOpen(false);
-  }}
-  onEdit={(updatedDistribution) => {
-    console.log(updatedDistribution);
-
-    // ici plus tard API
-    setIsEditPopupOpen(false);
-  }}
-/>
      
 {showStockPopup && (
   <StockPopup
