@@ -124,7 +124,7 @@ export default function PopupValidationProduit({
             onBack={handleClose}
           />
 
-          <h2 className="text-center text-[22px] sm:text-[24px] font-bold mt-4">
+          <h2 className="text-center text-[22px] sm:text-[24px] font-bold mt-2">
             Validation de Produit
           </h2>
 
@@ -225,7 +225,7 @@ export default function PopupValidationProduit({
                 icon={trash}
                 iconPosition="left"
                 fullWidth
-                noWrapperPadding
+                noPadding
                 onClick={handleRefuser}
               />
             </div>
@@ -235,7 +235,7 @@ export default function PopupValidationProduit({
                 title="Valider"
                 variant="success"
                 fullWidth
-                noWrapperPadding
+                noPadding
                 onClick={handleValider}
               />
             </div>
