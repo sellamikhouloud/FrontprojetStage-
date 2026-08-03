@@ -39,10 +39,10 @@ const LaitInfantile = ({
                 onChange={onTypeChange}
                 placeholder="Tapez pour choisir le type de lait"
                 error={errors.laitType}
-                options={[
-                  { value: "premier", label: "1er âge" },
-                  { value: "deuxieme", label: "2ème âge" },
-                ]}
+               options={[
+  { value: "1er âge (0-6 mois)", label: "1er âge (0-6 mois)" },
+  { value: "2ème âge (6-12 mois)", label: "2ème âge (6-12 mois)" },
+]}
               />
               <ErrorMessage
                 message={errors.laitType ? "Veuillez choisir un type de lait" : null}
