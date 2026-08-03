@@ -6,102 +6,87 @@ const CardZakatSummary = ({
   familles = 32,
 }) => {
   return (
-    <div className="w-full overflow-x-hidden">
-      <div
-        className="
-          origin-top-left
-          scale-[0.75]
-          sm:scale-[0.85]
-          md:scale-[0.95]
-          lg:scale-100
-          transition-transform
-          duration-300
-        "
-      >
-        <div
-          className="
-            relative
-            w-full
-            max-w-[714px]
-            h-[120px]
-            rounded-[20px]
-            bg-[#57A892]
-            overflow-hidden
-            px-8
-            py-5
-          "
-        >
-          {/* Décoration */}
+    <div
+      className="relative w-full max-w-[714px] rounded-[20px] bg-[#57A892] overflow-hidden"
+      style={{
+        paddingInline: "clamp(16px, 5vw, 32px)",
+        paddingBlock: "clamp(12px, 3vw, 20px)",
+      }}
+    >
+      {/* Décoration */}
+      <img
+        src={Decoration}
+        alt=""
+        className="absolute right-0 top-0 h-full opacity-10 object-contain pointer-events-none select-none"
+      />
+
+      <div className="relative z-10 flex flex-col justify-between gap-4">
+        {/* Titre */}
+        <div className="flex items-center gap-2">
           <img
-            src={Decoration}
-            alt=""
-            className="
-              absolute
-              right-0
-              top-0
-              h-full
-              opacity-10
-              object-contain
-              pointer-events-none
-              select-none
-            "
+            src={ZakatIcon}
+            alt="Zakat"
+            className="flex-shrink-0"
+            style={{
+              width: "clamp(18px, 4.5vw, 24px)",
+              height: "clamp(18px, 4.5vw, 24px)",
+            }}
           />
 
-          <div className="relative z-10 h-full flex flex-col justify-between">
-            {/* Titre */}
-            <div className="flex items-center gap-2">
-              <img
-                src={ZakatIcon}
-                alt="Zakat"
-                className="w-6 h-6"
-              />
+          <h2
+            className="text-white font-normal leading-tight tracking-[1.6px]"
+            style={{ fontSize: "clamp(13px, 3.2vw, 16px)" }}
+          >
+            Zakat
+          </h2>
+        </div>
 
-              <h2
-                className="
-                  text-white
-                  text-[16px]
-                  font-normal
-                  leading-6
-                  tracking-[1.6px]
-                "
+        {/* Informations */}
+        <div className="flex flex-wrap justify-between items-end gap-x-6 gap-y-3">
+          {/* Montant */}
+          <div className="min-w-0">
+            <p
+              className="text-[#CDE4DE] whitespace-nowrap"
+              style={{ fontSize: "clamp(11px, 2.8vw, 14px)" }}
+            >
+              Montant total versé
+            </p>
+
+            <h3
+              className="mt-[2px] text-white font-bold leading-none whitespace-nowrap"
+              style={{ fontSize: "clamp(16px, 4.2vw, 22px)" }}
+            >
+              {montant}
+            </h3>
+          </div>
+
+          {/* Familles */}
+          <div className="min-w-0">
+            <p
+              className="text-[#CDE4DE] whitespace-nowrap"
+              style={{ fontSize: "clamp(11px, 2.8vw, 14px)" }}
+            >
+              Familles bénéficiaires
+            </p>
+
+            <div className="flex items-end gap-2 mt-[2px]">
+              <span
+                className="text-white font-bold leading-none whitespace-nowrap"
+                style={{ fontSize: "clamp(16px, 4.2vw, 22px)" }}
               >
-                Zakat
-              </h2>
-            </div>
+                {familles}
+              </span>
 
-            {/* Informations */}
-            <div className="flex justify-between items-end">
-              {/* Montant */}
-              <div>
-                <p className="text-[#CDE4DE] text-[14px]">
-                  Montant total versé
-                </p>
-
-                <h3 className="mt-[2px] text-white text-[22px] font-bold leading-none">
-                  {montant}
-                </h3>
-              </div>
-
-              {/* Familles */}
-              <div className="mr-32">
-                <p className="text-[#CDE4DE] text-[14px]">
-                  Familles bénéficiaires
-                </p>
-
-                <div className="flex items-end gap-2 mt-[2px]">
-                  <span className="text-white text-[22px] font-bold leading-none">
-                    {familles}
-                  </span>
-
-                  <span className="text-[#E5F2EE] text-[16px] leading-none">
-                    Familles
-                  </span>
-                </div>
-              </div>
+              <span
+                className="text-[#E5F2EE] leading-none whitespace-nowrap"
+                style={{ fontSize: "clamp(12px, 3vw, 16px)" }}
+              >
+                Familles
+              </span>
             </div>
           </div>
         </div>
-      </div> 
+      </div>
     </div>
   );
 };
