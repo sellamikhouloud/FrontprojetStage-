@@ -15,7 +15,7 @@ import Popup from "../components/Popups/SuccessPopup.jsx";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import PopupZakatFamille from "../components/Popups/PopupZakatfamille";
 import OMSGraphs from "../components/OMSGraphs/OMSGraphs.jsx";
-
+import ZScoreBox from "../components/Containers/ZScoreBox";
 import PoidsAgeChart from "../components/OMSGraphs/PoidsAgeChart";
 import TailleAgeChart from "../components/OMSGraphs/TailleAgeChart";
 import PoidsTailleChart from "../components/OMSGraphs/PoidsTailleChart";
@@ -240,7 +240,6 @@ const distributionList = [
    
   },
 ];
-
 const visiteList = [
   {
     id: 1,
@@ -266,86 +265,10 @@ const visiteList = [
       muac: 240,
     },
 
-    statuts: [
-      { type: "mam", text: "MAS nourrisson" },
-      { type: "mere", text: "Mère normale" },
-    ],
-
-    observationNourrisson: "Observation nourrisson",
-    observationMere: "Observation mère",
-    evaluationFamiliale: "Famille stable",
-
-    visite: "Visite 1",
-    poids: "500",
-    taille: "35",
-    badges: [
-      { type: "mam", text: "MAS nourrisson" },
-      { type: "mere", text: "Mère normale" },
-    ],
-  },
-   {
-    id: 2,
-    numeroVisite: 1,
-    enfant: "Aïcha Mint Mohamed",
-    mere: "Meriem",
-    sexe: "Fille",
-    region: "Lexeiba",
-    dateNaissance: "15/05/2026",
-    code: "GDK-2026-003",
-    date: "15/05/2026",
-    enregistrePar: "Coordinateur",
-
-    nourrisson: {
-      poids: 500,
-      taille: 35,
-      muac: 112,
-    },
-
-    mereMesure: {
-      poids: 55,
-      taille: "-",
-      muac: 240,
-    },
-
-    statuts: [
-      { type: "mam", text: "MAS nourrisson" },
-      { type: "mere", text: "Mère normale" },
-    ],
-
-    observationNourrisson: "Observation nourrisson",
-    observationMere: "Observation mère",
-    evaluationFamiliale: "Famille stable",
-
-    visite: "Visite 1",
-    poids: "500",
-    taille: "35",
-    badges: [
-      { type: "mam", text: "MAS nourrisson" },
-      { type: "mere", text: "Mère normale" },
-    ],
-  },
-   {
-    id: 3,
-    numeroVisite: 1,
-    enfant: "Aïcha Mint Mohamed",
-    mere: "Meriem",
-    sexe: "Fille",
-    region: "Lexeiba",
-    dateNaissance: "15/05/2026",
-    code: "GDK-2026-003",
-    date: "15/05/2026",
-    enregistrePar: "Coordinateur",
-
-    nourrisson: {
-      poids: 500,
-      taille: 35,
-      muac: 112,
-    },
-
-    mereMesure: {
-      poids: 55,
-      taille: "-",
-      muac: 240,
+    zScores: {
+      pa: -0.8,
+      ta: -2.4,
+      pt: -3.5,
     },
 
     statuts: [
@@ -367,8 +290,104 @@ const visiteList = [
   },
 
   {
-    id: 4,
+    id: 2,
     numeroVisite: 2,
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "15/05/2026",
+    code: "GDK-2026-003",
+    date: "20/05/2026",
+    enregistrePar: "Coordinateur",
+
+    nourrisson: {
+      poids: 520,
+      taille: 36,
+      muac: 114,
+    },
+
+    mereMesure: {
+      poids: 56,
+      taille: "-",
+      muac: 242,
+    },
+
+    zScores: {
+      pa: 1.3,
+      ta: -1.5,
+      pt: 2.6,
+    },
+
+    statuts: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+
+    observationNourrisson: "Évolution satisfaisante.",
+    observationMere: "RAS",
+    evaluationFamiliale: "Bonne implication de la famille.",
+
+    visite: "Visite 2",
+    poids: "520",
+    taille: "36",
+    badges: [
+      { type: "mam", text: "MAM nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
+
+  {
+    id: 3,
+    numeroVisite: 3,
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "15/05/2026",
+    code: "GDK-2026-003",
+    date: "30/05/2026",
+    enregistrePar: "Coordinateur",
+
+    nourrisson: {
+      poids: 540,
+      taille: 37,
+      muac: 116,
+    },
+
+    mereMesure: {
+      poids: 56,
+      taille: "-",
+      muac: 243,
+    },
+
+    zScores: {
+      pa: -3.8,
+      ta: 0.5,
+      pt: -2.1,
+    },
+
+    statuts: [
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+
+    observationNourrisson: "Surveillance renforcée.",
+    observationMere: "Bon état général.",
+    evaluationFamiliale: "Suivi régulier.",
+
+    visite: "Visite 3",
+    poids: "540",
+    taille: "37",
+    badges: [
+      { type: "mam", text: "MAS nourrisson" },
+      { type: "mere", text: "Mère normale" },
+    ],
+  },
+
+  {
+    id: 4,
+    numeroVisite: 4,
     enfant: "Mohamed Ould Ahmed",
     mere: "Fatimata",
     sexe: "Garçon",
@@ -390,6 +409,12 @@ const visiteList = [
       muac: 250,
     },
 
+    zScores: {
+      pa: 0.2,
+      ta: 2.3,
+      pt: -0.6,
+    },
+
     statuts: [
       { type: "mam", text: "MAM nourrisson" },
       { type: "mere", text: "Mère normale" },
@@ -402,7 +427,7 @@ const visiteList = [
     evaluationFamiliale:
       "Famille coopérative.",
 
-    visite: "Visite 2",
+    visite: "Visite 4",
     poids: "610",
     taille: "38",
     badges: [
@@ -410,7 +435,6 @@ const visiteList = [
       { type: "mere", text: "Mère normale" },
     ],
   },
-
 ];
 const [openFinSuivi, setOpenFinSuivi] = useState(false);
 const [openSuccess, setOpenSuccess] = useState(false);
@@ -755,4 +779,5 @@ return (
 };
 
 export default FamilyProfile;
+
 
