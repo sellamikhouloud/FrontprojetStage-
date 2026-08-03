@@ -30,6 +30,17 @@ import Popup from "../components/Popups/SuccessPopup";
 import SuccessImage from "../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 
+// Utilitaire — parse une date au format "JJ/MM/AAAA" en objet Date valide
+const parseDateFR = (str) => {
+  if (!str) return null;
+  const [day, month, year] = str.split("/").map(Number);
+  if (!day || !month || !year) return null;
+  const parsed = new Date(year, month - 1, day);
+  return isNaN(parsed.getTime()) ? null : parsed;
+};
+
+
+
 export default function AjoutDistribution() {
   const stockProducts = [
     { id: 1, icon: Cereales, title: "Céréales", quantity: 50, unit: "kg" },
@@ -47,16 +58,37 @@ export default function AjoutDistribution() {
 
   const location = useLocation();
   const draft = location.state?.draft;
+  // Distribution existante passée depuis la page de détail (mode modification)
+  const distributionAModifier = location.state?.distributionAModifier;
 
-  const [selectedFamille, setSelectedFamille] = useState(draft?.selectedFamille || null);
-  const [products, setProducts] = useState(draft?.products || []);
-  const [date, setDate] = useState(draft?.date ? new Date(draft.date) : new Date());
-  const [confirmed, setConfirmed] = useState(draft?.confirmed || false);
+  // Mode modification si une distribution existante a été transmise
+  const isEditMode = !!distributionAModifier;
+
+
+ // Source des données : distribution existante (édition) > brouillon (retour "voir la fiche") > vide (ajout)
+  const source = distributionAModifier || draft;
+
+  // Icône utilisée par défaut quand un produit n'a pas d'icône
+  // (ex: produit reconstitué depuis la page détail, icon: null)
+  const DEFAULT_ICON = Sucre;
+
+  const withDefaultIcon = (list) =>
+    (list || []).map((p) => ({
+      ...p,
+      icon: p.icon || DEFAULT_ICON,
+    }));
+
+  const [selectedFamille, setSelectedFamille] = useState(source?.selectedFamille || null);
+  const [products, setProducts] = useState(withDefaultIcon(source?.products));
+const [date, setDate] = useState(
+  source?.date ? parseDateFR(source.date) || new Date() : new Date()
+);
+  const [confirmed, setConfirmed] = useState(source?.confirmed || false);
 
   // Lait infantile - état remonté ici pour permettre la validation
-  const [laitType, setLaitType] = useState(draft?.laitType || null);
-  const [grammage, setGrammage] = useState(draft?.grammage || "");
-  const [boxes, setBoxes] = useState(draft?.boxes ?? 0);
+  const [laitType, setLaitType] = useState(source?.laitType || null);
+  const [grammage, setGrammage] = useState(source?.grammage || "");
+  const [boxes, setBoxes] = useState(source?.boxes ?? 0);
 
   const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
@@ -113,6 +145,31 @@ export default function AjoutDistribution() {
 
   const handleSave = () => {
     if (!validateForm()) return;
+
+    if (isEditMode) {
+      // TODO: appel API réel — PUT /distributions/:id
+      console.log("Modification distribution", distributionAModifier.id, {
+        selectedFamille,
+        products,
+        date,
+        confirmed,
+        laitType,
+        grammage,
+        boxes,
+      });
+    } else {
+      // TODO: appel API réel — POST /distributions
+      console.log("Création distribution", {
+        selectedFamille,
+        products,
+        date,
+        confirmed,
+        laitType,
+        grammage,
+        boxes,
+      });
+    }
+
     setShowSuccessPopup(true);
   };
 
@@ -189,10 +246,13 @@ export default function AjoutDistribution() {
   const [openFamilles, setOpenFamilles] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
 
-  const familyOptions = [
-    { label: "Changer la famille", value: "changer" },
-    { label: "Voir la fiche famille", value: "voir" },
-  ];
+  // En mode modification, on ne peut plus changer de famille — seulement la consulter
+  const familyOptions = isEditMode
+    ? [{ label: "Voir la fiche famille", value: "voir" }]
+    : [
+        { label: "Changer la famille", value: "changer" },
+        { label: "Voir la fiche famille", value: "voir" },
+      ];
 
   const handleSearch = () => {
     setOpenFamilles(true);
@@ -243,66 +303,67 @@ export default function AjoutDistribution() {
         state: {
           from: "/ajout-distribution",
           draft: { selectedFamille, products, date, confirmed, laitType, grammage, boxes },
+          // Si on était déjà en mode modification, on garde le contexte au retour
+          distributionAModifier: isEditMode ? distributionAModifier : undefined,
         },
       });
     }
   };
 
   return (
-<div className="min-h-screen bg-white lg:flex">
-  
-  <div
-    className="
-      hidden
-      lg:flex
-      lg:sticky
-      lg:top-0
-      lg:h-screen
-      lg:items-center
-      lg:py-0
-      lg:pl-0
-      lg:shrink-0
-    "
-  >
-    <Sidebar role="admin" />
-  </div>
+    <div className="min-h-screen bg-white lg:flex">
+      <div
+        className="
+          hidden
+          lg:flex
+          lg:sticky
+          lg:top-0
+          lg:h-screen
+          lg:items-center
+          lg:py-0
+          lg:pl-0
+          lg:shrink-0
+        "
+      >
+        <Sidebar role="admin" />
+      </div>
 
-  {/* Mobile sidebar (hamburger) }
-  <div className="lg:hidden">
-    <Sidebar role="admin" />
-  </div>
+      {/* Mobile sidebar (hamburger) */}
+      <div className="lg:hidden">
+        <Sidebar role="admin" />
+      </div>
 
-  {/* Mobile fixed white header —}
-  <div
-    className="
-      fixed
-      top-0
-      left-0
-      right-0
-      h-20
-      bg-white
-      z-40
-      lg:hidden
-    "
-  />
+      {/* Mobile fixed white header */}
+      <div
+        className="
+          fixed
+          top-0
+          left-0
+          right-0
+          h-20
+          bg-white
+          z-40
+          lg:hidden
+        "
+      />
 
-  {/* Page content */}
-  <main
-    className="
-      flex-1
-      overflow-y-auto
-      bg-white
+      {/* Page content */}
+      <main
+        className="
+          flex-1
+          overflow-y-auto
+          bg-white
 
-      pt-20
-      lg:pt-4
+          pt-20
+          lg:pt-4
 
-      px-4
-      lg:px-10
+          px-4
+          lg:px-10
 
-      pb-8
-      lg:pb-2
-    "
-  >
+          pb-8
+          lg:pb-2
+        "
+      >
         {/* Header */}
         <div className="mb-3 lg:mb-6">
           <PageHeader
@@ -311,6 +372,8 @@ export default function AjoutDistribution() {
             onBack={() => window.history.back()}
           />
         </div>
+
+       
 
         {!selectedFamille && (
           <div className="flex flex-col gap-2">
@@ -493,7 +556,7 @@ export default function AjoutDistribution() {
         {/* Save button */}
         <div className="mt-2">
           <Button
-            title="Enregistrer"
+            title={isEditMode ? "Enregistrer les modifications" : "Enregistrer"}
             variant="save"
             noPadding
             onClick={handleSave}
@@ -502,7 +565,11 @@ export default function AjoutDistribution() {
 
         {showSuccessPopup && (
           <Popup
-            title="Distribution enregistrée avec succès"
+            title={
+              isEditMode
+                ? "Distribution modifiée avec succès"
+                : "Distribution enregistrée avec succès"
+            }
             image={SuccessImage}
             primaryButtonText="Voir la fiche famille"
             secondaryButtonText="Revenir à l'accueil"
