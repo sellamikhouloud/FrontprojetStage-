@@ -234,7 +234,7 @@ if (isFilterOpen && isMobile) {
 <NavigationHeader
   title="Liste des Zakat"
 
-  type="share"
+   type="export"
   actionTitle="Exporter la liste des Zakat"
   onAction={() => console.log("Exporter")}
 
