@@ -320,12 +320,12 @@ export default function AjoutVisite() {
       lg:shrink-0
     "
   >
-    <Sidebar role="admin" />
+    <Sidebar role="coordinator" />
   </div>
 
   {/* Mobile sidebar (hamburger) — unchanged */}
   <div className="lg:hidden">
-    <Sidebar role="admin" />
+    <Sidebar role="coordinator" />
   </div>
 
   {/* Mobile fixed white header — unchanged */}
