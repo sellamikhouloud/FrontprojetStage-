@@ -100,6 +100,7 @@ const zakatList = [
     numero: "Zakat n°1",
     date: "15/05/2026",
     montant: "500 MRU",
+    euro: "12.45",
 
     enfant: "Aïcha Mint Mohamed",
     mere: "Meriem Mint Ahmed",
@@ -120,6 +121,7 @@ const zakatList = [
     numero: "Zakat n°2",
     date: "20/06/2026",
     montant: "750 MRU",
+    euro: "18.67",
 
     enfant: "Aïcha Mint Mohamed",
     mere: "Meriem Mint Ahmed",
@@ -779,5 +781,6 @@ return (
 };
 
 export default FamilyProfile;
+
 
 
