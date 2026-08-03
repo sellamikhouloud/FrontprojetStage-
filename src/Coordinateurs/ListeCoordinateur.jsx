@@ -67,7 +67,7 @@ const filteredCoordinateurs = coordinateurs.filter((item) => {
 />
          <NavigationHeader
   title="Liste des coordinateurs"
-  type="share"
+  type="export"
   actionTitle="Exporter la liste des coordinateurs"
   onAction={() => {
     // Fonction d'export
