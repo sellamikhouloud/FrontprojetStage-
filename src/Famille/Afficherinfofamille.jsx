@@ -27,7 +27,7 @@ const FamilyProfile = () => {
     const navigate = useNavigate();
 const { id } = useParams();
 const isMobile = window.innerWidth < 768;
-  const statut = "Active"; // ou "Active"
+  const statut = "Sortie"; // ou "Active"
 
   const nourrisson = [
     { label: "Date de naissance", value: "15/05/2026" },
@@ -781,4 +781,6 @@ return (
 };
 
 export default FamilyProfile;
+
+
 
