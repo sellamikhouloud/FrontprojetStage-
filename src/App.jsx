@@ -20,6 +20,8 @@ import AjoutZakat from "./Zakat/AjoutZakat";
 import AjoutVisite from "./Visites/AjoutVisite";
 import Galerie from "./Galerie/Galerie";
 import RapportMensuel from "./Rapports/RapportMensuelle";
+import RapportBilan from "./Rapports/RapportDonateur";
+import RapportAnnuel from "./Rapports/RapportAnnuel";
 
 
 function App() {
@@ -94,12 +96,17 @@ function App() {
         <Route
           path="/galerie" element={<Galerie />}
         />
-
-        {/* Rapport */}
-        <Route
-          path="/rapports" element={<RapportMensuel />}
+  {/* Rapport : le premier onglet (mensuel) est l'entrée par défaut de /rapports,
+      les 2 autres onglets naviguent vers leurs propres sous-routes */}
+         <Route
+          path="/rapports" element={<RapportMensuel/>}
         />
-
+         <Route
+          path="/rapports/bilan-donateurs" element={<RapportBilan/>}
+        />
+         <Route
+          path="/rapports/annuel" element={<RapportAnnuel/>}
+        />
 
       </Routes>
     </BrowserRouter>
