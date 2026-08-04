@@ -77,7 +77,7 @@ const RapportMensuel = () => {
          />
        </div>
 
-        {/* Onglets : cachés sur mobile quand on est sur la "screen" du rapport (showPreview = true), toujours visibles sur desktop */}
+     
         <div className={`mt-6 ${showPreview ? "hidden" : "block"} xl:block`}>
           <ReportTabs />
         </div>
@@ -85,9 +85,7 @@ const RapportMensuel = () => {
         {/* Contenu */}
      <div className="mt-8 flex flex-col xl:flex-row items-start gap-8 h-[calc(100%-120px)]">
 
-{/* Partie gauche : le rapport (partie bleue)
-    - Mobile / tablette : caché par défaut, affiché seulement quand showPreview = true (agit comme une "screen" à part)
-    - Desktop (xl+) : toujours affiché, à côté du panneau de droite */}
+{/* Partie gauche  */}
  <div
   className={`
     ${showPreview ? "flex" : "hidden"}
@@ -106,7 +104,7 @@ const RapportMensuel = () => {
   `}
 
 >
-  {/* Bouton "Revenir" : visible seulement en mode preview mobile, caché sur desktop */}
+
   <button
     type="button"
     onClick={() => setShowPreview(false)}
@@ -178,9 +176,7 @@ const RapportMensuel = () => {
 
 </div>
 
-{/* Partie droite : mois + boutons
-    - Mobile / tablette : affiché par défaut, caché quand showPreview = true (on est sur la "screen" du rapport)
-    - Desktop (xl+) : toujours affiché, à côté du rapport */}
+{/* Partie droite  */}
   <div
   className={`
     ${showPreview ? "hidden" : "flex"}
@@ -197,7 +193,7 @@ const RapportMensuel = () => {
     scrollbar-hide
   `}
 >
-  {/* Titre "En attente de vérification" */}
+
   <div
     className="
       min-h-[44px] sm:min-h-[48px]
@@ -209,6 +205,7 @@ const RapportMensuel = () => {
       py-2
       text-sm sm:text-base
       leading-tight
+      font-semibold
     "
     style={{
       backgroundColor: "#F8F8F8",
@@ -261,3 +258,4 @@ const RapportMensuel = () => {
 };
 
 export default RapportMensuel;
+
