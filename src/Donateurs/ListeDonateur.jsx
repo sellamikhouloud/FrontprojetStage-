@@ -99,7 +99,7 @@ export default function ListeDonateur() {
         <NavigationHeader
   title="Liste des donateurs"
 
-  type="export"
+  type="share"
   actionTitle="Exporter la liste des donateurs"
   onAction={() => console.log("Exporter")}
 
