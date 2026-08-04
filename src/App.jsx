@@ -19,6 +19,7 @@ import ZakatPage from "./Zakat/ListeZakat";
 import AjoutZakat from "./Zakat/AjoutZakat";
 import AjoutVisite from "./Visites/AjoutVisite";
 import Galerie from "./Galerie/Galerie";
+import RapportMensuel from "./Rapports/RapportMensuelle";
 
 
 function App() {
@@ -92,6 +93,11 @@ function App() {
         {/* Galerie */}
         <Route
           path="/galerie" element={<Galerie />}
+        />
+
+        {/* Rapport */}
+        <Route
+          path="/rapports" element={<RapportMensuel />}
         />
 
 
