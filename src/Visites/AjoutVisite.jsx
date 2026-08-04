@@ -517,6 +517,7 @@ export default function AjoutVisite() {
                 </div>
               </div>
 
+               {selectedFamille && (
               <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
                 {/* Numero de cycle - saisie numerique */}
                 <div className="flex flex-col gap-1 w-full">
@@ -597,6 +598,7 @@ export default function AjoutVisite() {
                   </div>
                 </div>
               </div>
+            )}
             </div>
 
             {/* Mesures + Observations nourrisson */}
