@@ -390,7 +390,7 @@ if  (isFilterOpen && isMobile)  {
       {role === "admin" ? (
   <NavigationHeader
     title="Liste des familles"
-    type="export"
+    type="share"
     actionTitle="Exporter la liste des familles"
     onAction={() => {}}
     secondType="add"
