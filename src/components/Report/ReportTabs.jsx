@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const tabs = [
-  "Rapport mensuel de nutrition",
-  "Bilan donateurs",
-  "Rapport annuel",
+  { label: "Rapport mensuel de nutrition", path: "/rapports" },
+  { label: "Bilan donateurs", path: "/rapports/bilan-donateurs" },
+  { label: "Rapport annuel", path: "/rapports/annuel" },
 ];
 
 const ReportTabs = () => {
-  const [activeTab, setActiveTab] = useState(0);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="w-full bg-[#F8FBFC] rounded-[15px] p-[10px]">
@@ -21,48 +22,53 @@ const ReportTabs = () => {
           scrollbar-hide
         "
       >
-        {tabs.map((tab, index) => (
-          <button
-            key={index}
-            onClick={() => setActiveTab(index)}
-            className={`
-              flex-none
-              md:flex-1
+        {tabs.map((tab) => {
+          const isActive = location.pathname === tab.path;
 
-              min-w-max
-              md:min-w-0
+          return (
+            <button
+              key={tab.path}
+              onClick={() => navigate(tab.path)}
+              className={`
+                flex-none
+                md:flex-1
 
-              px-6
-              md:px-0
+                min-w-max
+                md:min-w-0
 
-              h-[44px]
-              rounded-[15px]
+                px-6
+                md:px-0
 
-              flex
-              items-center
-              justify-center
+                h-[44px]
+                rounded-[15px]
 
-              text-[18px]
-              font-medium
+                flex
+                items-center
+                justify-center
 
-              whitespace-nowrap
+                text-[18px]
+                font-medium
 
-              transition-all
-              duration-300
+                whitespace-nowrap
 
-              ${
-                activeTab === index
-                  ? "bg-[#7BC8C4] text-white"
-                  : "bg-transparent text-[#202124] hover:bg-white"
-              }
-            `}
-          >
-            {tab}
-          </button>
-        ))}
+                transition-all
+                duration-300
+
+                ${
+                  isActive
+                    ? "bg-[#7BC8C4] text-white"
+                    : "bg-transparent text-[#202124] hover:bg-white"
+                }
+              `}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 };
 
 export default ReportTabs;
+
