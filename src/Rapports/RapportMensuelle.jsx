@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
 import Sidebar from "../components/Sidebar/Sidebar";
 import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
 import ReportTabs from "../components/Report/ReportTabs";
@@ -9,10 +10,16 @@ import Download from "../assets/telecharger.svg";
 import CardZakatSummary from "../components/Report/CardZakatSummary";
 import HeaderRapport from "../components/Report/HeaderRapport";
 import StatusCard  from  "../components/Report/ReportBadge";
+import ReportVisitsNutrition from "../components/Report/ReportVisitsNutrition";
+import DistributionItem from "../components/Report/DistributionItem";
 
 const RapportMensuel = () => {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [rapport, setRapport] = useState(null);
+
+  // Contrôle l'affichage mobile : false = on voit juste les mois / boutons,
+  // true = on voit le rapport (partie bleue) en plein écran comme une "screen"
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleMonthChange = async (value) => {
   setSelectedMonth(value);
@@ -31,40 +38,84 @@ const RapportMensuel = () => {
   // setRapport(response.data);
 };
 
-  
+  const products = [
+  {
+    product: "Lait",
+    quantity: 38,
+    unit: "boîtes",
+  },
+  {
+    product: "Céréales",
+    quantity: 38,
+    unit: "Kg",
+  },
+  {
+    product: "Huile",
+    quantity: 6,
+    unit: "Litres",
+  },
+  {
+    product: "Sucre",
+    quantity: 38,
+    unit: "Kg",
+  },
+  {
+    product: "Sel iodé",
+    quantity: 7,
+    unit: "Kg",
+  },
+];
+
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar role="admin" />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10">
-       <NavigationHeader
-        title="Rapports"
-/>
+      <main className="flex-1 h-screen overflow-hidden px-5 pt-18 md:pt-0 pb-8 lg:p-10">
+       <div className={`${showPreview ? "hidden" : "block"} xl:block`}>
+         <NavigationHeader
+          title="Rapports"
+         />
+       </div>
 
-        {/* Onglets */}
-        <div className="mt-6">
+        {/* Onglets : cachés sur mobile quand on est sur la "screen" du rapport (showPreview = true), toujours visibles sur desktop */}
+        <div className={`mt-6 ${showPreview ? "hidden" : "block"} xl:block`}>
           <ReportTabs />
         </div>
 
         {/* Contenu */}
-        <div className="mt-8 flex flex-col xl:flex-row items-start gap-8">
-  
-{/* Partie gauche */}
+     <div className="mt-8 flex flex-col xl:flex-row items-start gap-8 h-[calc(100%-120px)]">
+
+{/* Partie gauche : le rapport (partie bleue)
+    - Mobile / tablette : caché par défaut, affiché seulement quand showPreview = true (agit comme une "screen" à part)
+    - Desktop (xl+) : toujours affiché, à côté du panneau de droite */}
  <div
-  className="
+  className={`
+    ${showPreview ? "flex" : "hidden"}
+    xl:flex
     flex-1
+    h-full
     w-full
     rounded-[15px]
     bg-[#F8FBFC]
-    min-h-[500px]
-    lg:min-h-[650px]
     p-4
     md:p-6
-    flex
     flex-col
     gap-8
-  "
+    overflow-y-auto
+    scrollbar-hide
+  `}
+
 >
+  {/* Bouton "Revenir" : visible seulement en mode preview mobile, caché sur desktop */}
+  <button
+    type="button"
+    onClick={() => setShowPreview(false)}
+    className="flex items-center gap-2 text-[#202124] font-medium xl:hidden"
+  >
+    <X size={18} />
+    Revenir
+  </button>
+
 <div className="mt-4">
   <HeaderRapport
     selectedMonth={selectedMonth}
@@ -86,6 +137,38 @@ const RapportMensuel = () => {
   </div>
 </div>
 
+<div className="mt-6 flex justify-center">
+  <div className="w-full max-w-[720px]">
+    <ReportVisitsNutrition
+      realised={9}
+      planned={21}
+      compliance={43}
+      normal={65}
+      mam={25}
+      mas={10}
+    />
+  </div>
+</div>
+
+
+<div className="mt-6 flex justify-center">
+  <div className="w-full max-w-[720px]">
+    <h2 className="text-[18px] font-semibold text-[#202124] mb-4">
+      Distributions ce mois
+    </h2>
+
+    <div className="space-y-3">
+      {products.map((item, index) => (
+        <DistributionItem
+          key={index}
+          product={item.product}
+          quantity={item.quantity}
+          unit={item.unit}
+        />
+      ))}
+    </div>
+  </div>
+</div>
  <div className=" flex items-center justify-center">
   <CardZakatSummary
     montant="2,450,000 MRU"
@@ -95,49 +178,82 @@ const RapportMensuel = () => {
 
 </div>
 
-    <div
-  className="
-    w-full
-    xl:w-[540px]
-    xl:min-w-[540px]
-
-    flex
-    flex-col
-
-    xl:pt-7
-  "
->
+{/* Partie droite : mois + boutons
+    - Mobile / tablette : affiché par défaut, caché quand showPreview = true (on est sur la "screen" du rapport)
+    - Desktop (xl+) : toujours affiché, à côté du rapport */}
   <div
-  className="h-[48px] rounded-[15px] border flex items-center justify-center"
-  style={{
-    backgroundColor: "#F8F8F8",
-    borderColor: "#818181",
-    color: "#818181",
-  }}
+  className={`
+    ${showPreview ? "hidden" : "flex"}
+    xl:flex
+    w-full
+    h-full
+    xl:w-[420px]
+    2xl:w-[540px]
+    xl:min-w-[380px]
+    2xl:min-w-[540px]
+    flex-col
+    xl:pt-7
+    overflow-y-auto
+    scrollbar-hide
+  `}
 >
-  En attente de vérification
-</div>
+  {/* Titre "En attente de vérification" */}
+  <div
+    className="
+      min-h-[44px] sm:min-h-[48px]
+      rounded-[15px]
+      border
+      flex items-center justify-center
+      text-center
+      px-3
+      py-2
+      text-sm sm:text-base
+      leading-tight
+    "
+    style={{
+      backgroundColor: "#F8F8F8",
+      borderColor: "#818181",
+      color: "#818181",
+    }}
+  >
+    En attente de vérification
+  </div>
 
-<div className="mt-4">
-  <MonthPicker onChange={handleMonthChange} />
-</div>
+  {/* MonthPicker */}
+  <div className="mt-4 w-full">
+    <MonthPicker onChange={handleMonthChange} />
+  </div>
 
-<div className="mt-6 flex flex-col">
-  <Button
-    title="Télécharger PDF"
-    icon={Download}
-    iconPosition="left"
-    variant="telecharger"
-    noPadding
-  />
+  {/* Boutons */}
+<div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
 
-  <Button
+    <div className="xl:hidden">
+      <Button
+        title="Prévoir le rapport"
+        variant="telecharger"
+        onClick={() => setShowPreview(true)}
+        noPadding
+      />
+    </div>
+
+    <Button
+      title="Télécharger PDF"
+      icon={Download}
+      iconPosition="left"
+      variant="telecharger"
+       noPadding
+    />
+ 
+
+ 
+      <Button
     title="Confirmer et envoyer"
     variant="primary"
     noPadding
   />
+ 
 </div>
-          </div>
+</div>
         </div>
       </main>
     </div>
