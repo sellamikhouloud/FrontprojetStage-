@@ -22,6 +22,7 @@ import Galerie from "./Galerie/Galerie";
 import RapportMensuel from "./Rapports/RapportMensuelle";
 import RapportBilan from "./Rapports/RapportDonateur";
 import RapportAnnuel from "./Rapports/RapportAnnuel";
+import Parametres from "./Account/Parametres";
 
 
 function App() {
@@ -107,6 +108,11 @@ function App() {
          <Route
           path="/rapports/annuel" element={<RapportAnnuel/>}
         />
+       {/* Parametres */}
+        <Route
+          path="/parametres" element={<Parametres/>}
+        />
+
 
       </Routes>
     </BrowserRouter>
