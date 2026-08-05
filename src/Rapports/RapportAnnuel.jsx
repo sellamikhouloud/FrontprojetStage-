@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import Sidebar from "../components/Sidebar/Sidebar";
 import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
 import ReportTabs from "../components/Report/ReportTabs";
-import MonthPicker from "../components/Report/MonthPicker";
+import YearPicker from "../components/Report/YearPicker";
 import Button from "../components/Button/Button";
 import Download from "../assets/telecharger.svg";
 import CardZakatSummary from "../components/Report/CardZakatSummary";
@@ -16,7 +16,7 @@ import DistributionItem from "../components/Report/DistributionItem";
 const RapportAnnuel = () => {
   const [selectedYear, setSelectedYear] = useState(null);
   const [rapport, setRapport] = useState(null);
-
+  const [isSent, setIsSent] = useState(false);
 
   const [showPreview, setShowPreview] = useState(false);
 
@@ -183,33 +183,33 @@ const RapportAnnuel = () => {
     scrollbar-hide
   `}
 >
+<div
+  className="
+    min-h-[44px] sm:min-h-[48px]
+    rounded-[15px]
+    border
+    flex items-center justify-center
+    text-center
+    px-3
+    py-2
+    text-sm sm:text-base
+    leading-tight
+    font-semibold
+  "
+  style={{
+    backgroundColor: isSent ? "#B5ECC926" : "#F8F8F8",
+    borderColor: isSent ? "#22C55E" : "#818181",
+    color: isSent ? "#22C55E" : "#818181",
+  }}
+>
+  {isSent ? "Envoyé" : "En attente de vérification"}
+</div>
 
-  <div
-    className="
-      min-h-[44px] sm:min-h-[48px]
-      rounded-[15px]
-      border
-      flex items-center justify-center
-      text-center
-      px-3
-      py-2
-      text-sm sm:text-base
-      leading-tight
-      font-semibold
-    "
-    style={{
-      backgroundColor: "#F8F8F8",
-      borderColor: "#818181",
-      color: "#818181",
-    }}
-  >
-    En attente de vérification
-  </div>
-
-  {/* Sélecteur d'année : reprend MonthPicker en attendant un YearPicker dédié */}
-  <div className="mt-4 w-full">
-    <MonthPicker onChange={handleYearChange} />
-  </div>
+ 
+ {/* Sélecteur d'année */}
+<div className="mt-4 w-full">
+  <YearPicker onChange={handleYearChange} />
+</div>
 
   {/* Boutons */}
 <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
@@ -232,13 +232,17 @@ const RapportAnnuel = () => {
     />
 
 
-
-      <Button
+{!isSent && (
+  <Button
     title="Confirmer et envoyer"
     variant="primary"
     noPadding
+    onClick={() => {
+      // Ici tu pourras appeler ton API
+      setIsSent(true);
+    }}
   />
-
+)}
 </div>
 </div>
         </div>
@@ -248,3 +252,4 @@ const RapportAnnuel = () => {
 };
 
 export default RapportAnnuel;
+
