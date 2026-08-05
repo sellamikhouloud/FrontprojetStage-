@@ -316,7 +316,7 @@ const handleAlertClick = (alert) => {
             subtitle={subtitle}
             NotificationCount={notificationCount}
             onNotificationClick={handleNotifications}
-            onSettingsClick={handleSettings}
+            onSettingsClick={() => navigate("/parametres")}
           />
         </div>
 
@@ -331,7 +331,7 @@ const handleAlertClick = (alert) => {
             subtitle={subtitle}
             NotificationCount={notificationCount}
             onNotificationClick={handleNotifications}
-            onSettingsClick={handleSettings}
+            onSettingsClick={() => navigate("/parametres")}
           />
 
         </div>
