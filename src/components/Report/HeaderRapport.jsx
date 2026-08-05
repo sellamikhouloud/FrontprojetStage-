@@ -17,16 +17,29 @@ const MONTHS = [
 
 export default function HeaderRapport({
   selectedMonth,
+  selectedYear,
   title = "Rapport Mensuel",
 }) {
   const today = new Date();
 
-  const displayedMonth = selectedMonth
-    ? `${selectedMonth.monthName} ${selectedMonth.year}`
-    : `${MONTHS[today.getMonth()]} ${today.getFullYear()}`;
+  let displayedDate = "";
+
+  if (selectedYear) {
+    // Cas du rapport annuel
+    displayedDate =
+      typeof selectedYear === "object"
+        ? selectedYear.year
+        : selectedYear;
+  } else if (selectedMonth) {
+    // Cas du rapport mensuel
+    displayedDate = `${selectedMonth.monthName} ${selectedMonth.year}`;
+  } else {
+    // Valeur par défaut
+    displayedDate = `${MONTHS[today.getMonth()]} ${today.getFullYear()}`;
+  }
 
   return (
- <div className="w-full flex flex-row items-center justify-center gap-24 sm:gap-36 md:gap-56">
+    <div className="w-full flex flex-row items-center justify-center gap-24 sm:gap-36 md:gap-56">
       {/* Partie gauche */}
       <div
         className="flex items-center min-w-0"
@@ -69,7 +82,9 @@ export default function HeaderRapport({
       <div className="flex flex-col items-end flex-shrink-0">
         <h3
           className="font-semibold text-[#202124] leading-tight whitespace-nowrap"
-          style={{ fontSize: "clamp(11px, 3.2vw, 22px)" }}
+          style={{
+            fontSize: "clamp(11px, 3.2vw, 22px)",
+          }}
         >
           {title}
         </h3>
@@ -89,7 +104,7 @@ export default function HeaderRapport({
               fontSize: "clamp(10px, 2.8vw, 18px)",
             }}
           >
-            {displayedMonth}
+            {displayedDate}
           </span>
         </div>
       </div>
