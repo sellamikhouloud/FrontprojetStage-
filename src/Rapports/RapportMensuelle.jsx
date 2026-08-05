@@ -16,6 +16,7 @@ import DistributionItem from "../components/Report/DistributionItem";
 const RapportMensuel = () => {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [rapport, setRapport] = useState(null);
+   const [isSent, setIsSent] = useState(false);
 
   // Contrôle l'affichage mobile : false = on voit juste les mois / boutons,
   // true = on voit le rapport (partie bleue) en plein écran comme une "screen"
@@ -194,27 +195,28 @@ const RapportMensuel = () => {
   `}
 >
 
+ 
   <div
-    className="
-      min-h-[44px] sm:min-h-[48px]
-      rounded-[15px]
-      border
-      flex items-center justify-center
-      text-center
-      px-3
-      py-2
-      text-sm sm:text-base
-      leading-tight
-      font-semibold
-    "
-    style={{
-      backgroundColor: "#F8F8F8",
-      borderColor: "#818181",
-      color: "#818181",
-    }}
-  >
-    En attente de vérification
-  </div>
+  className="
+    min-h-[44px] sm:min-h-[48px]
+    rounded-[15px]
+    border
+    flex items-center justify-center
+    text-center
+    px-3
+    py-2
+    text-sm sm:text-base
+    leading-tight
+    font-semibold
+  "
+  style={{
+    backgroundColor: isSent ? "#B5ECC926" : "#F8F8F8",
+    borderColor: isSent ? "#22C55E" : "#818181",
+    color: isSent ? "#22C55E" : "#818181",
+  }}
+>
+  {isSent ? "Envoyé" : "En attente de vérification"}
+</div>
 
   {/* MonthPicker */}
   <div className="mt-4 w-full">
@@ -242,12 +244,17 @@ const RapportMensuel = () => {
     />
  
 
- 
-      <Button
+  {!isSent && (
+  <Button
     title="Confirmer et envoyer"
     variant="primary"
     noPadding
+    onClick={() => {
+      // Ici tu pourras appeler ton API
+      setIsSent(true);
+    }}
   />
+)}
  
 </div>
 </div>
