@@ -13,12 +13,18 @@ import StatusCard  from  "../components/Report/ReportBadge";
 import ReportVisitsNutrition from "../components/Report/ReportVisitsNutrition";
 import DistributionItem from "../components/Report/DistributionItem";
 import TextArea  from "../components/Containers/Textarea";
+import PhotoTerrain from "../assets/photo terrain.png";
 
 const RapportBilan  = () => {
   const [selectedMonth, setSelectedMonth] = useState(null);
   const [rapport, setRapport] = useState(null);
-
+  const [isSent, setIsSent] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const terrainPhotos = [
+  PhotoTerrain,
+  PhotoTerrain,
+  PhotoTerrain,
+];
    const [narrativeMessage, setNarrativeMessage] = useState("");
   const handleMonthChange = async (value) => {
   setSelectedMonth(value);
@@ -181,9 +187,34 @@ const RapportBilan  = () => {
     familles={32}
   />
 </div>
+<div className="h-20 bg-white"></div>
+{/* Deuxième page : Photos de terrain */}
+<div className="mt-20 flex justify-center">
+  <div className="w-full max-w-[720px] rounded-[15px] bg-[#F8FBFC] p-6">
+    <HeaderRapport
+      selectedMonth={selectedMonth}
+      title="Bilan donateurs"
+    />
+
+    <div className="mt-8 space-y-6">
+      {terrainPhotos.map((photo, index) => (
+        <img
+          key={index}
+          src={photo}
+          alt={`Photo terrain ${index + 1}`}
+          className="w-full rounded-[10px] object-cover"
+        />
+      ))}
+    </div>
+  </div>
+</div>
+
 
 </div>
 
+
+
+ 
 {/* Partie droite  */}
  <div
   className={`
@@ -202,26 +233,26 @@ const RapportBilan  = () => {
 >
 
   <div
-    className="
-      min-h-[44px] sm:min-h-[48px]
-      rounded-[15px]
-      border
-      flex items-center justify-center
-      text-center
-      px-3
-      py-2
-      text-sm sm:text-base
-      leading-tight
-      font-semibold
-    "
-    style={{
-      backgroundColor: "#F8F8F8",
-      borderColor: "#818181",
-      color: "#818181",
-    }}
-  >
-    En attente de vérification
-  </div>
+  className="
+    min-h-[44px] sm:min-h-[48px]
+    rounded-[15px]
+    border
+    flex items-center justify-center
+    text-center
+    px-3
+    py-2
+    text-sm sm:text-base
+    leading-tight
+    font-semibold
+  "
+  style={{
+    backgroundColor: isSent ? "#B5ECC926" : "#F8F8F8",
+    borderColor: isSent ? "#22C55E" : "#818181",
+    color: isSent ? "#22C55E" : "#818181",
+  }}
+>
+  {isSent ? "Envoyé" : "En attente de vérification"}
+</div>
 
 <div className="mt-8">
   <TextArea
@@ -257,12 +288,17 @@ const RapportBilan  = () => {
     />
  
 
- 
-      <Button
+ {!isSent && (
+  <Button
     title="Confirmer et envoyer"
     variant="primary"
     noPadding
+    onClick={() => {
+      // Ici tu pourras appeler ton API
+      setIsSent(true);
+    }}
   />
+)}
  
 </div>
 </div>
@@ -273,3 +309,4 @@ const RapportBilan  = () => {
 };
 
 export default RapportBilan;
+
