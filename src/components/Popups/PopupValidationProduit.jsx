@@ -5,6 +5,7 @@ import SuccessBanner from "./SuccessBanner";
 import PageHeader from "../Navigation,Pageheader/PageHeader";
 import Button from "../Button/Button";
 import trash from "../../assets/Delete.svg";
+import quitter from "../../assets/quitter.svg";
 
 export default function PopupValidationProduit({
   open,
@@ -117,16 +118,47 @@ export default function PopupValidationProduit({
             borderColor: "#4E9F8A",
           }}
         >
-          {/* Fermer — via PageHeader */}
-          <PageHeader
-            leftTitle="Fermer"
-            showRight={false}
-            onBack={handleClose}
-          />
+       
 
-          <h2 className="text-center text-[22px] sm:text-[24px] font-bold mt-2">
-            Validation de Produit
-          </h2>
+           {/* Header */}
+                  <div className="mb-5 shrink-0">
+                    <button
+                      onClick={onClose}
+                      className="
+                        flex
+                        items-center
+                        gap-2
+      
+                        text-[16px]
+                        sm:text-[17px]
+      
+                        hover:opacity-70
+                        transition
+                      "
+                    >
+                      <img
+                        src={quitter}
+                        alt="Fermer"
+                        className="w-5 h-5"
+                      />
+                      Fermer
+                    </button>
+      
+                    <h2
+                      className="
+                        mt-5
+                        text-center
+      
+                        text-[22px]
+                        sm:text-[24px]
+      
+                        font-bold
+                        text-[#000000]
+                      "
+                    >
+                      Validation de Produit
+                    </h2>
+                  </div>
 
           {/* Bloc produit : nom + date + enregistré par */}
           <div
@@ -141,11 +173,11 @@ export default function PopupValidationProduit({
             "
           >
             <div className="flex items-center justify-between">
-              <p className="text-[18px] font-bold text-[#202124]">
+              <p className="text-[18px] font-bold text-[#000000]">
                 {produit.nom}
               </p>
               {produit.date && (
-                <p className="text-[14px] font-medium text-[#202124]">
+                <p className="text-[14px] font-medium text-[#000000]">
                   {produit.date}
                 </p>
               )}
@@ -156,7 +188,7 @@ export default function PopupValidationProduit({
                 <span className="text-[14px] font-semibold text-[#4E9F8A]">
                   enregistré par
                 </span>
-                <span className="text-[14px] text-[#202124]">
+                <span className="text-[14px] text-[#000000]">
                   {produit.enregistrePar}
                 </span>
               </div>
