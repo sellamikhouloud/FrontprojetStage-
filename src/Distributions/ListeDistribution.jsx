@@ -13,6 +13,7 @@ import CardListDistribution from "../components/Cards/CarteListeDistribution";
 import StockCard from "../components/Cards/StockCard";
 import StockPopup from "../components/Popups/StockPopup";
 import PopupValidationProduit from "../components/Popups/PopupValidationProduit";
+import PopupHistoriqueProduit from "../components/Popups/Popuphistoriqueproduit";
 import NoResultImage from "../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -23,6 +24,8 @@ export default function DistributionPage() {
   const navigate = useNavigate();
   const [showValidation, setShowValidation] = useState(false);
 const [produitSelectionne, setProduitSelectionne] = useState(null);
+const [showHistorique, setShowHistorique] = useState(false);
+const [produitHistorique, setProduitHistorique] = useState(null);
 const [filters, setFilters] = useState({
   
   dateDebut: null,
@@ -141,20 +144,61 @@ const [products, setProducts] = useState([
     statut: "valide",
   },
 ]);
-const handleCardClick = (item, index) => {
-  if (role === "admin" && item.statut === "en_attente") {
-    setProduitSelectionne({
-      id: index,
-      nom: item.nom,
-      quantite: item.quantity,
-      unite: item.unite,
-      date: item.date,
-      enregistrePar: item.enregistrePar,
-    });
-    setShowValidation(true);
-  }
+
+// Mock — à remplacer plus tard par un vrai fetch backend
+const historiqueParProduit = {
+  "Lait": [
+    { id: 1, type: "ajout", quantite: 20, unite: "boîtes", par: "Coordinateur Ahmed", date: "10/06/2026" },
+    { id: 2, type: "retrait", quantite: 5, unite: "boîtes", par: "Coordinateur sarah", date: "12/06/2026" },
+    { id: 3, type: "ajout", quantite: 23, unite: "boîtes", par: "Coordinateur Ahmed", date: "18/06/2026" },
+  ],
+  "Céréales": [
+    { id: 1, type: "ajout", quantite: 40, unite: "Kg", par: "Coordinateur Sarah", date: "05/06/2026" },
+    { id: 2, type: "retrait", quantite: 2, unite: "Kg", par: "Coordinateur ahmed", date: "08/06/2026" },
+  ],
+  "Huile": [
+    { id: 1, type: "ajout", quantite: 38, unite: "Litres", par: "Coordinateur Ahmed", date: "01/06/2026" },
+  ],
+  "Sucre": [
+    { id: 1, type: "ajout", quantite: 30, unite: "Kg", par: "Coordinateur Sarah", date: "03/06/2026" },
+    { id: 2, type: "retrait", quantite: 8, unite: "Kg", par: "Coordinateur ahmed", date: "09/06/2026" },
+    { id: 3, type: "ajout", quantite: 16, unite: "Kg", par: "Coordinateur Sarah", date: "15/06/2026" },
+    { id: 1, type: "ajout", quantite: 30, unite: "Kg", par: "Coordinateur Sarah", date: "03/06/2026" },
+    { id: 2, type: "retrait", quantite: 8, unite: "Kg", par: "Coordinateur ahmed", date: "09/06/2026" },
+    { id: 3, type: "ajout", quantite: 16, unite: "Kg", par: "Coordinateur Sarah", date: "15/06/2026" },
+  ],
+  "Sel iodé": [
+    { id: 1, type: "ajout", quantite: 38, unite: "Kg", par: "Coordinateur Ahmed", date: "12/06/2026" },
+  ],
+  "Légumineuses": [
+    { id: 1, type: "ajout", quantite: 25, unite: "Kg", par: "Coordinateur Sarah", date: "02/06/2026" },
+    { id: 2, type: "retrait", quantite: 3, unite: "Kg", par: "Coordinateur Sarah", date: "07/06/2026" },
+    { id: 3, type: "ajout", quantite: 16, unite: "Kg", par: "Coordinateur Ahmed", date: "14/06/2026" },
+  ],
 };
 
+const handleCardClick = (item, index) => {
+  if (item.statut === "en_attente") {
+    if (role === "admin") {
+      setProduitSelectionne({
+        id: index,
+        nom: item.nom,
+        quantite: item.quantity,
+        unite: item.unite,
+        date: item.date,
+        enregistrePar: item.enregistrePar,
+      });
+      setShowValidation(true);
+    }
+  } else {
+    setProduitHistorique({
+      nom: item.nom,
+      unite: item.unite,
+      mouvements: historiqueParProduit[item.nom] || [],
+    });
+    setShowHistorique(true);
+  }
+};
 const filtered = distributions.filter((item) => {
   const keyword = search.toLowerCase();
 
@@ -374,18 +418,17 @@ const grammage =
          {/* Stock cards */}
  <div className="mt-6 mb-5 w-full overflow-x-auto scrollbar-hide">
   <div className="flex gap-[4px] md:gap-[10px] w-max">
-    {products.map((item, index) => (
-      <StockCard
-        key={index}
-        nom={item.nom}
-        quantity={item.quantity}
-        unite={item.unite}
-        statut={item.statut}
-
-        showStatusColor={isAdmin}
-        onClick={isAdmin ? () => handleCardClick(item, index) : undefined}
-      />
-    ))}
+   {products.map((item, index) => (
+  <StockCard
+    key={index}
+    nom={item.nom}
+    quantity={item.quantity}
+    unite={item.unite}
+    statut={item.statut}
+    showStatusColor={isAdmin}
+    onClick={() => handleCardClick(item, index)}
+  />
+))}
   </div>
 </div>
 
@@ -523,6 +566,15 @@ const grammage =
       prev.map((p, i) => (i === id ? { ...p, statut: "refuse" } : p))
     );
     setProduitSelectionne(null);
+  }}
+/>
+<PopupHistoriqueProduit
+  open={showHistorique}
+  produit={produitHistorique}
+  historique={produitHistorique?.mouvements || []}
+  onClose={() => {
+    setShowHistorique(false);
+    setProduitHistorique(null);
   }}
 />
       </main>
