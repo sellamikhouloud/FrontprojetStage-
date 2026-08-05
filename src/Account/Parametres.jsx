@@ -1,0 +1,1051 @@
+import { useState } from "react";
+import PageHeader from "../components/Navigation,Pageheader/PageHeader";
+import omsInfo from "../assets/oms-info.svg";
+import {
+  AiOutlineInfoCircle,
+  AiOutlineReload,
+  AiOutlineBell,
+  AiOutlineDown,
+  AiOutlineLineChart,
+} from "react-icons/ai";
+import { HiOutlineCurrencyEuro } from "react-icons/hi";
+import OptionsMenu from "../components/Containers/OptionsMenu";
+import Button from "../components/Button/Button";
+import { useNavigate } from "react-router-dom";
+
+export default function Parametres({ onClose }) {
+  const navigate = useNavigate();
+  const [taux, setTaux] = useState("0.022");
+  const [rappelOuvert, setRappelOuvert] = useState(false);
+
+  const [frequenceRappel, setFrequenceRappel] =
+    useState("Tous les mois");
+
+  const optionsFrequence = [
+    "Tous les mois",
+    "Tous les 2 mois",
+    "Tous les 3 mois",
+    "Désactivé",
+  ];
+  const [scoreMAMMin, setScoreMAMMin] = useState("-3");
+  const [scoreMAMMax, setScoreMAMMax] = useState("-2");
+
+  const [scoreMAS, setScoreMAS] = useState("-3");
+
+  const [muacMAM, setMuacMAM] = useState("115");
+  const [muacMAS, setMuacMAS] = useState("110");
+
+  const handleTauxChange = (e) => {
+    const value = e.target.value;
+
+
+    // Autorise uniquement les nombres avec décimales
+    if (/^\d*\.?\d*$/.test(value)) {
+      setTaux(value);
+    }
+  };
+
+  const handleUpdate = () => {
+    if (!taux) return;
+
+    console.log("Nouveau taux :", taux);
+
+    // Ici tu mets ta logique de sauvegarde
+    // updateTauxChange(taux);
+  };
+
+  const handleSave = () => {
+  console.log("Paramètres enregistrés :", {
+    taux,
+    frequenceRappel,
+    scoreMAMMin,
+    scoreMAMMax,
+    scoreMAS,
+    muacMAM,
+    muacMAS,
+  });
+
+  // Ici ta logique de sauvegarde
+};
+
+  return (
+    <div className="
+      min-h-screen
+      bg-white
+      px-6
+      sm:px-10
+      lg:px-20
+      pt-8
+      pb-6
+      sm:pb-0
+      sm:pt-5
+    ">
+      
+      {/* ================================
+          HEADER
+      ================================= */}
+      <PageHeader
+        leftTitle="Fermer"
+        showRight={false}
+        onBack={() => navigate("/dashboard")}
+      />
+
+      {/* ================================
+          TITRE
+      ================================= */}
+      <h1
+        className="
+          mt-1
+          text-[24px]
+          sm:text-[26px]
+          font-semibold
+          text-[#000000]
+        "
+      >
+        Paramètres
+      </h1>
+
+      {/* ================================
+    TAUX DE CHANGE
+================================= */}
+<div
+  className="
+    mt-2
+    w-full
+    rounded-[12px]
+    border
+    border-[#7BC8C4]
+    bg-white
+
+    px-5
+    py-4
+
+    sm:px-6
+    sm:py-[15px]
+  "
+>
+  {/* --------------------------------
+      PARTIE 1
+  --------------------------------- */}
+  <div
+    className="
+      flex
+      flex-col
+      gap-2
+
+      sm:flex-row
+      sm:items-center
+      sm:justify-between
+      sm:gap-4
+    "
+  >
+    {/* Icon + titre */}
+    <div className="flex items-center gap-4">
+
+      {/* Cercle */}
+      <div
+        className="
+          w-[50px]
+          h-[50px]
+          shrink-0
+          rounded-full
+          bg-[#EAF7F3]
+          flex
+          items-center
+          justify-center
+          text-[#4E9F8A]
+        "
+      >
+        <HiOutlineCurrencyEuro className="text-[32px]" />
+      </div>
+
+      {/* Titre */}
+   <div
+  className="
+    flex
+    items-center
+    gap-3
+
+    sm:block
+  "
+>
+  <h2
+    className="
+      text-[20px]
+      font-semibold
+      leading-tight
+      text-[#346A5C]
+    "
+  >
+    Taux de change
+  </h2>
+
+  <p
+    className="
+      text-[18px]
+      leading-tight
+      text-[#3E4946]
+      whitespace-nowrap
+
+      sm:mt-1
+    "
+  >
+    EUR/MRU
+  </p>
+</div>
+    </div>
+
+    {/* Dernière mise à jour */}
+    <div
+      className="
+        flex
+        items-center
+        gap-2
+        text-left
+
+        sm:flex-col
+        sm:items-end
+        sm:gap-0
+        sm:text-right
+      "
+    >
+      <p className="text-[14px] sm:text-[16px] text-[#3E4946]">
+        Dernière mise à jour
+      </p>
+
+      <p className="text-[14px] sm:text-[16px] text-[#3E4946]">
+        12 juin 2026
+      </p>
+    </div>
+  </div>
+
+  {/* 16px entre les parties */}
+  <div className="mt-4" />
+
+  {/* --------------------------------
+      PARTIE 2
+  --------------------------------- */}
+  <div
+    className="
+      w-full
+      rounded-[10px]
+      bg-[#F7F9F8]
+
+      px-4
+      py-4
+
+      sm:px-4
+      sm:py-3
+    "
+  >
+    <p
+      className="
+        text-[16px]
+        text-[#3E4946]
+      "
+    >
+      1 Ouguiya (MRU) équivaut à
+    </p>
+
+    <div
+      className="
+        mt-3
+        flex
+        flex-col
+        items-start
+        gap-3
+
+        sm:flex-row
+        sm:items-center
+        sm:gap-3
+      "
+    >
+      {/* Container valeur */}
+      <div
+        className="
+          flex
+          items-center
+
+          w-full
+          h-[40px]
+
+          sm:w-[270px]
+
+          rounded-[10px]
+          border
+          border-[#7BC8C4]
+          bg-white
+          px-2
+        "
+      >
+        <input
+          type="text"
+          inputMode="decimal"
+          value={taux}
+          onChange={handleTauxChange}
+          className="
+            flex-1
+            min-w-0
+            w-full
+            bg-transparent
+            text-[18px]
+            text-[#346A5C]
+            outline-none
+          "
+        />
+
+        <span
+          className="
+            shrink-0
+            text-[18px]
+            font-medium
+            text-[#4E9F8A]
+            select-none
+          "
+        >
+          EUR
+        </span>
+      </div>
+
+      {/* Bouton */}
+      <button
+        type="button"
+        onClick={handleUpdate}
+        className="
+          h-[40px]
+          px-4
+
+          rounded-full
+          bg-[#4E9F8A]
+
+          text-white
+          text-[14px]
+          font-semibold
+
+          flex
+          items-center
+          justify-center
+          gap-1.5
+
+          hover:bg-[#428E7B]
+          active:scale-[0.98]
+          transition
+
+          sm:ml-auto
+        "
+      >
+        <AiOutlineReload className="text-[16px]" />
+        Mettre à jour
+      </button>
+    </div>
+  </div>
+
+  {/* 16px entre les parties */}
+  <div className="mt-4" />
+
+  {/* --------------------------------
+      PARTIE 3
+  --------------------------------- */}
+  <div
+    className="
+      flex
+      items-start
+      gap-2
+      text-[#3E4946]
+    "
+  >
+    <AiOutlineInfoCircle
+      className="
+        text-[18px]
+        shrink-0
+        mt-[1px]
+      "
+    />
+
+    <p className="text-[14px] leading-[1.4]">
+      Utilisé pour toutes les conversions affichées
+      (Zakat, bilans, rapports).
+    </p>
+  </div>
+</div>
+{/* =========================================
+    RAPPEL DE VÉRIFICATION DU TAUX
+========================================= */}
+<div
+  className="
+    mt-4
+    w-full
+    rounded-[8px]
+    border
+    border-[#7BC8C4]
+    bg-white
+
+    px-5
+    py-4
+
+    sm:px-6
+    sm:py-[15px]
+  "
+>
+{/* =====================================
+    MOBILE
+====================================== */}
+<div className="sm:hidden">
+
+{/* Icon + titre */}
+<div className="flex items-center gap-4">
+
+  {/* Icône cloche */}
+  <div
+    className="
+      w-[50px]
+      h-[50px]
+      shrink-0
+      rounded-full
+      bg-[#FFF4DD]
+      flex
+      items-center
+      justify-center
+      text-[#F59E0B]
+    "
+  >
+    <AiOutlineBell className="text-[28px]" />
+  </div>
+
+  {/* Titre uniquement */}
+  <div>
+    <h2
+      className="
+        text-[20px]
+        font-semibold
+        leading-tight
+        text-[#346A5C]
+      "
+    >
+      Rappel de vérification du taux
+    </h2>
+  </div>
+</div>
+
+{/* Sous-titre BELOW icon + titre */}
+<p
+  className="
+    mt-1
+    text-[16px]
+    leading-tight
+    text-[#3E4946]
+  "
+>
+  Fréquence de notification système
+</p>
+
+{/* Selecteur */}
+<div className="relative mt-4 flex justify-center">
+
+  <button
+    type="button"
+    onClick={() =>
+      setRappelOuvert((prev) => !prev)
+    }
+    className="
+      h-[50px]
+      w-[220px]
+      px-4
+      rounded-[16px]
+      border
+      border-[#7BC8C4]
+      bg-white
+
+      flex
+      items-center
+      justify-between
+
+      text-[18px]
+      text-[#3E4946]
+
+      hover:bg-[#F7F9F8]
+      transition
+    "
+  >
+    <span>
+      {frequenceRappel}
+    </span>
+
+    <AiOutlineDown
+      className={`
+        text-[20px]
+        transition-transform
+        ${rappelOuvert ? "rotate-180" : ""}
+      `}
+    />
+  </button>
+
+  <OptionsMenu
+    open={rappelOuvert}
+    onClose={() => setRappelOuvert(false)}
+    options={optionsFrequence}
+    onSelect={(value) => {
+      setFrequenceRappel(value);
+    }}
+    position="top-[56px] left-1/2 -translate-x-1/2"
+    width="w-[220px]"
+  />
+</div>
+</div>
+
+  {/* =====================================
+      DESKTOP
+  ====================================== */}
+  <div
+    className="
+      hidden
+      sm:flex
+      items-center
+      justify-between
+      gap-4
+    "
+  >
+
+    {/* GAUCHE */}
+    <div className="flex items-center gap-4">
+
+      {/* Icône cloche */}
+      <div
+        className="
+          w-[50px]
+          h-[50px]
+          shrink-0
+          rounded-full
+          bg-[#FFF4DD]
+          flex
+          items-center
+          justify-center
+          text-[#F59E0B]
+        "
+      >
+        <AiOutlineBell className="text-[28px]" />
+      </div>
+
+      {/* Texte */}
+      <div>
+        <h2
+          className="
+            text-[20px]
+            font-semibold
+            leading-tight
+            text-[#346A5C]
+          "
+        >
+          Rappel de vérification du taux
+        </h2>
+
+        <p
+          className="
+            mt-1
+            text-[16px]
+            leading-tight
+            text-[#3E4946]
+          "
+        >
+          Fréquence de notification système
+        </p>
+      </div>
+    </div>
+
+
+    {/* DROITE — SELECTEUR */}
+    <div className="relative shrink-0">
+
+      <button
+        type="button"
+        onClick={() =>
+          setRappelOuvert((prev) => !prev)
+        }
+        className="
+          h-[40px]
+          min-w-[150px]
+          px-3
+          rounded-[10px]
+          border
+          border-[#B8DDD5]
+          bg-white
+
+          flex
+          items-center
+          justify-between
+          gap-3
+
+          text-[14px]
+          text-[#3E4946]
+
+          hover:bg-[#F7F9F8]
+          transition
+        "
+      >
+        <span>
+          {frequenceRappel}
+        </span>
+
+        <AiOutlineDown
+          className={`
+            text-[16px]
+            transition-transform
+            ${rappelOuvert ? "rotate-180" : ""}
+          `}
+        />
+      </button>
+
+      <OptionsMenu
+        open={rappelOuvert}
+        onClose={() => setRappelOuvert(false)}
+        options={optionsFrequence}
+        onSelect={(value) => {
+          setFrequenceRappel(value);
+        }}
+        position="top-[46px] right-0"
+        width="w-[190px]"
+      />
+    </div>
+
+  </div>
+
+</div>
+
+{/* =========================================
+    SEUILS D'ALERTE NUTRITIONNELLE
+========================================= */}
+<div
+  className="
+    mt-4
+    w-full
+    rounded-[8px]
+    border
+    border-[#7BC8C4]
+    bg-white
+   
+    sm: px-6
+    py-[15px]
+  "
+>
+  {/* =====================================
+      HEADER
+  ====================================== */}
+{/* =========================================
+    HEADER — MOBILE / DESKTOP
+========================================= */}
+
+{/* =========================================
+    SEUILS D'ALERTE NUTRITIONNELLE
+========================================= */}
+
+<div className="flex flex-col">
+
+  {/* =====================================
+      ICON + TITRE
+      Desktop : comportement original
+      Mobile : icon + titre sur la même ligne
+  ====================================== */}
+  <div className="flex items-center gap-4 sm:items-start">
+
+    {/* Icon */}
+    <div
+      className="
+        w-[50px]
+        h-[50px]
+        shrink-0
+        rounded-full
+        bg-[#EEF4FF]
+        flex
+        items-center
+        justify-center
+        text-[#3478F6]
+      "
+    >
+      <AiOutlineLineChart className="text-[28px]" />
+    </div>
+
+    {/* Titre */}
+    <div>
+      <h2
+        className="
+          text-[20px]
+          font-semibold
+          leading-tight
+          text-[#346A5C]
+        "
+      >
+        Seuils d'alerte nutritionnelle
+      </h2>
+    </div>
+
+  </div>
+
+  {/* =====================================
+      SOUS-TITRE
+
+      Mobile : sous l'icon + titre
+      Desktop : retour à sa position originale
+  ====================================== */}
+  <p
+    className="
+      mt-3
+      sm:-mt-4
+      text-[16px]
+      leading-none
+      text-[#3E4946]
+
+      sm:ml-[66px]
+    "
+  >
+    Détermine les statuts MAM / MAS calculés automatiquement
+  </p>
+
+</div>
+  {/* =====================================
+      GRID DES SEUILS
+  ====================================== */}
+  <div
+    className="
+      mt-6
+      grid
+      grid-cols-1
+      lg:grid-cols-2
+      gap-3
+    "
+  >
+
+    {/* -------------------------------------
+        SCORE Z — MAM
+    -------------------------------------- */}
+    <div
+      className="
+        rounded-[10px]
+        bg-[#F7F9F8]
+        px-3
+        py-3
+      "
+    >
+      <p
+        className="
+          text-[13px]
+          font-semibold
+          uppercase
+          tracking-wide
+          text-[#3E4946]
+        "
+      >
+        SCORE Z — MAM
+      </p>
+
+      <div className="mt-2 flex items-center gap-2">
+
+        {/* Minimum */}
+        <div
+          className="
+            flex-1
+            h-[32px]
+            rounded-[10px]
+            border
+            border-[#7BC8C4]
+            bg-white
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <input
+            type="text"
+            inputMode="decimal"
+            value={scoreMAMMin}
+            onChange={(e) => setScoreMAMMin(e.target.value)}
+            className="
+              w-full
+              text-center
+              bg-transparent
+              text-[16px]
+              font-semibold
+              text-[#418573]
+              outline-none
+            "
+          />
+        </div>
+
+        <span className="text-[16px] text-[#3E4946]">
+          à
+        </span>
+
+        {/* Maximum */}
+        <div
+          className="
+            flex-1
+            h-[32px]
+            rounded-[10px]
+            border
+            border-[#7BC8C4]
+            bg-white
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <input
+            type="text"
+            inputMode="decimal"
+            value={scoreMAMMax}
+            onChange={(e) => setScoreMAMMax(e.target.value)}
+            className="
+              w-full
+              text-center
+              bg-transparent
+              text-[16px]
+              font-semibold
+              text-[#418573]
+              outline-none
+            "
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* -------------------------------------
+        SCORE Z — MAS
+    -------------------------------------- */}
+    <div
+      className="
+        rounded-[10px]
+        bg-[#F7F9F8]
+        px-3
+        py-3
+      "
+    >
+      <p
+        className="
+          text-[13px]
+          font-semibold
+          uppercase
+          tracking-wide
+          text-[#3E4946]
+        "
+      >
+        SCORE Z — MAS (INF. À)
+      </p>
+
+      <div
+        className="
+          mt-2
+          h-[32px]
+          rounded-[10px]
+          border
+          border-[#7BC8C4]
+          bg-white
+          flex
+          items-center
+          justify-center
+        "
+      >
+        <input
+          type="text"
+          inputMode="decimal"
+          value={scoreMAS}
+          onChange={(e) => setScoreMAS(e.target.value)}
+          className="
+            w-full
+            text-center
+            bg-transparent
+            text-[16px]
+            font-semibold
+            text-[#418573]
+            outline-none
+          "
+        />
+      </div>
+    </div>
+
+    {/* -------------------------------------
+        MUAC — MAM
+    -------------------------------------- */}
+    <div
+      className="
+        rounded-[10px]
+        bg-[#F7F9F8]
+        px-3
+        py-3
+      "
+    >
+      <p
+        className="
+          text-[13px]
+          font-semibold
+          uppercase
+          tracking-wide
+          text-[#3E4946]
+        "
+      >
+        MUAC — SEUIL MAM
+      </p>
+
+      <div
+        className="
+          mt-2
+          h-[32px]
+          rounded-[10px]
+          border
+          border-[#7BC8C4]
+          bg-white
+          flex
+          items-center
+          px-3
+        "
+      >
+        <input
+          type="text"
+          inputMode="numeric"
+          value={muacMAM}
+          onChange={(e) => setMuacMAM(e.target.value)}
+          className="
+            flex-1
+            min-w-0
+            text-center
+            bg-transparent
+            text-[16px]
+            font-semibold
+            text-[#418573]
+            outline-none
+          "
+        />
+
+        <span
+          className="
+            text-[14px]
+            font-medium
+            text-[#418573]
+          "
+        >
+          mm
+        </span>
+      </div>
+    </div>
+
+    {/* -------------------------------------
+        MUAC — MAS
+    -------------------------------------- */}
+    <div
+      className="
+        rounded-[10px]
+        bg-[#F7F9F8]
+        px-3
+        py-3
+      "
+    >
+      <p
+        className="
+          text-[13px]
+          font-semibold
+          uppercase
+          tracking-wide
+          text-[#3E4946]
+        "
+      >
+        MUAC — SEUIL MAS
+      </p>
+
+      <div
+        className="
+          mt-2
+          h-[32px]
+          rounded-[10px]
+          border
+          border-[#7BC8C4]
+          bg-white
+          flex
+          items-center
+          px-3
+        "
+      >
+        <input
+          type="text"
+          inputMode="numeric"
+          value={muacMAS}
+          onChange={(e) => setMuacMAS(e.target.value)}
+          className="
+            flex-1
+            min-w-0
+            text-center
+            bg-transparent
+            text-[16px]
+            font-semibold
+            text-[#418573]
+            outline-none
+          "
+        />
+
+        <span
+          className="
+            text-[14px]
+            font-medium
+            text-[#418573]
+          "
+        >
+          mm
+        </span>
+      </div>
+    </div>
+  </div>
+
+  {/* =====================================
+      INFORMATION OMS
+  ====================================== */}
+  <div
+    className="
+      mt-6
+      min-h-[38px]
+      rounded-[10px]
+      border
+      border-[#22C55E]
+      bg-[#E8F7EF]
+      px-4
+      py-1
+      flex
+      items-center
+      gap-3
+    "
+  >
+    <img
+  src={omsInfo}
+  alt=""
+  className="
+    w-[26px]
+    h-[26px]
+    shrink-0
+    object-contain
+  "
+/>
+
+    <p
+      className="
+        text-[14px]
+        text-[#3E4946]
+        font-semibold
+      "
+    >
+      Basés par défaut sur les tables OMS 2006.
+      La modification affecte le calcul automatique
+      du statut nutritionnel pour toutes les visites.
+    </p>
+  </div>
+</div>
+
+ <div className="mt-2 pb-0 w-full">
+  <Button
+    title="Enregistrer les paramètres"
+    variant="save"
+    onClick={handleSave}
+    fullWidth={true}
+    noWrapperPadding
+  />
+</div>
+
+
+    </div>
+  );
+}
