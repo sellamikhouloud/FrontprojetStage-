@@ -426,18 +426,16 @@ const handleAlertClick = (alert) => {
           />
 
 
-
           <ZakatCard
-            title={zakatTitle}
-            remainingBalanceMRU={remainingBalanceMRU}
-            remainingBalanceEUR={remainingBalanceEUR}
-            monthlyDistributedMRU={monthlyDistributedMRU}
-            monthlyDistributedEUR={monthlyDistributedEUR}
-            beneficiaryFamilies={beneficiaryFamilies}
-            exchangeRate={exchangeRate}
-            onClick={()=>console.log("Zakat")}
+            variant="admin"
+            title="Zakat aid"
+            remainingBalanceMRU="34 000,00 MRU"
+            remainingBalanceEUR="500 Euros"
+            monthlyDistributedMRU="15 000 MRU"
+            monthlyDistributedEUR="220 Euros"
+            beneficiaryFamilies="42"
+            exchangeRate="1 € = 68 MRU"
           />
-
 
 
           <DonorCard
@@ -481,11 +479,11 @@ const handleAlertClick = (alert) => {
 
           <div className="flex flex-col gap-[18px]">
 
-<FamilyStatusCard
-  title={familyStatusTitle}
-  stats={familyStats}
-  onClick={() => navigate("/liste-famille")}
-/>
+            <FamilyStatusCard
+              title={familyStatusTitle}
+              stats={familyStats}
+              onClick={() => navigate("/liste-famille")}
+            />
 
 
             <NutritionCard
@@ -543,14 +541,14 @@ const handleAlertClick = (alert) => {
 
 
             <ZakatCard
-              title={zakatTitle}
-              remainingBalanceMRU={remainingBalanceMRU}
-              remainingBalanceEUR={remainingBalanceEUR}
-              monthlyDistributedMRU={monthlyDistributedMRU}
-              monthlyDistributedEUR={monthlyDistributedEUR}
-              beneficiaryFamilies={beneficiaryFamilies}
-              exchangeRate={exchangeRate}
-              onClick={()=>console.log("Zakat")}
+              variant="admin"
+              title="Zakat aid"
+              remainingBalanceMRU="34 000,00 MRU"
+              remainingBalanceEUR="500 Euros"
+              monthlyDistributedMRU="15 000 MRU"
+              monthlyDistributedEUR="220 Euros"
+              beneficiaryFamilies="42"
+              exchangeRate="1 € = 68 MRU"
             />
 
 
