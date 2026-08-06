@@ -9,6 +9,8 @@ const AlertBanner = ({
   iconBgColor,
   borderColor,
   hasLeftBorder = false,
+  subtitleColor = "#5E6064",
+  height = "66px",
   onClick,
 }) => {
   return (
@@ -17,7 +19,6 @@ const AlertBanner = ({
       className="
         relative
         w-full
-        h-[66px]
         rounded-[20px]
         border
         overflow-hidden
@@ -26,7 +27,7 @@ const AlertBanner = ({
         justify-between
         gap-[18px]
         px-[20px]
-        py-[18px]
+        py-[15px]
         transition-all
         duration-200
         hover:shadow-md
@@ -36,6 +37,7 @@ const AlertBanner = ({
       style={{
         backgroundColor: bgColor,
         borderColor: borderColor,
+        height,
       }}
     >
       {/* Left Border */}
@@ -72,32 +74,32 @@ const AlertBanner = ({
 
       {/* Text */}
       <div
-        className="
+        className={`
           flex-1
           flex
-          flex-col
-          items-start
-          gap-[6px]
-        "
+          ${title ? "flex-col items-start gap-[6px]" : "items-center"}
+        `}
       >
-        <h3
-          className="
-            text-[18px]
-            font-semibold
-            leading-5
-            text-[#2E2E2E]
-          "
-        >
-          {title}
-        </h3>
+        {title && (
+          <h3
+            className="
+              text-[18px]
+              font-semibold
+              leading-5
+              text-[#2E2E2E]
+            "
+          >
+            {title}
+          </h3>
+        )}
 
         <p
-          className="
+          className={`
             text-[16px]
             font-medium
             leading-5
-            text-[#5E6064]
-          "
+          `}
+          style={{ color: subtitleColor }}
         >
           {count !== undefined ? (
             <>
