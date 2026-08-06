@@ -1,14 +1,35 @@
 import StatusBadge from "./StatusBadge";
+import { Check } from "lucide-react";
 
 const GalleryCard = ({
   image,
   title,
   status,
   onClick,
+  photoId,
+  selectionMode = false,
+  selectedPhotos = [],
+  setSelectedPhotos,
 }) => {
+  const isSelected = selectedPhotos.includes(photoId);
+  const handleClick = () => {
+    if (selectionMode){
+      // Only validated photos can be selected
+      if (status !== "validated") return;
+      if(isSelected){
+        setSelectedPhotos((prev) => 
+         prev.filter((id) => id != photoId)
+        );
+      }else{
+        setSelectedPhotos((prev) => [...prev,photoId])
+      }
+      return;
+    }
+    onClick?.()
+  }
   return (
     <div
-      onClick={onClick}
+      onClick={handleClick}
       className="
         relative
         overflow-hidden
@@ -34,6 +55,38 @@ const GalleryCard = ({
           group-hover:scale-105
         "
       />
+
+      {selectionMode && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleClick();
+          }}          
+          className={`
+            absolute
+            top-3
+            right-3
+            w-8
+            h-8
+            rounded-full
+            flex
+            items-center
+            justify-center
+            z-20
+            border
+            ${
+              isSelected
+                ? "bg-[#4E9F8A] border-[#FFFFFF4D]"
+                : "bg-[#FFFFFF4D] border-[#FFFFFF33]"
+            }
+          `}
+        >
+          {isSelected && (
+            <Check size={17} color="white"/>
+          )}
+        </button>
+      )}
 
       {/* Status */}
       <div

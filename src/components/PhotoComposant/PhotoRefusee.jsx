@@ -1,3 +1,4 @@
+import Button from "../Button/Button";
 import AlertBox from "../AlertComposant/AlertBox";
 import ImagePreview from "../PhotoComposant/ImagePreview";
 
@@ -7,31 +8,34 @@ import testImage from "../../assets/icon.svg";
 
 const PhotoRefusee = ({
   photo,
+  role = "coordinator",
   onClose = () => {},
+  onReexamine = () => {},
 }) => {
   const image = photo?.image || testImage;
 
   return (
-    <div
-      className="
-        w-screen
-        h-screen
-        bg-white
-        flex
-        flex-col
+    <>
+      <div
+        className="
+          lg:w-[900px]
+          lg:h-[580px]
 
-        md:w-[900px]
-        md:h-[580px]
-        md:flex-row
-        md:rounded-[20px]
-        md:shadow-xl
-        md:overflow-hidden
-      "
-    >
-      {/* ================= MOBILE ================= */}
-      <div className="md:hidden flex flex-col h-full overflow-y-auto">
-        {/* Close */}
-        <div className="px-4 pt-5 pb-3">
+          bg-white
+
+          lg:rounded-[20px]
+          lg:shadow-xl
+
+          flex
+          flex-col
+          lg:flex-row
+
+          overflow-hidden
+        "
+      >
+        {/* ================= MOBILE HEADER ================= */}
+
+        <div className="lg:hidden px-5 pt-5 pb-3">
           <button
             onClick={onClose}
             className="
@@ -47,60 +51,60 @@ const PhotoRefusee = ({
               alt="Fermer"
               className="w-4 h-4"
             />
+
             Fermer
           </button>
         </div>
 
-        {/* Image */}
-        <div className="px-4">
-          <div className="rounded-[24px] overflow-hidden">
-            <ImagePreview
-              image={image}
-              buttonTitle="Refusée"
-              buttonIcon={Refused}
-              buttonVariant="refusee"
-            />
-          </div>
-        </div>
+        {/* ================= IMAGE ================= */}
 
-        {/* Information */}
-        <div className="p-4 space-y-4">
-          <AlertBox
-            variant="info"
-            title={photo?.title || ""}
-            location={photo?.village || ""}
-            date={photo?.date || ""}
-            message={photo?.description || ""}
-            padding="p-5"
-          />
-
-          <AlertBox
-            variant="warning"
-            title="Motif de refus :"
-            titleColor="text-[#8A4D00]"
-            message={photo?.motifRefus || ""}
-            padding="p-5"
-          />
-        </div>
-      </div>
-
-      {/* ================= DESKTOP ================= */}
-      <div className="hidden md:flex w-full h-full">
-        {/* LEFT */}
         <div
           className="
-            w-[420px]
-            h-full
-            flex
-            flex-col
-            p-6
+            order-1
+            lg:order-2
+
+            w-full
+            h-[320px]
+
+            lg:flex-1
+            lg:h-full
+
+            flex-shrink-0
           "
         >
-          {/* Close */}
+          <ImagePreview
+            image={image}
+            buttonTitle="Refusée"
+            buttonIcon={Refused}
+            buttonVariant="refusee"
+          />
+        </div>
+
+        {/* ================= CONTENT ================= */}
+
+        <div
+          className="
+            order-2
+            lg:order-1
+
+            w-full
+            lg:w-[420px]
+
+            flex
+            flex-col
+
+            px-5
+            pb-5
+            lg:p-6
+          "
+        >
+          {/* Desktop Close */}
+
           <button
             onClick={onClose}
             className="
-              flex
+              hidden
+              lg:flex
               items-center
               gap-[10px]
               text-[16px]
@@ -113,40 +117,80 @@ const PhotoRefusee = ({
               alt="Fermer"
               className="w-5 h-5"
             />
+
             Fermer
           </button>
+                    {/* Informations */}
 
-          {/* Photo informations */}
-          <div className="mb-6">
+          <AlertBox
+            variant="info"
+            title={photo?.title || ""}
+            location={photo?.village || ""}
+            date={photo?.date || ""}
+            message={photo?.description || ""}
+            padding="p-4"
+          />
+
+          {/* Coordinateur */}
+
+          {role === "admin" && (
+            <div className="mt-6">
+              <p
+                className="
+                  text-[14px]
+                  text-[#5E6064]
+                "
+              >
+                Coordinateur
+              </p>
+
+              <p
+                className="
+                  mt-1
+                  text-[16px]
+                  font-semibold
+                  text-[#202124]
+                "
+              >
+                {photo?.coordinator || "Nom ID"}
+              </p>
+            </div>
+          )}
+
+          {/* Motif de refus */}
+
+          <div className="mt-6">
             <AlertBox
-              variant="info"
-              title={photo?.title || ""}
-              location={photo?.village || ""}
-              date={photo?.date || ""}
-              message={photo?.description || ""}
+              variant="warning"
+              title="Motif de refus :"
+              titleColor="text-[#8A4D00]"
+              message={photo?.motifRefus || ""}
+              padding="p-4"
             />
           </div>
 
-          {/* Refusal reason */}
-          <AlertBox
-            variant="warning"
-            title="Motif de refus :"
-            titleColor="text-[#8A4D00]"
-            message={photo?.motifRefus || ""}
-          />
-        </div>
+          {/* Bottom */}
 
-        {/* RIGHT */}
-        <div className="flex-1 h-full">
-          <ImagePreview
-            image={image}
-            buttonTitle="Refusée"
-            buttonIcon={Refused}
-            buttonVariant="refusee"
-          />
-        </div>
+          <div className="mt-auto pt-6">
+            {role === "admin" ? (
+              <Button
+                noPadding
+                title="Réexaminer"
+                variant="modifier"
+                onClick={onReexamine}
+              />
+            ) : (
+              <Button
+                noPadding
+                title="Modifier"
+                variant="modifier"
+                onClick={onReexamine}
+              />
+            )}
+          </div>
+          </div>
       </div>
-    </div>
+    </>
   );
 };
 

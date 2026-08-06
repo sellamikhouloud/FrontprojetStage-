@@ -4,6 +4,9 @@ const GalleryGrid = ({
   photos,
   selectedFilter,
   onPhotoClick,
+  selectionMode,
+  selectedPhotos,
+  setSelectedPhotos,
 }) => {
   const filteredPhotos =
     selectedFilter === "all"
@@ -28,10 +31,14 @@ const GalleryGrid = ({
         {filteredPhotos.map((photo) => (
           <GalleryCard
             key={photo.id}
+            photoId={photo.id}
             image={photo.image}
             title={photo.title}
             status={photo.status}
             onClick={() => onPhotoClick(photo)}
+            selectionMode={selectionMode}
+            selectedPhotos={selectedPhotos}
+            setSelectedPhotos={setSelectedPhotos}
           />
         ))}
       </div>

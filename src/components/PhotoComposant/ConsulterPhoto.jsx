@@ -1,12 +1,18 @@
 import AlertBox from "../AlertComposant/AlertBox";
 import ImagePreview from "../PhotoComposant/ImagePreview";
+import Button from "../Button/Button";
 
 import quitter from "../../assets/quitter.svg";
 import Verified from "../../assets/Verified.svg";
 import testImage from "../../assets/icon.svg";
+import Edit from "../../assets/Modify.svg"; 
 
 const ConsulterPhoto = ({
   photo,
+  role = "coordinator",
+  includedInReport = false,
+  onToggleReport = () => {},
+  onEdit = () => {},
   onClose = () => {},
 }) => {
   const image = photo?.image || testImage;
@@ -19,7 +25,6 @@ const ConsulterPhoto = ({
         bg-white
         flex
         flex-col
-
         md:w-[900px]
         md:h-[580px]
         md:flex-row
@@ -29,6 +34,7 @@ const ConsulterPhoto = ({
       "
     >
       {/* ================= MOBILE ================= */}
+
       <div className="md:hidden flex flex-col h-full overflow-y-auto">
         {/* Close */}
         <div className="px-4 pt-5 pb-3">
@@ -73,12 +79,82 @@ const ConsulterPhoto = ({
             message={photo?.description || ""}
             padding="p-5"
           />
+
+          {/* ================= ADMIN ONLY ================= */}
+
+          {role === "admin" && (
+            <>
+              <div className="mt-5">
+                <p className="text-[16px] font-medium">
+                  Coordinateur :
+                  <span className="font-normal">
+                    {" "}
+                    {photo?.coordinator || "Nom ID"}
+                  </span>
+                </p>
+              </div>
+
+              <button
+                onClick={onToggleReport}
+                className="
+                  mt-5
+                  w-full
+                  h-[48px]
+                  rounded-[14px]
+                  border
+                  border-[#4E9F8A]
+                  flex
+                  items-center
+                  gap-3
+                  px-4
+                "
+              >
+                <div
+                  className={`
+                    w-5
+                    h-5
+                    rounded-full
+                    border
+                    flex
+                    items-center
+                    justify-center
+                    ${
+                      includedInReport
+                        ? "bg-[#4E9F8A] border-[#4E9F8A]"
+                        : "border-[#BDBDBD]"
+                    }
+                  `}
+                >
+                  {includedInReport && (
+                    <span className="text-white text-xs">
+                      ✓
+                    </span>
+                  )}
+                </div>
+
+                <span className="font-medium">
+                  Inclure dans le bilan mensuel
+                </span>
+              </button>
+
+              <div className="mt-4">
+                <Button
+                  title="Modifier"
+                  icon={Edit}
+                  variant="primary"
+                  onClick={onEdit}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
 
       {/* ================= DESKTOP ================= */}
+
       <div className="hidden md:flex w-full h-full">
         {/* LEFT */}
+
         <div
           className="
             w-[420px]
@@ -115,9 +191,79 @@ const ConsulterPhoto = ({
             message={photo?.description || ""}
             padding="p-4"
           />
+
+          {/* ================= ADMIN ONLY ================= */}
+
+          {role === "admin" && (
+            <>
+              <div className="mt-6">
+                <p className="text-[18px] font-medium text-[#2E2E2E]">
+                  Coordinateur :
+                  <span className="font-normal">
+                    {" "}
+                    {photo?.coordinator || "Nom ID"}
+                  </span>
+                </p>
+              </div>
+
+              <button
+                onClick={onToggleReport}
+                className="
+                  mt-5
+                  w-full
+                  h-[45px]
+                  rounded-[15px]
+                  border
+                  border-[#6CD894]
+                  flex
+                  items-center
+                  gap-3
+                  px-4
+                "
+              >
+                <div
+                  className={`
+                    w-5
+                    h-5
+                    rounded-[8px]
+                    border
+                    flex
+                    items-center
+                    justify-center
+                    ${
+                      includedInReport
+                        ? "bg-[#4E9F8A] border-[#4E9F8A]"
+                        : "border-[#BDBDBD]"
+                    }
+                  `}
+                >
+                  {includedInReport && (
+                    <span className="text-white text-xs">
+                      ✓
+                    </span>
+                  )}
+                </div>
+
+                <span className="font-medium">
+                  Inclure dans le bilan mensuel
+                </span>
+              </button>
+
+              <div className="mt-4">
+                <Button
+                  title="Modifier"
+                  icon={Edit}
+                  variant="modifier"
+                  onClick={onEdit}
+                  noPadding
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* RIGHT */}
+
         <div className="flex-1 h-full">
           <ImagePreview
             image={image}
