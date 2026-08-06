@@ -24,6 +24,7 @@ import RapportBilan from "./Rapports/RapportDonateur";
 import RapportAnnuel from "./Rapports/RapportAnnuel";
 import Parametres from "./Account/Parametres";
 import PageProfilCoordinateur from "./Account/Pageprofilcoordinateur";
+import CoordinatorDashboard from "./Dashbord/CoordinatorDashboard";
 
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboardCoor" element={<CoordinatorDashboard />} />
         <Route path="/liste-famille" element={<ListeFamille />} />
 
         {/* Family */}

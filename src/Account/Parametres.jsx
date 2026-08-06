@@ -8,14 +8,16 @@ import {
   AiOutlineDown,
   AiOutlineLineChart,
 } from "react-icons/ai";
-import { HiOutlineCurrencyEuro } from "react-icons/hi";
+import { HiOutlineCurrencyEuro, HiOutlineLocationMarker, HiOutlineMail } from "react-icons/hi";
 import OptionsMenu from "../components/Containers/OptionsMenu";
 import Button from "../components/Button/Button";
+import ErrorMessage from "../components/Forms/ErrorMessage";
 import { useNavigate } from "react-router-dom";
 
 export default function Parametres({ onClose }) {
   const navigate = useNavigate();
   const [taux, setTaux] = useState("0.022");
+  const [tauxInitial] = useState("0.022");
   const [rappelOuvert, setRappelOuvert] = useState(false);
 
   const [frequenceRappel, setFrequenceRappel] =
@@ -35,6 +37,13 @@ export default function Parametres({ onClose }) {
   const [muacMAM, setMuacMAM] = useState("115");
   const [muacMAS, setMuacMAS] = useState("110");
 
+  // Ajout de région
+  const [nouvelleRegion, setNouvelleRegion] = useState("");
+
+  // Ajout d'email destinataire des rapports
+  const [nouvelEmail, setNouvelEmail] = useState("");
+  const [erreurEmail, setErreurEmail] = useState("");
+
   const handleTauxChange = (e) => {
     const value = e.target.value;
 
@@ -45,13 +54,56 @@ export default function Parametres({ onClose }) {
     }
   };
 
+  const tauxModifie = taux.trim() !== "" && taux !== tauxInitial;
+
   const handleUpdate = () => {
-    if (!taux) return;
+    if (!tauxModifie) return;
 
     console.log("Nouveau taux :", taux);
 
     // Ici tu mets ta logique de sauvegarde
     // updateTauxChange(taux);
+  };
+
+  const handleAjouterRegion = () => {
+    const nom = nouvelleRegion.trim();
+    if (!nom) return;
+
+    console.log("Nouvelle région à ajouter :", nom);
+
+    // TODO: appel API pour créer la région, puis rafraîchir la liste côté parent
+    // addRegion(nom);
+
+    setNouvelleRegion("");
+  };
+
+  const handleVoirToutesRegions = () => {
+    // TODO: adapter la route vers la vue/page de gestion des régions
+    navigate("/parametres/regions");
+  };
+
+  const handleAjouterEmail = () => {
+    const email = nouvelEmail.trim();
+    if (!email) return;
+
+    const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!emailValide) {
+      setErreurEmail("Cette adresse email n'est pas valide.");
+      return;
+    }
+
+    setErreurEmail("");
+    console.log("Nouvel email destinataire des rapports :", email);
+
+    // TODO: appel API pour enregistrer l'email, puis rafraîchir la liste côté parent
+    // addReportRecipient(email);
+
+    setNouvelEmail("");
+  };
+
+  const handleVoirTousLesEmails = () => {
+    // TODO: adapter la route vers la vue/page de gestion des destinataires
+    navigate("/parametres/destinataires-rapports");
   };
 
   const handleSave = () => {
@@ -311,7 +363,11 @@ export default function Parametres({ onClose }) {
       <button
         type="button"
         onClick={handleUpdate}
+        disabled={!tauxModifie}
         className="
+          w-full
+          sm:w-auto
+
           h-[40px]
           px-4
 
@@ -330,6 +386,10 @@ export default function Parametres({ onClose }) {
           hover:bg-[#428E7B]
           active:scale-[0.98]
           transition
+
+          disabled:opacity-50
+          disabled:cursor-not-allowed
+          disabled:active:scale-100
 
           sm:ml-auto
         "
@@ -368,6 +428,433 @@ export default function Parametres({ onClose }) {
     </p>
   </div>
 </div>
+
+{/* =========================================
+    RÉGIONS
+========================================= */}
+<div
+  className="
+    mt-4
+    w-full
+    rounded-[12px]
+    border
+    border-[#7BC8C4]
+    bg-white
+
+    px-5
+    py-4
+
+    sm:px-6
+    sm:py-[15px]
+  "
+>
+  {/* --------------------------------
+      EN-TÊTE : icône + titre + "Voir tout"
+  --------------------------------- */}
+  <div
+    className="
+      flex
+      items-start
+      justify-between
+      gap-3
+
+      sm:items-center
+      sm:gap-4
+    "
+  >
+    {/* Icon + titre */}
+    <div className="flex items-center gap-4">
+      <div
+        className="
+          w-[50px]
+          h-[50px]
+          shrink-0
+          rounded-full
+          bg-[#EAF7F3]
+          flex
+          items-center
+          justify-center
+          text-[#4E9F8A]
+        "
+      >
+        <HiOutlineLocationMarker className="text-[28px]" />
+      </div>
+
+      <div>
+        <h2
+          className="
+            text-[20px]
+            font-semibold
+            leading-tight
+            text-[#346A5C]
+          "
+        >
+          Régions
+        </h2>
+
+        <p
+          className="
+            mt-1
+            text-[16px]
+            leading-tight
+            text-[#3E4946]
+          "
+        >
+          Gérer les régions disponibles
+        </p>
+      </div>
+    </div>
+
+    {/* Voir tout */}
+    <button
+      type="button"
+      onClick={handleVoirToutesRegions}
+      className="
+        shrink-0
+
+        text-[15px]
+        font-semibold
+        text-[#4E9F8A]
+
+        hover:text-[#346A5C]
+        transition
+        underline
+        underline-offset-2
+      "
+    >
+      Voir tout
+    </button>
+  </div>
+
+  {/* 16px avant le champ */}
+  <div className="mt-4" />
+
+  {/* --------------------------------
+      CHAMP D'AJOUT
+  --------------------------------- */}
+  <div
+    className="
+      w-full
+      rounded-[10px]
+      bg-[#F7F9F8]
+
+      px-4
+      py-4
+
+      sm:px-4
+      sm:py-3
+    "
+  >
+    <p className="text-[16px] text-[#3E4946]">
+      Ajouter une nouvelle région
+    </p>
+
+    <div
+      className="
+        mt-3
+        flex
+        flex-col
+        items-start
+        gap-3
+
+        sm:flex-row
+        sm:items-center
+        sm:gap-3
+      "
+    >
+      <div
+        className="
+          flex
+          items-center
+
+          w-full
+          h-[40px]
+
+          sm:w-[270px]
+
+          rounded-[10px]
+          border
+          border-[#7BC8C4]
+          bg-white
+          px-3
+        "
+      >
+        <input
+          type="text"
+          value={nouvelleRegion}
+          onChange={(e) => setNouvelleRegion(e.target.value)}
+          placeholder="Nom de la région"
+          className="
+            flex-1
+            min-w-0
+            w-full
+            bg-transparent
+            text-[18px]
+            text-[#346A5C]
+            outline-none
+            placeholder:text-[#9CA6A3]
+          "
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleAjouterRegion}
+        disabled={!nouvelleRegion.trim()}
+        className="
+          w-full
+          sm:w-auto
+          sm:min-w-[140px]
+
+          h-[40px]
+          px-4
+
+          rounded-full
+          bg-[#4E9F8A]
+
+          text-white
+          text-[14px]
+          font-semibold
+
+          flex
+          items-center
+          justify-center
+
+          hover:bg-[#428E7B]
+          active:scale-[0.98]
+          transition
+
+          disabled:opacity-50
+          disabled:cursor-not-allowed
+          disabled:active:scale-100
+
+          sm:ml-auto
+        "
+      >
+        Ajouter
+      </button>
+    </div>
+  </div>
+</div>
+
+{/* =========================================
+    DESTINATAIRES DES RAPPORTS
+========================================= */}
+<div
+  className="
+    mt-4
+    w-full
+    rounded-[12px]
+    border
+    border-[#7BC8C4]
+    bg-white
+
+    px-5
+    py-4
+
+    sm:px-6
+    sm:py-[15px]
+  "
+>
+
+  {/* --------------------------------
+      EN-TÊTE : icône + titre + "Voir tout"
+  --------------------------------- */}
+  <div
+    className="
+      flex
+      items-start
+      justify-between
+      gap-3
+
+      sm:items-center
+      sm:gap-4
+    "
+  >
+    {/* Icon + titre */}
+    <div className="flex items-center gap-4">
+      <div
+        className="
+          w-[50px]
+          h-[50px]
+          shrink-0
+          rounded-full
+          bg-[#EAF7F3]
+          flex
+          items-center
+          justify-center
+          text-[#4E9F8A]
+        "
+      >
+        <HiOutlineMail className="text-[28px]" />
+      </div>
+
+      <div>
+        <h2
+          className="
+            text-[20px]
+            font-semibold
+            leading-tight
+            text-[#346A5C]
+          "
+        >
+          Destinataires des rapports
+        </h2>
+
+        <p
+          className="
+            mt-1
+            text-[16px]
+            leading-tight
+            text-[#3E4946]
+          "
+        >
+          Rapports mensuels et annuels envoyés par email
+        </p>
+      </div>
+    </div>
+
+    {/* Voir tout */}
+    <button
+      type="button"
+      onClick={handleVoirTousLesEmails}
+      className="
+        shrink-0
+
+        text-[15px]
+        font-semibold
+        text-[#4E9F8A]
+
+        hover:text-[#346A5C]
+        transition
+        underline
+        underline-offset-2
+      "
+    >
+      Voir tout
+    </button>
+  </div>
+
+  {/* 16px avant le champ */}
+  <div className="mt-4" />
+
+  {/* --------------------------------
+      CHAMP D'AJOUT
+  --------------------------------- */}
+  <div
+    className="
+      w-full
+      rounded-[10px]
+      bg-[#F7F9F8]
+
+      px-4
+      py-4
+
+      sm:px-4
+      sm:py-3
+    "
+  >
+    <p className="text-[16px] text-[#3E4946]">
+      Ajouter un destinataire
+    </p>
+
+    <div
+      className="
+        mt-3
+        flex
+        flex-col
+        items-start
+        gap-3
+
+        sm:flex-row
+        sm:items-center
+        sm:gap-3
+      "
+    >
+      <div
+        className="
+          flex
+          items-center
+
+          w-full
+          h-[40px]
+
+          sm:w-[270px]
+
+          rounded-[10px]
+          border
+          bg-white
+          px-3
+        "
+        style={{ borderColor: erreurEmail ? "#EF4444" : "#7BC8C4" }}
+      >
+        <input
+          type="email"
+          value={nouvelEmail}
+          onChange={(e) => {
+            setNouvelEmail(e.target.value);
+            if (erreurEmail) setErreurEmail("");
+          }}
+          placeholder="exemple@email.com"
+          className="
+            flex-1
+            min-w-0
+            w-full
+            bg-transparent
+            text-[18px]
+            text-[#346A5C]
+            outline-none
+            placeholder:text-[#9CA6A3]
+          "
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={handleAjouterEmail}
+        disabled={!nouvelEmail.trim()}
+        className="
+          w-full
+          sm:w-auto
+          sm:min-w-[140px]
+
+          h-[40px]
+          px-4
+
+          rounded-full
+          bg-[#4E9F8A]
+
+          text-white
+          text-[14px]
+          font-semibold
+
+          flex
+          items-center
+          justify-center
+
+          hover:bg-[#428E7B]
+          active:scale-[0.98]
+          transition
+
+          disabled:opacity-50
+          disabled:cursor-not-allowed
+          disabled:active:scale-100
+
+          sm:ml-auto
+        "
+      >
+        Ajouter
+      </button>
+    </div>
+
+    {erreurEmail && (
+      <div className="mt-2">
+        <ErrorMessage message={erreurEmail} />
+      </div>
+    )}
+  </div>
+</div>
+
 {/* =========================================
     RAPPEL DE VÉRIFICATION DU TAUX
 ========================================= */}
