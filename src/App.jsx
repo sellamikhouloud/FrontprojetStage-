@@ -91,7 +91,7 @@ function App() {
 
         {/* Galerie */}
         <Route
-          path="/galerie" element={<Galerie />}
+          path="/galerie" element={<Galerie role="admin"/>}
         />
 
 
