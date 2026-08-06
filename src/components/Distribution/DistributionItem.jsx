@@ -3,7 +3,7 @@ const DistributionItem = ({
   quantity,
   unit,
   showDivider = true,
-  dividerColor = "#7BC8C4",
+  dividerColor = "#4E9F8A",
 }) => {
   return (
     <div className="flex flex-1 items-center">
@@ -23,7 +23,7 @@ const DistributionItem = ({
         {/* Quantity */}
         <div className="flex items-end gap-[2px]">
           <span
-            className="text-[24px] font-bold leading-[28px]"
+            className="text-[20px] font-bold leading-[28px]"
             style={{ color: dividerColor }}
           >
             {quantity}
