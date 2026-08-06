@@ -4,7 +4,7 @@ const DistributionCard = ({
   title,
   products = [],
   viewAllText = "Voir tous",
-  dividerColor = "#73C8C5",
+  dividerColor = "#4E9F8A",
   onClick,        // card click -> navigate
   onViewAllClick, // button click -> open popup
 }) => {
