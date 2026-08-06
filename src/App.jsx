@@ -19,6 +19,11 @@ import ZakatPage from "./Zakat/ListeZakat";
 import AjoutZakat from "./Zakat/AjoutZakat";
 import AjoutVisite from "./Visites/AjoutVisite";
 import Galerie from "./Galerie/Galerie";
+import RapportMensuel from "./Rapports/RapportMensuelle";
+import RapportBilan from "./Rapports/RapportDonateur";
+import RapportAnnuel from "./Rapports/RapportAnnuel";
+import Parametres from "./Account/Parametres";
+import PageProfilCoordinateur from "./Account/Pageprofilcoordinateur";
 
 
 function App() {
@@ -92,6 +97,25 @@ function App() {
         {/* Galerie */}
         <Route
           path="/galerie" element={<Galerie role="admin"/>}
+        />
+  {/* Rapport : le premier onglet (mensuel) est l'entrée par défaut de /rapports,
+      les 2 autres onglets naviguent vers leurs propres sous-routes */}
+         <Route
+          path="/rapports" element={<RapportMensuel/>}
+        />
+         <Route
+          path="/rapports/bilan-donateurs" element={<RapportBilan/>}
+        />
+         <Route
+          path="/rapports/annuel" element={<RapportAnnuel/>}
+        />
+       {/* Parametres */}
+        <Route
+          path="/parametres" element={<Parametres/>}
+        />
+
+         <Route
+          path="/profile-coor" element={<PageProfilCoordinateur/>}
         />
 
 

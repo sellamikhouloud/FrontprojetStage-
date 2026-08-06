@@ -136,7 +136,7 @@ const PopupZakatFamille = ({
   zakat={item.numero}
   date={item.date}
   montant="Montant"
-  valeur={item.montant}
+  valeur={`${item.montant} MRU / ${item.euro} EUR`}
   onClick={() => {
     setSelectedZakat(item);
     setOpenDetail(true);

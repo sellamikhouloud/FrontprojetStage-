@@ -302,7 +302,16 @@ const handleAlertClick = (alert) => {
     <div className="flex h-screen overflow-hidden bg-white">
         {/* Sidebar */}
       
-          <Sidebar role="admin" />
+         <Sidebar
+  role="admin"
+  user={{
+    nom: "Ahmed Mohamed",
+    id: "admin",
+    email: "ahmed.mohamed@gmail.com",
+    telephone: "+222 00 00 00 00",
+    profilePicture: "",
+  }}
+/>
       
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
@@ -316,7 +325,7 @@ const handleAlertClick = (alert) => {
             subtitle={subtitle}
             NotificationCount={notificationCount}
             onNotificationClick={handleNotifications}
-            onSettingsClick={handleSettings}
+            onSettingsClick={() => navigate("/parametres")}
           />
         </div>
 
@@ -331,7 +340,7 @@ const handleAlertClick = (alert) => {
             subtitle={subtitle}
             NotificationCount={notificationCount}
             onNotificationClick={handleNotifications}
-            onSettingsClick={handleSettings}
+            onSettingsClick={() => navigate("/parametres")}
           />
 
         </div>

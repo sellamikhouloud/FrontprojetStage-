@@ -96,41 +96,49 @@ const PopupDetailZakat = ({
             {/* Colonne gauche */}
             <div className="space-y-3">
 
-              <InfoCard
-                title="Informations générales"
-                data={[
-                  {
-                    label: "Date",
-                    value: zakat.date,
-                  },
-                  {
-                    label: "Zakat n°",
-                    value: zakat.numero,
-                  },
-                  {
-                    label: "Montant versé",
-                    value: (
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold">
-                          {zakat.montant} MRU
-                        </span>
+            <InfoCard
+  title="Informations générales"
+  data={[
+    {
+      label: "Date",
+      value: zakat.date,
+    },
+    {
+      label: "Zakat n°",
+      value: zakat.numero,
+    },
+    {
+      label: "Montant versé",
+      value: (
+        <div className="flex items-center gap-2">
+          <span className="font-bold">
+            {zakat.montant} MRU
+          </span>
 
-                        <span className="text-[12px] text-[#8A8A8A]">
-                          ≈ {zakat.euro}
-                        </span>
-                      </div>
-                    ),
-                  },
-                  {
-                    label: "Mode de paiement",
-                    value: zakat.modePaiement,
-                  },
-                  {
-                    label: "Enregistrée par",
-                    value: zakat.enregistrePar,
-                  },
-                ]}
-              />
+          <span className="text-[12px] text-[#8A8A8A]">
+            ≈ {zakat.euro}
+          </span>
+        </div>
+      ),
+    },
+    {
+      label: "Mode de paiement",
+      value: zakat.modePaiement,
+    },
+    {
+      label: "Enregistrée par",
+      value: zakat.enregistrePar,
+    },
+    {
+      label: "Modifié par",
+      value: zakat.modifiePar || "-",
+    },
+    {
+      label: "Date de modification",
+      value: zakat.dateModification || "-",
+    },
+  ]}
+/>
 
               <InfoCard
                 title="Observations complémentaires"

@@ -61,9 +61,9 @@ const isAdmin = role === "admin";
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
-      <div className="hidden md:block">
+    
        <Sidebar role={role} />
-      </div>
+    
 
       {/* Main Content */}
       <main

@@ -59,9 +59,9 @@ const confirmDelete = () => {
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
-      <div className="hidden md:block">
+      
         <Sidebar role="admin" />
-      </div>
+    
 
       {/* Contenu */}
       <main

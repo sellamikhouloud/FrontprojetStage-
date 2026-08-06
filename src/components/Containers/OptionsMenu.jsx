@@ -47,10 +47,7 @@ const OptionsMenu = ({
               ${className}
             `}
           >
-            <div
-              className={maxHeight ? "overflow-y-auto" : ""}
-              style={maxHeight ? { maxHeight } : undefined}
-            >
+            <div>
               <Options options={options} handleSelect={handleSelect} />
             </div>
           </motion.div>

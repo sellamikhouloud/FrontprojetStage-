@@ -11,6 +11,7 @@ import DeleteIcon from "../../assets/Delete.svg";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
 import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
+import ZScoreBox from "../Containers/ZScoreBox";
 
 const PopupDetailVisite = ({
   open,
@@ -139,30 +140,58 @@ const PopupDetailVisite = ({
 
             <div className="space-y-3">
 
-              <InfoCard
-                title="Informations générales"
-                data={[
-                  {
-                    label: "Date",
-                    value: visite.date,
-                  },
-                  {
-                    label: "Visite n ",
-                    value: visite.numeroVisite,
-                  },
-                  {
-                    label: "Enregistrée par",
-                    value: visite.enregistrePar,
-                  },
-                ]}
-              />
-
+            <InfoCard
+  title="Informations générales"
+  data={[
+    {
+      label: "Date",
+      value: visite.date,
+    },
+    {
+      label: "Visite n°",
+      value: visite.numeroVisite,
+    },
+    {
+      label: "Enregistrée par",
+      value: visite.enregistrePar,
+    },
+    {
+      label: "Modifié par",
+      value: visite.modifiePar || "-",
+    },
+    {
+      label: "Date de modification",
+      value: visite.dateModification || "-",
+    },
+  ]}
+/>
               <AfficherMesure
                 title="Mesure nourrisson"
                 poids={visite.nourrisson?.poids}
                 taille={visite.nourrisson?.taille}
                 muac={visite.nourrisson?.muac}
               />
+
+            
+  
+
+  <div className="flex gap-3">
+    <ZScoreBox
+      label="P/A"
+      value={visite.zScores?.pa}
+    />
+
+    <ZScoreBox
+      label="T/A"
+      value={visite.zScores?.ta}
+    />
+
+    <ZScoreBox
+      label="P/T"
+      value={visite.zScores?.pt}
+    />
+  </div>
+
 
           <InfoCard
   title="Observations cliniques nourrisson"
