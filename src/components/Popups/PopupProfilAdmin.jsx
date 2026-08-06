@@ -1,21 +1,9 @@
+import { useState } from "react";
 import PageHeader from "../Navigation,Pageheader/PageHeader";
 import ProfilInfoBlock, { CHAMPS_DEFAUT } from "../Forms/Profilinfoblock";
+import ConfirmDialog from "../Popups/ConfirmdialogPopup";
 
-/**
- * Popup Profil Admin — affiche la carte profil + infos de contact + actions.
- * "Modifier le profil" bascule la popup en mode édition inline (pas de navigation).
- *
- * Tout l'état (formulaire, avatar, mode édition) est géré par ProfilInfoBlock,
- * cette popup ne s'occupe que du chrome de la modale (overlay, header, fermeture).
- *
- * admin: {
- *   nom, id, role, avatarUrl,
- *   email, telephone, structure,
- * }
- *
- * onSave(updatedFields) est appelé au clic sur "Sauvegarder" avec
- * { nom, email, telephone, structure, avatarFile, avatarUrl } — à toi de persister ça côté parent (API, state...).
- */
+
 export default function PopupProfilAdmin({
   open,
   admin,
@@ -23,7 +11,14 @@ export default function PopupProfilAdmin({
   onSave,
   onDeconnexion,
 }) {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   if (!open || !admin) return null;
+
+  const handleConfirmDeconnexion = () => {
+    setShowLogoutConfirm(false);
+    onDeconnexion?.();
+  };
 
   return (
     <div
@@ -104,11 +99,21 @@ export default function PopupProfilAdmin({
               admin={admin}
               champs={CHAMPS_DEFAUT}
               onSave={onSave}
-              onDeconnexion={onDeconnexion}
+              onDeconnexion={() => setShowLogoutConfirm(true)}
             />
           </div>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title="Se déconnecter ?"
+        message="Vous devrez vous reconnecter avec vos identifiants pour accéder de nouveau à votre compte."
+        confirmLabel="Déconnexion"
+        cancelLabel="Annuler"
+        onConfirm={handleConfirmDeconnexion}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 }
