@@ -40,7 +40,7 @@ export default function ParametresCard({
             <div className="min-w-0">
               <p className="text-[14px] font-semibold text-[#202124]">Synchronisation</p>
               {lastSync && (
-                <p className="text-[12px] text-[#6E7976] truncate">
+                <p className="text-[12px] text-[#6E7976] break-words">
                   Dernière synchronisation : {lastSync}
                 </p>
               )}
@@ -48,10 +48,10 @@ export default function ParametresCard({
           </div>
 
           <div
-            className="rounded-full border px-3 py-[4px] shrink-0 whitespace-nowrap"
+            className="rounded-full border px-3 py-[4px] shrink-0 whitespace-nowrap flex items-center justify-center"
             style={{ backgroundColor: status.bg, borderColor: status.border, color: status.color }}
           >
-            <span className="text-[12px] font-bold">{status.label}</span>
+            <span className="text-[12px] font-bold leading-none">{status.label}</span>
           </div>
         </div>
 
