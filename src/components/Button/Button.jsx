@@ -168,6 +168,28 @@ const Button = ({
     border-[#00694C]
     hover:bg-[#F4FBF8]
   `,
+    // Déconnexion
+    deconnexion: `
+      bg-white
+      text-[#EF4444]
+      border
+      border-[#EF4444]
+      hover:bg-[#FFF5F5]
+      
+      !shadow-none
+    `,
+    
+    // Sauvegarder (mode édition)
+    sauvegarder: `
+      bg-white
+      text-[#757575]
+      border
+      border-[#757575]
+      hover:bg-[#F8FBFC]
+      
+      !shadow-none
+    `,
+  
 
     annuler : `
     font-bold
@@ -175,6 +197,7 @@ const Button = ({
     rounded-[20px]
     border
     `
+    
   };
 
   const wrapper =
@@ -196,7 +219,8 @@ const Button = ({
         variant === "save" ||
         variant === "success" ||
         variant === "email" ||
-        variant === "deleteCoordinator"
+        variant === "deleteCoordinator"||
+        variant === "deconnexion"
       ? `
           flex
           items-center

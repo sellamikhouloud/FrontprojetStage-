@@ -1,0 +1,83 @@
+import Sidebar from "../components/Sidebar/Sidebar";
+import ProfilInfoBlock, { CHAMPS_COORDINATEUR, logoutIcon } from "../components/Forms/Profilinfoblock";
+import ParametresCard from "../components/Forms/ParametresCard";
+import AssistanceCard from "../components/Forms/AssistanceCard";
+import Button from "../components/Button/Button";
+
+
+export default function PageProfilCoordinateur() {
+  // Simulation des données — à remplacer par le vrai coordinateur connecté (context/API)
+  const coordinateur = {
+    nom: "Ahmed Mohamed",
+    id: "id – coordinateur",
+    role: "Coordinateur",
+    avatarUrl: "",
+    email: "ahmed.mohamed@gmail.com",
+    telephone: "+220 000 000",
+    region: "Lexibia",
+    structure: "Nutrigest Mauritanie",
+  };
+
+  const handleSave = (updatedFields) => {
+    // TODO: appel API pour persister les modifications du coordinateur
+    console.log("À sauvegarder :", updatedFields);
+  };
+
+  const handleDeconnexion = () => {
+    // TODO: logique de déconnexion (clear session/token, navigate("/login")...)
+  };
+
+  return (
+    <div className="flex h-screen overflow-hidden bg-white">
+      <Sidebar role="coordinator" user={coordinateur} />
+
+      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:pt-10 lg:px-10 lg:py-4 bg-white">
+        <div
+          className="
+            grid
+            grid-cols-1
+            lg:grid-cols-[1.3fr_1fr]
+            gap-[24px]
+          "
+        >
+          {/* Colonne gauche — profil */}
+          <div>
+            <ProfilInfoBlock
+              admin={coordinateur}
+              champs={CHAMPS_COORDINATEUR}
+              onSave={handleSave}
+              showDeconnexion={false}
+            />
+          </div>
+
+          {/* Colonne droite — paramètres + assistance + déconnexion */}
+          <div className="mt-16">
+            <ParametresCard
+              lastSync="Aujourd'hui à 09:42"
+              syncStatus="synchronise"
+              version="1.0.0"
+            />
+
+            <AssistanceCard
+              onCentreAide={() => console.log("Centre d'aide")}
+              onConditions={() => console.log("Conditions d'utilisation")}
+              onPolitique={() => console.log("Politique de confidentialité")}
+            />
+
+            
+          </div>
+         
+        </div>
+         <div className="mt-0">
+              <Button
+                title="Déconnexion"
+                variant="deconnexion"
+                icon={logoutIcon}
+                noPadding
+                onClick={handleDeconnexion}
+              />
+            </div>
+      </main>
+    </div>
+  );
+}

@@ -23,6 +23,7 @@ import RapportMensuel from "./Rapports/RapportMensuelle";
 import RapportBilan from "./Rapports/RapportDonateur";
 import RapportAnnuel from "./Rapports/RapportAnnuel";
 import Parametres from "./Account/Parametres";
+import PageProfilCoordinateur from "./Account/Pageprofilcoordinateur";
 
 
 function App() {
@@ -111,6 +112,10 @@ function App() {
        {/* Parametres */}
         <Route
           path="/parametres" element={<Parametres/>}
+        />
+
+         <Route
+          path="/profile-coor" element={<PageProfilCoordinateur/>}
         />
 
 

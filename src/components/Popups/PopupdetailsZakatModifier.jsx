@@ -32,7 +32,7 @@ const PopupModifierZakat = ({
       return new Date(parts[2], parts[1] - 1, parts[0]);
     };
 
-  setInfos([
+ setInfos([
   {
     label: "Date",
     value: parseDate(zakat.date),
@@ -41,7 +41,7 @@ const PopupModifierZakat = ({
   {
     label: "Zakat n°",
     value: zakat.numero,
-    editable: false, // <-- ajouter
+    editable: false,
   },
   {
     label: "Montant versé",
@@ -62,7 +62,17 @@ const PopupModifierZakat = ({
   {
     label: "Enregistrée par",
     value: zakat.enregistrePar,
-    editable: false, 
+    editable: false,
+  },
+  {
+    label: "Modifié par",
+    value: zakat.modifiePar || "-",
+    editable: false,
+  },
+  {
+    label: "Date de modification",
+    value: zakat.dateModification || "-",
+    editable: false,
   },
 ]);
     setObservations(zakat.observations || "");
@@ -83,19 +93,21 @@ const PopupModifierZakat = ({
   };
 
  const handleSave = () => {
-  const updatedZakat = {
-    ...zakat,
+ const updatedZakat = {
+  ...zakat,
 
-    date: infos[0]?.value,
-    numero: infos[1]?.value,
-    montant: infos[2]?.value,
-    modePaiement: infos[3]?.value,
-    enregistrePar: infos[4]?.value,
+  date: infos[0]?.value,
+  numero: infos[1]?.value,
+  montant: infos[2]?.value,
+  modePaiement: infos[3]?.value,
+  enregistrePar: infos[4]?.value,
+  modifiePar: infos[5]?.value,
+  dateModification: infos[6]?.value,
 
-    observations,
-    causePrincipale: cause,
-    precisions,
-  };
+  observations,
+  causePrincipale: cause,
+  precisions,
+};
 
   setShowBanner(true);
 

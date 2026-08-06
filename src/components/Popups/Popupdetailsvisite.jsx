@@ -140,24 +140,31 @@ const PopupDetailVisite = ({
 
             <div className="space-y-3">
 
-              <InfoCard
-                title="Informations générales"
-                data={[
-                  {
-                    label: "Date",
-                    value: visite.date,
-                  },
-                  {
-                    label: "Visite n ",
-                    value: visite.numeroVisite,
-                  },
-                  {
-                    label: "Enregistrée par",
-                    value: visite.enregistrePar,
-                  },
-                ]}
-              />
-
+            <InfoCard
+  title="Informations générales"
+  data={[
+    {
+      label: "Date",
+      value: visite.date,
+    },
+    {
+      label: "Visite n°",
+      value: visite.numeroVisite,
+    },
+    {
+      label: "Enregistrée par",
+      value: visite.enregistrePar,
+    },
+    {
+      label: "Modifié par",
+      value: visite.modifiePar || "-",
+    },
+    {
+      label: "Date de modification",
+      value: visite.dateModification || "-",
+    },
+  ]}
+/>
               <AfficherMesure
                 title="Mesure nourrisson"
                 poids={visite.nourrisson?.poids}
@@ -305,4 +312,3 @@ const PopupDetailVisite = ({
 };
 
 export default PopupDetailVisite;
-

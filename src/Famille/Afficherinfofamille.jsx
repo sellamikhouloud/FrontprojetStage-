@@ -36,23 +36,44 @@ const isMobile = window.innerWidth < 768;
     { label: "Taille de naissance", value: "35 cm" },
   ];
 
-  const mere = [
-    { label: "Village", value: "Lexeiba" },
-    { label: "Téléphone", value: "24123456" },
-    { label: "Date de naissance", value: "15/05/1990" },
-    { label: "Statut matrimonial", value: "Mariée" },
-    { label: "Nombre d'enfants à charge", value: "2" },
-    { label: "Référent médical", value: "Mariam Diallo" },
-  ];
-
+const mere = [
+  { label: "Village", value: "Lexeiba" },
+  { label: "Numéro de téléphone", value: "24123456" },
+  { label: "Date de naissance", value: "15/05/1990" },
+  { label: "Statut matrimonial", value: "Mariée" },
+  { label: "Nombre d'enfants à charge", value: "2" },
+  { label: "Référent médical", value: "Mariam Diallo" },
+  {
+    label: "Informations complémentaires",
+    value:
+      "/",
+  },
+];
  
   const programme = [
     
       { label: "Date d'entrée dans le programme",
       value: "16/05/2026"},
+    {
+    label: "Enregistré par",
+    value: "Ahmed Mohamed",
+  },
+  ];
+
+
+    const modification = [
+  {
+    label: "Modifié par",
+    value: "Ahmed Mohamed",
+  },
+  {
+    label: "Date de modification",
+    value: "05/08/2026 ",
+  },
+];
       
     
-  ];
+  
 
   const zakat = [
     {
@@ -681,7 +702,12 @@ return (
   action="Voir tous"
   onActionClick={() => setOpenZakat(true)}
   data={zakat}
-/>
+/> 
+
+    
+ <InfoCard
+    data={modification}
+  />
   </div>
 
   {/* Colonne droite */}
@@ -781,6 +807,3 @@ return (
 };
 
 export default FamilyProfile;
-
-
-

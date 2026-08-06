@@ -12,6 +12,7 @@ import EditableInfoCard from "../components/Containers/ModifierContainer";
 import PopupFinSuivi from "../components/Popups/PopupFinsuivi";
 import Popup from "../components/Popups/SuccessPopup.jsx";
 import PopupListeCoordinateurs from "../components/Popups/PopupListeCoordinateurs";
+import PopupZakatFamille from "../components/Popups/PopupZakatfamille";
 import successImage from "../assets/Success.svg";
 
 
@@ -26,8 +27,47 @@ const { id } = useParams();
 const statut = "Sortie"; // ou "Sortie" pour tester
 
 const isMobile = window.innerWidth < 768;
-
+const [openZakat, setOpenZakat] = useState(false);
 const [openSuccess, setOpenSuccess] = useState(false);
+const zakatList = [
+  {
+    id: 1,
+    numero: "Zakat n°1",
+    date: "15/05/2026",
+    montant: "500",
+    euro: "12.45",
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem Mint Ahmed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "12 mars 2025",
+    code: "GDK-2026-003",
+    enregistrePar: "Coordinateur",
+    modePaiement: "Bankily",
+    observations: "Observation...",
+    causePrincipale: "Cause principale",
+    precisions: "Précisions...",
+  },
+
+  {
+    id: 2,
+    numero: "Zakat n°2",
+    date: "20/06/2026",
+    montant: "750",
+    euro: "18.67",
+    enfant: "Aïcha Mint Mohamed",
+    mere: "Meriem Mint Ahmed",
+    sexe: "Fille",
+    region: "Lexeiba",
+    dateNaissance: "12 mars 2025",
+    code: "GDK-2026-003",
+    enregistrePar: "Coordinateur",
+    modePaiement: "Espèces",
+    observations: "",
+    causePrincipale: "",
+    precisions: "",
+  },
+];
 const coordinateurs = [
   {
     id: 1,
@@ -76,7 +116,7 @@ const [openCoordinateur, setOpenCoordinateur] = useState(false);
 },
 ]);
 
- const [mere, setMere] = useState([
+const [mere, setMere] = useState([
   {
     label: "Village",
     value: "Lexeiba",
@@ -86,10 +126,10 @@ const [openCoordinateur, setOpenCoordinateur] = useState(false);
     ],
   },
   {
-  label: "Téléphone",
-  value: "24123456",
-  type: "phone",
-},
+    label: "Téléphone",
+    value: "24123456",
+    type: "phone",
+  },
   {
     label: "Date de naissance",
     value: new Date("1990-05-15"),
@@ -105,21 +145,43 @@ const [openCoordinateur, setOpenCoordinateur] = useState(false);
       "Veuve",
     ],
   },
- {
-  label: "Nombre d'enfants à charge",
-  value: "2",
-  type: "number",
-},
+  {
+    label: "Nombre d'enfants à charge",
+    value: "2",
+    type: "number",
+  },
   {
     label: "Référent médical",
     value: "Mariam Diallo",
   },
+  {
+    label: "Informations complémentaires",
+    value:
+      "/",
+    type: "textarea",
+  },
 ]);
+
+const modification = [
+  {
+    label: "Modifié par",
+    value: "Ahmed Mohamed",
+  },
+  {
+    label: "Date de modification",
+    value: "05/08/2026 ",
+  },
+];
 const [programme, setProgramme] = useState([
   {
     label: "Date d'entrée dans le programme",
     value: new Date("2026-05-16"),
     type: "date",
+  },
+  {
+    label: "Enregistré par",
+    value: "Ahmed Mohamed",
+    readOnly: true,
   },
 ]);
   const handleNourrissonChange = (index, value) => {
@@ -396,6 +458,12 @@ return (
   Distribution={distributionList}
 />
 
+<PopupZakatFamille
+  open={openZakat}
+  onClose={() => setOpenZakat(false)}
+  zakats={zakatList}
+/>
+
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
@@ -525,10 +593,18 @@ return (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
   {/* Colonne gauche */}
   <div className="flex flex-col gap-4">
-    <InfoCard
-      title="Zakat aid"
-      data={zakat}
-    />
+   <InfoCard
+  title="Zakat aid"
+  action="Voir tous"
+  onActionClick={() => setOpenZakat(true)}
+  data={zakat}
+/>
+
+    
+  <InfoCard
+   
+    data={modification}
+  />
   </div>
 
   {/* Colonne droite */}
@@ -633,30 +709,3 @@ return (
 };
 
 export default Modifyfamilly ;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

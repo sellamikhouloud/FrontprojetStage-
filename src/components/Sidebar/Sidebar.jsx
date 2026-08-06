@@ -1,15 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SidebarItem from "./SidebarItem";
 import { sidebarConfig } from "./sidebarData";
 import menuIcon from "../../assets/menu.svg";
 import closeIcon from "../../assets/close.svg";
+import PopupProfilAdmin from "../Popups/PopupProfilAdmin";
 
 export default function Sidebar({
   role = "coordinator",
   user = {},
 }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showProfil, setShowProfil] = useState(false);
 
   // Fallback to coordinator if role doesn't exist
   const config = sidebarConfig[role] || sidebarConfig.coordinator;
@@ -24,8 +28,29 @@ export default function Sidebar({
   // User avatar if available, otherwise use the default avatar
   const displayedAvatar = user.profilePicture || defaultAvatar;
 
+  const isAdmin = role === "admin";
+
+  const adminData = {
+    nom: user.nom || "Admin",
+    id: user.id ? `id – ${user.id}` : "id – admin",
+    role: "Admin",
+    avatarUrl: user.profilePicture,
+    email: user.email,
+    telephone: user.telephone,
+    region: user.region,
+  };
+
   const handleItemClick = () => {
     setMobileOpen(false);
+  };
+
+  // Admin -> ouvre la popup profil. Coordinateur -> navigue vers la page profil dédiée.
+  const handleAvatarClick = () => {
+    if (isAdmin) {
+      setShowProfil(true);
+    } else {
+      navigate("/profile-coor");
+    }
   };
 
   return (
@@ -62,6 +87,7 @@ export default function Sidebar({
       )}
 
       {/* ================= DESKTOP ================= */}
+      {/* mt / mb / ml ajoutent l'espace blanc autour de la sidebar (haut, bas, gauche) sur toutes les pages */}
 
       <aside
         onMouseLeave={() => setExpanded(false)}
@@ -69,11 +95,13 @@ export default function Sidebar({
           hidden
           md:flex
           self-stretch
-          min-h-full
+          mt-4
+          mb-4
+          ml-6
           bg-[#4E9F8A]
           rounded-[42px]
-          pt-8
-          pb-6
+          pt-4
+          pb-4
           flex-col
           transition-all
           duration-300
@@ -147,7 +175,7 @@ export default function Sidebar({
         {/* Avatar */}
 
         <div className="flex justify-center flex-shrink-0">
-          <button>
+          <button onClick={handleAvatarClick}>
             <img
               src={displayedAvatar}
               alt="Avatar"
@@ -262,7 +290,12 @@ export default function Sidebar({
         {/* Avatar */}
 
         <div className="flex justify-center flex-shrink-0 pt-2">
-          <button>
+          <button
+            onClick={() => {
+              setMobileOpen(false);
+              handleAvatarClick();
+            }}
+          >
             <img
               src={displayedAvatar}
               alt="Avatar"
@@ -276,6 +309,16 @@ export default function Sidebar({
           </button>
         </div>
       </aside>
+
+      {/* ================= POPUP PROFIL ADMIN (uniquement pour les admins) ================= */}
+
+      {isAdmin && (
+        <PopupProfilAdmin
+          open={showProfil}
+          admin={adminData}
+          onClose={() => setShowProfil(false)}
+        />
+      )}
     </>
   );
 }

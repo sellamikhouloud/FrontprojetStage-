@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-
+import DateContainer from "../Containers/DateContainer";
 import TextArea from "../Containers/Textarea";
 import Button from "../Button/Button";
 
@@ -12,7 +12,7 @@ const PopupFinSuivi = ({
   onConfirm,
 }) => {
   const [motif, setMotif] = useState("");
-
+  const [dateSortie, setDateSortie] = useState(new Date());
   return (
     <AnimatePresence>
       {open && (
@@ -114,7 +114,19 @@ const PopupFinSuivi = ({
               {title}
             </h2>
 
+
+<div className="mt-4">
+  <DateContainer
+    label="Date de sortie"
+    value={dateSortie}
+    onChange={setDateSortie}
+    noPadding
+  />
+</div>
+
+
             {/* TextArea */}
+            <div className="mt-4">
             <TextArea
               label="Motif de sortie"
               placeholder="Entrez le motif"
@@ -122,7 +134,7 @@ const PopupFinSuivi = ({
               onChange={(e) => setMotif(e.target.value)}
               height="h-[130px]"
             />
-
+</div>
             {/* Bouton */}
             <div className="mt-8">
               <Button

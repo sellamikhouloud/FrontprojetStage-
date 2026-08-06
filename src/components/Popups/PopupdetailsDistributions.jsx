@@ -114,22 +114,30 @@ const PopupDetailDistribution = ({
             {/* Colonne gauche */}
            <div className="space-y-3 ">
               <InfoCard
-                title="Informations générales"
-                data={[
-                  {
-                    label: "Date",
-                    value: distribution.date,
-                  },
-                  {
-                    label: "Distribution n°",
-                    value: distribution.numeroDistribution,
-                  },
-                  {
-                    label: "Enregistrée par",
-                    value: distribution.enregistrePar,
-                  },
-                ]}
-              />
+  title="Informations générales"
+  data={[
+    {
+      label: "Date",
+      value: distribution.date,
+    },
+    {
+      label: "Distribution n°",
+      value: distribution.numeroDistribution,
+    },
+    {
+      label: "Enregistrée par",
+      value: distribution.enregistrePar,
+    },
+    {
+      label: "Modifié par",
+      value: distribution.modifiePar || "-",
+    },
+    {
+      label: "Date de modification",
+      value: distribution.dateModification || "-",
+    },
+  ]}
+/>
 
               <InfoCard
                 title="Lait infantile"
