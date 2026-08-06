@@ -25,7 +25,7 @@ import familleWhite from "../../assets/famille-white.svg";
 
 // Admin
 import galerieA from "../../assets/GalerieA.svg";
-import galerieAWhite from "../../assets/GalerieA-white.svg";
+import galerieAWhite from "../../assets/Galerie-white.svg";
 
 import zakat from "../../assets/money-add.svg";
 import zakatWhite from "../../assets/money-add-white.svg";
