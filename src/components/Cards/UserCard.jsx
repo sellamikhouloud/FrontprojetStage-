@@ -27,7 +27,8 @@ export default function UserCard({
         rounded-2xl
         border
         gap-8
-        py-[11px]
+        py-[16px]
+        sm:py-[11px]
         px-[20px]
         ${editing ? "border-dashed" : "border-solid"}
       `}
@@ -97,37 +98,60 @@ export default function UserCard({
         )}
       </div>
 
-      {/* Nom + id */}
-      <div className="flex flex-col justify-center min-w-0">
-        <p className="text-[20px] font-extrabold text-black leading-tight truncate">
-          {nom}
-        </p>
-        <p
-          className=" mt-1 text-[14px] font-normal leading-tight truncate"
-          style={{ color: "#6E7976" }}
-        >
-          {id}
-        </p>
-      </div>
-
-      {/* Badge rôle */}
+      {/*
+        Bloc droit : contient le nom/id ET le badge rôle.
+        - Mobile (par défaut) : flex-col -> le badge tombe SOUS le nom/id.
+        - >= sm : flex-row -> on retrouve la mise en page originale,
+          nom/id à gauche, badge poussé à droite via sm:ml-auto.
+      */}
       <div
         className="
-          ml-auto
-          rounded-full
-          border
-          px-4
-          py-[6px]
-          shrink-0
-          whitespace-nowrap
+          flex
+          flex-col
+          sm:flex-row
+          sm:items-center
+          flex-1
+          min-w-0
+          gap-3
+          sm:gap-8
         "
-        style={{
-          backgroundColor: "#E8F7EF",
-          borderColor: "#22C55E",
-          color: "#22C55E",
-        }}
       >
-        <span className="text-[15px] font-bold">{role}</span>
+        {/* Nom + id */}
+        <div className="flex flex-col justify-center min-w-0">
+          <p className="text-[20px] font-extrabold text-black leading-tight truncate">
+            {nom}
+          </p>
+          <p
+            className=" mt-1 text-[14px] font-normal leading-tight truncate"
+            style={{ color: "#6E7976" }}
+          >
+            {id}
+          </p>
+        </div>
+
+        {/* Badge rôle */}
+        <div
+          className="
+            self-start
+            sm:self-auto
+            sm:ml-auto
+            rounded-full
+            border
+            px-4
+            py-[6px]
+            mt-1
+            sm:mt-0
+            shrink-0
+            whitespace-nowrap
+          "
+          style={{
+            backgroundColor: "#E8F7EF",
+            borderColor: "#22C55E",
+            color: "#22C55E",
+          }}
+        >
+          <span className="text-[15px] font-bold">{role}</span>
+        </div>
       </div>
     </div>
   );
