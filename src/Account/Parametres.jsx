@@ -12,6 +12,7 @@ import { HiOutlineCurrencyEuro, HiOutlineLocationMarker, HiOutlineMail } from "r
 import OptionsMenu from "../components/Containers/OptionsMenu";
 import Button from "../components/Button/Button";
 import ErrorMessage from "../components/Forms/ErrorMessage";
+import ListManagerDialog from "../components/Popups/ListManagerDialog";
 import { useNavigate } from "react-router-dom";
 
 export default function Parametres({ onClose }) {
@@ -39,10 +40,23 @@ export default function Parametres({ onClose }) {
 
   // Ajout de région
   const [nouvelleRegion, setNouvelleRegion] = useState("");
+  // Liste des régions — à remplacer par les données réelles de l'API
+  const [regions, setRegions] = useState([
+    { id: 1, label: "Nouakchott" },
+    { id: 2, label: "Nouadhibou" },
+    { id: 3, label: "Rosso" },
+  ]);
+  const [showRegionsList, setShowRegionsList] = useState(false);
 
   // Ajout d'email destinataire des rapports
   const [nouvelEmail, setNouvelEmail] = useState("");
   const [erreurEmail, setErreurEmail] = useState("");
+  // Liste des destinataires — à remplacer par les données réelles de l'API
+  const [emails, setEmails] = useState([
+    { id: 1, label: "direction@nutrigest.mr" },
+    { id: 2, label: "comptabilite@nutrigest.mr" },
+  ]);
+  const [showEmailsList, setShowEmailsList] = useState(false);
 
   const handleTauxChange = (e) => {
     const value = e.target.value;
@@ -71,15 +85,21 @@ export default function Parametres({ onClose }) {
 
     console.log("Nouvelle région à ajouter :", nom);
 
-    // TODO: appel API pour créer la région, puis rafraîchir la liste côté parent
-    // addRegion(nom);
+    // TODO: appel API pour créer la région, puis remplacer par la réponse réelle
+    setRegions((prev) => [...prev, { id: Date.now(), label: nom }]);
 
     setNouvelleRegion("");
   };
 
+  const handleSupprimerRegion = (id) => {
+    console.log("Région à supprimer :", id);
+
+    // TODO: appel API pour supprimer la région côté serveur
+    setRegions((prev) => prev.filter((r) => r.id !== id));
+  };
+
   const handleVoirToutesRegions = () => {
-    // TODO: adapter la route vers la vue/page de gestion des régions
-    navigate("/parametres/regions");
+    setShowRegionsList(true);
   };
 
   const handleAjouterEmail = () => {
@@ -95,15 +115,21 @@ export default function Parametres({ onClose }) {
     setErreurEmail("");
     console.log("Nouvel email destinataire des rapports :", email);
 
-    // TODO: appel API pour enregistrer l'email, puis rafraîchir la liste côté parent
-    // addReportRecipient(email);
+    // TODO: appel API pour enregistrer l'email, puis remplacer par la réponse réelle
+    setEmails((prev) => [...prev, { id: Date.now(), label: email }]);
 
     setNouvelEmail("");
   };
 
+  const handleSupprimerEmail = (id) => {
+    console.log("Destinataire à supprimer :", id);
+
+    // TODO: appel API pour supprimer le destinataire côté serveur
+    setEmails((prev) => prev.filter((e) => e.id !== id));
+  };
+
   const handleVoirTousLesEmails = () => {
-    // TODO: adapter la route vers la vue/page de gestion des destinataires
-    navigate("/parametres/destinataires-rapports");
+    setShowEmailsList(true);
   };
 
   const handleSave = () => {
@@ -121,6 +147,7 @@ export default function Parametres({ onClose }) {
 };
 
   return (
+    <>
     <div className="
       min-h-screen
       bg-white
@@ -656,7 +683,6 @@ export default function Parametres({ onClose }) {
     sm:py-[15px]
   "
 >
-
   {/* --------------------------------
       EN-TÊTE : icône + titre + "Voir tout"
   --------------------------------- */}
@@ -1111,5 +1137,24 @@ export default function Parametres({ onClose }) {
 
 
     </div>
+
+    <ListManagerDialog
+      open={showRegionsList}
+      title="Toutes les régions"
+      items={regions}
+      onDelete={handleSupprimerRegion}
+      onClose={() => setShowRegionsList(false)}
+      emptyMessage="Aucune région pour l'instant."
+    />
+
+    <ListManagerDialog
+      open={showEmailsList}
+      title="Tous les destinataires"
+      items={emails}
+      onDelete={handleSupprimerEmail}
+      onClose={() => setShowEmailsList(false)}
+      emptyMessage="Aucun destinataire pour l'instant."
+    />
+    </>
   );
 }
