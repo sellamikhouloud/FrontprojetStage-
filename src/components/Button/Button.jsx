@@ -174,6 +174,18 @@ const Button = ({
     text-[16px]
     rounded-[20px]
     border
+    `,
+    refus:`
+    bg-[#FFF2F5]
+    border
+    border-[#EF4444]
+    text-[#EF4444]
+    `,
+    Annuler : `
+    bg-[#EEEEEE]
+    border
+    border-[#6B7280]
+    text-[#6B7280]
     `
   };
 
