@@ -1,8 +1,11 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar/Sidebar";
 import ProfilInfoBlock, { CHAMPS_COORDINATEUR, logoutIcon } from "../components/Forms/Profilinfoblock";
 import ParametresCard from "../components/Forms/ParametresCard";
 import AssistanceCard from "../components/Forms/AssistanceCard";
 import Button from "../components/Button/Button";
+import ConfirmDialog from "../components/Popups/ConfirmdialogPopup";
 
 
 export default function PageProfilCoordinateur() {
@@ -18,13 +21,18 @@ export default function PageProfilCoordinateur() {
     structure: "Nutrigest Mauritanie",
   };
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const navigate = useNavigate();
+
   const handleSave = (updatedFields) => {
     // TODO: appel API pour persister les modifications du coordinateur
     console.log("À sauvegarder :", updatedFields);
   };
 
   const handleDeconnexion = () => {
-    // TODO: logique de déconnexion (clear session/token, navigate("/login")...)
+    // TODO: logique de déconnexion réelle (clear session/token...)
+    setShowLogoutConfirm(false);
+    navigate("/");
   };
 
   return (
@@ -51,7 +59,7 @@ export default function PageProfilCoordinateur() {
           </div>
 
           {/* Colonne droite — paramètres + assistance + déconnexion */}
-          <div className="mt-16">
+          <div className="mt-0 lg:mt-16">
             <ParametresCard
               lastSync="Aujourd'hui à 09:42"
               syncStatus="synchronise"
@@ -64,9 +72,9 @@ export default function PageProfilCoordinateur() {
               onPolitique={() => console.log("Politique de confidentialité")}
             />
 
-            
+
           </div>
-         
+
         </div>
          <div className="mt-0">
               <Button
@@ -74,10 +82,20 @@ export default function PageProfilCoordinateur() {
                 variant="deconnexion"
                 icon={logoutIcon}
                 noPadding
-                onClick={handleDeconnexion}
+                onClick={() => setShowLogoutConfirm(true)}
               />
             </div>
       </main>
+
+      <ConfirmDialog
+        open={showLogoutConfirm}
+        title="Se déconnecter ?"
+        message="Vous devrez vous reconnecter avec vos identifiants pour accéder de nouveau à votre compte."
+        confirmLabel="Déconnexion"
+        cancelLabel="Annuler"
+        onConfirm={handleDeconnexion}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </div>
   );
 }
