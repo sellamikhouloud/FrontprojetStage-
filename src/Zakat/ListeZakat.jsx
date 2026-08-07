@@ -15,11 +15,13 @@ import  SoldeCard from "../components/Cards/SoldeCard";
 import  RepartitionAides from "../components/Cards/RepartitionAides";
 import NoResultImage from "../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
+import PopupHistoriqueVersements from "../components/Popups/PopupHistoriqueVersements";
 
 export default function ZakatPage() {
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
+  const [showHistoriqueVersements, setShowHistoriqueVersements] = useState(false);
  
 
   const navigate = useNavigate();
@@ -69,6 +71,61 @@ const motifOptions = [
   precisions: "Distribution effectuée."
 }
 ];
+
+const versements = [
+  {
+    id: 1,
+    date: "04/08/2026",
+    commentaire: "Ce mantant était a cause de l'aid",
+    montantMRU: 100,
+    montantEUR: 47,
+  },
+  {
+    id: 2,
+    date: "04/08/2026",
+    commentaire: "",
+    montantMRU: 100,
+    montantEUR: 47,
+  },
+  {
+    id: 3,
+    date: "04/08/2027",
+    commentaire: "",
+    montantMRU: 23000,
+    montantEUR: 4744,
+    commentaire: "Ce mantant était a cause de l'aid",
+  },
+  {
+    id: 4,
+    date: "04/04/2027",
+    commentaire: "",
+    montantMRU: 500,
+    montantEUR: 25,
+  },
+  {
+    id: 5,
+    date: "04/04/2027",
+    commentaire: "",
+    montantMRU: 500,
+    montantEUR: 25,
+  },
+  {
+    id: 6,
+    date: "04/04/2027",
+    commentaire: "",
+    montantMRU: 500,
+    montantEUR: 25,
+  },
+  {
+    id: 7,
+    date: "04/04/2027",
+    commentaire: "",
+    montantMRU: 500,
+    montantEUR: 25,
+  },
+  // ...
+];
+
 const filtered = zakats.filter((item) => {
   const keyword = search.toLowerCase();
 
@@ -200,10 +257,32 @@ if (isFilterOpen && isMobile) {
 
       <Sidebar role="admin" />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
+       <main
+      className="
+        relative
+        flex-1
+        min-h-0
+        overflow-hidden
+        bg-white
+      "
+    >
+        <div
+    className="
+      h-full
+      overflow-y-auto
+      px-5
+      pt-18
+      md:pt-0
+      lg:p-8
+      pb-[50px]
+    "
+  >
        
 <NavigationHeader
   title="Statistiques des zakats"
+  type="historique"
+  actionTitle="Voir l'historique des versements"
+  onAction={() => setShowHistoriqueVersements(true)}
   secondType="add"
   secondActionTitle="Alimenter le solde"
   onSecondAction={() => setOpenAlimenterSolde(true)}
@@ -292,10 +371,19 @@ if (isFilterOpen && isMobile) {
   </div>
 )}
         </div>
-
-     
-
-      </main>
+        </div>
+  <div
+    className="
+      absolute
+      bottom-0
+      left-0
+      right-0
+      h-[15px]
+      bg-white
+      z-20
+    "
+  />
+</main>
      
  <PopupDetailZakat
     open={showDetailPopup}
@@ -330,6 +418,11 @@ if (isFilterOpen && isMobile) {
 
     setOpenAlimenterSolde(false);
   }}
+/>
+<PopupHistoriqueVersements
+  open={showHistoriqueVersements}
+  onClose={() => setShowHistoriqueVersements(false)}
+  versements={versements}
 />
     </div>
    

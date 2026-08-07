@@ -5,6 +5,7 @@ import Edit1 from "../../assets/Edit 1.svg";
 import Edit2 from "../../assets/Edit 2.svg";
 import DocumentAdd from "../../assets/Document add.svg";
 import Share from "../../assets/Share.svg";
+import Historique from "../../assets/History.svg";
 
 const NavigationHeader = ({
   title,
@@ -191,6 +192,49 @@ const NavigationHeader = ({
       />
     </button>
   );
+
+      case "historique":
+        return (
+          <button
+            onClick={currentAction}
+            className="
+              group
+              flex
+              items-center
+              gap-1
+              sm:gap-2
+              text-[#1E1E1E]
+              text-[13px]
+              sm:text-[16px]
+              lg:text-[18px]
+              font-medium
+              whitespace-nowrap
+              shrink-0
+              cursor-pointer
+              transition-all
+              duration-150
+              hover:opacity-70
+              active:scale-95
+            "
+          >
+            <span>{currentTitle}</span>
+
+            <img
+              src={Historique}
+              alt="Historique"
+              className="
+                w-4
+                h-4
+                sm:w-5
+                sm:h-5
+                transition-transform
+                duration-150
+                group-active:scale-90
+              "
+            />
+          </button>
+        );
+
       case "save":
         return (
           <div className="shrink-0">
