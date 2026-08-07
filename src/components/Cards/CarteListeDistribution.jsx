@@ -2,7 +2,6 @@ const CardListDistribution = ({
   sexe = "Fille",
   nom,
   code,
-  distribution,
   date,
   produits = [],
   onClick,
@@ -13,10 +12,10 @@ const CardListDistribution = ({
     <div
       onClick={onClick}
       className="w-full min-h-[100px] rounded-[15px] border px-[15px] py-[15px] transition hover:shadow-sm cursor-pointer"
-     style={{
-  background: isGirl ? "#FFF2F5" : "#F8FBFC",
-  borderColor: "#E2E8F0",
-}}
+      style={{
+        background: isGirl ? "#FFF2F5" : "#F8FBFC",
+        borderColor: "#E2E8F0",
+      }}
     >
       {/* ================= MOBILE ================= */}
       <div className="block md:hidden">
@@ -36,13 +35,11 @@ const CardListDistribution = ({
           </span>
         </div>
 
-        {/* Ligne 2 */}
-        <div className="mt-2 flex items-center gap-2 text-[16px] text-[#111827]">
-          <span>{distribution}</span>
-
-          <span className="text-[#94A3B8]">•</span>
-
-          <span className="font-semibold">{date}</span>
+        {/* Date */}
+        <div className="mt-2">
+          <span className="text-[16px] font-semibold text-[#111827]">
+            {date}
+          </span>
         </div>
 
         {/* Produits */}
@@ -87,12 +84,6 @@ const CardListDistribution = ({
               }}
             >
               {code}
-            </span>
-
-            <span className="text-[#94A3B8]">•</span>
-
-            <span className="text-[17px] font-semibold text-[#111827]">
-              {distribution}
             </span>
           </div>
 
