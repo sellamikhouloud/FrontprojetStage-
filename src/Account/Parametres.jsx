@@ -236,17 +236,17 @@ return (
       {/* ================================
           TITRE
       ================================= */}
-      <h1
-        className="
-          mt-1
-          text-[24px]
-          sm:text-[26px]
-          font-semibold
-          text-[#000000]
-        "
-      >
-        Paramètres
-      </h1>
+     <h1
+  className="
+    mt-1
+    text-center
+    text-[36px]
+    font-bold
+    text-[#000000]
+  "
+>
+  Paramètres
+</h1>
 
       <h3 className="text-[20px] font-bold text-black mt-3">
   Taux de change
