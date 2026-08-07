@@ -42,9 +42,11 @@ export default function Parametres({ onClose }) {
   const [nouvelleRegion, setNouvelleRegion] = useState("");
   // Liste des régions — à remplacer par les données réelles de l'API
   const [regions, setRegions] = useState([
-    { id: 1, label: "Nouakchott" },
-    { id: 2, label: "Nouadhibou" },
-    { id: 3, label: "Rosso" },
+    { id: 1, label: "Nouakchott" ,date: "04/08/2026"},
+    { id: 2, label: "Nouadhibou" ,date: "04/08/2026"},
+    { id: 3, label: "Rosso" , date: "04/08/2026"},
+    { id: 4, label: "Rosso" , date: "04/08/2026"},
+     { id: 5, label: "Rosso" , date: "04/08/2026"},
   ]);
   const [showRegionsList, setShowRegionsList] = useState(false);
 
@@ -53,8 +55,13 @@ export default function Parametres({ onClose }) {
   const [erreurEmail, setErreurEmail] = useState("");
   // Liste des destinataires — à remplacer par les données réelles de l'API
   const [emails, setEmails] = useState([
-    { id: 1, label: "direction@nutrigest.mr" },
-    { id: 2, label: "comptabilite@nutrigest.mr" },
+    { id: 1, label: "direction@nutrigest.mr" , date: "04/08/2026" },
+    { id: 2, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 3, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 4, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 5, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 6, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+        
   ]);
   const [showEmailsList, setShowEmailsList] = useState(false);
 
@@ -1149,7 +1156,7 @@ export default function Parametres({ onClose }) {
 
     <ListManagerDialog
       open={showEmailsList}
-      title="Tous les destinataires"
+      title="Emails destinataires des rapports annuels et mensuels"
       items={emails}
       onDelete={handleSupprimerEmail}
       onClose={() => setShowEmailsList(false)}
