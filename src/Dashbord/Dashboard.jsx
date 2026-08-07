@@ -317,20 +317,6 @@ const handleAlertClick = (alert) => {
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
 
 
-        {/* ================= MOBILE HEADER ================= */}
-
-        <div className="lg:hidden">
-          <WelcomeCard
-            userName={userName}
-            subtitle={subtitle}
-            NotificationCount={notificationCount}
-            onNotificationClick={handleNotifications}
-            onSettingsClick={() => navigate("/parametres")}
-          />
-        </div>
-
-
-
         {/* ================= DESKTOP WELCOME ================= */}
 
         <div className="hidden lg:block">
