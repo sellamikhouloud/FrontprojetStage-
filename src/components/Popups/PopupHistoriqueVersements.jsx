@@ -20,11 +20,13 @@ export default function PopupHistoriqueVersements({
     <div
       className="
         fixed inset-0 z-[70]
-        bg-black/40
+        bg-transparent
+        sm:bg-black/40
         flex items-start sm:items-center
         justify-center
         overflow-y-auto
-        p-4
+        p-0
+        sm:p-4
       "
       onClick={onClose}
     >
@@ -34,16 +36,19 @@ export default function PopupHistoriqueVersements({
           w-full
           sm:w-[560px]
 
-          h-[85vh]
-          max-h-[85vh]
+          h-full
+          sm:h-[85vh]
+          max-h-full
+          sm:max-h-[85vh]
 
           flex
           flex-col
 
           bg-white
-          rounded-[24px]
+          rounded-none
+          sm:rounded-[24px]
           overflow-hidden
-          shadow-xl
+          sm:shadow-xl
         "
       >
         {/* Header FIXE */}
@@ -100,7 +105,9 @@ export default function PopupHistoriqueVersements({
                 <div
                   key={v.id}
                   className="
-                    flex items-center justify-between gap-3
+                    flex flex-col
+                    sm:flex-row sm:items-center sm:justify-between
+                    gap-2 sm:gap-3
                     rounded-[15px]
                     border
                     border-[#E2E8F0]
