@@ -13,6 +13,7 @@ import StatusCard  from  "../components/Report/ReportBadge";
 import ReportVisitsNutrition from "../components/Report/ReportVisitsNutrition";
 import DistributionItem from "../components/Report/DistributionItem";
 import UpRight from "../assets/Up Right.svg";
+import ListManagerDialog from "../components/Popups/ListManagerDialog";
 
 const RapportAnnuel = () => {
   const [selectedYear, setSelectedYear] = useState(null);
@@ -20,6 +21,8 @@ const RapportAnnuel = () => {
   const [isSent, setIsSent] = useState(false);
 
   const [showPreview, setShowPreview] = useState(false);
+
+   const [showEmailsListReadOnly, setShowEmailsListReadOnly] = useState(false);
 
   // TODO: remplacer par un vrai YearPicker (2025, 2026, 2027...) comme sur ta maquette.
   // Pour l'instant on réutilise MonthPicker pour que la navigation fonctionne déjà.
@@ -56,6 +59,17 @@ const RapportAnnuel = () => {
     unit: "Kg",
   },
 ];
+
+
+const [emails, setEmails] = useState([
+    { id: 1, label: "direction@nutrigest.mr" , date: "04/08/2026" },
+    { id: 2, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 3, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 4, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 5, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 6, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+        
+  ]);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -212,18 +226,25 @@ const RapportAnnuel = () => {
   <YearPicker onChange={handleYearChange} />
 </div>
 
-    <button
+<button
   type="button"
-  onClick={() => {
-    
-    console.log("Consulter la liste des emails destinataires");
-  }}
-    className="mt-4 flex items-center gap-1.5 text-[14px] sm:text-[12px] md:text-[16px] font-semibold text-[#202124]  w-fit"
+  onClick={() => setShowEmailsListReadOnly(true)}
+  className="
+    mt-4
+    flex items-center gap-1.5
+    text-[14px] sm:text-[12px] md:text-[16px]
+    font-semibold
+    text-[#202124]
+    w-fit
+
+    hover:opacity-70
+    active:scale-[0.97]
+    transition
+  "
 >
   Consulter la liste des emails destinataires du rapport
   <img src={UpRight} alt="" className="w-4 h-4" />
 </button>
-
   {/* Boutons */}
 <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
 
@@ -260,9 +281,19 @@ const RapportAnnuel = () => {
 </div>
         </div>
       </main>
+      
+       <ListManagerDialog
+        open={showEmailsListReadOnly}
+        title="Emails destinataires des rapports"
+        items={emails}
+        onClose={() => setShowEmailsListReadOnly(false)}
+        emptyMessage="Aucun destinataire pour l'instant."
+        showDelete={false}
+      />
     </div>
   );
 };
 
 export default RapportAnnuel;
+
 
