@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { User } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 import { sidebarConfig } from "./sidebarData";
 import menuIcon from "../../assets/menu.svg";
 import closeIcon from "../../assets/close.svg";
+import bellIcon from "../../assets/Bell.svg";
+import settingsIcon from "../../assets/SettingsBlack.svg";
 import PopupProfilAdmin from "../Popups/PopupProfilAdmin";
 
 export default function Sidebar({
   role = "coordinator",
   user = {},
+  showTopBarIcons = true,       // notif + paramètres (admin uniquement)
+  showTopBarAvatar = true,      // cercle avatar (coordinateur uniquement)
 }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
@@ -29,6 +34,7 @@ export default function Sidebar({
   const displayedAvatar = user.profilePicture || defaultAvatar;
 
   const isAdmin = role === "admin";
+  const isCoordinator = role === "coordinator";
 
   const adminData = {
     nom: user.nom || "Admin",
@@ -55,21 +61,109 @@ export default function Sidebar({
 
   return (
     <>
-      {/* ================= MOBILE BUTTON ================= */}
+      {/* ================= MOBILE TOP BAR ================= */}
 
-      <button
-        onClick={() => setMobileOpen(true)}
+      <div
         className="
           lg:hidden
           fixed
-          top-4
-          left-4
+          top-0
+          left-0
+          right-0
+          h-16
+          bg-white
           z-50
-          p-3
+
+          flex
+          items-center
+          justify-between
+
+          px-4
         "
       >
-        <img src={menuIcon} alt="Menu" className="w-10 h-10" />
-      </button>
+        {/* Hamburger */}
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="
+            w-11
+            h-11
+            rounded-[12px]
+
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <img src={menuIcon} alt="Menu" className="w-10 h-10" />
+        </button>
+
+        {/* Notification + Paramètres — admin uniquement */}
+        {isAdmin && showTopBarIcons && (
+          <div className="flex items-center gap-4">
+            <button
+              type="button"
+              aria-label="Notifications"
+              className="
+                w-9
+                h-9
+                flex
+                items-center
+                justify-center
+                hover:opacity-70
+                transition
+              "
+            >
+              <img src={bellIcon} alt="Notifications" className="w-7 h-7" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/parametres")}
+              aria-label="Paramètres"
+              className="
+                w-9
+                h-9
+                flex
+                items-center
+                justify-center
+                hover:opacity-70
+                transition
+              "
+            >
+              <img src={settingsIcon} alt="Paramètres" className="w-7 h-7" />
+            </button>
+          </div>
+        )}
+
+       {/* Avatar cercle — coordinateur uniquement */}
+{isCoordinator && showTopBarAvatar && (
+  <button
+    type="button"
+    onClick={handleAvatarClick}
+    aria-label="Profil"
+    className="
+      w-[45px]
+      h-[45px]
+      rounded-full
+      bg-[#8FC9C3]
+
+      flex
+      items-center
+      justify-center
+      overflow-hidden
+
+      hover:opacity-80
+      transition
+    "
+  >
+    <User
+      className="w-9 h-9 text-[#EAF7F3]"
+      strokeWidth={0}
+      fill="#EAF7F3"
+    />
+  </button>
+)}
+      </div>
 
       {/* ================= OVERLAY ================= */}
 
