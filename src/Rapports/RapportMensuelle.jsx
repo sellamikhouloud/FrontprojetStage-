@@ -13,6 +13,7 @@ import StatusCard  from  "../components/Report/ReportBadge";
 import ReportVisitsNutrition from "../components/Report/ReportVisitsNutrition";
 import DistributionItem from "../components/Report/DistributionItem";
 import UpRight from "../assets/Up Right.svg";
+import ListManagerDialog from "../components/Popups/ListManagerDialog";
 
 const RapportMensuel = () => {
   const [selectedMonth, setSelectedMonth] = useState(null);
@@ -22,6 +23,8 @@ const RapportMensuel = () => {
   // Contrôle l'affichage mobile : false = on voit juste les mois / boutons,
   // true = on voit le rapport (partie bleue) en plein écran comme une "screen"
   const [showPreview, setShowPreview] = useState(false);
+
+  const [showEmailsListReadOnly, setShowEmailsListReadOnly] = useState(false);
 
   const handleMonthChange = async (value) => {
   setSelectedMonth(value);
@@ -67,6 +70,16 @@ const RapportMensuel = () => {
     unit: "Kg",
   },
 ];
+
+const [emails, setEmails] = useState([
+    { id: 1, label: "direction@nutrigest.mr" , date: "04/08/2026" },
+    { id: 2, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 3, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 4, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 5, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+    { id: 6, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
+        
+  ]);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -226,11 +239,19 @@ const RapportMensuel = () => {
 
 <button
   type="button"
-  onClick={() => {
-    
-    console.log("Consulter la liste des emails destinataires");
-  }}
-    className="mt-4 flex items-center gap-1.5 text-[14px] sm:text-[12px] md:text-[16px] font-semibold text-[#202124]  w-fit"
+  onClick={() => setShowEmailsListReadOnly(true)}
+  className="
+    mt-4
+    flex items-center gap-1.5
+    text-[14px] sm:text-[12px] md:text-[16px]
+    font-semibold
+    text-[#202124]
+    w-fit
+
+    hover:opacity-70
+    active:scale-[0.97]
+    transition
+  "
 >
   Consulter la liste des emails destinataires du rapport
   <img src={UpRight} alt="" className="w-4 h-4" />
@@ -274,6 +295,14 @@ const RapportMensuel = () => {
 </div>
         </div>
       </main>
+      <ListManagerDialog
+  open={showEmailsListReadOnly}
+  title="Emails destinataires des rapports"
+  items={emails}
+  onClose={() => setShowEmailsListReadOnly(false)}
+  emptyMessage="Aucun destinataire pour l'instant."
+  showDelete={false}
+/>
     </div>
   );
 };
