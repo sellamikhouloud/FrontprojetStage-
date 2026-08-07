@@ -12,6 +12,7 @@ import HeaderRapport from "../components/Report/HeaderRapport";
 import StatusCard  from  "../components/Report/ReportBadge";
 import ReportVisitsNutrition from "../components/Report/ReportVisitsNutrition";
 import DistributionItem from "../components/Report/DistributionItem";
+import UpRight from "../assets/Up Right.svg";
 
 const RapportAnnuel = () => {
   const [selectedYear, setSelectedYear] = useState(null);
@@ -210,6 +211,18 @@ const RapportAnnuel = () => {
 <div className="mt-4 w-full">
   <YearPicker onChange={handleYearChange} />
 </div>
+
+    <button
+  type="button"
+  onClick={() => {
+    
+    console.log("Consulter la liste des emails destinataires");
+  }}
+    className="mt-4 flex items-center gap-1.5 text-[14px] sm:text-[12px] md:text-[16px] font-semibold text-[#202124]  w-fit"
+>
+  Consulter la liste des emails destinataires du rapport
+  <img src={UpRight} alt="" className="w-4 h-4" />
+</button>
 
   {/* Boutons */}
 <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
