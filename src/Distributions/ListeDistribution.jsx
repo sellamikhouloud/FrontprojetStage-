@@ -475,7 +475,7 @@ const grammage =
   sexe={item.sexe}
   nom={item.nom}
   code={item.code}
-  distribution={item.distribution}
+  
   date={item.date}
   produits={item.produits}
  onClick={() => {
@@ -584,3 +584,4 @@ const grammage =
    
   );
 }
+
