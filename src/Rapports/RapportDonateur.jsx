@@ -223,7 +223,7 @@ const RapportBilan  = () => {
           key={index}
           src={photo}
           alt={`Photo terrain ${index + 1}`}
-          className="w-full rounded-[10px] object-cover"
+       className="w-[85%] mx-auto rounded-[10px] object-cover"
         />
       ))}
     </div>
@@ -329,5 +329,6 @@ const RapportBilan  = () => {
 };
 
 export default RapportBilan;
+
 
 
