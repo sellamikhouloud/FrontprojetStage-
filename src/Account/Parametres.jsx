@@ -180,7 +180,16 @@ const handleSelectionnerSonnerie = () => {
 
 return (
   <div className="flex h-screen bg-white overflow-hidden">
-    <Sidebar role="coordinator" />
+    <Sidebar
+     role="admin"
+     user={{
+       nom: "Ahmed Mohamed",
+       id: "admin",
+       email: "ahmed.mohamed@gmail.com",
+       telephone: "+222 00 00 00 00",
+       profilePicture: "",
+     }}
+   />
 
     <main
       className="
