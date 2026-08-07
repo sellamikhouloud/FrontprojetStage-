@@ -48,3 +48,7 @@ vite-tsconfig-paths
 
 ## Installation
 npm install framer-motion 
+npm install recharts
+
+##integration 
+npm install axios 
