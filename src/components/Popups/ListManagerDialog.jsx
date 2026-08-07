@@ -7,6 +7,7 @@ import SearchBar from "../Filter/Searchbar";
  * ListManagerDialog — modal générique listant des éléments avec option de suppression.
  * Réutilisable pour n'importe quelle liste (villages, emails destinataires, etc.).
  *
+ *
  * props:
  *   open          : boolean
  *   title         : string                 -> ex: "Les villages"
@@ -33,16 +34,17 @@ export default function ListManagerDialog({
     item.label?.toLowerCase().includes(search.toLowerCase())
   );
 
-
   return (
     <div
       className="
         fixed inset-0 z-[70]
-        bg-black/40
+        bg-transparent
+        sm:bg-black/40
         flex items-start sm:items-center
         justify-center
         overflow-y-auto
-        p-4
+        p-0
+        sm:p-4
       "
       onClick={onClose}
     >
@@ -52,16 +54,19 @@ export default function ListManagerDialog({
           w-full
           sm:w-[640px]
 
-          h-[85vh]
-          max-h-[85vh]
+          h-full
+          sm:h-[85vh]
+          max-h-full
+          sm:max-h-[85vh]
 
           flex
           flex-col
 
           bg-white
-          rounded-[24px]
+          rounded-none
+          sm:rounded-[24px]
           overflow-hidden
-          shadow-xl
+          sm:shadow-xl
         "
       >
         {/* Header FIXE */}
@@ -115,22 +120,25 @@ export default function ListManagerDialog({
                 <div
                   key={item.id}
                   className="
-                    flex items-center justify-between gap-3
+                    flex flex-col
+                    sm:flex-row sm:items-center sm:justify-between
+                    gap-1.5 sm:gap-3
                     rounded-[15px]
                     border
                     border-[#A7DAD8]
                     bg-white
                     px-4
-                    py-1
+                    py-2
+                    sm:py-1
                   "
                 >
                   {/* Label */}
-                  <span className="text-[16px] font-semibold text-black min-w-0 ">
+                  <span className="text-[16px] font-semibold text-black min-w-0 truncate">
                     {item.label}
                   </span>
 
                   {/* Date + Delete */}
-                  <div className="flex items-center gap-4 shrink-0">
+                  <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
                     {item.date && (
                       <div className="flex items-center gap-1.5 whitespace-nowrap">
                         <Clock
