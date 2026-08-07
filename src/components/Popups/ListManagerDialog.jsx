@@ -7,6 +7,8 @@ import SearchBar from "../Filter/Searchbar";
  * ListManagerDialog — modal générique listant des éléments avec option de suppression.
  * Réutilisable pour n'importe quelle liste (villages, emails destinataires, etc.).
  *
+ * Desktop (sm+)  : affiché comme un popup centré avec fond assombri.
+ * Mobile (<sm)   : affiché comme un écran plein, sans overlay ni coins arrondis.
  *
  * props:
  *   open          : boolean
@@ -16,6 +18,7 @@ import SearchBar from "../Filter/Searchbar";
  *   onClose       : () => void
  *   searchPlaceholder? : string
  *   emptyMessage? : string                  -> texte affiché si aucun résultat
+ *   showDelete?   : boolean                 -> affiche ou non le bouton corbeille (true par défaut)
  */
 export default function ListManagerDialog({
   open,
@@ -25,6 +28,7 @@ export default function ListManagerDialog({
   onClose,
   searchPlaceholder = "Entrer le nom ici",
   emptyMessage = "Aucun élément trouvé.",
+  showDelete = true,
 }) {
   const [search, setSearch] = useState("");
 
@@ -129,7 +133,7 @@ export default function ListManagerDialog({
                     bg-white
                     px-4
                     py-2
-                    sm:py-1
+                    sm:py-2
                   "
                 >
                   {/* Label */}
@@ -151,24 +155,26 @@ export default function ListManagerDialog({
                       </div>
                     )}
 
-                    <button
-                      type="button"
-                      onClick={() => onDelete?.(item.id)}
-                      aria-label={`Supprimer ${item.label}`}
-                      className="
-                        shrink-0
-                        w-8 h-8
-                        rounded-full
-                        flex
-                        items-center
-                        justify-center
-                        text-[#EF4444]
-                        hover:bg-[#FDECEC]
-                        transition
-                      "
-                    >
-                      <Trash2 size={17} strokeWidth={2.25} />
-                    </button>
+                    {showDelete && (
+                      <button
+                        type="button"
+                        onClick={() => onDelete?.(item.id)}
+                        aria-label={`Supprimer ${item.label}`}
+                        className="
+                          shrink-0
+                          w-8 h-8
+                          rounded-full
+                          flex
+                          items-center
+                          justify-center
+                          text-[#EF4444]
+                          hover:bg-[#FDECEC]
+                          transition
+                        "
+                      >
+                        <Trash2 size={17} strokeWidth={2.25} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
