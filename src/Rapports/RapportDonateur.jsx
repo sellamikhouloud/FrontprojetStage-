@@ -98,16 +98,11 @@ const RapportBilan  = () => {
     flex-1
     h-full
     w-full
-    rounded-[15px]
-    bg-[#F8FBFC]
-    p-4
-    md:p-6
     flex-col
     gap-8
     overflow-y-auto
     scrollbar-hide
   `}
-
 >
 
   <button
@@ -119,84 +114,110 @@ const RapportBilan  = () => {
     Revenir
   </button>
 
-<div className="mt-4">
-  <HeaderRapport
-    selectedMonth={selectedMonth}
-    title="Bilan donateurs"
-  />
-</div>
-<div className="mt-4 flex justify-center">
-  <div className="w-full max-w-[720px] min-w-0">
-    <h2 className="text-[18px] font-semibold text-[#202124] mb-2">
-      Cher donateur,
-    </h2>
-    <p className="text-[14px] leading-6 whitespace-pre-wrap break-words text-[#5F6368]">
-      {narrativeMessage}
-    </p>
-  </div>
-</div>
- <div className="mt-4 flex flex-col items-center">
-  <div className="w-full max-w-[720px]">
-    <h2 className="text-[18px] font-semibold text-[#202124] mb-3">
-      États des familles
-    </h2>
-
-    <div className="flex w-full gap-3">
-      <StatusCard value={38} label="Actives" type="active" />
-      <StatusCard value={1} label="Alertées" type="alert" />
-      <StatusCard value={5} label="Sorties" type="sortie" />
+  {/* ===================== PAGE 1 : Bilan (bloc bleu) ===================== */}
+  <div
+    className="
+      rounded-[15px]
+      bg-[#F8FBFC]
+      p-4
+      md:p-6
+      flex
+      flex-col
+      gap-8
+    "
+  >
+    <div className="mt-4">
+      <HeaderRapport
+        selectedMonth={selectedMonth}
+        title="Bilan donateurs"
+      />
     </div>
-  </div>
-</div>
 
-<div className="mt-6 flex justify-center">
-  <div className="w-full max-w-[720px]">
-    <ReportVisitsNutrition
-      realised={9}
-      planned={21}
-      compliance={43}
-      normal={65}
-      mam={25}
-      mas={10}
-    />
-  </div>
-</div>
+    <div className="flex justify-center">
+      <div className="w-full max-w-[720px] min-w-0">
+        <h2 className="text-[18px] font-semibold text-[#202124] mb-2">
+          Cher donateur,
+        </h2>
+        <p className="text-[14px] leading-6 whitespace-pre-wrap break-words text-[#5F6368]">
+          {narrativeMessage}
+        </p>
+      </div>
+    </div>
 
+    <div className="flex flex-col items-center">
+      <div className="w-full max-w-[720px]">
+        <h2 className="text-[18px] font-semibold text-[#202124] mb-3">
+          États des familles
+        </h2>
 
-<div className="mt-6 flex justify-center">
-  <div className="w-full max-w-[720px]">
-    <h2 className="text-[18px] font-semibold text-[#202124] mb-4">
-      Distributions ce mois
-    </h2>
+        <div className="flex w-full gap-3">
+          <StatusCard value={38} label="Actives" type="active" />
+          <StatusCard value={1} label="Alertées" type="alert" />
+          <StatusCard value={5} label="Sorties" type="sortie" />
+        </div>
+      </div>
+    </div>
 
-    <div className="space-y-3">
-      {products.map((item, index) => (
-        <DistributionItem
-          key={index}
-          product={item.product}
-          quantity={item.quantity}
-          unit={item.unit}
+    <div className="flex justify-center">
+      <div className="w-full max-w-[720px]">
+        <ReportVisitsNutrition
+          realised={9}
+          planned={21}
+          compliance={43}
+          normal={65}
+          mam={25}
+          mas={10}
         />
-      ))}
+      </div>
+    </div>
+
+    <div className="flex justify-center">
+      <div className="w-full max-w-[720px]">
+        <h2 className="text-[18px] font-semibold text-[#202124] mb-4">
+          Distributions ce mois
+        </h2>
+
+        <div className="space-y-3">
+          {products.map((item, index) => (
+            <DistributionItem
+              key={index}
+              product={item.product}
+              quantity={item.quantity}
+              unit={item.unit}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+
+    <div className="flex items-center justify-center">
+      <CardZakatSummary
+        montant="2,450,000 MRU"
+        familles={32}
+      />
     </div>
   </div>
-</div>
- <div className=" flex items-center justify-center">
-  <CardZakatSummary
-    montant="2,450,000 MRU"
-    familles={32}
-  />
-</div>
-<div className="h-20 bg-white"></div>
-{/* Deuxième page : Photos de terrain */}
-<div className="mt-20 flex justify-center">
-  <div className="w-full max-w-[720px] rounded-[15px] bg-[#F8FBFC] p-6">
+  {/* ===================== FIN PAGE 1 ===================== */}
+
+
+  {/* ===================== PAGE 2 : Photos de terrain ===================== */}
+  <div
+    className="
+      rounded-[15px]
+      bg-[#F8FBFC]
+      p-4
+      md:p-6
+      flex
+      flex-col
+      gap-8
+    "
+  >
     <HeaderRapport
       selectedMonth={selectedMonth}
       title="Bilan donateurs"
     />
 
-    <div className="mt-8 space-y-6">
+    <div className="space-y-6">
       {terrainPhotos.map((photo, index) => (
         <img
           key={index}
@@ -207,8 +228,7 @@ const RapportBilan  = () => {
       ))}
     </div>
   </div>
-</div>
-
+  {/* ===================== FIN PAGE 2 ===================== */}
 
 </div>
 
@@ -309,4 +329,5 @@ const RapportBilan  = () => {
 };
 
 export default RapportBilan;
+
 
