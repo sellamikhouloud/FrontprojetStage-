@@ -729,9 +729,9 @@ return (
         font-semibold
         text-black
 
-        hover:opacity-70
-        transition
-        whitespace-nowrap
+         hover:opacity-70
+         active:scale-[0.97]
+         transition
       "
     >
       Voir la liste des villages
@@ -929,9 +929,9 @@ return (
         font-semibold
         text-black
 
-        hover:opacity-70
-        transition
-        whitespace-nowrap
+         hover:opacity-70
+         active:scale-[0.97]
+         transition
       "
     >
       Voir la liste des emails
