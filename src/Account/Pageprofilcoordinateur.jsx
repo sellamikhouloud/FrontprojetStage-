@@ -39,52 +39,90 @@ export default function PageProfilCoordinateur() {
     <div className="flex h-screen overflow-hidden bg-white">
       <Sidebar role="coordinator" user={coordinateur} />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:pt-10 lg:px-10 lg:py-4 bg-white">
+      <main
+        className="
+          relative
+          flex-1
+          min-h-0
+          overflow-hidden
+          bg-white
+        "
+      >
+        {/* ESPACE BLANC FIXE en haut uniquement, ne scroll pas */}
         <div
           className="
-            grid
-            grid-cols-1
-            lg:grid-cols-[1.3fr_1fr]
-            gap-[24px]
+            absolute
+            top-0
+            left-0
+            right-0
+            h-[15px]
+            bg-white
+            z-20
           "
-        >
-          {/* Colonne gauche — profil */}
-          <div>
-            <ProfilInfoBlock
-              admin={coordinateur}
-              champs={CHAMPS_COORDINATEUR}
-              onSave={handleSave}
-              showDeconnexion={false}
-            />
-          </div>
+        />
 
-          {/* Colonne droite — paramètres + assistance + déconnexion */}
-          <div className="mt-0 lg:mt-16">
-            <ParametresCard
-              lastSync="Aujourd'hui à 09:42"
-              syncStatus="synchronise"
-              version="1.0.0"
-            />
-
-            <AssistanceCard
-              onCentreAide={() => console.log("Centre d'aide")}
-              onConditions={() => console.log("Conditions d'utilisation")}
-              onPolitique={() => console.log("Politique de confidentialité")}
-            />
-
-
-          </div>
-
-        </div>
-         <div className="mt-0">
-              <Button
-                title="Déconnexion"
-                variant="deconnexion"
-                icon={logoutIcon}
-                noPadding
-                onClick={() => setShowLogoutConfirm(true)}
+        <div className="h-full overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:pt-10 lg:px-10 lg:py-4">
+          <div className="min-h-full flex flex-col justify-center">
+          <div
+            className="
+              grid
+              grid-cols-1
+              lg:grid-cols-[1.3fr_1fr]
+              gap-[24px]
+            "
+          >
+            {/* Colonne gauche — profil */}
+            <div>
+              <ProfilInfoBlock
+                admin={coordinateur}
+                champs={CHAMPS_COORDINATEUR}
+                onSave={handleSave}
+                showDeconnexion={false}
               />
             </div>
+
+            {/* Colonne droite — paramètres + assistance + déconnexion */}
+            <div className="mt-0 lg:mt-16">
+              <ParametresCard
+                lastSync="Aujourd'hui à 09:42"
+                syncStatus="synchronise"
+                version="1.0.0"
+              />
+
+              <AssistanceCard
+                onCentreAide={() => console.log("Centre d'aide")}
+                onConditions={() => console.log("Conditions d'utilisation")}
+                onPolitique={() => console.log("Politique de confidentialité")}
+              />
+
+
+            </div>
+
+          </div>
+           <div className="mt-0">
+                <Button
+                  title="Déconnexion"
+                  variant="deconnexion"
+                  icon={logoutIcon}
+                  noPadding
+                  onClick={() => setShowLogoutConfirm(true)}
+                />
+              </div>
+          </div>
+        </div>
+
+        {/* ESPACE BLANC FIXE en bas uniquement, ne scroll pas */}
+        <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-[15px]
+            bg-white
+            z-20
+          "
+        />
       </main>
 
       <ConfirmDialog
