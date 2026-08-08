@@ -1,58 +1,64 @@
-import { RefreshCw, Info } from "lucide-react";
+import { Bell, Info } from "lucide-react";
 
 /**
- * ParametresCard — bloc "Paramètres" (Synchronisation, Version).
+ * ParametresCard — bloc "Paramètres" (Sonnerie des notifications, Version).
  *
- * lastSync: string -> "Aujourd'hui à 09:42"
- * syncStatus: "synchronise" | "en_cours" | "erreur"
+ * onSelectSonnerie: () => void  -> appelé au clic sur "Sélectionner une sonnerie"
  * version: string -> "1.0.0"
  */
 export default function ParametresCard({
-  lastSync,
-  syncStatus = "synchronise",
+  onSelectSonnerie,
   version,
 }) {
-  const statusConfig = {
-    synchronise: { label: "Synchronisé", color: "#22C55E", bg: "#E8F7EF", border: "#22C55E" },
-    en_cours: { label: "En cours", color: "#F59E0B", bg: "#FFF4D8", border: "#F59E0B" },
-    erreur: { label: "Erreur", color: "#EF4444", bg: "#FDECEC", border: "#EF4444" },
-  };
-  const status = statusConfig[syncStatus] || statusConfig.synchronise;
-
   return (
     <div>
       <p className="text-[15px] font-bold text-[#202124] mb-3">Paramètres</p>
 
-      <div
-        className="rounded-[15px] border border-[#E5E7EB] overflow-hidden"
-        style={{ backgroundColor: "#F8FBFC" }}
-      >
-        {/* Synchronisation */}
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#E5E7EB]">
+      <div className="rounded-[15px] overflow-hidden bg-[#F8FBFC] border border-[#BEC9C5]/30">
+        {/* Sonnerie des notifications */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-b border-[#BEC9C5]/30">
           <div className="flex items-center gap-3 min-w-0">
             <div
               className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center"
               style={{ backgroundColor: "#E6F5F4", color: "#4FA18F" }}
             >
-              <RefreshCw size={16} strokeWidth={2.5} />
+              <Bell size={16} strokeWidth={2.5} />
             </div>
 
             <div className="min-w-0">
-              <p className="text-[14px] font-semibold text-[#202124]">Synchronisation</p>
-              {lastSync && (
-                <p className="text-[12px] text-[#6E7976] break-words">
-                  Dernière synchronisation : {lastSync}
-                </p>
-              )}
+              <p className="text-[14px] font-semibold text-[#4E9F8A]">
+                Sonnerie des notifications
+              </p>
+              <p className="text-[12px] text-[#6E7976]">
+                Vous pouvez choisir la sonnerie qui vous convient
+              </p>
             </div>
           </div>
 
-          <div
-            className="rounded-full border px-3 py-[4px] shrink-0 whitespace-nowrap flex items-center justify-center"
-            style={{ backgroundColor: status.bg, borderColor: status.border, color: status.color }}
+          <button
+            type="button"
+            onClick={onSelectSonnerie}
+            className="
+              rounded-full
+              px-4
+              py-2
+
+              w-full
+              sm:w-auto
+              shrink-0
+              whitespace-nowrap
+
+              bg-[#4FA18F]
+              text-white
+              text-[13px]
+              font-semibold
+
+              hover:bg-[#428E7B]
+              transition
+            "
           >
-            <span className="text-[12px] font-bold leading-none">{status.label}</span>
-          </div>
+            Selectionner une sonnerie
+          </button>
         </div>
 
         {/* Version */}
