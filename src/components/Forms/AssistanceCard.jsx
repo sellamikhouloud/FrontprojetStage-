@@ -16,20 +16,21 @@ export default function AssistanceCard({ onCentreAide, onConditions, onPolitique
     <div className="mt-6">
       <p className="text-[15px] font-bold text-[#202124] mb-3">Assistance</p>
 
-      <div className="flex flex-col gap-3">
-        {items.map((item) => {
+      <div className="rounded-[15px] overflow-hidden bg-[#F8FBFC] border border-[#BEC9C5]/30">
+        {items.map((item, index) => {
           const Icon = item.icon;
+          const isLast = index === items.length - 1;
+
           return (
             <button
               key={item.label}
               onClick={item.onClick}
-              className="
+              className={`
+                w-full
                 flex items-center justify-between gap-3
-                rounded-[15px]
-                border border-[#E5E7EB]
                 px-4 py-3
-              "
-              style={{ backgroundColor: "#F8FBFC" }}
+                ${!isLast ? "border-b border-[#BEC9C5]/30" : ""}
+              `}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div
