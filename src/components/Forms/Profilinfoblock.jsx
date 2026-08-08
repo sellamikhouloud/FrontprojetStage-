@@ -134,11 +134,10 @@ export default function ProfilInfoBlock({
       {/* Infos de contact / formulaire */}
       {rows.length > 0 && (
         <div
-          className="mt-3 rounded-[15px] overflow-hidden"
-          style={{
-            backgroundColor: "#F8FBFC",
-            border: `1px ${isEditing ? "dashed" : "solid"} ${isEditing ? "#686868" : "#CBD5D4"}`,
-          }}
+          className={`
+            mt-3 rounded-[15px] overflow-hidden bg-[#F8FBFC]
+            ${isEditing ? "border border-dashed border-[#686868]" : "border border-[#BEC9C5]/30"}
+          `}
         >
           {rows.map((row, index) => {
             const Icon = row.icon;
@@ -148,7 +147,7 @@ export default function ProfilInfoBlock({
                 className={`
                   flex items-center gap-3
                   px-4 py-3
-                  ${index !== rows.length - 1 ? "border-b border-solid border-[#E5E7EB]" : ""}
+                  ${index !== rows.length - 1 ? "border-b border-solid border-[#BEC9C5]/30" : ""}
                 `}
               >
                 <div
