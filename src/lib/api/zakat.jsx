@@ -1,0 +1,20 @@
+import api from "@/lib/axios";
+
+export const listAidesZakat = (params) => api.get("/api/zakat/aides/", { params });
+
+export const getAideZakat = (id) =>  api.get(`/api/zakat/aides/${id}/`);
+
+
+export const updateAideZakat = (id, patch) => api.patch(`/api/zakat/aides/${id}/`, patch);
+
+export const annulerAideZakat = (id) => api.post(`/api/zakat/aides/${id}/annuler/`);
+
+export const createVersementSolde = (data) =>  api.post("/api/zakat/versements-solde/", data);
+
+export const listVersementsSolde = (params) => api.get("/api/zakat/versements-solde/", { params });
+
+export const getVersementSolde = (id) => api.get(`/api/zakat/versements-solde/${id}/`);
+
+export const getSoldeActuel = () => api.get("/api/zakat/versements-solde/solde_actuel/");
+
+export const getZakatDashboard = () => api.get("/api/zakat/dashboard/");
