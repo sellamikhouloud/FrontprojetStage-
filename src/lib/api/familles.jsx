@@ -13,3 +13,5 @@ export const getCourbes = (id) =>  api.get(`/api/familles/${id}/courbes/`);
 export const getVisites = (id) => api.get(`/api/familles/${id}/visites/`);
 
 export const getDistributions = (id) =>  api.get(`/api/familles/${id}/distributions/`);
+
+export const getFamilleZakat = (id) => api.get(`/api/familles/${id}/zakat/`);
