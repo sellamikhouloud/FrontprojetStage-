@@ -512,30 +512,66 @@ if  (isFilterOpen && isMobile)  {
   <Card
   enfant={famille.nourrisson?.prenom}
   mere={`${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`}
-  sexe={famille.nourrisson?.sexe === "M" ? "Fils" : "Fille"}
+  sexe={
+    famille.nourrisson?.sexe === "M"
+      ? "Fils"
+      : "Fille"
+  }
   region={famille.mere?.village ?? "-"}
   naissance={famille.nourrisson?.date_naissance}
   code={famille.id}
   badges={[
-    // Statut général de la famille
-    famille.statut && {
-      type: "statut",
-      text: famille.statut,
+    // =========================
+    // STATUT NUTRITIONNEL BÉBÉ
+    // =========================
+
+    famille.statut_nutritionnel_bebe === "mam" && {
+      type: "mam",
+      text: "MAM nourrisson",
     },
 
-    // Statut nutritionnel du bébé
-    famille.statut_nutritionnel_bebe && {
-      type: "bebe",
-      text: famille.statut_nutritionnel_bebe,
+    famille.statut_nutritionnel_bebe === "mas" && {
+      type: "mas",
+      text: "MAS nourrisson",
     },
 
-    // Statut nutritionnel de la mère
-    famille.statut_nutritionnel_mere && {
-      type: "mere",
-      text: famille.statut_nutritionnel_mere,
+    famille.statut_nutritionnel_bebe === "normale" && {
+      type: "mereNormal",
+      text: "Bébé normal",
     },
 
-    // Visite en retard
+    // =========================
+    // STATUT NUTRITIONNEL MÈRE
+    // =========================
+
+    famille.statut_nutritionnel_mere === "normale" && {
+      type: "mereNormal",
+      text: "Mère normale",
+    },
+
+    famille.statut_nutritionnel_mere === "a_risque" && {
+      type: "mereActive",
+      text: "Mère à risque",
+    },
+
+    famille.statut_nutritionnel_mere === "malnutrition" && {
+      type: "mas",
+      text: "Mère malnutrie",
+    },
+
+    // =========================
+    // STATUT FAMILLE
+    // =========================
+
+    famille.statut === "sortie" && {
+      type: "sortie",
+      text: "Sortie",
+    },
+
+    // =========================
+    // VISITE EN RETARD
+    // =========================
+
     famille.est_visite_en_retard && {
       type: "retard",
       text: "Visite en retard",
@@ -560,25 +596,57 @@ if  (isFilterOpen && isMobile)  {
   naissance={famille.nourrisson?.date_naissance}
   code={famille.id}
   badges={[
-    // Statut général de la famille
-    famille.statut && {
-      type: "statut",
-      text: famille.statut,
+    // =========================
+    // STATUT NUTRITIONNEL BÉBÉ
+    // =========================
+
+    famille.statut_nutritionnel_bebe === "mam" && {
+      type: "mam",
+      text: "MAM nourrisson",
     },
 
-    // Statut nutritionnel du bébé
-    famille.statut_nutritionnel_bebe && {
-      type: "bebe",
-      text: famille.statut_nutritionnel_bebe,
+    famille.statut_nutritionnel_bebe === "mas" && {
+      type: "mas",
+      text: "MAS nourrisson",
     },
 
-    // Statut nutritionnel de la mère
-    famille.statut_nutritionnel_mere && {
-      type: "mere",
-      text: famille.statut_nutritionnel_mere,
+    famille.statut_nutritionnel_bebe === "normale" && {
+      type: "mereNormal",
+      text: "Bébé normal",
     },
 
-    // Visite en retard
+    // =========================
+    // STATUT NUTRITIONNEL MÈRE
+    // =========================
+
+    famille.statut_nutritionnel_mere === "normale" && {
+      type: "mereNormal",
+      text: "Mère normale",
+    },
+
+    famille.statut_nutritionnel_mere === "a_risque" && {
+      type: "mereRisque",
+      text: "Mère à risque",
+    },
+
+    famille.statut_nutritionnel_mere === "malnutrition" && {
+      type: "mereMalnutrition",
+      text: "Mère malnutrie",
+    },
+
+    // =========================
+    // STATUT FAMILLE
+    // =========================
+
+    famille.statut === "sortie" && {
+      type: "sortie",
+      text: "Sortie",
+    },
+
+    // =========================
+    // VISITE EN RETARD
+    // =========================
+
     famille.est_visite_en_retard && {
       type: "retard",
       text: "Visite en retard",
@@ -603,3 +671,4 @@ if  (isFilterOpen && isMobile)  {
     
   );
 }
+
