@@ -1,26 +1,31 @@
 import { useEffect, useState } from "react";
-
-import Sidebar from "../components/Sidebar/Sidebar";
-import NavigationHeader from "../components/Navigation,Pageheader/NavigationHeader";
-import SearchBar from "../components/Filter/Searchbar";
-import Card from "../components/Cards/card";
-import Button from "../components/Button/Button";
-import SelectInput from "../components/Containers/ChoiceContainer";
-import CardPopup from "../components/Cards/card2";
-import NoResultImage from "../assets/no result picture.svg";
-import PageHeader from "../components/Navigation,Pageheader/PageHeader";
-import FilterTag from "../components/Filter/FilterTag";
+import { useQuery } from "@tanstack/react-query";
+import { listFamilles } from "@/api/familles";
+import Sidebar from "../../components/Sidebar/Sidebar";
+import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
+import SearchBar from "../../components/Filter/Searchbar";
+import Card from "../../components/Cards/card";
+import Button from "../../components/Button/Button";
+import SelectInput from "../../components/Containers/ChoiceContainer";
+import CardPopup from "../../components/Cards/card2";
+import NoResultImage from "../../assets/no result picture.svg";
+import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
+import FilterTag from "../../components/Filter/FilterTag";
 import { useNavigate } from "react-router-dom";
 
 
 export default function FamiliesPage() {
   const [search, setSearch] = useState("");
-  const [familles, setFamilles] = useState([]);
+ /* const [familles, setFamilles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); a supprimer react query va gerer ca */ 
  const [isFilterOpen, setIsFilterOpen] = useState(false);
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
+
+   // Simulation du rôle
+  const role = "admin";
+  // const role = "coordinateur";
 
 useEffect(() => {
   const handleResize = () => {
@@ -81,8 +86,9 @@ const filtersContent = (
       }
       options={[
         "En attente",
-        "Suivie",
-        "Terminée",
+        "Active",
+        "Alerte",
+        "Sortie",
       ]}
       noPadding
     />
@@ -117,8 +123,8 @@ const filtersContent = (
         })
       }
       options={[
-        "Oui",
-        "Non",
+        "a bénéficié",
+        "n’a pas bénéficié",
       ]}
       noPadding
     />
@@ -203,7 +209,7 @@ const filterTagsContent = (
     )}
   </div>
 );
-  useEffect(() => {
+  /* useEffect(() => {
     setLoading(true);
 
     setTimeout(() => {
@@ -305,18 +311,91 @@ const filterTagsContent = (
         },
       ]);
 
-      setLoading(false);
-    }, 500);
-  }, []);
+     
+    });
+  }, []); supprimer react query va gerer ca */ 
 
-  const filteredFamilies = familles.filter((famille) => {
-    const keyword = search.toLowerCase();
+  const {
+  data,
+  isLoading,
+  isError,
+  refetch,
+} = useQuery({
+  queryKey: ["familles", appliedFilters],
+  queryFn: () =>
+    listFamilles(appliedFilters).then((r) => r.data),
+});
+const familles = data?.results ?? data ?? [];
 
-    return (
-      famille.enfant.toLowerCase().includes(keyword) ||
-      famille.code.toLowerCase().includes(keyword)
-    );
-  });
+ const filteredFamilies = familles.filter((famille) => {
+  const keyword = search.trim().toLowerCase();
+
+  if (!keyword) return true;
+
+  const normalizedKeyword = keyword.replace(/^0/, "");
+
+  const enfant =
+    famille.nourrisson?.prenom?.toLowerCase() ?? "";
+
+  const mere =
+    `${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`
+      .toLowerCase();
+
+  const code =
+    famille.id?.toLowerCase() ?? "";
+
+  const sexe =
+    famille.nourrisson?.sexe?.toLowerCase() ?? "";
+
+  const village =
+    famille.mere?.village?.toLowerCase() ?? "";
+
+  // Date venant du backend : "2025-04-05"
+  const dateNaissance =
+    famille.nourrisson?.date_naissance ?? "";
+
+  let matchDate = false;
+
+  if (dateNaissance) {
+    const date = new Date(dateNaissance);
+
+    if (!isNaN(date.getTime())) {
+      const jour = String(date.getDate()).padStart(2, "0");
+      const jourSansZero = String(date.getDate());
+
+      const mois = date.toLocaleDateString("fr-FR", {
+        month: "long",
+      });
+
+      const annee = String(date.getFullYear());
+
+      matchDate = [
+        dateNaissance.toLowerCase(),        // 2025-04-05
+        `${jour} ${mois} ${annee}`,         // 05 avril 2025
+        `${jourSansZero} ${mois} ${annee}`, // 5 avril 2025
+        jour,                               // 05
+        jourSansZero,                       // 5
+        mois,                               // avril
+        annee,                              // 2025
+        `${jour} ${mois}`,                  // 05 avril
+        `${jourSansZero} ${mois}`,          // 5 avril
+      ].some((value) =>
+        value.toLowerCase().includes(normalizedKeyword)
+      );
+    }
+  }
+
+  return (
+    enfant.includes(normalizedKeyword) ||
+    mere.includes(normalizedKeyword) ||
+    code.includes(normalizedKeyword) ||
+    sexe.includes(normalizedKeyword) ||
+    village.includes(normalizedKeyword) ||
+    matchDate
+  );
+});
+
+
 if  (isFilterOpen && isMobile)  {
   return (
     <div className="min-h-screen bg-white p-6 md:hidden">
@@ -351,19 +430,27 @@ if  (isFilterOpen && isMobile)  {
      <div className="flex h-screen overflow-hidden bg-white">
     {/* Sidebar */}
    
-      <Sidebar role="admin" />
+     <Sidebar role={role} />
    
 
   <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-        <NavigationHeader
-  title="Liste des familles"
-  type="add"
-  actionTitle="Ajouter une famille"
-  onAction={() => {
-    console.log("Button clicked");
-    navigate("/information-mere");
-  }}
-/>
+      {role === "admin" ? (
+  <NavigationHeader
+    title="Liste des familles"
+    type="share"
+    actionTitle="Exporter la liste des familles"
+    onAction={() => {}}
+    secondType="add"
+    secondActionTitle="Ajouter une famille"
+    onSecondAction={() => {
+      navigate("/information-mere");
+    }}
+  />
+) : (
+  <NavigationHeader
+    title="Liste des familles"
+  />
+)}
 
           <div className="my-6">
             <SearchBar
@@ -381,19 +468,22 @@ if  (isFilterOpen && isMobile)  {
 
           </div>
 
-          {loading && (
-            <p className="text-center text-gray-500">
-              Chargement...
-            </p>
-          )}
+         
+// on a ajouter ca 
+         {isError && (
+  <div className="text-center text-red-500 py-6">
+    <p>Impossible de charger les familles.</p>
 
-          {error && (
-            <p className="text-center text-red-500">
-              {error}
-            </p>
-          )}
+    <button
+      onClick={() => refetch()}
+      className="mt-2 underline"
+    >
+      Réessayer
+    </button>
+  </div>
+)}
 
-         {!loading && filteredFamilies.length === 0 && (
+      {!isLoading && !isError && filteredFamilies.length === 0 && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
@@ -407,7 +497,7 @@ if  (isFilterOpen && isMobile)  {
           <div className="flex gap-6">
            <div className="flex-1 space-y-4">
  {filteredFamilies.length > 0 && (
-  <div className="w-full flex-1 space-y-4">
+  <div className="w-full flex-1 space-y-3">
     {filteredFamilies.map((famille) => (
       <div key={famille.id}>
         {/* Desktop */}
@@ -415,19 +505,43 @@ if  (isFilterOpen && isMobile)  {
   className="hidden md:block cursor-pointer"
   onClick={() =>
     navigate(`/famille/${famille.id}`, {
-      state: famille,
-    })
+  state: { from: "/liste-famille" },
+})
   }
 >
   <Card
-    enfant={famille.enfant}
-    mere={famille.mere}
-    sexe={famille.sexe}
-    region={famille.region}
-    naissance={famille.naissance}
-    code={famille.code}
-    badges={famille.badges}
-  />
+  enfant={famille.nourrisson?.prenom}
+  mere={`${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`}
+  sexe={famille.nourrisson?.sexe === "M" ? "Fils" : "Fille"}
+  region={famille.mere?.village ?? "-"}
+  naissance={famille.nourrisson?.date_naissance}
+  code={famille.id}
+  badges={[
+    // Statut général de la famille
+    famille.statut && {
+      type: "statut",
+      text: famille.statut,
+    },
+
+    // Statut nutritionnel du bébé
+    famille.statut_nutritionnel_bebe && {
+      type: "bebe",
+      text: famille.statut_nutritionnel_bebe,
+    },
+
+    // Statut nutritionnel de la mère
+    famille.statut_nutritionnel_mere && {
+      type: "mere",
+      text: famille.statut_nutritionnel_mere,
+    },
+
+    // Visite en retard
+    famille.est_visite_en_retard && {
+      type: "retard",
+      text: "Visite en retard",
+    },
+  ].filter(Boolean)}
+/>
 </div>
 
         {/* Mobile */}
@@ -439,14 +553,38 @@ if  (isFilterOpen && isMobile)  {
     })
   }
 >
-  <CardPopup
-    enfant={famille.enfant}
-    sexe={famille.sexe}
-    region={famille.region}
-    naissance={famille.naissance}
-    code={famille.code}
-    badges={famille.badges}
-  />
+ <CardPopup
+  enfant={famille.nourrisson?.prenom}
+  sexe={famille.nourrisson?.sexe === "M" ? "Fils" : "Fille"}
+  region={famille.mere?.village ?? "-"}
+  naissance={famille.nourrisson?.date_naissance}
+  code={famille.id}
+  badges={[
+    // Statut général de la famille
+    famille.statut && {
+      type: "statut",
+      text: famille.statut,
+    },
+
+    // Statut nutritionnel du bébé
+    famille.statut_nutritionnel_bebe && {
+      type: "bebe",
+      text: famille.statut_nutritionnel_bebe,
+    },
+
+    // Statut nutritionnel de la mère
+    famille.statut_nutritionnel_mere && {
+      type: "mere",
+      text: famille.statut_nutritionnel_mere,
+    },
+
+    // Visite en retard
+    famille.est_visite_en_retard && {
+      type: "retard",
+      text: "Visite en retard",
+    },
+  ].filter(Boolean)}
+/>
 </div>
       </div>
     ))}
