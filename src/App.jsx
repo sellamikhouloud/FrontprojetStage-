@@ -26,6 +26,7 @@ import Parametres from "./pages/Account/Parametres";
 import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
 import { AuthProvider } from "./components/Providers/AuthProvider";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   return (
@@ -33,10 +34,11 @@ function App() {
     <AuthProvider>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />        
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboardCoor" element={<CoordinatorDashboard />} />
-        <Route path="/liste-famille" element={<ListeFamille />} />
+        <Route path="/login" element={<Login />} />  
+         <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}><Dashboard /></ProtectedRoute>} />
+        <Route path="/dashboardCoor" element={<ProtectedRoute allowedRoles={["coordinator"]}><CoordinatorDashboard /></ProtectedRoute>} />  
+    
+          <Route path="/liste-famille" element={<ListeFamille />} />
 
         {/* Family */}
         <Route path="/famille/:id" element={<FamilyProfile />} />
@@ -130,3 +132,4 @@ function App() {
 }
 
 export default App;
+
