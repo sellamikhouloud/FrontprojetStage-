@@ -1,4 +1,4 @@
-/*
+
 
 import { useAuth } from "@/components/providers/AuthProvider";
 export default function RoleGate({ allow, children }) {
@@ -8,4 +8,3 @@ export default function RoleGate({ allow, children }) {
 
   return allow.includes(user.role) ? children : null;
 }
-*/
