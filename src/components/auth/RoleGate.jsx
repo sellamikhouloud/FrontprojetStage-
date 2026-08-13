@@ -1,6 +1,7 @@
 /*
 
-import { useAuth } from "../../components/providers/AuthProvider";
+
+import { useAuth } from "../providers/AuthProvider";
 
 export default function RoleGate({ allow, children }) {
   const { user } = useAuth();
