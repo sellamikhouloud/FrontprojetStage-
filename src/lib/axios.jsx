@@ -52,8 +52,8 @@ window.location.href = "/";
 return Promise.reject(refreshError);
 } finally {
 isRefreshing = false;
-}
-}
+   }
+  }
 );
 
 export default api;
