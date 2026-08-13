@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { listFamilles } from "@/api/familles";
+import { useAuth } from "../../components/providers/AuthProvider";
+import Spinner from "../../components/Spinner";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import SearchBar from "../../components/Filter/Searchbar";
@@ -15,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 
 
 export default function FamiliesPage() {
+    const { user, ready } = useAuth();
   const [search, setSearch] = useState("");
  /* const [familles, setFamilles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -23,9 +25,7 @@ export default function FamiliesPage() {
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
 
-   // Simulation du rôle
-  const role = "admin";
-  // const role = "coordinateur";
+   
 
 useEffect(() => {
   const handleResize = () => {
@@ -325,6 +325,15 @@ const filterTagsContent = (
   queryFn: () =>
     listFamilles(appliedFilters).then((r) => r.data),
 });
+
+if (isLoading) {
+  return (
+    <div className="min-h-screen grid place-items-center">
+      <Spinner />
+    </div>
+  );
+}
+
 const familles = data?.results ?? data ?? [];
 
  const filteredFamilies = familles.filter((famille) => {
@@ -430,11 +439,11 @@ if  (isFilterOpen && isMobile)  {
      <div className="flex h-screen overflow-hidden bg-white">
     {/* Sidebar */}
    
-     <Sidebar role={role} />
+     <Sidebar  />
    
 
   <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-      {role === "admin" ? (
+     {user?.role === "admin" ? (
   <NavigationHeader
     title="Liste des familles"
     type="share"
@@ -483,7 +492,7 @@ if  (isFilterOpen && isMobile)  {
   </div>
 )}
 
-      {!isLoading && !isError && filteredFamilies.length === 0 && (
+      {!isError && filteredFamilies.length === 0 && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
@@ -671,4 +680,3 @@ if  (isFilterOpen && isMobile)  {
     
   );
 }
-
