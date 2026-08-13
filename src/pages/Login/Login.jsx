@@ -78,7 +78,15 @@ const Login = () => {
       console.log("User:", user);
 
       // Login successful
-      navigate("/dashboard");
+    if (user?.role === "admin") {
+  navigate("/dashboard");
+} else if (user?.role === "chef_coordinator") {
+  navigate("/dashboard");
+} else if (user?.role === "coordinator") {
+  navigate("/dashboardCoor");
+} else {
+  setPasswordError("Rôle utilisateur non reconnu.");
+}
 
     } catch (err) {
       console.error("================================");
