@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Eye, EyeOff, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import Button from "../../components/Button/Button";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 import LoginIllustration from "../../assets/LoginIcon.svg";
 import LoginIllustrationMob from "../../assets/LoginMob.svg";
@@ -10,32 +12,126 @@ import Vector from "../../assets/Vector.svg";
 import Vector1 from "../../assets/Vector1.svg";
 import Vector2 from "../../assets/Vector2.svg";
 import WaveM from "../../assets/Vector4.svg";
-import { useNavigate } from "react-router-dom";
-
 
 const Login = () => {
   const [adminID, setAdminID] = useState("");
   const [password, setPassword] = useState("");
+
   const [showPassword, setShowPassword] = useState(false);
-const navigate = useNavigate();
-  const handleSubmit = (e) => {
+
+  // Separate errors for each field
+  const [idError, setIdError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  // ================= AUTH =================
+
+  const { login } = useAuth();
+
+  // ================= LOGIN =================
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log({
-      adminID,
-      password,
-    });
-    navigate("/dashboard");
+    // Clear previous errors
+    setIdError("");
+    setPasswordError("");
+
+    // VALIDATION
+    let hasError = false;
+
+    // ID validation
+    if (!adminID.trim()) {
+      setIdError("Veuillez saisir votre identifiant.");
+      hasError = true;
+    }
+
+    // Password validation
+    if (!password) {
+      setPasswordError("Veuillez saisir votre mot de passe.");
+      hasError = true;
+    }
+
+    // Stop here if there are validation errors
+    if (hasError) {
+      return;
+    }
+
+    // LOGIN
+    try {
+      setLoading(true);
+
+      console.log("================================");
+      console.log("LOGIN");
+      console.log("Username:", adminID);
+      console.log("================================");
+
+      const user = await login(
+        adminID.trim(),
+        password
+      );
+
+      console.log("LOGIN SUCCESS");
+      console.log("User:", user);
+
+      // Login successful
+      navigate("/dashboard");
+
+    } catch (err) {
+      console.error("================================");
+      console.error("LOGIN ERROR");
+      console.error("Error:", err);
+      console.error("Response:", err.response);
+      console.error("Request:", err.request);
+      console.error("Message:", err.message);
+      console.error("================================");
+
+      // SERVER RESPONSE
+      if (err.response) {
+        const data = err.response.data;
+
+        const message =
+          data?.detail ||
+          data?.message ||
+          "Identifiant ou mot de passe incorrect.";
+
+        setPasswordError(message);
+      }
+
+      // REQUEST SENT BUT NO RESPONSE
+      else if (err.request) {
+        setPasswordError(
+          "Impossible de contacter le serveur."
+        );
+      }
+
+      // OTHER ERROR
+      else {
+        setPasswordError(
+          err.message ||
+          "Une erreur est survenue."
+        );
+      }
+
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-white overflow-hidden">
+    <div className="min-h-screen">
 
-      {/* ================= DESKTOP VERSION ================= */}
+      {/* =====================================================
+          DESKTOP VERSION
+      ===================================================== */}
 
       <div className="hidden md:block relative min-h-screen">
 
-        {/* Top Decoration */}
+        {/* ================= TOP DECORATION ================= */}
+
         <div className="absolute top-0 left-0 w-full h-[110px]">
 
           <img
@@ -64,11 +160,13 @@ const navigate = useNavigate();
 
         </div>
 
+        {/* ================= CONTENT ================= */}
+
         <div className="relative z-10 flex items-center justify-center min-h-screen mr-20">
 
           <div className="w-full max-w-[1220px] flex items-center justify-between px-12">
 
-            {/* Illustration */}
+            {/* ================= ILLUSTRATION ================= */}
 
             <div className="w-[550px] flex justify-center ml-20 mt-20">
 
@@ -80,7 +178,7 @@ const navigate = useNavigate();
 
             </div>
 
-            {/* Form */}
+            {/* ================= FORM ================= */}
 
             <div className="w-[384px] ml-30 mt-30">
 
@@ -93,13 +191,19 @@ const navigate = useNavigate();
                 className="space-y-3"
               >
 
+                {/* ================= IDENTIFIANT ================= */}
+
                 <InputField
                   label="Identifiant professionnel"
                   placeholder="Saisie de l'identifiant"
                   value={adminID}
                   setValue={setAdminID}
                   icon={<User size={18} />}
+                  error={idError}
+                  setError={setIdError}
                 />
+
+                {/* ================= PASSWORD ================= */}
 
                 <InputField
                   label="Mot de passe"
@@ -109,12 +213,20 @@ const navigate = useNavigate();
                   password
                   showPassword={showPassword}
                   setShowPassword={setShowPassword}
+                  error={passwordError}
+                  setError={setPasswordError}
                 />
+
+                {/* ================= BUTTON ================= */}
 
                 <div className="pt-4">
 
                   <Button
-                    title="Log In"
+                    title={
+                      loading
+                        ? "Connexion..."
+                        : "Log In"
+                    }
                     type="submit"
                     variant="primary"
                     noPadding={true}
@@ -132,11 +244,13 @@ const navigate = useNavigate();
 
       </div>
 
-      {/* ================= MOBILE VERSION ================= */}
+      {/* =====================================================
+          MOBILE VERSION
+      ===================================================== */}
 
       <div className="md:hidden min-h-screen bg-white relative overflow-hidden">
 
-        {/* Top Wave */}
+        {/* ================= TOP WAVE ================= */}
 
         <div className="absolute top-0 left-0 w-full overflow-hidden">
 
@@ -148,15 +262,17 @@ const navigate = useNavigate();
 
         </div>
 
+        {/* ================= CONTENT ================= */}
+
         <div className="relative z-10 px-7 pt-9">
 
-          {/* Title */}
+          {/* ================= TITLE ================= */}
 
           <h1 className="text-[34px] font-bold text-[#4E9F8A]">
             Log In
           </h1>
 
-          {/* Illustration */}
+          {/* ================= ILLUSTRATION ================= */}
 
           <div className="flex justify-center mb-10">
 
@@ -168,14 +284,14 @@ const navigate = useNavigate();
 
           </div>
 
-          {/* Form */}
+          {/* ================= FORM ================= */}
 
           <form
             onSubmit={handleSubmit}
             className="space-y-5"
           >
 
-            {/* Identifiant */}
+            {/* ================= IDENTIFIANT ================= */}
 
             <div>
 
@@ -189,7 +305,14 @@ const navigate = useNavigate();
                   type="text"
                   placeholder="Saisie de l'identifiant"
                   value={adminID}
-                  onChange={(e) => setAdminID(e.target.value)}
+                  onChange={(e) => {
+                    setAdminID(e.target.value);
+
+                    // Remove error when user starts typing
+                    if (e.target.value.trim()) {
+                      setIdError("");
+                    }
+                  }}
                   className="
                     w-full
                     h-[36px]
@@ -214,9 +337,17 @@ const navigate = useNavigate();
 
               </div>
 
+              {/* ID ERROR */}
+
+              {idError && (
+                <p className="text-red-500 text-xs mt-1">
+                  {idError}
+                </p>
+              )}
+
             </div>
 
-            {/* Password */}
+            {/* ================= PASSWORD ================= */}
 
             <div>
 
@@ -227,10 +358,21 @@ const navigate = useNavigate();
               <div className="relative">
 
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
                   placeholder="Saisie votre mot de passe"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+
+                    // Remove error when user starts typing
+                    if (e.target.value) {
+                      setPasswordError("");
+                    }
+                  }}
                   className="
                     w-full
                     h-[36px]
@@ -246,28 +388,51 @@ const navigate = useNavigate();
                     focus:ring-[#4E9F8A]
                   "
                 />
+
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                  onClick={() =>
+                    setShowPassword(!showPassword)
+                  }
+                  className="
+                    absolute
+                    right-3
+                    top-1/2
+                    -translate-y-1/2
+                    text-gray-500
+                  "
                 >
+
                   {showPassword ? (
                     <Eye size={15} />
                   ) : (
                     <EyeOff size={15} />
                   )}
+
                 </button>
 
               </div>
 
+              {/* PASSWORD ERROR */}
+
+              {passwordError && (
+                <p className="text-red-500 text-xs mt-1">
+                  {passwordError}
+                </p>
+              )}
+
             </div>
 
-            {/* Login Button */}
+            {/* ================= LOGIN BUTTON ================= */}
 
             <div className="pt-8">
 
               <Button
-                title="Log In"
+                title={
+                  loading
+                    ? "Connexion..."
+                    : "Log In"
+                }
                 type="submit"
                 variant="primary"
                 noPadding={true}
@@ -285,7 +450,10 @@ const navigate = useNavigate();
   );
 };
 
-/* ================= INPUT COMPONENT (Desktop Only) ================= */
+
+/* =========================================================
+   INPUT COMPONENT — DESKTOP
+========================================================= */
 
 const InputField = ({
   label,
@@ -296,25 +464,44 @@ const InputField = ({
   password = false,
   showPassword,
   setShowPassword,
+  error,
+  setError,
 }) => {
   return (
     <div>
 
+      {/* ================= LABEL ================= */}
+
       <label className="block mb-2 text-[18px] font-medium">
         {label}
       </label>
+
+      {/* ================= INPUT ================= */}
 
       <div className="relative">
 
         <input
           type={
             password
-              ? (showPassword ? "text" : "password")
+              ? showPassword
+                ? "text"
+                : "password"
               : "text"
           }
           placeholder={placeholder}
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+
+            // Clear error when user starts typing
+            if (
+              password
+                ? e.target.value
+                : e.target.value.trim()
+            ) {
+              setError("");
+            }
+          }}
           className="
             w-full
             h-[45px]
@@ -330,29 +517,57 @@ const InputField = ({
           "
         />
 
+        {/* ================= ICON ================= */}
+
         {password ? (
 
           <button
             type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+            onClick={() =>
+              setShowPassword(!showPassword)
+            }
+            className="
+              absolute
+              right-3
+              top-1/2
+              -translate-y-1/2
+              text-gray-500
+            "
           >
+
             {showPassword ? (
               <Eye size={18} />
             ) : (
               <EyeOff size={18} />
             )}
+
           </button>
 
         ) : (
 
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+          <div
+            className="
+              absolute
+              right-3
+              top-1/2
+              -translate-y-1/2
+              text-gray-500
+            "
+          >
             {icon}
           </div>
 
         )}
 
       </div>
+
+      {/* ================= ERROR ================= */}
+
+      {error && (
+        <p className="text-red-500 text-sm mt-1">
+          {error}
+        </p>
+      )}
 
     </div>
   );

@@ -25,13 +25,15 @@ import RapportAnnuel from "./pages/Rapports/RapportAnnuel";
 import Parametres from "./pages/Account/Parametres";
 import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
-
+import { AuthProvider } from "./components/Providers/AuthProvider";
 
 function App() {
   return (
     <BrowserRouter>
+    <AuthProvider>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />        
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/dashboardCoor" element={<CoordinatorDashboard />} />
         <Route path="/liste-famille" element={<ListeFamille />} />
@@ -122,6 +124,7 @@ function App() {
 
 
       </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
