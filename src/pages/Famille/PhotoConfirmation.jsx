@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader.jsx";
@@ -12,6 +12,7 @@ import Popup from "../../components/Popups/SuccessPopup.jsx";
 import CoordinateurSelector from "../../components/Containers/CoordinateurSelector.jsx";
 import PopupListeCoordinateurs from "../../components/Popups/PopupListeCoordinateurs.jsx";
 import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
+import { useFamilyForm } from "../../context/FamilyFormContext";
 
 
 import successImage from "../../assets/Success.svg"; 
@@ -22,11 +23,39 @@ import ArrowRight from "../../assets/right-arrow.png";
 
 export default function PhotoConfirmation() {
   const [dateProgramme, setDateProgramme] = useState(null);
+  
   const [relecture, setRelecture] = useState("");
   const navigate = useNavigate();
+  const { formData, updateMere, updateFamilyData } = useFamilyForm();
+   const [photoPreview, setPhotoPreview] = useState(null);
+
+useEffect(() => {
+  const photo = formData.mere?.photo;
+
+  if (!photo) {
+    setPhotoPreview(null);
+    return;
+  }
+
+  // Si la photo est encore un File
+  if (photo instanceof File) {
+    const url = URL.createObjectURL(photo);
+
+    setPhotoPreview(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }
+
+  // Si plus tard ton backend renvoie une URL
+  if (typeof photo === "string") {
+    setPhotoPreview(photo);
+  }
+}, [formData.mere?.photo]);
   const [showPopup, setShowPopup] = useState(false);
   const [openCoordinateurs, setOpenCoordinateurs] = useState(false);
-  const [selectedCoordinateur, setSelectedCoordinateur] = useState(null);
+
   const [errors, setErrors] = useState({});
 
   const listeDesCoordinateurs = [
@@ -34,6 +63,9 @@ export default function PhotoConfirmation() {
     { id: 2, name: "Fatimetou Mint Cheikh", code: "COORD-002", village: "Boghé", familles: 18, status: "Actif" },
     { id: 3, name: "Mohamed Ould Ahmed", code: "COORD-003", village: "Kaédi", familles: 31, status: "Actif" },
   ];
+  const selectedCoordinateur = listeDesCoordinateurs.find(
+  (coordinateur) => coordinateur.id === formData.coordinateur
+);
 
   const clearError = (field) => {
     setErrors((prev) => {
@@ -103,49 +135,75 @@ const isAdmin = role === "admin";
             Photo & confirmation
           </h1>
 
-          {/* Photo Area */}
-          <div
-            className="
-              w-full
-              h-[180px]
-              lg:h-[200px]
+        <label
+  htmlFor="photo-mere"
+ className={`
+    w-full
+    ${photoPreview ? "h-[350px] lg:h-[450px]" : "h-[180px] lg:h-[200px]"}
+    border
+    border-dashed
+    border-[#89BFB1]
+    rounded-[20px]
+    flex
+    flex-col
+    items-center
+    justify-center
+    gap-3
+    cursor-pointer
+    overflow-hidden
+    transition-all
+    duration-300
+  `}
+>
+  <input
+  id="photo-mere"
+  type="file"
+  accept="image/*"
+  className="hidden"
+  onChange={(e) => {
+    const file = e.target.files?.[0];
 
-              border
-              border-dashed
-              border-[#89BFB1]
+    if (!file) return;
 
-              rounded-[20px]
+    console.log("PHOTO SELECTIONNÉE :", file);
 
-              flex
-              flex-col
-              items-center
-              justify-center
+    updateMere({
+      photo: file,
+    });
+  }}
+/>
 
-              gap-3
-              cursor-pointer
-            "
-          >
-            <img
-              src={blackCamera}
-              alt="Camera"
-              className="
-                w-[45px]
-                h-[45px]
-                lg:w-[55px]
-                lg:h-[55px]
-              "
-            />
+  {photoPreview ? (
+    <img
+      src={photoPreview}
+      alt="Photo de la mère"
+      className="w-full h-full object-cover"
+    />
+  ) : (
+    <>
+      <img
+        src={blackCamera}
+        alt="Camera"
+        className="
+          w-[45px]
+          h-[45px]
+          lg:w-[55px]
+          lg:h-[55px]
+        "
+      />
 
-            <span
-              className="
-                text-[16px]
-                font-medium
-                text-black
-              "
-            >
-              Tapez pour prendre une photo
-            </span>
-          </div>
+      <span
+        className="
+          text-[16px]
+          font-medium
+          text-black
+        "
+      >
+        Tapez pour prendre une photo
+      </span>
+    </>
+  )}
+</label>
 
        
          {/* Warning */}
@@ -180,20 +238,25 @@ const isAdmin = role === "admin";
 </div>
 
           {/* Date */}
-          <DateContainer
-            label="Date d'entrée dans le programme"
-            value={dateProgramme}
-            onChange={setDateProgramme}
-            noPadding
-          />
+          <DateContainer 
+  label="Date d'entrée dans le programme"
+  value={formData.date_entree || null}
+  onChange={(date) => {
+    setDateProgramme(date);
+    updateFamilyData({
+      date_entree: date,
+    });
+  }}
+  noPadding
+/>
 
          {/* Coordinator — réservé à l'admin */}
 {isAdmin && (
   <div className="flex flex-col gap-1">
-    <CoordinateurSelector
-      selectedCoordinateur={selectedCoordinateur}
-      onOpenPopup={() => setOpenCoordinateurs(true)}
-    />
+   <CoordinateurSelector 
+  selectedCoordinateur={selectedCoordinateur}
+  onOpenPopup={() => setOpenCoordinateurs(true)}
+/>
     <ErrorMessage message={errors.coordinateur} />
   </div>
 )}
@@ -268,11 +331,14 @@ const isAdmin = role === "admin";
   open={openCoordinateurs}
   onClose={() => setOpenCoordinateurs(false)}
   coordinateurs={listeDesCoordinateurs}
-  onSelectCoordinateur={(coordinateur) => {
-    setSelectedCoordinateur(coordinateur);
-    setOpenCoordinateurs(false);
-    clearError("coordinateur");
-  }}
+ onSelectCoordinateur={(coordinateur) => {
+  updateFamilyData({
+    coordinateur: coordinateur.id,
+  });
+
+  setOpenCoordinateurs(false);
+  clearError("coordinateur");
+}}
 />
         </div>
       </main>
