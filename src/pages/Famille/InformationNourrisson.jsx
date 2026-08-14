@@ -11,17 +11,16 @@ import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
 import Input from "../../components/Containers/ContainerEcriture.jsx";
 
 import bunny from "../../assets/images/bunny.svg";
+import { useFamilyForm } from "../../context/FamilyFormContext";
 
 export default function InformationNourrisson() {
   
-  const [nom, setNom] = useState("");
-  const [prenom, setPrenom] = useState("");
-  const [dateNaissance, setDateNaissance] = useState(null);
-  const [poids, setPoids] = useState("");
-  const [sexe, setSexe] = useState("");
-  const [taille, setTaille] = useState("");
+ 
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const { formData, updateNourrisson } = useFamilyForm();
+
+  const nourrisson = formData.nourrisson;
 
   const clearError = (field) => {
     setErrors((prev) => {
@@ -31,22 +30,31 @@ export default function InformationNourrisson() {
       return updated;
     });
   };
+const handleNext = () => {
+  const newErrors = {};
 
-  const handleNext = () => {
-    const newErrors = {};
+  if (!nourrisson.prenom?.trim()) {
+    newErrors.prenom = "Veuillez saisir le prénom";
+  }
 
-    if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
-    if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
-    if (!poids.trim()) newErrors.poids = "Veuillez saisir le poids de naissance";
-    if (!sexe.trim()) newErrors.sexe = "Veuillez choisir le sexe";
-    if (!taille.trim()) newErrors.taille = "Veuillez saisir la taille de naissance";
+  if (!nourrisson.poids?.trim()) {
+    newErrors.poids = "Veuillez saisir le poids de naissance";
+  }
 
-    setErrors(newErrors);
+  if (!nourrisson.sexe?.trim()) {
+    newErrors.sexe = "Veuillez choisir le sexe";
+  }
 
-    if (Object.keys(newErrors).length === 0) {
-      navigate("/photo-confirmation");
-    }
-  };
+  if (!nourrisson.taille?.trim()) {
+    newErrors.taille = "Veuillez saisir la taille de naissance";
+  }
+
+  setErrors(newErrors);
+
+  if (Object.keys(newErrors).length === 0) {
+    navigate("/photo-confirmation");
+  }
+};
 
     // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
 const role = "admin";
@@ -106,29 +114,19 @@ const isAdmin = role === "admin";
             />
           </div>
 
-           <div className="flex flex-col gap-1">
-            <Input
-              label="Nom"
-              placeholder="Saisir le nom"
-              value={nom}
-              onChange={(e) => {
-                setNom(e.target.value);
-                clearError("nom");
-              }}
-              noPadding
-            />
-            <ErrorMessage message={errors.nom} />
-          </div>
+           
 
           <div className="flex flex-col gap-1">
             <Input
               label="Prénom"
               placeholder="Saisir le prénom"
-              value={prenom}
-              onChange={(e) => {
-                setPrenom(e.target.value);
-                clearError("prenom");
-              }}
+            value={nourrisson.prenom || ""}
+onChange={(e) => {
+  updateNourrisson({
+    prenom: e.target.value,
+  });
+  clearError("prenom");
+}}
               noPadding
             />
             <ErrorMessage message={errors.prenom} />
@@ -138,11 +136,13 @@ const isAdmin = role === "admin";
          
             <DateContainer
               label="Date de naissance"
-              value={dateNaissance}
-              onChange={(date) => {
-                setDateNaissance(date);
-                clearError("dateNaissance");
-              }}
+              value={nourrisson.date_naissance || null}
+onChange={(date) => {
+  updateNourrisson({
+    date_naissance: date,
+  });
+  clearError("dateNaissance");
+}}
               noPadding
             />
            
@@ -174,11 +174,13 @@ const isAdmin = role === "admin";
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={poids}
+                      value={nourrisson.poids || ""}
                       onChange={(e) => {
                         const raw = e.target.value;
                         if (/^\d*$/.test(raw)) {
-                          setPoids(raw);
+                          updateNourrisson({
+                            poids: raw,
+                          });
                           clearError("poids");
                         }
                       }}
@@ -223,11 +225,14 @@ const isAdmin = role === "admin";
                 "Masculin",
                 "Féminin",
               ]}
-              value={sexe}
-              onChange={(value) => {
-                setSexe(value);
-                clearError("sexe");
-              }}
+              value={nourrisson.sexe || ""}
+onChange={(value) => {
+  updateNourrisson({
+    sexe: value,
+  });
+
+  clearError("sexe");
+}}
               noPadding
             />
             <ErrorMessage message={errors.sexe} />
@@ -259,14 +264,18 @@ const isAdmin = role === "admin";
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={taille}
-                      onChange={(e) => {
-                        const raw = e.target.value;
-                        if (/^\d*$/.test(raw)) {
-                          setTaille(raw);
-                          clearError("taille");
-                        }
-                      }}
+                      value={nourrisson.taille || ""}
+                     onChange={(e) => {
+  const raw = e.target.value;
+
+  if (/^\d*$/.test(raw)) {
+    updateNourrisson({
+      taille: raw,
+    });
+
+    clearError("taille");
+  }
+}}
                       placeholder="Ex : 50"
                       className="
                         flex-1
