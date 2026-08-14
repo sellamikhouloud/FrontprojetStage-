@@ -7,13 +7,16 @@ import {
 
 import "./index.css";
 import App from "./App.jsx";
+import { AuthProvider } from "./components/providers/AuthProvider";
 
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </QueryClientProvider>
   </StrictMode>
 );
