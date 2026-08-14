@@ -27,12 +27,15 @@ import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
 import { AuthProvider } from "./components/Providers/AuthProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import { FamilyFormProvider } from "./context/FamilyFormContext";
+
 
 function App() {
   return (
-    <BrowserRouter>
-    <AuthProvider>
-      <Routes>
+     <BrowserRouter>
+      <AuthProvider>
+        <FamilyFormProvider>
+          <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />  
          <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}><Dashboard /></ProtectedRoute>} />
@@ -44,19 +47,22 @@ function App() {
         <Route path="/famille/:id" element={<FamilyProfile />} />
         <Route path="/famille/:id/modifier" element={<Modifyfamilly />} />
 
-        {/* Add Family */}
-        <Route
-          path="/information-mere"
-          element={<InformationMere />}
-        />
-        <Route
-          path="/information-nourrisson"
-          element={<InformationNourrisson />}
-        />
-        <Route
-          path="/photo-confirmation"
-          element={<PhotoConfirmation />}
-        />
+    {/* Add Family */}
+            <Route
+              path="/information-mere"
+              element={<InformationMere />}
+            />
+
+            <Route
+              path="/information-nourrisson"
+              element={<InformationNourrisson />}
+            />
+
+            <Route
+              path="/photo-confirmation"
+              element={<PhotoConfirmation />}
+            />
+
 
 
         {/* Coordinateur */}
@@ -125,7 +131,8 @@ function App() {
         />
 
 
-      </Routes>
+     </Routes>
+        </FamilyFormProvider>
       </AuthProvider>
     </BrowserRouter>
   );
