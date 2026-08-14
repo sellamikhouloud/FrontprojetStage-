@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
-
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../../components/providers/AuthProvider";
+import { listFamilles } from "@/lib/api/familles";
+import { listVillages } from "@/lib/api/Parametres";
+import Spinner from "../../components/Spinner";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import SearchBar from "../../components/Filter/Searchbar";
 import Card from "../../components/Cards/card";
 import Button from "../../components/Button/Button";
-import SelectInput from "../../components/Containers/ChoiceContainer";
+import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import CardPopup from "../../components/Cards/card2";
 import NoResultImage from "../../assets/no result picture.svg";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
@@ -14,17 +18,30 @@ import { useNavigate } from "react-router-dom";
 
 
 export default function FamiliesPage() {
+    const { user, ready } = useAuth();
   const [search, setSearch] = useState("");
-  const [familles, setFamilles] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+ const [selectedVillage, setSelectedVillage] = useState("");
+const [selectedStatut, setSelectedStatut] = useState("");
+const [selectedMois, setSelectedMois] = useState("");
  const [isFilterOpen, setIsFilterOpen] = useState(false);
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
+const moisOptions = [
+  { label: "Janvier", value: 1 },
+  { label: "Février", value: 2 },
+  { label: "Mars", value: 3 },
+  { label: "Avril", value: 4 },
+  { label: "Mai", value: 5 },
+  { label: "Juin", value: 6 },
+  { label: "Juillet", value: 7 },
+  { label: "Août", value: 8 },
+  { label: "Septembre", value: 9 },
+  { label: "Octobre", value: 10 },
+  { label: "Novembre", value: 11 },
+  { label: "Décembre", value: 12 },
+];
 
-   // Simulation du rôle
-  const role = "admin";
-  // const role = "coordinateur";
+   
 
 useEffect(() => {
   const handleResize = () => {
@@ -35,96 +52,122 @@ useEffect(() => {
 
   return () => window.removeEventListener("resize", handleResize);
 }, []);
-  const [appliedFilters, setAppliedFilters] = useState({
+const [appliedFilters, setAppliedFilters] = useState({
   village: "",
+  villageLabel: "",
   statut: "",
-  mois: "",
-  statutZakat: "",
+  statutLabel: "",
+  mois_entree: "",
+  moisLabel: "",
 });
-  
 
-  const [filters, setFilters] = useState({
+ const [filters, setFilters] = useState({
   village: "",
+  villageLabel: "",
   statut: "",
-  mois: "",
-  statutZakat: "",
+  statutLabel: "",
+  mois_entree: "",
+  moisLabel: "",
 });
+
+ const {
+    data: villagesData,
+    isLoading: villagesLoading,
+    isError: villagesError,
+  } = useQuery({
+    queryKey: ["villages"],
+    queryFn: () => listVillages().then((r) => r.data),
+  });
+ const villages = villagesData?.results ?? [];
+
+const villageOptions = villages.map((village) => ({
+  label: village.nom,
+  value: village.id,
+}));
+
+   const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["familles", appliedFilters],
+    queryFn: () => listFamilles(appliedFilters).then((r) => r.data),
+  });
+const familles = data?.results ?? data ?? [];
+
+if (isLoading) {
+  return (
+    <div className="min-h-screen grid place-items-center">
+      <Spinner />
+    </div>
+  );
+}
+if (isError) {
+  return (
+    <div className="min-h-screen grid place-items-center">
+      <div className="text-center text-red-500">
+        <p>Impossible de charger les familles.</p>
+
+        <button
+          onClick={refetch}
+          className="mt-2 underline"
+        >
+          Réessayer
+        </button>
+      </div>
+    </div>
+  );
+}
 
 
 
 const filtersContent = (
   <div className="space-y-2">
-    <SelectInput
+    <SelectInput2
       label="Village"
       placeholder="Tapez pour choisir un village"
       value={filters.village}
-      onChange={(value) =>
-        setFilters({
-          ...filters,
-          village: value,
-        })
+      onChange={(village) =>
+        setFilters((prev) => ({
+          ...prev,
+          village: village.value,
+          villageLabel: village.label,
+        }))
       }
-      options={[
-        "Lexeiba",
-        "Rosso",
-        "Kaédi",
-        "Atar",
-      ]}
+      options={villageOptions}
       noPadding
     />
 
-    <SelectInput
+    <SelectInput2
       label="Statut"
-      placeholder="Tapez pour choisir le statut"
+      placeholder="Choisir un statut"
       value={filters.statut}
-      onChange={(value) =>
-        setFilters({
-          ...filters,
-          statut: value,
-        })
-      }
+      onChange={(selected) => {
+        setFilters((prev) => ({
+          ...prev,
+          statut: selected.value,
+        }));
+      }}
       options={[
-        "En attente",
-        "Active",
-        "Alerte",
-        "Sortie",
+        { label: "Active", value: "active" },
+        { label: "Sortie", value: "sortie" },
       ]}
       noPadding
     />
 
-    <SelectInput
+    <SelectInput2
       label="Mois d'entrée"
-      placeholder="Tapez pour choisir le mois d'entrée"
-      value={filters.mois}
-      onChange={(value) =>
-        setFilters({
-          ...filters,
-          mois: value,
-        })
-      }
-      options={[
-        "Janvier",
-        "Février",
-        "Mars",
-        "Avril",
-      ]}
-      noPadding
-    />
-
-    <SelectInput
-      label="Statut Zakat"
-      placeholder="Tapez pour choisir le statut zakat"
-      value={filters.statutZakat}
-      onChange={(value) =>
-        setFilters({
-          ...filters,
-          statutZakat: value,
-        })
-      }
-      options={[
-        "a bénéficié",
-        "n’a pas bénéficié",
-      ]}
+      placeholder="Choisir un mois"
+      value={filters.mois_entree}
+     onChange={(selected) => {
+  setFilters((prev) => ({
+    ...prev,
+    mois_entree: selected.value,
+    moisLabel: selected.label,
+  }));
+}}
+     options={moisOptions}
       noPadding
     />
 
@@ -134,8 +177,7 @@ const filtersContent = (
       noPadding
       onClick={() => {
         setAppliedFilters(filters);
-
-       setIsFilterOpen(false);
+        setIsFilterOpen(false);
       }}
     />
 
@@ -146,11 +188,10 @@ const filtersContent = (
       onClick={() => {
         const empty = {
           village: "",
+          villageLabel: "",
           statut: "",
-          mois: "",
-          statutZakat: "",
+          mois_entree: "",
         };
-
         setFilters(empty);
         setAppliedFilters(empty);
       }}
@@ -159,17 +200,18 @@ const filtersContent = (
 );
 const filterTagsContent = (
   <div className="flex flex-wrap gap-2 my-4">
-    {appliedFilters.mois && (
-      <FilterTag
-        text={appliedFilters.mois}
-        onRemove={() =>
-          setAppliedFilters((prev) => ({
-            ...prev,
-            mois: "",
-          }))
-        }
-      />
-    )}
+   {appliedFilters.mois_entree && (
+  <FilterTag
+    text={appliedFilters.moisLabel}
+    onRemove={() =>
+      setAppliedFilters((prev) => ({
+        ...prev,
+        mois_entree: "",
+        moisLabel: "",
+      }))
+    }
+  />
+)}
 
     {appliedFilters.statut && (
       <FilterTag
@@ -195,160 +237,87 @@ const filterTagsContent = (
       />
     )}
 
-    {appliedFilters.statutZakat && (
-      <FilterTag
-        text={appliedFilters.statutZakat}
-        onRemove={() =>
-          setAppliedFilters((prev) => ({
-            ...prev,
-            statutZakat: "",
-          }))
-        }
-      />
-    )}
+ 
   </div>
 );
-  useEffect(() => {
-    setLoading(true);
-
-    setTimeout(() => {
-      setFamilles([
-        {
-          id: 1,
-          enfant: "Aïcha Mint Mohamed",
-          mere: "Meriem",
-          sexe: "Fille",
-          region: "Lexeiba",
-          naissance: "12 mars 2026",
-          code: "GDK-2026-003",
-          badges: [
-            { type: "mam", text: "MAM nourrisson" },
-            { type: "mere", text: "Mère normale" },
-            { type: "retard", text: "Visite en retard" },
-          ],
-        },
-        {
-          id: 2,
-          enfant: "Mohamed Ahmed",
-          mere: "Fatima",
-          sexe: "Fils",
-          region: "Nouakchott",
-          naissance: "05 avril 2025",
-          code: "GDK-2026-004",
-          badges: [
-            { type: "mam", text: "MAM nourrisson" },
-            { type: "mere", text: "Mère normale" },
-          ],
-        },
-        {
-          id: 3,
-          enfant: "Salma Mohamed",
-          mere: "Khadija",
-          sexe: "Fille",
-          region: "Rosso",
-          naissance: "15 janvier 2026",
-          code: "GDK-2026-005",
-          badges: [
-            { type: "mas", text: "MAS nourrisson" },
-            { type: "mere", text: "Mère normale" },
-          ],
-        },
-        {
-          id: 4,
-          enfant: "Youssef Ali",
-          mere: "Amina",
-          sexe: "Fils",
-          region: "Atar",
-          naissance: "20 février 2025",
-          code: "GDK-2026-006",
-          badges: [
-            { type: "mam", text: "MAM nourrisson" },
-            { type: "mere", text: "Mère normale" },
-            { type: "retard", text: "Visite en retard" },
-          ],
-        },
-        {
-          id: 5,
-          enfant: "Mariem Ould Ahmed",
-          mere: "Zeinab",
-          sexe: "Fille",
-          region: "Kaédi",
-          naissance: "08 août 2025",
-          code: "GDK-2026-007",
-          badges: [
-            { type: "mas", text: "MAS nourrisson" },
-            { type: "mere", text: "Mère normale" },
-          ],
-        },
-
-         {
-          id: 5,
-          enfant: "Mariem Ould Ahmed",
-          mere: "Zeinab",
-          sexe: "Fille",
-          region: "Kaédi",
-          naissance: "08 août 2025",
-          code: "GDK-2026-007",
-          badges: [
-            { type: "mas", text: "MAS nourrisson" },
-            { type: "mere", text: "Mère normale" },
-          ],
-        },
-
-         {
-          id: 5,
-          enfant: "Mariem Ould Ahmed",
-          mere: "Zeinab",
-          sexe: "Fille",
-          region: "Kaédi",
-          naissance: "08 août 2025",
-          code: "GDK-2026-007",
-          badges: [
-            { type: "mas", text: "MAS nourrisson" },
-            { type: "mere", text: "Mère normale" },
-          ],
-        },
-      ]);
-
-     
-    });
-  }, []);
+ 
 
  const filteredFamilies = familles.filter((famille) => {
   const keyword = search.trim().toLowerCase();
 
+  if (!keyword) return true;
+
   const normalizedKeyword = keyword.replace(/^0/, "");
 
-  const matchSexe =
-    famille.sexe.toLowerCase() === normalizedKeyword;
+  const enfant =
+    famille.nourrisson?.prenom?.toLowerCase() ?? "";
 
-  // Date
-  const naissance = famille.naissance.toLowerCase();
+  const mere =
+    `${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`
+      .toLowerCase();
 
-  const [jour, mois, annee] = naissance.split(" ");
+  const code =
+    famille.id?.toLowerCase() ?? "";
+const sexeCode =
+  famille.nourrisson?.sexe?.toLowerCase() ?? "";
 
-  const jourSansZero = jour.replace(/^0/, "");
+const sexe =
+  sexeCode === "m"
+    ? "m masculin fils"
+    : sexeCode === "f"
+    ? "f feminin féminin fille"
+    : "";
 
-  const matchDate = [
-    naissance,                              // 05 avril 2025
-    `${jourSansZero} ${mois} ${annee}`,     // 5 avril 2025
-    jour,                                   // 05
-    jourSansZero,                           // 5
-    mois,                                   // avril
-    annee,                                  // 2025
-    `${jour} ${mois}`,                      // 05 avril
-    `${jourSansZero} ${mois}`,              // 5 avril
-  ].some((value) =>
-    value.includes(normalizedKeyword)
-  );
+
+ const village =
+  famille.mere?.village?.nom?.toLowerCase() ?? "";
+
+  // Date venant du backend : "2025-04-05"
+  const dateNaissance =
+    famille.nourrisson?.date_naissance ?? "";
+
+  let matchDate = false;
+
+  if (dateNaissance) {
+    const date = new Date(dateNaissance);
+
+    if (!isNaN(date.getTime())) {
+      const jour = String(date.getDate()).padStart(2, "0");
+      const jourSansZero = String(date.getDate());
+
+      const mois = date.toLocaleDateString("fr-FR", {
+        month: "long",
+      });
+
+      const annee = String(date.getFullYear());
+
+      matchDate = [
+        dateNaissance.toLowerCase(),        // 2025-04-05
+        `${jour} ${mois} ${annee}`,         // 05 avril 2025
+        `${jourSansZero} ${mois} ${annee}`, // 5 avril 2025
+        jour,                               // 05
+        jourSansZero,                       // 5
+        mois,                               // avril
+        annee,                              // 2025
+        `${jour} ${mois}`,                  // 05 avril
+        `${jourSansZero} ${mois}`,          // 5 avril
+      ].some((value) =>
+        value.toLowerCase().includes(normalizedKeyword)
+      );
+    }
+  }
 
   return (
-    famille.enfant.toLowerCase().includes(normalizedKeyword) ||
-    famille.code.toLowerCase().includes(normalizedKeyword) ||
-    matchSexe ||
+    enfant.includes(normalizedKeyword) ||
+    mere.includes(normalizedKeyword) ||
+    code.includes(normalizedKeyword) ||
+    sexe.includes(normalizedKeyword) ||
+    village.includes(normalizedKeyword) ||
     matchDate
   );
 });
+
+
 if  (isFilterOpen && isMobile)  {
   return (
     <div className="min-h-screen bg-white p-6 md:hidden">
@@ -370,8 +339,7 @@ if  (isFilterOpen && isMobile)  {
 
       {(appliedFilters.village ||
   appliedFilters.statut ||
-  appliedFilters.mois ||
-  appliedFilters.statutZakat) && filterTagsContent}
+  appliedFilters.mois_entree ) && filterTagsContent}
 
       <div className="mt-6">
     {filtersContent}
@@ -383,11 +351,11 @@ if  (isFilterOpen && isMobile)  {
      <div className="flex h-screen overflow-hidden bg-white">
     {/* Sidebar */}
    
-     <Sidebar role={role} />
+     <Sidebar  />
    
 
   <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-      {role === "admin" ? (
+     {user?.role === "admin" ? (
   <NavigationHeader
     title="Liste des familles"
     type="share"
@@ -408,28 +376,37 @@ if  (isFilterOpen && isMobile)  {
           <div className="my-6">
             <SearchBar
   value={search}
-  onChange={(e) => setSearch(e.target.value)}
+   onChange={(e) => {
+    setSearch(e.target.value);
+    setIsFilterOpen(false);
+  }}
   onFilterClick={() => setIsFilterOpen((prev) => !prev)}
   maxWidth="max-w-full"
 />
 
 {(appliedFilters.village ||
   appliedFilters.statut ||
-  appliedFilters.mois ||
-  appliedFilters.statutZakat) && filterTagsContent}
+  appliedFilters.mois_entree) && filterTagsContent}
 
 
           </div>
 
          
 
-          {error && (
-            <p className="text-center text-red-500">
-              {error}
-            </p>
-          )}
+         {isError && (
+  <div className="text-center text-red-500 py-6">
+    <p>Impossible de charger les familles.</p>
 
-         {!loading && filteredFamilies.length === 0 && (
+    <button
+      onClick={() => refetch()}
+      className="mt-2 underline"
+    >
+      Réessayer
+    </button>
+  </div>
+)}
+
+      {!isError && filteredFamilies.length === 0 && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
@@ -456,14 +433,66 @@ if  (isFilterOpen && isMobile)  {
   }
 >
   <Card
-    enfant={famille.enfant}
-    mere={famille.mere}
-    sexe={famille.sexe}
-    region={famille.region}
-    naissance={famille.naissance}
-    code={famille.code}
-    badges={famille.badges}
-  />
+  enfant={famille.nourrisson?.prenom}
+  mere={`${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`}
+  sexe={
+    famille.nourrisson?.sexe === "M"
+      ? "Fils"
+      : "Fille"
+  }
+  region={famille.mere?.village?.nom ?? "-"}
+  naissance={famille.nourrisson?.date_naissance}
+  code={famille.id}
+  badges={[
+    // =========================
+    // STATUT NUTRITIONNEL BÉBÉ
+    // =========================
+
+    famille.statut_nutritionnel_bebe === "mam" && {
+      type: "mam",
+      text: "MAM nourrisson",
+    },
+
+    famille.statut_nutritionnel_bebe === "mas" && {
+      type: "mas",
+      text: "MAS nourrisson",
+    },
+
+    famille.statut_nutritionnel_bebe === "normale" && {
+      type: "mereNormal",
+      text: "Bébé normal",
+    },
+
+    // =========================
+    // STATUT NUTRITIONNEL MÈRE
+    // =========================
+
+    famille.statut_nutritionnel_mere === "normale" && {
+      type: "mereNormal",
+      text: "Mère normale",
+    },
+
+    famille.statut_nutritionnel_mere === "a_risque" && {
+      type: "mereActive",
+      text: "Mère à risque",
+    },
+
+    famille.statut_nutritionnel_mere === "malnutrition" && {
+      type: "mas",
+      text: "Mère malnutrie",
+    },
+
+   
+    // =========================
+    // VISITE EN RETARD
+    // =========================
+
+    famille.est_visite_en_retard && {
+      type: "retard",
+      text: "Visite en retard",
+    },
+  ].filter(Boolean)}
+/>
 </div>
 
         {/* Mobile */}
@@ -475,14 +504,63 @@ if  (isFilterOpen && isMobile)  {
     })
   }
 >
-  <CardPopup
-    enfant={famille.enfant}
-    sexe={famille.sexe}
-    region={famille.region}
-    naissance={famille.naissance}
-    code={famille.code}
-    badges={famille.badges}
-  />
+ <CardPopup
+  enfant={famille.nourrisson?.prenom}
+  sexe={famille.nourrisson?.sexe === "M" ? "Fils" : "Fille"}
+  region={famille.mere?.village?.nom ?? "-"}
+  naissance={famille.nourrisson?.date_naissance}
+  code={famille.id}
+  badges={[
+    // =========================
+    // STATUT NUTRITIONNEL BÉBÉ
+    // =========================
+
+    famille.statut_nutritionnel_bebe === "mam" && {
+      type: "mam",
+      text: "MAM nourrisson",
+    },
+
+    famille.statut_nutritionnel_bebe === "mas" && {
+      type: "mas",
+      text: "MAS nourrisson",
+    },
+
+    famille.statut_nutritionnel_bebe === "normale" && {
+      type: "mereNormal",
+      text: "Bébé normal",
+    },
+
+    // =========================
+    // STATUT NUTRITIONNEL MÈRE
+    // =========================
+
+    famille.statut_nutritionnel_mere === "normale" && {
+      type: "mereNormal",
+      text: "Mère normale",
+    },
+
+    famille.statut_nutritionnel_mere === "a_risque" && {
+      type: "mereRisque",
+      text: "Mère à risque",
+    },
+
+    famille.statut_nutritionnel_mere === "malnutrition" && {
+      type: "mereMalnutrition",
+      text: "Mère malnutrie",
+    },
+
+   
+
+    // =========================
+    // VISITE EN RETARD
+    // =========================
+
+    famille.est_visite_en_retard && {
+      type: "retard",
+      text: "Visite en retard",
+    },
+  ].filter(Boolean)}
+/>
 </div>
       </div>
     ))}
