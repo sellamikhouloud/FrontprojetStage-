@@ -13,20 +13,17 @@ import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
 
 import motherbaby from "../../assets/images/motherbaby.png";
 import { useNavigate } from "react-router-dom";
+import { useFamilyForm } from "../../context/FamilyFormContext";
 
 
 export default function InformationMere() {
 
-  const [nom, setNom] = useState("");
-  const [prenom, setPrenom] = useState("");
-  const [telephone, setTelephone] = useState("");
-  const [dateNaissance, setDateNaissance] = useState(null);
-  const [situation, setSituation] = useState("");
-  const [enfants, setEnfants] = useState(0);
-  const [referent, setReferent] = useState("");
-  const [observation, setObservation] = useState("");
+
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const { formData, updateMere } = useFamilyForm();
+
+  const mere = formData.mere;
 
   // Efface l'erreur d'un champ précis
   const clearError = (field) => {
@@ -39,20 +36,47 @@ export default function InformationMere() {
   };
 
   const handleNext = () => {
-    const newErrors = {};
+  const newErrors = {};
 
-    if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
-    if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
-    if (!dateNaissance) newErrors.dateNaissance = "Veuillez sélectionner la date de naissance";
-    if (!situation.trim()) newErrors.situation = "Veuillez choisir la situation familiale";
-    if (enfants === 0) newErrors.enfants = "Veuillez indiquer le nombre d'enfants";
+  if (!mere.nom?.trim()) {
+    newErrors.nom = "Veuillez saisir le nom";
+  }
 
-    setErrors(newErrors);
+  if (!mere.prenom?.trim()) {
+    newErrors.prenom = "Veuillez saisir le prénom";
+  }
 
-    if (Object.keys(newErrors).length === 0) {
-      navigate("/information-nourrisson");
-    }
-  };
+  if (!mere.date_naissance) {
+    newErrors.dateNaissance =
+      "Veuillez sélectionner la date de naissance";
+  }
+
+  if (!mere.statut_matrimonial?.trim()) {
+    newErrors.situation =
+      "Veuillez choisir la situation familiale";
+  }
+
+  if (!mere.nb_enfants || mere.nb_enfants === 0) {
+    newErrors.enfants =
+      "Veuillez indiquer le nombre d'enfants";
+  }
+
+  if (!mere.village) {
+    newErrors.village =
+      "Veuillez choisir le village";
+  }
+
+  if (!mere.motif_prise_en_charge?.trim()) {
+    newErrors.motifPriseEnCharge =
+      "Veuillez saisir le motif de prise en charge";
+  }
+
+  setErrors(newErrors);
+
+  if (Object.keys(newErrors).length === 0) {
+    navigate("/information-nourrisson");
+  }
+};
     // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
 const role = "admin";
 // const role = "coordinateur"; 
@@ -119,11 +143,13 @@ const isAdmin = role === "admin";
             <Input
               label="Nom"
               placeholder="Saisir le nom"
-              value={nom}
+              value={mere.nom || ""}
               onChange={(e) => {
-                setNom(e.target.value);
-                clearError("nom");
-              }}
+              updateMere({
+              nom: e.target.value,
+             });
+             clearError("nom");
+            }}
               noPadding
             />
             <ErrorMessage message={errors.nom} />
@@ -133,11 +159,13 @@ const isAdmin = role === "admin";
             <Input
               label="Prénom"
               placeholder="Saisir le prénom"
-              value={prenom}
-              onChange={(e) => {
-                setPrenom(e.target.value);
-                clearError("prenom");
-              }}
+             value={mere.prenom || ""}
+onChange={(e) => {
+  updateMere({
+    prenom: e.target.value,
+  });
+  clearError("prenom");
+}}
               noPadding
             />
             <ErrorMessage message={errors.prenom} />
@@ -146,11 +174,13 @@ const isAdmin = role === "admin";
           <div className="flex flex-col gap-1">
             <DateContainer
               label="Date de naissance"
-              value={dateNaissance}
-              onChange={(date) => {
-                setDateNaissance(date);
-                clearError("dateNaissance");
-              }}
+             value={mere.date_naissance || null}
+onChange={(date) => {
+  updateMere({
+    date_naissance: date,
+  });
+  clearError("dateNaissance");
+}}
               noPadding
               defaultToToday={false}
             />
@@ -158,14 +188,38 @@ const isAdmin = role === "admin";
           </div>
 
           <div className="flex flex-col gap-1">
+  <ChoiceContainer
+    label="Village"
+    placeholder="Tapez pour choisir le village"
+    options={[
+      "Village 1",
+      "Village 2",
+      "Village 3",
+      "Village 4",
+    ]}
+   value={mere.village || ""}
+onChange={(value) => {
+  updateMere({
+    village: value,
+  });
+  clearError("village");
+}}
+    noPadding
+  />
+
+  <ErrorMessage message={errors.village} />
+</div>
+
+          <div className="flex flex-col gap-1">
             <Input
               label="Numéro de téléphone"
               placeholder="Saisir le numéro de téléphone"
-              value={telephone}
-              onChange={(e) => {
-                setTelephone(e.target.value);
-                clearError("telephone");
-              }}
+             value={mere.telephone || ""}
+onChange={(e) => {
+  updateMere({
+    telephone: e.target.value,
+  });
+}}
               noPadding
             />
             
@@ -181,25 +235,44 @@ const isAdmin = role === "admin";
                 "Divorcée",
                 "Veuve",
               ]}
-              value={situation}
-              onChange={(value) => {
-                setSituation(value);
-                clearError("situation");
-              }}
+              value={mere.statut_matrimonial || ""}
+onChange={(value) => {
+  updateMere({
+    statut_matrimonial: value,
+  });
+  clearError("situation");
+}}
               noPadding
             />
             <ErrorMessage message={errors.situation} />
           </div>
+          <div className="flex flex-col gap-1">
+  <Input
+    label="Motif de prise en charge"
+    placeholder="Entrez le motif de prise en charge"
+   value={mere.motif_prise_en_charge || ""}
+onChange={(e) => {
+  updateMere({
+    motif_prise_en_charge: e.target.value,
+  });
+  clearError("motifPriseEnCharge");
+}}
+    noPadding
+  />
+
+  <ErrorMessage message={errors.motifPriseEnCharge} />
+</div>
 
         
             <Input
               label=""
               placeholder="Entrez le Référent médical"
-              value={referent}
-              onChange={(e) => {
-                setReferent(e.target.value);
-                
-              }}
+             value={mere.referent_medical || ""}
+onChange={(e) => {
+  updateMere({
+    referent_medical: e.target.value,
+  });
+}}
               noPadding
             />
        
@@ -219,16 +292,20 @@ const isAdmin = role === "admin";
 
               <div className="flex justify-center">
                 <CounterInput
-                  value={enfants}
+                  value={mere.nb_enfants || 0}
                   mobileWidth="w-[80px]"
                   desktopWidth="lg:w-[200px]"
-                  onIncrement={() => {
-                    setEnfants((prev) => prev + 1);
-                    clearError("enfants");
-                  }}
-                  onDecrement={() =>
-                    setEnfants((prev) => Math.max(0, prev - 1))
-                  }
+                 onIncrement={() => {
+  updateMere({
+    nb_enfants: (mere.nb_enfants || 0) + 1,
+  });
+  clearError("enfants");
+}}
+                  onDecrement={() => {
+  updateMere({
+    nb_enfants: Math.max(0, (mere.nb_enfants || 0) - 1),
+  });
+}}
                 />
               </div>
             </div>
@@ -238,8 +315,12 @@ const isAdmin = role === "admin";
           <Input
             label="Informations complémentaires"
             placeholder="Entrez les informations complémentaires ici"
-            value={observation}
-            onChange={(e) => setObservation(e.target.value)}
+            value={mere.informations_complementaires || ""}
+onChange={(e) => {
+  updateMere({
+    informations_complementaires: e.target.value,
+  });
+}}
             noPadding
           />
 
