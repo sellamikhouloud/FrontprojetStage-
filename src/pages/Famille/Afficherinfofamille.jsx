@@ -217,6 +217,7 @@ const STATUT_FAMILLE = {
 };
 const statut =
   STATUT_FAMILLE[famille?.statut] || null;
+  
 
 const STATUT_BEBE = {
   normale: {
@@ -942,7 +943,7 @@ return (
  <OMSGraphs graphs={graphs} />
 </div> 
 
-{statut === "Active" && (
+{(famille?.statut === "active" || famille?.statut === "Active") && (
   <div className="mt-8 w-full">
     <Button
       title="Sortir du programme"
@@ -953,23 +954,23 @@ return (
   </div>
 )}
 
-{statut === "Sortie" && (
+{(famille?.statut === "sortie" || famille?.statut === "Sortie") && (
   <div className="mt-8">
     <InfoCard
-  title="Statut sortie"
-  data={[
-    {
-      label: "Date de sortie",
-      value: famille?.date_sortie
-        ? new Date(famille.date_sortie).toLocaleDateString("fr-FR")
-        : "/",
-    },
-    {
-      label: "Motif de sortie",
-      value: famille?.motif_sortie || "/",
-    },
-  ]}
-/>
+      title="Statut sortie"
+      data={[
+        {
+          label: "Date de sortie",
+          value: famille?.date_sortie
+            ? new Date(famille.date_sortie).toLocaleDateString("fr-FR")
+            : "/",
+        },
+        {
+          label: "Motif de sortie",
+          value: famille?.motif_sortie || "/",
+        },
+      ]}
+    />
   </div>
 )}
       </main>
