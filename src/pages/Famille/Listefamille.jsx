@@ -464,7 +464,7 @@ if  (isFilterOpen && isMobile)  {
 
   (famille?.statut_nutritionnel_bebe === "normale" ||
     famille?.statut_nutritionnel_bebe === "Normale") && {
-    type: "mereNormal",
+    type: "mere",
     text: "Bébé normal",
   },
 
@@ -474,13 +474,13 @@ if  (isFilterOpen && isMobile)  {
 
    (famille?.statut_nutritionnel_mere === "normale" ||
   famille?.statut_nutritionnel_mere === "Normale") && {
-  type: "mereNormal",
+  type: "mere",
   text: "Mère normale",
 },
 
 (famille?.statut_nutritionnel_mere === "a_risque" ||
   famille?.statut_nutritionnel_mere === "À risque") && {
-  type: "mereActive",
+  type: "risque",
   text: "Mère à risque",
 },
 
@@ -540,7 +540,7 @@ if  (isFilterOpen && isMobile)  {
 
   (famille?.statut_nutritionnel_bebe === "normale" ||
     famille?.statut_nutritionnel_bebe === "Normale") && {
-    type: "mereNormal",
+    type: "mere",
     text: "Bébé normal",
   },
 
@@ -550,13 +550,13 @@ if  (isFilterOpen && isMobile)  {
 
      (famille?.statut_nutritionnel_mere === "normale" ||
   famille?.statut_nutritionnel_mere === "Normale") && {
-  type: "mereNormal",
+  type: "mere",
   text: "Mère normale",
 },
 
 (famille?.statut_nutritionnel_mere === "a_risque" ||
   famille?.statut_nutritionnel_mere === "À risque") && {
-  type: "mereActive",
+  type: "risque",
   text: "Mère à risque",
 },
 
