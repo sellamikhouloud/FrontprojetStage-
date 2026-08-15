@@ -448,39 +448,47 @@ if  (isFilterOpen && isMobile)  {
     // STATUT NUTRITIONNEL BÉBÉ
     // =========================
 
-    famille.statut_nutritionnel_bebe === "mam" && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
+    (famille?.statut_nutritionnel_bebe === "mam" ||
+    famille?.statut_nutritionnel_bebe ===
+      "Malnutrition Aiguë Modérée") && {
+    type: "mam",
+    text: "MAM nourrisson",
+  },
 
-    famille.statut_nutritionnel_bebe === "mas" && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
+  (famille?.statut_nutritionnel_bebe === "mas" ||
+    famille?.statut_nutritionnel_bebe ===
+      "Malnutrition Aiguë Sévère") && {
+    type: "mas",
+    text: "MAS nourrisson",
+  },
 
-    famille.statut_nutritionnel_bebe === "normale" && {
-      type: "mereNormal",
-      text: "Bébé normal",
-    },
+  (famille?.statut_nutritionnel_bebe === "normale" ||
+    famille?.statut_nutritionnel_bebe === "Normale") && {
+    type: "mereNormal",
+    text: "Bébé normal",
+  },
 
     // =========================
     // STATUT NUTRITIONNEL MÈRE
     // =========================
 
-    famille.statut_nutritionnel_mere === "normale" && {
-      type: "mereNormal",
-      text: "Mère normale",
-    },
+   (famille?.statut_nutritionnel_mere === "normale" ||
+  famille?.statut_nutritionnel_mere === "Normale") && {
+  type: "mereNormal",
+  text: "Mère normale",
+},
 
-    famille.statut_nutritionnel_mere === "a_risque" && {
-      type: "mereActive",
-      text: "Mère à risque",
-    },
+(famille?.statut_nutritionnel_mere === "a_risque" ||
+  famille?.statut_nutritionnel_mere === "À risque") && {
+  type: "mereActive",
+  text: "Mère à risque",
+},
 
-    famille.statut_nutritionnel_mere === "malnutrition" && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
+(famille?.statut_nutritionnel_mere === "malnutrition" ||
+  famille?.statut_nutritionnel_mere === "Malnutrition") && {
+  type: "mas",
+  text: "Mère malnutrie",
+},
 
    
     // =========================
@@ -515,40 +523,48 @@ if  (isFilterOpen && isMobile)  {
     // STATUT NUTRITIONNEL BÉBÉ
     // =========================
 
-    famille.statut_nutritionnel_bebe === "mam" && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
+  
+    (famille?.statut_nutritionnel_bebe === "mam" ||
+    famille?.statut_nutritionnel_bebe ===
+      "Malnutrition Aiguë Modérée") && {
+    type: "mam",
+    text: "MAM nourrisson",
+  },
 
-    famille.statut_nutritionnel_bebe === "mas" && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
+  (famille?.statut_nutritionnel_bebe === "mas" ||
+    famille?.statut_nutritionnel_bebe ===
+      "Malnutrition Aiguë Sévère") && {
+    type: "mas",
+    text: "MAS nourrisson",
+  },
 
-    famille.statut_nutritionnel_bebe === "normale" && {
-      type: "mereNormal",
-      text: "Bébé normal",
-    },
+  (famille?.statut_nutritionnel_bebe === "normale" ||
+    famille?.statut_nutritionnel_bebe === "Normale") && {
+    type: "mereNormal",
+    text: "Bébé normal",
+  },
 
     // =========================
     // STATUT NUTRITIONNEL MÈRE
     // =========================
 
-    famille.statut_nutritionnel_mere === "normale" && {
-      type: "mereNormal",
-      text: "Mère normale",
-    },
+     (famille?.statut_nutritionnel_mere === "normale" ||
+  famille?.statut_nutritionnel_mere === "Normale") && {
+  type: "mereNormal",
+  text: "Mère normale",
+},
 
-    famille.statut_nutritionnel_mere === "a_risque" && {
-      type: "mereRisque",
-      text: "Mère à risque",
-    },
+(famille?.statut_nutritionnel_mere === "a_risque" ||
+  famille?.statut_nutritionnel_mere === "À risque") && {
+  type: "mereActive",
+  text: "Mère à risque",
+},
 
-    famille.statut_nutritionnel_mere === "malnutrition" && {
-      type: "mereMalnutrition",
-      text: "Mère malnutrie",
-    },
-
+(famille?.statut_nutritionnel_mere === "malnutrition" ||
+  famille?.statut_nutritionnel_mere === "Malnutrition") && {
+  type: "mas",
+  text: "Mère malnutrie",
+},
    
 
     // =========================
