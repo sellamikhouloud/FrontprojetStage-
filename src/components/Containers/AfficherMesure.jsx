@@ -16,7 +16,7 @@ export default function AfficherMesure({
           <div>
             <p className="text-[14px] text-[#666666]">Poids</p>
             <p className="text-[20px] font-bold text-[#202124]">
-              {poids} <span className="text-[15px]">g</span>
+              {poids} <span className="text-[13px]">g</span>
             </p>
           </div>
 
@@ -26,7 +26,7 @@ export default function AfficherMesure({
 
             <p className="text-[14px] text-[#666666]">Taille</p>
             <p className="text-[20px] font-bold text-[#202124]">
-              {taille} <span className="text-[15px]">cm</span>
+              {taille} <span className="text-[13px]">cm</span>
             </p>
 
             <div className="absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
@@ -36,7 +36,7 @@ export default function AfficherMesure({
           <div>
             <p className="text-[14px] text-[#666666]">MUAC</p>
             <p className="text-[20px] font-bold text-[#202124]">
-              {muac} <span className="text-[15px]">mm</span>
+              {muac} <span className="text-[13px]">mm</span>
             </p>
           </div>
         </div>
