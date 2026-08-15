@@ -36,6 +36,12 @@ sortie: {
   background: "#BEBEBE80",
   text: "#4B5563",
 },
+
+risque: {
+  border: "#EF4444",
+  background: "#FFFFFF",
+  text: "#EF4444",
+},
     // Mère normale (fond vert clair utiliser dans fiche famille meme que status mere )
   mereNormal: {
     border: "#22C55E",
@@ -99,6 +105,7 @@ sm:min-h-[36px]
 };
 
 export default StatusBadge;
+
 
 
 
