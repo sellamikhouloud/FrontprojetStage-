@@ -19,7 +19,7 @@ export default function AfficherMesure({
           <div className="grid grid-cols-2 items-center text-center">
             {/* Statut IMC */}
             <div className="relative">
-              <p className="text-[14px] text-[#666666]">
+              <p className="text-[16px] text-[#666666]">
                 Statut IMC
               </p>
 
@@ -32,7 +32,7 @@ export default function AfficherMesure({
 
             {/* Hémoglobine */}
             <div>
-              <p className="text-[14px] text-[#666666]">
+              <p className="text-[16px] text-[#666666]">
                 Hémoglobine
               </p>
 
@@ -57,13 +57,13 @@ export default function AfficherMesure({
         <div className="grid grid-cols-3 items-center text-center">
           {/* Poids */}
           <div>
-            <p className="text-[14px] text-[#666666]">
+            <p className="text-[16px] text-[#666666]">
               Poids
             </p>
 
-            <p className="text-[20px] font-bold text-[#202124]">
+            <p className="text-[18px] font-bold text-[#202124]">
               {poids ?? "-"}{" "}
-              <span className="text-[13px]">g</span>
+              <span className="text-[14px]">g</span>
             </p>
           </div>
 
@@ -71,13 +71,13 @@ export default function AfficherMesure({
           <div className="relative">
             <div className="absolute left-0 top-1/2 h-10 -translate-y-1/2 border-l border-[#E5E7EB]" />
 
-            <p className="text-[14px] text-[#666666]">
+            <p className="text-[16px] text-[#666666]">
               Taille
             </p>
 
-            <p className="text-[20px] font-bold text-[#202124]">
+            <p className="text-[18px] font-bold text-[#202124]">
               {taille ?? "-"}{" "}
-              <span className="text-[13px]">cm</span>
+              <span className="text-[14px]">cm</span>
             </p>
 
             <div className="absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
@@ -85,13 +85,13 @@ export default function AfficherMesure({
 
           {/* MUAC */}
           <div>
-            <p className="text-[14px] text-[#666666]">
+            <p className="text-[16px] text-[#666666]">
               MUAC
             </p>
 
-            <p className="text-[20px] font-bold text-[#202124]">
+            <p className="text-[18px] font-bold text-[#202124]">
               {muac ?? "-"}{" "}
-              <span className="text-[13px]">mm</span>
+              <span className="text-[14px]">mm</span>
             </p>
           </div>
         </div>
