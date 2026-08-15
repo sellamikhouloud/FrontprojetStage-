@@ -10,7 +10,7 @@ export const createFamille = (payload) => api.post("/api/familles/", payload);
 
 export const updateFamille = (id, patch) => api.patch(`/api/familles/${id}/`, patch);
 
-export const marquerSortie = (id, data) =>  api.post(`/api/familles/${id}/marquer-sortie/`, data);
+export const marquerSortie = (id, data) =>  api.patch(`/api/familles/${id}/marquer-sortie/`, data);
 
 export const getCourbes = (id) =>  api.get(`/api/familles/${id}/courbes/`);
 
