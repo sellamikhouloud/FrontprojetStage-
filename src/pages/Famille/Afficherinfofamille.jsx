@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getFamille } from "@/lib/api/familles";
+import { marquerSortie} from "@/lib/api/familles";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../../components/Containers/AfficherContainer";
@@ -41,6 +42,7 @@ const {
   isLoading,
   isError,
   error,
+  refetch,
 } = useQuery({
   queryKey: ["famille", id],
   queryFn: () => getFamille(id).then((res) => res.data),
@@ -721,7 +723,7 @@ return (
  
     <Sidebar />
   
-      
+  {/*  
       <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
@@ -739,25 +741,31 @@ return (
   onClose={() => setOpenVisites(false)}
   Visites ={visiteList}
 />
+*/}
 
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
- onConfirm={async (motif) => {
-  console.log("Motif :", motif);
+  onConfirm={async (motif, dateSortie) => {
+    try {
+      await marquerSortie(famille.id, {
+        date_sortie: dateSortie.toISOString().split("T")[0],
+        motif_sortie: motif,
+      });
 
-  // await sortirFamille(id, motif);
+         // Fermer le popup
+      setOpenFinSuivi(false);
 
-  if (isMobile) {
-    setOpenSuccess(true);
-  } else {
-    setOpenFinSuivi(false);
+      // Recharger les données de la famille
+      await refetch();
 
-    // Recharger la fiche
-  }
-}}
+   
+     
+    } catch (error) {
+      console.error("Erreur lors de la sortie :", error);
+    }
+  }}
 />
-
 {openSuccess && (
   <Popup
   title="Fin de suivi avec succès"
