@@ -188,7 +188,7 @@ const modification = [
   {
     label: "Modifié par",
     value: famille?.audit?.modifie_par
-      ? `${famille.audit.modifie_par.prenom} ${famille.audit.modifie_par.nom}`
+      ? `${famille.audit.modifie_par.nom} ${famille.audit.modifie_par.prenom}`
       : "/",
   },
   {
@@ -904,7 +904,7 @@ return (
     {
       label: "Nom du coordinateur",
       value: famille?.coordinateur
-        ? `${famille.coordinateur.prenom} ${famille.coordinateur.nom}`
+        ? `${famille.coordinateur.nom} ${famille.coordinateur.prenom}`
         : "/",
     },
   ]}
