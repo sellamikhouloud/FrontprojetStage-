@@ -5,11 +5,14 @@ import { useState } from "react";
 import PopupDetailVisite from "./Popupdetailsvisite";
 import CardPopupvisite from "../Cards/cardvisite";
 import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
+import Spinner from "../Spinner";
 
 const Popupvisites = ({
   open,
   onClose,
   Visites = [],
+  famille,
+  isLoading = false,
 }) => {
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedVisite, setSelectedVisite] = useState(null);
@@ -64,6 +67,7 @@ const Popupvisites = ({
               open={openDetail}
               onClose={() => setOpenDetail(false)}
               visite={selectedVisite}
+              famille={famille}
               onEdit={() => {
                 setOpenDetail(false);
                 setOpenModifier(true);
@@ -123,15 +127,71 @@ const Popupvisites = ({
                 pr-1
               "
             >
-              {Visites.length ? (
-                Visites.map((item) => (
+              {isLoading ? (
+                <div className="flex justify-center py-10">
+                  <Spinner />
+                </div>
+              ) : Visites.length ? (
+                Visites.map((item, index) => (
                   <CardPopupvisite
-                    key={item.id}
-                    visite={item.visite}
-                    date={item.date}
-                    poids={item.poids}
-                    taille={item.taille}
-                    badges={item.badges}
+                    key={item.id ?? `visite-${index}`}
+                    visite={
+                      item.numero_visite !== undefined && item.numero_visite !== null
+                        ? `Visite ${item.numero_visite + 1}`
+                        : `Visite ${index + 1}`
+                    }
+                   date={
+  item.date_visite
+    ? new Date(item.date_visite).toLocaleDateString("fr-FR")
+    : "-"
+}
+                    poids={item.poids_bebe ?? "-"}
+                    taille={item.taille_bebe ?? "-"}
+                    badges={[
+                      // =========================
+                      // STATUT NUTRITIONNEL BÉBÉ
+                      // =========================
+
+                      (item.statut_nutritionnel === "mam" ||
+                        item.statut_nutritionnel === "Malnutrition Aiguë Modérée") && {
+                        type: "mam",
+                        text: "MAM nourrisson",
+                      },
+
+                      (item.statut_nutritionnel === "mas" ||
+                        item.statut_nutritionnel === "Malnutrition Aiguë Sévère") && {
+                        type: "mas",
+                        text: "MAS nourrisson",
+                      },
+
+                      (item.statut_nutritionnel === "normale" ||
+                        item.statut_nutritionnel === "Normale") && {
+                        type: "mere",
+                        text: "Bébé normal",
+                      },
+
+                      // =========================
+                      // STATUT NUTRITIONNEL MÈRE
+                      // =========================
+
+                      (item.statut_nutritionnel_mere === "normale" ||
+                        item.statut_nutritionnel_mere === "Normale") && {
+                        type: "mere",
+                        text: "Mère normale",
+                      },
+
+                      (item.statut_nutritionnel_mere === "a_risque" ||
+                        item.statut_nutritionnel_mere === "À risque") && {
+                        type: "risque",
+                        text: "Mère à risque",
+                      },
+
+                      (item.statut_nutritionnel_mere === "malnutrition" ||
+                        item.statut_nutritionnel_mere === "Malnutrition") && {
+                        type: "mas",
+                        text: "Mère malnutrie",
+                      },
+                    ].filter(Boolean)}
                     onClick={() => {
                       setSelectedVisite(item);
                       setOpenDetail(true);
@@ -139,9 +199,7 @@ const Popupvisites = ({
                   />
                 ))
               ) : (
-                <div className="py-10 text-center text-gray-500">
-                  Aucune visite.
-                </div>
+                <div className="py-10 text-center text-gray-500">Aucune visite.</div>
               )}
             </div>
           </motion.div>
