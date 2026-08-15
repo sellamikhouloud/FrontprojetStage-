@@ -1,5 +1,7 @@
 import { useState } from "react";
-
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getFamille } from "@/lib/api/familles";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../../components/Containers/AfficherContainer";
@@ -12,7 +14,6 @@ import MotherPhoto from "../../assets/photo mere.svg";
 import successImage from "../../assets/Success.svg"; 
 import PopupFinSuivi from "../../components/Popups/PopupFinsuivi";
 import Popup from "../../components/Popups/SuccessPopup.jsx";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
 import PopupZakatFamille from "../../components/Popups/PopupZakatfamille";
 import OMSGraphs from "../../components/OMSGraphs/OMSGraphs.jsx";
 import ZScoreBox from "../../components/Containers/ZScoreBox";
@@ -20,100 +21,262 @@ import PoidsAgeChart from "../../components/OMSGraphs/PoidsAgeChart";
 import TailleAgeChart from "../../components/OMSGraphs/TailleAgeChart";
 import PoidsTailleChart from "../../components/OMSGraphs/PoidsTailleChart";
 import MuacAgeChart from "../../components/OMSGraphs/MuacAgeChart";
+import Spinner from "../../components/Spinner";
 
 
 const FamilyProfile = () => {
   const location = useLocation();
     const navigate = useNavigate();
 const { id } = useParams();
-const isMobile = window.innerWidth < 768;
-  const statut = "Active"; // ou "Active"
-
-  const nourrisson = [
-    { label: "Date de naissance", value: "15/05/2026" },
-    { label: "Sexe", value: "Masculin" },
-    { label: "Poids de naissance", value: "500 g" },
-    { label: "Taille de naissance", value: "35 cm" },
-  ];
-
-const mere = [
-  { label: "Village", value: "Lexeiba" },
-  { label: "Numéro de téléphone", value: "24123456" },
-  { label: "Date de naissance", value: "15/05/1990" },
-  { label: "Statut matrimonial", value: "Mariée" },
-  { label: "Nombre d'enfants à charge", value: "2" },
-  { label: "Référent médical", value: "Mariam Diallo" },
-  {
-    label: "Informations complémentaires",
-    value:
-      "/",
-  },
-];
- 
-  const programme = [
-    
-      { label: "Date d'entrée dans le programme",
-      value: "16/05/2026"},
-    {
-    label: "Enregistré par",
-    value: "Ahmed Mohamed",
-  },
-  ];
 
 
-    const modification = [
-  {
-    label: "Modifié par",
-    value: "Ahmed Mohamed",
-  },
-  {
-    label: "Date de modification",
-    value: "05/08/2026 ",
-  },
-];
-      
-    
-  
-
-  const zakat = [
-    {
-      label: "Nombre d'aides",
-      value: "6",
-    },
-    {
-      label: "Montant total",
-      value: "4000 MRU",
-    },
-  ];
-
-  const distributions = [
-    {
-      label: "Nombre de distributions",
-      value: "4",
-    },
-  ];
-
-  const visites = [
-    {
-      label: "Nombre de visites",
-      value: "2",
-    },
-    {
-      label: "Date de la dernière visite",
-      value: "15/08/2026",
-    },
-  ];
-
-
-const superviseur = [
-  {
-    label: "Nom du coordinateur",
-    value: "Kshfhd Qdjshf",
-  },
-];
 const [openDistribution, setOpenDistribution] = useState(false);
 const [openVisites, setOpenVisites] = useState(false);
 const [openZakat, setOpenZakat] = useState(false);
+const [openFinSuivi, setOpenFinSuivi] = useState(false);
+const [openSuccess, setOpenSuccess] = useState(false);
+
+const {
+  data: famille,
+  isLoading,
+  isError,
+  error,
+} = useQuery({
+  queryKey: ["famille", id],
+  queryFn: () => getFamille(id).then((res) => res.data),
+  enabled: !!id,
+});
+
+if (isLoading) {
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <Spinner />
+    </div>
+  );
+}
+
+if (isError) {
+  return (
+    <div className="p-6 text-red-500">
+      Erreur lors du chargement de la famille.
+      <br />
+      {error?.message}
+    </div>
+  );
+}
+
+
+const isMobile = window.innerWidth < 768;
+
+
+  const nourrisson = [
+  {
+   label: "Date de naissance",
+  value: famille?.nourrisson?.date_naissance
+    ? famille.nourrisson.date_naissance.split("-").reverse().join("/")
+    : "/",
+  },
+  {
+    label: "Sexe",
+  value:
+    famille?.nourrisson?.sexe === "M" ||
+    famille?.nourrisson?.sexe === "Masculin"
+      ? "Masculin"
+      : famille?.nourrisson?.sexe === "F" ||
+        famille?.nourrisson?.sexe === "Féminin"
+      ? "Féminin"
+      : "/",
+  },
+  {
+    label: "Poids de naissance",
+    value: famille?.nourrisson?.poids_naissance
+      ? `${famille.nourrisson.poids_naissance} kg`
+      : "/",
+  },
+  {
+    label: "Taille de naissance",
+    value: famille?.nourrisson?.taille_naissance
+      ? `${famille.nourrisson.taille_naissance} cm`
+      : "/",
+  },
+];
+
+const mere = [
+  {
+    label: "Village",
+    value: famille?.mere?.village?.nom || "/",
+  },
+  {
+    label: "Numéro de téléphone",
+    value: famille?.mere?.telephone || "/",
+  },
+  {
+   label: "Date de naissance",
+  value: famille?.mere?.date_naissance
+    ? new Date(famille.mere.date_naissance).toLocaleDateString("fr-FR")
+    : "/",
+  },
+  {
+    label: "Statut matrimonial",
+    value: famille?.mere?.statut_matrimonial || "/",
+  },
+  {
+    label: "Nombre d'enfants à charge",
+    value: famille?.mere?.nb_enfants ?? "/",
+  },
+  {
+    label: "Référent médical",
+    value: famille?.mere?.referent_medical || "/",
+  },
+  {
+    label: "Informations complémentaires",
+    value: famille?.mere?.informations_complementaires || "/",
+  },
+];
+
+
+
+
+    const programme = [
+  {
+     label: "Date d'entrée dans le programme",
+    value: famille?.date_entree
+      ? new Date(famille.date_entree).toLocaleDateString("fr-FR")
+      : "/",
+  },
+  {
+    label: "Enregistré par",
+    value: famille?.audit?.cree_par
+      ? `${famille.audit.cree_par.prenom} ${famille.audit.cree_par.nom}`
+      : "/",
+  },
+];
+
+const zakat = [
+  {
+    label: "Nombre d'aides",
+    value: famille?.zakat?.nombre ?? 0,
+  },
+  {
+    label: "Montant total",
+    value: `${famille?.zakat?.montant_total ?? 0} MRU`,
+  },
+];
+
+const distributions = [
+  {
+    label: "Nombre de distributions",
+    value: famille?.distributions?.nombre ?? 0,
+  },
+];
+
+const visites = [
+  {
+    label: "Nombre de visites",
+    value: famille?.visites?.nombre ?? 0,
+  },
+  {
+    label: "Date de la dernière visite",
+    value: famille?.visites?.derniere_visite
+      ? new Date(famille.visites.derniere_visite).toLocaleDateString("fr-FR")
+      : "/",
+  },
+];
+const modification = [
+  {
+    label: "Modifié par",
+    value: famille?.audit?.modifie_par
+      ? `${famille.audit.modifie_par.prenom} ${famille.audit.modifie_par.nom}`
+      : "/",
+  },
+  {
+    label: "Date de modification",
+    value: famille?.audit?.date_modification
+      ? new Date(famille.audit.date_modification).toLocaleDateString("fr-FR")
+      : "/",
+  },
+];
+
+const STATUT_FAMILLE = {
+  active: {
+    text: "Active",
+    type: "mereActive",
+  },
+  Active: {
+    text: "Active",
+    type: "mereActive",
+  },
+  sortie: {
+    text: "Sortie",
+    type: "sortie",
+  },
+  Sortie: {
+    text: "Sortie",
+    type: "sortie",
+  },
+};
+const statut =
+  STATUT_FAMILLE[famille?.statut] || null;
+
+const STATUT_BEBE = {
+  normale: {
+    text: "Bébé normal",
+    type: "mereNormal",
+  },
+  "Normale": {
+    text: "Bébé normal",
+    type: "mereNormal",
+  },
+  mam: {
+    text: "MAM nourrisson",
+    type: "mam",
+  },
+  "Malnutrition Aiguë Modérée": {
+    text: "MAM nourrisson",
+    type: "mam",
+  },
+  mas: {
+    text: "MAS nourrisson",
+    type: "mas",
+  },
+  "Malnutrition Aiguë Sévère": {
+    text: "MAS nourrisson",
+    type: "mas",
+  },
+};
+
+const STATUT_MERE = {
+  normale: {
+    text: "Mère normale",
+    type: "mereNormal",
+  },
+  "Normale": {
+    text: "Mère normale",
+    type: "mereNormal",
+  },
+  a_risque: {
+    text: "Mère à risque",
+    type: "mereActive",
+  },
+  "À risque": {
+    text: "Mère à risque",
+    type: "mereActive",
+  },
+  malnutrition: {
+    text: "Malnutrition",
+    type: "mas",
+  },
+  Malnutrition: {
+    text: "Malnutrition",
+    type: "mas",
+  },
+};
+
+const statutBebe =
+  STATUT_BEBE[famille?.statut_nutritionnel_bebe] || null;
+
+const statutMere =
+  STATUT_MERE[famille?.statut_nutritionnel_mere] || null;
 
 const zakatList = [
   {
@@ -459,8 +622,7 @@ const visiteList = [
     ],
   },
 ];
-const [openFinSuivi, setOpenFinSuivi] = useState(false);
-const [openSuccess, setOpenSuccess] = useState(false);
+
 const DONNEES_POIDS = [
   { age: 0, poids: 3.1 },
   { age: 1, poids: 3.6 },
@@ -556,7 +718,7 @@ return (
   <div className="flex h-screen overflow-hidden bg-white">
   {/* Sidebar */}
  
-    <Sidebar role="admin" />
+    <Sidebar />
   
       
       <PopupDistributionfamille
@@ -637,10 +799,10 @@ return (
          {/* Photo */}
 <div className="w-full lg:w-[520px] h-[331px] rounded-[15px] overflow-hidden border border-[#E5E7EB] bg-white shadow-sm">
   <img
-    src={MotherPhoto}
-    alt="Photo de la mère"
-    className="w-full h-full object-cover"
-  />
+  src={famille?.mere?.photo || MotherPhoto}
+  alt="Photo de la mère"
+  className="w-full h-full object-cover"
+/>
 </div>
 
           {/* Partie droite */}
@@ -649,11 +811,12 @@ return (
             {/* Nom */}
           <div className="flex items-center justify-between">
   <h2 className="text-[26px] font-bold text-[#202124]">
-    Aïcha Mint Mohamed
-  </h2>
+  {famille?.mere?.prenom} {famille?.mere?.nom}
+</h2>
+
 
   <span className="text-[#67A7A3] text-[18px] font-semibold">
-    GDK-2026-003
+   {famille?.id }
   </span>
 </div>
 
@@ -661,24 +824,31 @@ return (
          
       <div className="flex flex-col gap-2">
 
- <StatusBadge
-  type={statut === "Sortie" ? "sortie" : "mereActive"}
-  text={statut}
-  className="w-full h-[40px] rounded-[10px]"
-/>
+ {statut && (
+  <StatusBadge
+    type={statut.type}
+    text={statut.text}
+    className="w-full h-[40px] rounded-[10px]"
+  />
+)}
+
 
   <div className="grid grid-cols-2 gap-1">
-    <StatusBadge
-      type="mas"
-      text="MAS nourrisson"
-      className="w-full h-[40px] rounded-[10px]"
-    />
+  {statutBebe && (
+  <StatusBadge
+    type={statutBebe.type}
+    text={statutBebe.text}
+    className="w-full h-[40px] rounded-[10px]"
+  />
+)}
 
-   <StatusBadge
-  type="mereNormal"
-  text="Mère normale"
-  className="w-full h-[40px] rounded-[10px]"
-/>
+{statutMere && (
+  <StatusBadge
+    type={statutMere.type}
+    text={statutMere.text}
+    className="w-full h-[40px] rounded-[10px]"
+  />
+)}
   </div>
 
 </div>
@@ -719,16 +889,17 @@ return (
       
       data={distributions}
     />
-
-    <InfoCard
-      title="Supervise par"
-      data={[
-        {
-          label: "Nom du coordinateur",
-          value: "Kshfhd Qdjshf",
-        },
-      ]}
-    />
+<InfoCard
+  title="Supervise par"
+  data={[
+    {
+      label: "Nom du coordinateur",
+      value: famille?.coordinateur
+        ? `${famille.coordinateur.prenom} ${famille.coordinateur.nom}`
+        : "/",
+    },
+  ]}
+/>
   </div>
 </div>
 
@@ -785,19 +956,20 @@ return (
 {statut === "Sortie" && (
   <div className="mt-8">
     <InfoCard
-      title="Statut sortie"
-      data={[
-        {
-          label: "Date de sortie",
-          value: "15/05/2026",
-        },
-        {
-          label: "Motif de sortie",
-          value:
-            "Enfant sorti du programme après amélioration de son état nutritionnel.",
-        },
-      ]}
-    />
+  title="Statut sortie"
+  data={[
+    {
+      label: "Date de sortie",
+      value: famille?.date_sortie
+        ? new Date(famille.date_sortie).toLocaleDateString("fr-FR")
+        : "/",
+    },
+    {
+      label: "Motif de sortie",
+      value: famille?.motif_sortie || "/",
+    },
+  ]}
+/>
   </div>
 )}
       </main>
