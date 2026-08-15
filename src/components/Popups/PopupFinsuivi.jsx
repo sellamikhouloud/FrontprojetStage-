@@ -140,10 +140,10 @@ const PopupFinSuivi = ({
               <Button
                 title="Confirmer la sortie"
                 variant="confirm"
-                onClick={() => {
-                  onConfirm?.(motif);
-                  setMotif("");
-                }}
+                 onClick={() => {
+    onConfirm?.(motif, dateSortie);
+    setMotif("");
+  }}
               />
             </div>
           </motion.div>
