@@ -263,7 +263,7 @@ const STATUT_MERE = {
   },
   "À risque": {
     text: "Mère à risque",
-    type: "mereActive",
+    type: "risque",
   },
   malnutrition: {
     text: "Malnutrition",
@@ -723,7 +723,7 @@ return (
  
     <Sidebar />
   
-  {/*  
+   
       <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
@@ -741,7 +741,7 @@ return (
   onClose={() => setOpenVisites(false)}
   Visites ={visiteList}
 />
-*/}
+
 
 <PopupFinSuivi
   open={openFinSuivi}
