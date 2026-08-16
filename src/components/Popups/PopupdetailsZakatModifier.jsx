@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
+import TextareaModifier from "../Containers/TextAreaModifier";
 import Card from "../Cards/Card";
 import EditableInfoCard from "../Containers/ModifierContainer";
 import SelectInput from "../Containers/ChoiceContainer";
@@ -210,28 +210,12 @@ style={{
                 onChange={handleChange}
               />
 
-              <div>
-                <h2 className="text-[18px] font-semibold mb-2">
-                  Observations complémentaires
-                </h2>
-
-                <textarea
-                  value={observations}
-                  onChange={(e) =>
-                    setObservations(e.target.value)
-                  }
-                  className="
-                    w-full
-                    h-[90px]
-                    border
-                    border-[#84D6D0]
-                    rounded-[15px]
-                    p-3
-                    resize-none
-                    outline-none
-                  "
-                />
-              </div>
+              <TextareaModifier
+  label="Observations complémentaires"
+  value={observations}
+  onChange={(e) => setObservations(e.target.value)}
+  height="h-[90px]"
+/>
 
             </div>
 
@@ -242,54 +226,21 @@ style={{
               <h2 className="text-[18px] font-semibold">
                 Motif de sélection
               </h2>
-              <div>
-  <p className="text-[#4E9F8A] font-medium mb-2">
-    Cause principale :
-  </p>
+             
+  <TextareaModifier
+  label="Cause principale :"
+  value={cause}
+  onChange={(e) => setCause(e.target.value)}
+  placeholder="Saisir la cause principale"
+  height="h-[60px]"
+/>
 
-  <textarea
-    value={cause}
-    onChange={(e) => setCause(e.target.value)}
-    placeholder="Saisir la cause principale"
-    rows={1}
-    className="
-      w-full
-      border
-      border-[#84D6D0]
-      rounded-[15px]
-      px-4
-      py-3
-      resize-none
-      outline-none
-      overflow-hidden
-    "
-  />
-</div>
-
-              <div>
-
-                <p className="text-[#4E9F8A] font-medium mb-2">
-                  Précisions :
-                </p>
-
-                <textarea
-                  value={precisions}
-                  onChange={(e) =>
-                    setPrecisions(e.target.value)
-                  }
-                  className="
-                    w-full
-                    h-[120px]
-                    border
-                    border-[#84D6D0]
-                    rounded-[15px]
-                    p-3
-                    resize-none
-                    outline-none
-                  "
-                />
-
-              </div>
+             <TextareaModifier
+  label="Précisions :"
+  value={precisions}
+  onChange={(e) => setPrecisions(e.target.value)}
+  height="h-[120px]"
+/>
 
              <div className="mt-4">
 
