@@ -14,6 +14,7 @@ import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
 import motherbaby from "../../assets/images/motherbaby.png";
 import { useNavigate } from "react-router-dom";
 import { useFamilyForm } from "../../context/FamilyFormContext";
+import { searchMere } from "../../lib/api/familles";
 
 
 export default function InformationMere() {
@@ -21,7 +22,7 @@ export default function InformationMere() {
 
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-  const { formData, updateMere } = useFamilyForm();
+  const { formData, updateMere, updateFamilyData, setNourrissonsCount } = useFamilyForm();
 
   const mere = formData.mere;
 
@@ -35,7 +36,7 @@ export default function InformationMere() {
     });
   };
 
-  const handleNext = () => {
+ const handleNext = async () => {
   const newErrors = {};
 
   if (!mere.nom?.trim()) {
@@ -66,15 +67,48 @@ export default function InformationMere() {
       "Veuillez choisir le village";
   }
 
-  if (!mere.motif_prise_en_charge?.trim()) {
-    newErrors.motifPriseEnCharge =
-      "Veuillez saisir le motif de prise en charge";
-  }
-
   setErrors(newErrors);
 
-  if (Object.keys(newErrors).length === 0) {
+  if (Object.keys(newErrors).length > 0) return;
+
+  try {
+    const response = await searchMere({
+      nom: mere.nom,
+      prenom: mere.prenom,
+      date_naissance: mere.date_naissance,
+    });
+
+    console.log("🔎 Résultat recherche mère :", response.data);
+
+    const idMere = response.data?.id ?? null;
+
+    console.log("🆔 ID mère trouvé :", idMere);
+
+    // IMPORTANT :
+    // On garde l'ID dans formData, PAS dans formData.mere
+    updateFamilyData({
+      id_mere: idMere,
+    });
+
+    console.log(
+      "📦 formData.id_mere enregistré :",
+      idMere
+    );
+
+    setNourrissonsCount(mere.nb_enfants);
+
     navigate("/information-nourrisson");
+
+  } catch (error) {
+    console.error(
+      "Erreur lors de la recherche de la mère :",
+      error.response?.data || error
+    );
+
+    setErrors({
+      global:
+        "Une erreur est survenue, veuillez réessayer.",
+    });
   }
 };
     // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
@@ -189,23 +223,21 @@ onChange={(date) => {
 
           <div className="flex flex-col gap-1">
   <ChoiceContainer
-    label="Village"
-    placeholder="Tapez pour choisir le village"
-    options={[
-      "Village 1",
-      "Village 2",
-      "Village 3",
-      "Village 4",
-    ]}
-   value={mere.village || ""}
-onChange={(value) => {
-  updateMere({
-    village: value,
-  });
-  clearError("village");
-}}
-    noPadding
-  />
+  label="Village"
+  placeholder="Tapez pour choisir le village"
+  options={[
+    { label: "Village 1", value: 1 },
+    { label: "Village 2", value: 2 },
+    { label: "Village 3", value: 3 },
+    { label: "Village 4", value: 4 },
+  ]}
+  value={mere.village || ""}
+  onChange={(value) => {
+    updateMere({ village: value });
+    clearError("village");
+  }}
+  noPadding
+/>
 
   <ErrorMessage message={errors.village} />
 </div>
@@ -227,23 +259,23 @@ onChange={(e) => {
 
           <div className="flex flex-col gap-1">
             <ChoiceContainer
-              label="Situation familiale"
-              placeholder="Tapez pour choisir le status matrimonial"
-              options={[
-                "Mariée",
-                "Célibataire",
-                "Divorcée",
-                "Veuve",
-              ]}
-              value={mere.statut_matrimonial || ""}
-onChange={(value) => {
-  updateMere({
-    statut_matrimonial: value,
-  });
-  clearError("situation");
-}}
-              noPadding
-            />
+  label="Situation familiale"
+  placeholder="Tapez pour choisir le statut matrimonial"
+  options={[
+    { label: "Mariée", value: "mariee" },
+    { label: "Célibataire", value: "celibataire" },
+    { label: "Divorcée", value: "divorcee" },
+    { label: "Veuve", value: "veuve" },
+  ]}
+  value={mere.statut_matrimonial || ""}
+  onChange={(value) => {
+    updateMere({
+      statut_matrimonial: value,
+    });
+    clearError("situation");
+  }}
+  noPadding
+/>
             <ErrorMessage message={errors.situation} />
           </div>
           <div className="flex flex-col gap-1">
