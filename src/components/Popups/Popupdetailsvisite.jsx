@@ -228,7 +228,7 @@ const PopupDetailVisite = ({
             </button>
 
             <h2 className="mt-2 text-center text-[20px] font-bold">
-              Détail de la visite {(visite.numero_visite ?? -1) + 1}
+              Détail de la visite n°{(visite.numero_visite ?? -1) + 1}
             </h2>
           </div>
 
@@ -309,7 +309,7 @@ const PopupDetailVisite = ({
             </div>
           </div>
 
-          {/* ==================== MOBILE (nouvel ordre) ==================== */}
+          {/* ==================== MOBILE  ==================== */}
           <div className="flex sm:hidden flex-col gap-4 mt-4">
             <InfoCard title="Informations générales" data={infosGenerales} />
 
