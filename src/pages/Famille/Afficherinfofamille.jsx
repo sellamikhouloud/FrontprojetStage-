@@ -495,6 +495,7 @@ return (
   open={openZakat}
   onClose={() => setOpenZakat(false)}
   zakats={zakatsData}
+  famille={famille}
   isLoading={zakatLoading}
 />
 
