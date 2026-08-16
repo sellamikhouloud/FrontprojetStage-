@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
+import { listAidesZakat } from  "@/lib/api/zakat";
+import { useQuery } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -15,6 +17,7 @@ import  SoldeCard from "../../components/Cards/SoldeCard";
 import  RepartitionAides from "../../components/Cards/RepartitionAides";
 import NoResultImage from "../../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../../components/Spinner";
 import PopupHistoriqueVersements from "../../components/Popups/PopupHistoriqueVersements";
 
 export default function ZakatPage() {
@@ -40,37 +43,24 @@ const motifOptions = [
   "Vulnérabilité extreme",
   "Autre",
 ];
- const zakats = [
-{
-  id: 1,
-  numero: "001",
 
-  enfant: "Aïcha Mint Mohamed",
-  mere: "Fatimetou Mint Ahmed",
 
-  nom: "Aïcha Mint Mohamed",
-  code: "GDK-2026-003",
-  sexe: "Garçon",
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: ["zakats", appliedFilters],
 
-  region: "Nouakchott",
-  dateNaissance: "12/05/2023",
+    queryFn: () =>
+      listAidesZakat({
+        ...appliedFilters,
+      }).then((response) => response.data),
+  });
 
-  causePrincipale: "Vulnérabilité extrême",
 
-  zakat: "Zakat 1",
-
-  date: "12/06/2026",
-
-  montant: "1500",
-  euro: "42 Euros",
-
-  modePaiement: "Espèces",
-  enregistrePar: "Administrateur",
-
-  observations: "Aucune observation.",
-  precisions: "Distribution effectuée."
-}
-];
+  const zakats = data?.results ?? data ?? [];
 
 const versements = [
   {
@@ -126,41 +116,74 @@ const versements = [
   // ...
 ];
 
-const filtered = zakats.filter((item) => {
-  const keyword = search.toLowerCase();
+ const filteredZakats = zakats.filter((item) => {
+    const keyword = search.trim().toLowerCase();
 
-  const matchSearch =
-    item.nom.toLowerCase().includes(keyword) ||
-    item.code.toLowerCase().includes(keyword);
+    if (!keyword) {
+      return true;
+    }
 
+    const famille = item.famille_info ?? {};
+
+    const nomEnfant =
+      famille.enfant_prenom?.toLowerCase() ?? "";
+
+    const nomMere =
+      famille.mere_nom?.toLowerCase() ?? "";
+
+    const codeFamille =
+      item.famille?.toLowerCase() ?? "";
+
+    const numeroZakat =
+      String(item.numero_zakat ?? "").toLowerCase();
+
+    const cause =
+      item.cause_principale?.toLowerCase() ?? "";
+
+    const date =
+      item.date_versement?.toLowerCase() ?? "";
+
+    const montant =
+      String(item.montant ?? "").toLowerCase();
+
+
+    return (
+      nomEnfant.includes(keyword) ||
+      nomMere.includes(keyword) ||
+      codeFamille.includes(keyword) ||
+      numeroZakat.includes(keyword) ||
+      cause.includes(keyword) ||
+      date.includes(keyword) ||
+      montant.includes(keyword)
+    );
+  });
  
   
 
  
- const matchMotif =
-  !appliedFilters.motif ||
-  appliedFilters.motif === "Tous" ||
-  item.causePrincipale === appliedFilters.motif;
 
-return matchSearch && matchMotif;
-  
-});
+ const filterTagsContent = (
+    <div className="flex flex-wrap gap-2 my-4">
 
-const filterTagsContent = (
-  <div className="flex flex-wrap gap-2 my-4">
-    {appliedFilters.motif && (
-      <FilterTag
-        text={`Motif : ${appliedFilters.motif}`}
-        onRemove={() =>
-          setAppliedFilters((prev) => ({
-            ...prev,
-            motif: "",
-          }))
-        }
-      />
-    )}
-  </div>
-);
+      {appliedFilters.motif && (
+        <FilterTag
+          text={`Motif : ${appliedFilters.motif}`}
+          onRemove={() => {
+            setAppliedFilters((prev) => ({
+              ...prev,
+              motif: "",
+            }));
+
+            setFilters((prev) => ({
+              ...prev,
+              motif: "",
+            }));
+          }}
+        />
+      )}
+
+    </div>
+  );
 
 const [selectedZakat, setSelectedZakat] = useState(null);
 const [showDetailPopup, setShowDetailPopup] = useState(false);
@@ -184,47 +207,68 @@ useEffect(() => {
       handleResize
     );
 }, []);
-const filtersContent = (
-  <div className="space-y-4">
-    <div className="w-full">
-  <SelectInput
-  label="Motif"
-  placeholder="Tapez pour choisir la cause principale"
-  value={filters.motif}
-  options={motifOptions}
-  noPadding
-  onChange={(value) =>
-    setFilters((prev) => ({
-      ...prev,
-      motif: value,
-    }))
-  }
-/>
-</div>
+ const filtersContent = (
+    <div className="space-y-4">
 
-    <div className="mt-3 space-y-2">
-      <Button
-        title="Filtrer"
-        variant="filter"
-        noPadding
-        onClick={() => {
-          setAppliedFilters(filters);
-          setIsFilterOpen(false);
-        }}
-      />
+      <div className="w-full">
 
-      <Button
-        title="Annuler les filtres"
-        variant="outline"
-        noPadding
-        onClick={() => {
-          setFilters({ motif: "" });
-          setAppliedFilters({ motif: "" });
-        }}
-      />
+        <SelectInput
+          label="Motif"
+          placeholder="Tapez pour choisir la cause principale"
+          value={filters.motif}
+          options={motifOptions}
+          noPadding
+
+          onChange={(value) => {
+            setFilters((prev) => ({
+              ...prev,
+              motif: value,
+            }));
+          }}
+        />
+
+      </div>
+
+
+      {/* FILTRER */}
+
+      <div className="mt-3 space-y-2">
+
+        <Button
+          title="Filtrer"
+          variant="filter"
+          noPadding
+
+          onClick={() => {
+            setAppliedFilters(filters);
+            setIsFilterOpen(false);
+          }}
+        />
+
+
+        {/* ANNULER */}
+
+        <Button
+          title="Annuler les filtres"
+          variant="outline"
+          noPadding
+
+          onClick={() => {
+
+            const emptyFilters = {
+              motif: "",
+            };
+
+            setFilters(emptyFilters);
+
+            setAppliedFilters(emptyFilters);
+          }}
+        />
+
+      </div>
+
     </div>
-  </div>
-);
+  );
 
 if (isFilterOpen && isMobile) {
   return (
@@ -252,10 +296,23 @@ if (isFilterOpen && isMobile) {
     </div>
   );
 }
+
+ if (isLoading) {
+
+    return (
+      <div className="min-h-screen grid place-items-center">
+
+        <Spinner />
+
+      </div>
+    );
+  }
+
+
   return (
     <div className="flex h-screen bg-white overflow-hidden">
 
-      <Sidebar role="admin" />
+      <Sidebar  />
 
        <main
       className="
@@ -323,15 +380,51 @@ if (isFilterOpen && isMobile) {
 />
         <div className="my-6">
           <SearchBar
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onFilterClick={() => setIsFilterOpen(!isFilterOpen)}
-            maxWidth="max-w-full"
-          />
+              value={search}
+
+              onChange={(e) => {
+                setSearch(e.target.value);
+
+                setIsFilterOpen(false);
+              }}
+
+              onFilterClick={() =>
+                setIsFilterOpen((prev) => !prev)
+              }
+
+              maxWidth="max-w-full"
+            />
         </div>
 {appliedFilters.motif && filterTagsContent}
 
-{filtered.length === 0 && (
+  {isError && (
+
+            <div
+              className="
+                text-center
+                text-red-500
+                py-6
+              "
+            >
+
+              <p>
+                Impossible de charger les zakats.
+              </p>
+
+              <button
+                onClick={() => refetch()}
+                className="mt-2 underline"
+              >
+                Réessayer
+              </button>
+
+            </div>
+
+          )}
+
+
+ {!isError &&
+            filteredZakats.length === 0 && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
@@ -346,21 +439,72 @@ if (isFilterOpen && isMobile) {
 
           <div className="flex-1 space-y-3">
 
-            {filtered.map((item) => (
-          <CardListZakat
-  nom={item.nom}
-  code={item.code}
-  sexe={item.sexe}
-  zakat={item.zakat}
-  date={item.date}
-  montant="Montant"
-  valeur={`${item.montant} MRU / ${item.euro}`}
-  onClick={() => {
-    setSelectedZakat(item);
-    setShowDetailPopup(true);
-  }}
-/>
-            ))}
+           {filteredZakats.map((item, index) => {
+
+                const famille =
+                  item.famille_info ?? {};
+
+                const nomEnfant =
+                  famille.enfant_prenom || "-";
+
+                const codeFamille =
+                  item.famille || "-";
+
+              const sexe =
+  famille.enfant_sexe === "M" ||
+  famille.enfant_sexe === "Masculin"
+    ? "Garçon"
+    : famille.enfant_sexe === "F" ||
+      famille.enfant_sexe === "Féminin" ||
+      famille.enfant_sexe === "Fille"
+    ? "Fille"
+    : "-";
+
+                const numeroZakat =
+                  item.numero_zakat ?? "-";
+
+                const dateVersement =
+                  item.date_versement
+                    ? new Date(
+                        item.date_versement
+                      ).toLocaleDateString("fr-FR")
+                    : "-";
+
+                const montant =
+                  item.montant ?? "0";
+
+                const montantEuro =
+                  item.montant_eur ?? "0";
+
+
+                return (
+
+                  <CardListZakat
+                    key={
+                      item.id ??
+                      `zakat-${index}`
+                    }
+                    nom={nomEnfant}
+
+                    code={codeFamille}
+                    sexe={sexe}
+                    zakat={`Zakat ${numeroZakat}`}
+                    date={dateVersement}
+                    montant="Montant"
+
+                    valeur={`${montant} MRU / ${montantEuro} Euros`}
+                    onClick={() => {
+
+                      setSelectedZakat(item);
+
+                      setShowDetailPopup(true);
+
+                    }}
+                  />
+
+                );
+              })}
+
 
           </div>
 
@@ -385,30 +529,50 @@ if (isFilterOpen && isMobile) {
   />
 </main>
      
- <PopupDetailZakat
-    open={showDetailPopup}
-    zakat={selectedZakat}
-    onClose={() => setShowDetailPopup(false)}
-    onEdit={(zakat) => {
-        setShowDetailPopup(false);
-        setSelectedZakat(zakat);
-        setOpenModifier(true);
-    }}
-/>
+   <PopupDetailZakat
 
-<PopupModifierZakat
-    open={openModifier}
-    zakat={selectedZakat}
-    onClose={() => {
-        setOpenModifier(false);
-        setShowDetailPopup(true);
-    }}
-    onSave={(updated) => {
-        console.log(updated);
-        setOpenModifier(false);
-        setShowDetailPopup(true);
-    }}
-/>
+        open={showDetailPopup}
+        zakat={selectedZakat}
+        famille={
+          selectedZakat?.famille_info
+        }
+        onClose={() => {
+          setShowDetailPopup(false);
+        }}
+        onEdit={(zakat) => {
+          setShowDetailPopup(false);
+          setSelectedZakat(zakat);
+          setOpenModifier(true);
+
+        }}
+
+      />
+
+      <PopupModifierZakat
+
+        open={openModifier}
+        zakat={selectedZakat}
+        famille={
+          selectedZakat?.famille_info
+        }
+        onClose={() => {
+  setOpenModifier(false);
+          setShowDetailPopup(true);
+
+        }}
+        onSave={(updated) => {
+          console.log(
+            "Zakat modifié :",
+            updated
+          );
+
+          setSelectedZakat(updated);
+          setOpenModifier(false);
+          setShowDetailPopup(true);
+
+        }}
+
+      />
 
 <PopupAlimenterSolde
   open={openAlimenterSolde}
