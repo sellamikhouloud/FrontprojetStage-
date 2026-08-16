@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getFamille } from "@/lib/api/familles";
 import { marquerSortie} from "@/lib/api/familles";
 import {getVisites} from "@/lib/api/familles";
+import { getDistributions } from "@/lib/api/familles";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../../components/Containers/AfficherContainer";
@@ -67,6 +68,24 @@ const visitesData =
     ? visitesResponse.results
     : visitesResponse
     ? [visitesResponse]
+    : [];
+const {
+  data: distributionsResponse,
+  isLoading: distributionsLoading,
+  isError: distributionsError,
+} = useQuery({
+  queryKey: ["distributions", id],
+  queryFn: () => getDistributions(id).then((res) => res.data),
+  enabled: !!id && openDistribution,
+});
+
+const distributionsData =
+  Array.isArray(distributionsResponse)
+    ? distributionsResponse
+    : distributionsResponse?.results
+    ? distributionsResponse.results
+    : distributionsResponse
+    ? [distributionsResponse]
     : [];
 
 if (isLoading) {
@@ -547,13 +566,15 @@ return (
  
     <Sidebar />
   
-   {/*
-      <PopupDistributionfamille
+   
+    <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
-  Distribution={distributionList}
+  Distribution={distributionsData}
+  famille={famille}
+  isLoading={distributionsLoading}
 />
-
+{/*
 <PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
