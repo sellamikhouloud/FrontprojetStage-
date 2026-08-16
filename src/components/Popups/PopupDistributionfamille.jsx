@@ -67,7 +67,9 @@ const grammage = produitLait?.produit?.grammage_boite
   ? String(produitLait.produit.grammage_boite)
   : "";
 
-const laitType = produitLait?.produit?.nom ?? null;
+const laitType = produitLait?.produit?.nom
+  ? produitLait.produit.nom.replace(/\s*\d+\s*g\b/i, "").trim()
+  : null;
 
   return {
     products,
