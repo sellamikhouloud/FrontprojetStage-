@@ -57,6 +57,15 @@ const PopupModifierZakat = ({
         value: zakat.cree_par?.nom || "-",
         editable: false,
       },
+
+       {
+        label: "Date d'enregistrement",
+        value: zakat.date_creation
+          ? new Date(zakat.date_creation).toLocaleDateString("fr-FR")
+          : "-",
+        editable: false,
+      },
+      
       {
         label: "Modifié par",
         value: zakat.modifie_par?.nom || "-",
