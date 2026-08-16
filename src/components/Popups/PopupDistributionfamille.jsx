@@ -1,42 +1,55 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 
-import CardPopupDistribution from  "../Cards/cardDistribution";
+import CardPopupDistribution from "../Cards/cardDistribution";
 import PopupDetailDistribution from "./PopupdetailsDistributions";
-import PopupDetailDistributionModifier from "./PopupdetailsDistributionsModifier";
+
+import Spinner from "../Spinner";
+
 const PopupDistributionfamille = ({
   open,
   onClose,
   Distribution = [],
+  famille,
+  isLoading = false,
 }) => {
+  const [selectedDistribution, setSelectedDistribution] = useState(null);
+  const [openDetail, setOpenDetail] = useState(false);
+ 
 
-const [selectedDistribution, setSelectedDistribution] = useState(null);
-const [openDetail, setOpenDetail] = useState(false);
-const [openModifier, setOpenModifier] = useState(false);
+  // Tri chronologique : la plus ancienne = Distribution 1
+  const distributionsTriees = useMemo(() => {
+    return [...Distribution]
+      .sort((a, b) => {
+        const dateA = new Date(a.date_distribution);
+        const dateB = new Date(b.date_distribution);
+
+        const diff = dateA - dateB;
+
+        // Si même date, on utilise l'id comme deuxième critère
+        return diff !== 0 ? diff : (a.id ?? 0) - (b.id ?? 0);
+      })
+      .map((item, index) => ({
+        ...item,
+        numeroDistribution: index + 1,
+      }));
+  }, [Distribution]);
+
   return (
     <AnimatePresence>
       {open && (
         <div
- className="
-  fixed
-  inset-0
-  z-50
-
-  bg-transparent
-  sm:bg-black/30
-
-  flex
-  items-start
-  sm:items-center
-
-  justify-center
-
-  overflow-y-auto
-  scrollbar-hide
-"
-  onClick={onClose}
->
+          className="
+            fixed inset-0 z-50
+            bg-transparent sm:bg-black/30
+            flex items-start sm:items-center
+            justify-center
+            overflow-y-auto
+            scrollbar-hide
+          "
+          onClick={onClose}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -45,10 +58,8 @@ const [openModifier, setOpenModifier] = useState(false);
             onClick={(e) => e.stopPropagation()}
             className="
               w-full
-
               min-h-screen
               sm:min-h-0
-
               sm:max-w-[620px]
 
               bg-white
@@ -62,6 +73,9 @@ const [openModifier, setOpenModifier] = useState(false);
 
               shadow-none
               sm:shadow-2xl
+
+              overflow-y-auto
+              scrollbar-hide
             "
           >
             {/* Header */}
@@ -69,13 +83,8 @@ const [openModifier, setOpenModifier] = useState(false);
               <button
                 onClick={onClose}
                 className="
-                  flex
-                  items-center
-                  gap-2
-
-                  text-[16px]
-                  sm:text-[17px]
-
+                  flex items-center gap-2
+                  text-[16px] sm:text-[17px]
                   hover:opacity-70
                   transition
                 "
@@ -91,12 +100,8 @@ const [openModifier, setOpenModifier] = useState(false);
               <h2
                 className="
                   mt-5
-
                   text-center
-
-                  text-[22px]
-                  sm:text-[24px]
-
+                  text-[22px] sm:text-[24px]
                   font-semibold
                   text-[#1E1E1E]
                 "
@@ -108,36 +113,45 @@ const [openModifier, setOpenModifier] = useState(false);
             {/* Cartes */}
             <div
               className="
-                px-5
-                sm:px-6
-
+                px-5 sm:px-6
                 pb-6
-
                 mt-5
-
-                flex-1
-
-                max-h-none
-                sm:max-h-[420px]
-
-                overflow-y-auto
-                scrollbar-hide
-
                 space-y-4
+
+                sm:max-h-[420px]
+                sm:overflow-y-auto
+                scrollbar-hide
               "
             >
-              {Distribution.length ? (
-                Distribution.map((item) => (
-                 <CardPopupDistribution
-  key={item.id}
-  distribution={item.distribution}
-  date={item.date}
-  produits={item.produits}
-  onClick={() => {
-    setSelectedDistribution(item);
-    setOpenDetail(true);
-  }}
-/>
+              {isLoading ? (
+                <div className="flex justify-center py-10">
+                  <Spinner />
+                </div>
+              ) : distributionsTriees.length ? (
+                distributionsTriees.map((item) => (
+                  <CardPopupDistribution
+                    key={item.id}
+                    distribution={`Distribution ${item.numeroDistribution}`}
+                    date={
+                      item.date_distribution
+                        ? new Date(
+                            item.date_distribution
+                          ).toLocaleDateString("fr-FR")
+                        : "-"
+                    }
+                    produits={(item.produits || []).map((prod) => ({
+  nom: prod.produit?.nom ?? "-",
+  quantite: `${Number(prod.quantite ?? 0)} ${
+  prod.produit?.unite === "boite"
+    ? "boîtes"
+    : prod.produit?.unite ?? ""
+}`.trim(),
+}))}
+                    onClick={() => {
+                      setSelectedDistribution(item);
+                      setOpenDetail(true);
+                    }}
+                  />
                 ))
               ) : (
                 <div className="py-10 text-center text-gray-500">
@@ -149,21 +163,18 @@ const [openModifier, setOpenModifier] = useState(false);
         </div>
       )}
 
-     <PopupDetailDistribution
-  open={openDetail}
-  onClose={() => setOpenDetail(false)}
-  distribution={selectedDistribution}
-  onEdit={() => {
-    setOpenDetail(false);
-    setOpenModifier(true);
-  }}
-/>
+      <PopupDetailDistribution
+        open={openDetail}
+        onClose={() => setOpenDetail(false)}
+        distribution={selectedDistribution}
+        famille={famille}
+        onEdit={() => {
+          setOpenDetail(false);
+          setOpenModifier(true);
+        }}
+      />
 
-<PopupDetailDistributionModifier
-  open={openModifier}
-  onClose={() => setOpenModifier(false)}
-  distribution={selectedDistribution}
-/>
+     
     </AnimatePresence>
   );
 };
