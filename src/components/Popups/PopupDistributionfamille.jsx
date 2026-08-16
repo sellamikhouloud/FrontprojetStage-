@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-
+import { useNavigate } from "react-router-dom";
 import CardPopupDistribution from "../Cards/cardDistribution";
 import PopupDetailDistribution from "./PopupdetailsDistributions";
 
@@ -14,6 +14,7 @@ const PopupDistributionfamille = ({
   famille,
   isLoading = false,
 }) => {
+  const navigate = useNavigate();
   const [selectedDistribution, setSelectedDistribution] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
  
@@ -35,6 +36,46 @@ const PopupDistributionfamille = ({
         numeroDistribution: index + 1,
       }));
   }, [Distribution]);
+
+  const mapDistributionToEditData = (distribution) => {
+  const products = (distribution.produits || [])
+    .filter(
+      (p) =>
+        p.produit?.type_produit !== "lait" &&
+        !p.produit?.nom?.toLowerCase().includes("lait")
+    )
+    .map((p, index) => ({
+      id: p.produit?.id ?? index + 1,
+      title: p.produit?.nom ?? "-",
+      quantity: Number(p.quantite ?? 0),
+      unit: p.produit?.unite ?? "",
+      maxQuantity: Number(p.quantite ?? 0),
+      icon: null,
+    }));
+
+  const produitLait = (distribution.produits || []).find(
+    (p) =>
+      p.produit?.type_produit === "lait" ||
+      p.produit?.nom?.toLowerCase().includes("lait")
+  );
+
+  const boxes = produitLait
+  ? Number(produitLait.quantite ?? 0)
+  : 0;
+
+const grammage = produitLait?.produit?.grammage_boite
+  ? String(produitLait.produit.grammage_boite)
+  : "";
+
+const laitType = produitLait?.produit?.nom ?? null;
+
+  return {
+    products,
+    laitType,
+    grammage,
+    boxes,
+  };
+};
 
   return (
     <AnimatePresence>
@@ -164,21 +205,77 @@ const PopupDistributionfamille = ({
       )}
 
       <PopupDetailDistribution
-        open={openDetail}
-        onClose={() => setOpenDetail(false)}
-        distribution={selectedDistribution}
-        famille={famille}
-        onEdit={() => {
-          setOpenDetail(false);
-          setOpenModifier(true);
-        }}
-      />
+  open={openDetail}
+  onClose={() => {
+    setOpenDetail(false);
+    setSelectedDistribution(null);
+  }}
+  distribution={selectedDistribution}
+  famille={famille}
+  onEdit={(distribution) => {
+    setOpenDetail(false);
 
+    const {
+      products,
+      laitType,
+      grammage,
+      boxes,
+    } = mapDistributionToEditData(distribution);
+
+    navigate("/ajout-distribution", {
+      state: {
+        distributionAModifier: {
+          ...distribution,
+
+             numeroDistribution: distribution.numeroDistribution,
+
+          selectedFamille: {
+            id: famille?.id,
+
+            enfant: famille?.nourrisson
+              ? `${famille.nourrisson.prenom || ""} ${
+                  famille.nourrisson.nom || ""
+                }`.trim()
+              : "",
+
+            mere: famille?.mere
+              ? `${famille.mere.prenom || ""} ${
+                  famille.mere.nom || ""
+                }`.trim()
+              : "",
+
+             sexe:
+    famille?.nourrisson?.sexe === "M" ||
+    famille?.nourrisson?.sexe === "Masculin"
+      ? "Fils"
+      : famille?.nourrisson?.sexe === "F" ||
+        famille?.nourrisson?.sexe === "Féminin"
+      ? "Fille"
+      : "-",
+
+            region: famille?.mere?.village?.nom,
+
+            naissance: famille?.nourrisson?.date_naissance,
+
+            code: famille?.id,
+
+            badges: [],
+          },
+
+          products,
+          laitType,
+          grammage,
+          boxes,
+
+          confirmed: true,
+        },
+      },
+    });
+  }}
+/>
      
     </AnimatePresence>
   );
 };
 
 export default PopupDistributionfamille;
-
-
