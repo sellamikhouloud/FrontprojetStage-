@@ -2,6 +2,25 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import calendar from "../../assets/calender.svg";
 
+// Convertit une chaîne "YYYY-MM-DD" (ou un Date déjà existant) en objet Date
+
+const toDate = (val) => {
+  if (!val) return null;
+  if (val instanceof Date) return val;
+  const parsed = new Date(val);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+// Convertit l'objet Date renvoyé par le picker en "YYYY-MM-DD" à partir des
+
+const toDateOnlyString = (date) => {
+  if (!date) return null;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const DateContainer = ({
   label,
   value,
@@ -10,7 +29,11 @@ const DateContainer = ({
   defaultToToday = true,
   hideLabelSpace = false, 
 }) => {
-  const displayValue = value || (defaultToToday ? new Date() : null);
+  const displayValue = toDate(value) || (defaultToToday ? new Date() : null);
+
+  const handleChange = (date) => {
+    onChange(toDateOnlyString(date));
+  };
 
   return (
     <div
@@ -30,7 +53,7 @@ const DateContainer = ({
         <div className="relative w-full">
           <DatePicker
             selected={displayValue}
-            onChange={onChange}
+            onChange={handleChange}
             dateFormat="dd/MM/yyyy"
             placeholderText="Sélectionner une date"
             wrapperClassName="w-full"
