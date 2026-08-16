@@ -94,9 +94,14 @@ function App() {
           path="/liste-distributions" element={<DistributionPage />}
         />
         {/* Zakat*/}
-         <Route
-          path="/zakat" element={<ZakatPage />}
-        />
+          <Route
+  path="/zakat"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+      <ZakatPage />
+    </ProtectedRoute>
+  }
+/>
          <Route
           path="/ajout-zakat" element={<AjoutZakat />}
         />
