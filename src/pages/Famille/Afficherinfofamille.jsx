@@ -5,6 +5,7 @@ import { getFamille } from "@/lib/api/familles";
 import { marquerSortie} from "@/lib/api/familles";
 import {getVisites} from "@/lib/api/familles";
 import { getDistributions } from "@/lib/api/familles";
+import { getFamilleZakat } from "@/lib/api/familles";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../../components/Containers/AfficherContainer";
@@ -87,6 +88,26 @@ const distributionsData =
     : distributionsResponse
     ? [distributionsResponse]
     : [];
+
+const {
+  data: zakatResponse,
+  isLoading: zakatLoading,
+  isError: zakatError,
+} = useQuery({
+  queryKey: ["zakat", id],
+  queryFn: () => getFamilleZakat(id).then((res) => res.data),
+  enabled: !!id && openZakat,
+});
+
+const zakatsData =
+  Array.isArray(zakatResponse)
+    ? zakatResponse
+    : zakatResponse?.results
+    ? zakatResponse.results
+    : zakatResponse
+    ? [zakatResponse]
+    : [];
+  
 
 if (isLoading) {
   return (
@@ -363,111 +384,6 @@ const zakatList = [
     precisions: "",
   },
 ];
-const distributionList = [
-  {
-    id: 1,
-
-    // Informations de la carte
-    distribution: "Distribution 1",
-    date: "15/05/2026",
-    produits: [
-      { nom: "Lait infantile", quantite: "2 boîtes" },
-      { nom: "Riz", quantite: "5 kg" },
-      { nom: "Huile", quantite: "1 L" },
-    ],
-
-    // Informations générales
-    numeroDistribution: 1,
-    enfant: "Aïcha Mint Mohamed",
-    mere: "Meriem Mint Ahmed",
-    sexe: "Fille",
-    region: "Lexeiba",
-    dateNaissance: "12 mars 2025",
-    code: "GDK-2026-003",
-
-    enregistrePar: "Coordinateur",
-
-    // Lait infantile
-    typeLait: "2ème âge (6–12 mois)",
-    nombreBoites: "2 boîtes",
-    poidsTotal: "1600 g",
-
-    // Colis alimentaire (dynamique)
-    colisAlimentaire: [
-      {
-        label: "Riz",
-        value: "5 kg",
-      },
-      {
-        label: "Huile",
-        value: "1 L",
-      },
-      {
-        label: "Sucre",
-        value: "2 kg",
-      },
-      {
-        label: "Farine",
-        value: "3 kg",
-      },
-    ],
-  },
-
-  {
-    id: 2,
-
-    distribution: "Distribution 2",
-    date: "20/05/2026",
-    produits: [
-      { nom: "Lait infantile", quantite: "3 boîtes" },
-      { nom: "Farine", quantite: "4 kg" },
-    ],
-
-    numeroDistribution: 2,
-    enfant: "Mohamed Ould Ahmed",
-    mere: "Khadijetou Mint Mohamed",
-    sexe: "Fils",
-    region: "Nouakchott",
-    dateNaissance: "05 janvier 2025",
-    code: "GDK-2026-004",
-
-    enregistrePar: "Administrateur",
-
-    typeLait: "1er âge (0–6 mois)",
-    nombreBoites: "3 boîtes",
-    poidsTotal: "2400 g",
-
-  
-  },
-
-  {
-    id: 3,
-
-    distribution: "Distribution 3",
-    date: "28/05/2026",
-    produits: [
-      { nom: "Lait infantile", quantite: "1 boîte" },
-      { nom: "Lentilles", quantite: "2 kg" },
-      { nom: "Riz", quantite: "3 kg" },
-    ],
-
-    numeroDistribution: 3,
-    enfant: "Fatimata Mint Sidi",
-    mere: "Aminetou Mint Ely",
-    sexe: "Fille",
-    region: "Rosso",
-    dateNaissance: "18 février 2025",
-    code: "GDK-2026-005",
-
-    enregistrePar: "Coordinateur",
-
-    typeLait: "3ème âge (12 mois et plus)",
-    nombreBoites: "1 boîte",
-    poidsTotal: "800 g",
-
-   
-  },
-];
 
 const DONNEES_POIDS = [
   { age: 0, poids: 3.1 },
@@ -574,13 +490,15 @@ return (
   famille={famille}
   isLoading={distributionsLoading}
 />
-{/*
+
 <PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
-  zakats={zakatList}
+  zakats={zakatsData}
+  isLoading={zakatLoading}
 />
-*/}
+
+
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
