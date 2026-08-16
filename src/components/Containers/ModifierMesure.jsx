@@ -1,20 +1,145 @@
 export default function ModifierMesure({
   title = "Mesure nourrisson",
+
+  // Mesures classiques
   poids,
   taille,
   muac,
   setPoids,
   setTaille,
   setMuac,
+
+  // Mesures complémentaires
+  statutImc,
+  hemoglobine,
+  setStatutImc,
+  setHemoglobine,
+
+  // "mesures" ou "complement"
+  variant = "mesures",
 }) {
+
+  // =====================================================
+  // BLOC IMC + HÉMOGLOBINE
+  // =====================================================
+  if (variant === "complement") {
+    return (
+      <div className="w-full">
+
+        {/* Titre */}
+        <h3 className="text-[18px] font-semibold text-[#202124] mb-2">
+          {title}
+        </h3>
+
+        {/* Conteneur */}
+        <div
+          className="
+            rounded-[14px]
+            border
+            border-dashed
+            border-[#9CD6D2]
+            bg-white
+            px-4
+            py-2
+          "
+        >
+          <div className="grid grid-cols-2 items-center text-center">
+
+            {/* ================= STATUT IMC ================= */}
+            <div className="relative">
+
+              <p className="text-[16px] text-[#666666]">
+                Statut IMC
+              </p>
+
+              <div className="flex justify-center items-center mt-1">
+                <input
+                  type="text"
+                  value={statutImc ?? ""}
+                  onChange={(e) =>
+                    setStatutImc?.(e.target.value)
+                  }
+                  className="
+                    w-auto
+                    max-w-[120px]
+                    bg-transparent
+                    text-center
+                    text-[18px]
+                    font-bold
+                    text-[#202124]
+                    outline-none
+                    border-none
+                    p-0
+                    m-0
+                  "
+                />
+              </div>
+
+              {/* Séparateur */}
+              <div
+                className="
+                  absolute
+                  right-0
+                  top-1/2
+                  h-10
+                  -translate-y-1/2
+                  border-r
+                  border-[#E5E7EB]
+                "
+              />
+            </div>
+
+            {/* ================= HÉMOGLOBINE ================= */}
+            <div>
+
+              <p className="text-[16px] text-[#666666]">
+                Hémoglobine
+              </p>
+
+              <div className="flex justify-center items-center gap-1 mt-1">
+
+                <input
+                  type="number"
+                  value={hemoglobine ?? ""}
+                  onChange={(e) =>
+                    setHemoglobine?.(e.target.value)
+                  }
+                  className="
+                    w-auto
+                    max-w-[80px]
+                    bg-transparent
+                    text-center
+                    text-[18px]
+                    font-bold
+                    text-[#202124]
+                    outline-none
+                    border-none
+                    p-0
+                    m-0
+                  "
+                />
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =====================================================
+  // BLOC MESURES CLASSIQUES
+  // =====================================================
   return (
     <div className="w-full">
+
       {/* Titre */}
       <h3 className="text-[18px] font-semibold text-[#202124] mb-2">
         {title}
       </h3>
 
-      {/* Conteneur des mesures */}
+      {/* Conteneur */}
       <div
         className="
           rounded-[14px]
@@ -26,19 +151,24 @@ export default function ModifierMesure({
           py-2
         "
       >
+
         <div className="grid grid-cols-3 items-center text-center">
 
           {/* ================= POIDS ================= */}
           <div>
+
             <p className="text-[16px] text-[#666666]">
               Poids
             </p>
 
             <div className="flex justify-center items-center gap-1">
+
               <input
                 type="number"
                 value={poids ?? ""}
-                onChange={(e) => setPoids(e.target.value)}
+                onChange={(e) =>
+                  setPoids(e.target.value)
+                }
                 className="
                   w-auto
                   max-w-[80px]
@@ -57,6 +187,7 @@ export default function ModifierMesure({
               <span className="text-[14px] font-bold">
                 g
               </span>
+
             </div>
           </div>
 
@@ -81,10 +212,13 @@ export default function ModifierMesure({
             </p>
 
             <div className="flex justify-center items-center gap-1">
+
               <input
                 type="number"
                 value={taille ?? ""}
-                onChange={(e) => setTaille(e.target.value)}
+                onChange={(e) =>
+                  setTaille(e.target.value)
+                }
                 className="
                   w-auto
                   max-w-[80px]
@@ -103,6 +237,7 @@ export default function ModifierMesure({
               <span className="text-[14px] font-bold">
                 cm
               </span>
+
             </div>
 
             {/* Séparateur droit */}
@@ -117,19 +252,24 @@ export default function ModifierMesure({
                 border-[#E5E7EB]
               "
             />
+
           </div>
 
           {/* ================= MUAC ================= */}
           <div>
+
             <p className="text-[16px] text-[#666666]">
               MUAC
             </p>
 
             <div className="flex justify-center items-center gap-1">
+
               <input
                 type="number"
                 value={muac ?? ""}
-                onChange={(e) => setMuac(e.target.value)}
+                onChange={(e) =>
+                  setMuac(e.target.value)
+                }
                 className="
                   w-auto
                   max-w-[80px]
@@ -148,6 +288,7 @@ export default function ModifierMesure({
               <span className="text-[14px] font-bold">
                 mm
               </span>
+
             </div>
           </div>
 
