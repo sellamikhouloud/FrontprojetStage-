@@ -1,198 +1,64 @@
-import Card from "../Cards/Card";
-import StatusBadge from "../Cards/Badge";
-import InfoCard from "../Containers/AfficherContainer";
-import AfficherMesure from "../Containers/AfficherMesure";
-import Button from "../Button/Button";
-import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+
+import Card from "../Cards/Card";
+import InfoCard from "../Containers/AfficherContainer";
+import Button from "../Button/Button";
+
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
-import DeleteIcon from "../../assets/Delete.svg";
-import Popup from "./SuccessPopup";
-import SuccessImage from "../../assets/Confirm.svg";
-import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
-import ZScoreBox from "../Containers/ZScoreBox";
 
-const PopupDetailVisite = ({
+const PopupDetailZakat = ({
   open,
   onClose,
-  visite,
+  zakat,
   famille,
   onEdit,
-  onDelete,
 }) => {
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  if (!open || !zakat) return null;
 
-  if (!open || !visite) return null;
+  const formatDate = (date) => {
+    if (!date) return "-";
 
-  // Contenu réutilisé dans les deux layouts
-  const infosGenerales = [
-   {
-  label: "Date",
-  value: visite.date_visite
-    ? new Date(visite.date_visite).toLocaleDateString("fr-FR")
-    : "-",
-},
-    { label: "Visite n°", value: (visite.numero_visite ?? -1) + 1 },
-    {
-      label: "Enregistrée par",
-      value: visite.audit?.cree_par
-        ? `${visite.audit.cree_par.nom} ${visite.audit.cree_par.prenom}`
-        : "-",
-    },
- {
-      label: "Date d'enregistrement",
-      value: visite.date_creation
-        ? new Date(visite.date_creation).toLocaleDateString("fr-FR")
-        : "-",
-    },
+    const parsedDate = new Date(date);
 
-    {
-      label: "Modifié par",
-      value: visite.audit?.modifie_par
-        ? `${visite.audit.modifie_par.nom} ${visite.audit.modifie_par.prenom}`
-        : "-",
-    },
-    {
-      label: "Date de modification",
-      value: visite.date_modification
-        ? new Date(visite.date_modification).toLocaleDateString("fr-FR")
-        : "-",
-    },
-  ];
+    if (isNaN(parsedDate.getTime())) {
+      return date;
+    }
 
-  const statutBadges = [
-    (visite?.statut_nutritionnel === "mam" ||
-      visite?.statut_nutritionnel === "Malnutrition Aiguë Modérée") && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
-    (visite?.statut_nutritionnel === "mas" ||
-      visite?.statut_nutritionnel === "Malnutrition Aiguë Sévère") && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
-    (visite?.statut_nutritionnel === "normale" ||
-      visite?.statut_nutritionnel === "Normale") && {
-      type: "mere",
-      text: "Bébé normal",
-    },
-    (visite?.statut_nutritionnel_mere === "normale" ||
-      visite?.statut_nutritionnel_mere === "Normale") && {
-      type: "mere",
-      text: "Mère normale",
-    },
-    (visite?.statut_nutritionnel_mere === "a_risque" ||
-      visite?.statut_nutritionnel_mere === "À risque") && {
-      type: "risque",
-      text: "Mère à risque",
-    },
-    (visite?.statut_nutritionnel_mere === "malnutrition" ||
-      visite?.statut_nutritionnel_mere === "Malnutrition") && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
-  ].filter(Boolean);
+    return parsedDate.toLocaleDateString("fr-FR");
+  };
 
-  const StatutCalculeBlock = () => (
-    <div
-      className="
-        w-full
-        rounded-[20px]
-        border
-        border-[#E6ECEA]
-        bg-[#F8FBFC]
-        px-[15px]
-        py-3
-        flex
-        flex-col
-      "
-    >
-      <h3 className="text-[18px] font-semibold text-center text-[#202124] mb-3">
-        Statut calculé
-      </h3>
+  const enfant = famille?.enfant_prenom || "-";
+  const mere = famille?.mere_nom || "-";
 
-      <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3">
-        {statutBadges.map((badge, index) => (
-          <StatusBadge
-            key={`${badge.type}-${index}`}
-            type={badge.type}
-            text={badge.text}
-            className="
-              h-[44px]
-              sm:h-[50px]
-              flex-1
-              sm:flex-none
-              min-w-0
-              sm:min-w-[190px]
-              rounded-[18px]
-              text-[14px]
-              sm:text-[16px]
-              font-semibold
-              px-4
-              sm:px-6
-            "
-          />
-        ))}
-      </div>
-    </div>
-  );
+  const sexe =
+    famille?.enfant_sexe === "M" || famille?.enfant_sexe === "Masculin"
+      ? "Fils"
+      : famille?.enfant_sexe === "F" || famille?.enfant_sexe === "Féminin"
+      ? "Fille"
+      : "-";
 
-  const ActionButtons = ({ className }) => (
-    <div className={className}>
-      <Button
-        title="Modifier"
-        variant="modifier"
-        icon={EditIcon}
-        noWrapperPadding
-        onClick={() => onEdit?.(visite)}
-      />
-      <Button
-        title="Supprimer"
-        variant="supprimer"
-        icon={DeleteIcon}
-        noWrapperPadding
-        onClick={() => setShowDeletePopup(true)}
-      />
-    </div>
-  );
+  const region = famille?.village || "-";
+  const dateNaissance = formatDate(famille?.enfant_date_naissance);
+  const code = zakat.famille || "-";
+
+  const numeroZakat = zakat.numero_zakat ?? "-";
+  const dateVersement = formatDate(zakat.date_versement);
+  const dateCreation = formatDate(zakat.date_creation);
+  const dateModification = formatDate(zakat.date_modification);
 
   return (
     <AnimatePresence>
       <div
         className="
-          fixed
-          inset-0
-          z-[60]
-          bg-transparent
-          sm:bg-black/40
-          flex
-          items-start
-          sm:items-center
+          fixed inset-0 z-[60]
+          bg-transparent sm:bg-black/40
+          flex items-start sm:items-center
           justify-center
           overflow-y-auto
-          scrollbar-hide
         "
         onClick={onClose}
       >
-        {showDeletePopup && (
-          <div onClick={(e) => e.stopPropagation()}>
-            <Popup
-              title="Confirmer la suppression"
-              image={SuccessImage}
-              description="Êtes-vous sûr de vouloir supprimer cette visite ? Cette action est irréversible."
-              primaryButtonText="Supprimer"
-              secondaryButtonText="Annuler"
-              primaryButtonVariant="danger"
-              onPrimaryClick={() => {
-                setShowDeletePopup(false);
-                onDelete?.(visite);
-              }}
-              onSecondaryClick={() => setShowDeletePopup(false)}
-            />
-          </div>
-        )}
-
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -215,150 +81,187 @@ const PopupDetailVisite = ({
             p-4
             sm:p-6
           "
-          style={{ borderColor: "#4E9F8A" }}
+          style={{
+            borderColor: "#4E9F8A",
+          }}
         >
-          {/* Header */}
-          <div className="mb-2">
+          {/* HEADER */}
+          <div className="mb-4">
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-[17px] text-[#202124] hover:opacity-70 transition"
+              className="
+                flex
+                items-center
+                gap-2
+                text-[17px]
+                text-[#202124]
+              "
             >
-              <img src={quitter} alt="Fermer" className="w-5 h-5" />
+              <img
+                src={quitter}
+                alt="Fermer"
+                className="w-5 h-5"
+              />
+
               Fermer
             </button>
 
-            <h2 className="mt-2 text-center text-[20px] font-bold">
-              Détail de la visite n°{(visite.numero_visite ?? -1) + 1}
+            <h2
+              className="
+                mt-3
+                text-center
+                text-[20px]
+                font-bold
+              "
+            >
+              Détail du Zakat n°{numeroZakat}
             </h2>
           </div>
 
-          {/* Carte famille */}
+          {/* CARTE FAMILLE */}
           <Card
-            enfant={famille?.nourrisson?.prenom}
-            mere={`${famille?.mere?.prenom ?? ""} ${famille?.mere?.nom ?? ""}`}
-            sexe={
-              famille?.nourrisson?.sexe === "M" ||
-              famille?.nourrisson?.sexe === "Masculin"
-                ? "Fils"
-                : famille?.nourrisson?.sexe === "F" ||
-                  famille?.nourrisson?.sexe === "Féminin"
-                ? "Fille"
-                : "-"
-            }
-            region={famille?.mere?.village?.nom ?? "-"}
-            naissance={famille?.nourrisson?.date_naissance ?? "-"}
-            code={famille?.id ?? "-"}
+            enfant={enfant}
+            mere={mere}
+            sexe={sexe}
+            region={region}
+            naissance={dateNaissance}
+            code={code}
             badges={[]}
           />
 
-          {/* ==================== DESKTOP (inchangé) ==================== */}
-          <div className="hidden sm:grid sm:grid-cols-2 gap-4 mt-4">
-            {/* Gauche */}
-            <div className="space-y-3">
-              <InfoCard title="Informations générales" data={infosGenerales} />
+          {/* CONTENU */}
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-[58%_40%]
+              gap-5
+              mt-4
+            "
+          >
+            {/* ======================
+                COLONNE GAUCHE
+            ====================== */}
 
-              <AfficherMesure
-                title="Mesure nourrisson"
-                poids={visite.poids_bebe}
-                taille={visite.taille_bebe}
-                muac={visite.muac_bebe}
+            <div className="space-y-3">
+
+              <InfoCard
+                title="Informations générales"
+                data={[
+                  {
+                    label: "Date",
+                    value: dateVersement,
+                  },
+                  {
+                    label: "Zakat n°",
+                    value: `${numeroZakat}`,
+                  },
+                  {
+                    label: "Montant versé",
+                    value: (
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold">
+                          {zakat.montant ?? "0"} MRU
+                        </span>
+
+                        <span className="text-[12px] text-[#8A8A8A]">
+                          ≈ {zakat.montant_eur ?? "0"} EUR
+                        </span>
+                      </div>
+                    ),
+                  },
+                  {
+                    label: "Mode de paiement",
+                    value: zakat.mode_remise ?? "-",
+                  },
+                  {
+                    label: "Enregistrée par",
+                    value: zakat.cree_par?.nom || "-",
+                  },
+                  {
+                    label: "Date d'enregistrement",
+                    value: dateCreation,
+                  },
+                  {
+                    label: "Modifié par",
+                    value: zakat.modifie_par?.nom || "-",
+                  },
+                  {
+                    label: "Date de modification",
+                    value: dateModification,
+                  },
+                ]}
               />
 
-              <div className="flex gap-3">
-                <ZScoreBox label="P/A" value={visite.score_z_pa} />
-                <ZScoreBox label="T/A" value={visite.score_z_ta} />
-                <ZScoreBox label="P/T" value={visite.score_z_pt} />
+              <InfoCard
+                title="Observations complémentaires"
+                text={zakat.observation || "-"}
+                textHeight="90px"
+              />
+
+            </div>
+
+            {/* ======================
+                COLONNE DROITE
+            ====================== */}
+
+            <div className="space-y-3">
+
+              <h2 className="text-[18px] font-semibold">
+                Motif de sélection
+              </h2>
+
+              {/* CAUSE */}
+              <div>
+                <p className="text-[#4E9F8A] font-medium mb-2">
+                  Cause principale :
+                </p>
+
+                <div
+                  className="
+                    border
+                    border-[#84D6D0]
+                    rounded-[15px]
+                    px-4
+                    py-3
+                  "
+                >
+                  {zakat.cause_principale || "-"}
+                </div>
               </div>
 
-              <InfoCard
-                title="Observations cliniques nourrisson"
-                text={visite.observations_cliniques_bebe || "-"}
+              {/* PRECISIONS */}
+              <div>
+                <p className="text-[#4E9F8A] font-medium mb-2">
+                  Précisions :
+                </p>
+
+                <div
+                  className="
+                    border
+                    border-[#84D6D0]
+                    rounded-[15px]
+                    px-4
+                    py-3
+                    h-[86px]
+                  "
+                >
+                  <p className="text-[#7B7B7B]">
+                    {zakat.precisions || "-"}
+                  </p>
+                </div>
+              </div>
+
+              {/* MODIFIER */}
+              <Button
+                title="Modifier"
+                variant="modifier"
+                icon={EditIcon}
+                noWrapperPadding
+                onClick={() => onEdit?.(zakat)}
               />
 
-              <ActionButtons className="mt-6 grid grid-cols-2 gap-4 w-full" />
             </div>
-
-            {/* Droite */}
-            <div className="space-y-3">
-              <StatutCalculeBlock />
-
-              <AfficherMesure
-                title="Mesure mère"
-                poids={visite.poids_mere}
-                taille={visite.taille_mere}
-                muac={visite.muac_mere}
-              />
-
-
-<AfficherMesure
-  title="Informations complémentaires"
-  variant="complement"
-  statutImc={visite.statut_imc}
-  hemoglobine={visite.hemoglobine}
-/>
-
-              <InfoCard
-                title="Observations cliniques mère"
-                text={visite.observations_cliniques_mere || "-"}
-              />
-
-              <InfoCard
-                title="Évaluation visuelle de la situation familiale"
-                text={visite.evaluation_famille || "-"}
-              />
-            </div>
-          </div>
-
-          {/* ==================== MOBILE  ==================== */}
-          <div className="flex sm:hidden flex-col gap-4 mt-4">
-            <InfoCard title="Informations générales" data={infosGenerales} />
-
-            <StatutCalculeBlock />
-
-            <AfficherMesure
-              title="Mesure nourrisson"
-              poids={visite.poids_bebe}
-              taille={visite.taille_bebe}
-              muac={visite.muac_bebe}
-            />
-
-            <div className="flex gap-3">
-              <ZScoreBox label="P/A" value={visite.score_z_pa} />
-              <ZScoreBox label="T/A" value={visite.score_z_ta} />
-              <ZScoreBox label="P/T" value={visite.score_z_pt} />
-            </div>
-
-            <InfoCard
-              title="Observations cliniques nourrisson"
-              text={visite.observations_cliniques_bebe || "-"}
-            />
-
-            <AfficherMesure
-              title="Mesure mère"
-              poids={visite.poids_mere}
-              taille={visite.taille_mere}
-              muac={visite.muac_mere}
-            />
-
-
-<AfficherMesure
-  title="Informations complémentaires"
-  variant="complement"
-  statutImc={visite.statut_imc}
-  hemoglobine={visite.hemoglobine}
-/>
-
-            <InfoCard
-              title="Observations cliniques mère"
-              text={visite.observations_cliniques_mere || "-"}
-            />
-
-            <InfoCard
-              title="Évaluation visuelle de la situation familiale"
-              text={visite.evaluation_famille || "-"}
-            />
-
-            <ActionButtons className="mt-2 grid grid-cols-1 gap-3 w-full" />
           </div>
         </motion.div>
       </div>
@@ -366,4 +269,4 @@ const PopupDetailVisite = ({
   );
 };
 
-export default PopupDetailVisite;
+export default PopupDetailZakat;
