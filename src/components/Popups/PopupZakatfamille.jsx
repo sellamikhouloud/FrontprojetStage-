@@ -5,11 +5,13 @@ import quitter from "../../assets/quitter.svg";
 import CardListZakat from "../Cards/CarteListeZakat";
 import PopupDetailZakat from "./PopupdetailsZakat";
 import PopupModifierZakat from "./PopupdetailsZakatModifier";
+import Spinner from "../Spinner";
 
 const PopupZakatFamille = ({
   open,
   onClose,
   zakats = [],
+  isLoading = false,
 }) => {
   const [selectedZakat, setSelectedZakat] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
@@ -169,7 +171,11 @@ const PopupZakatFamille = ({
                 space-y-4
               "
             >
-              {zakatsFormates.length ? (
+              {isLoading ? (
+                <div className="flex justify-center py-10">
+                  <Spinner />
+                </div>
+              ) : zakatsFormates.length ? (
                 zakatsFormates.map((item) => (
                   <CardListZakat
                     key={item.id}
