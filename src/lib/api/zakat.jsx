@@ -4,6 +4,7 @@ export const listAidesZakat = (params) => api.get("/api/zakat/aides/", { params 
 
 export const getAideZakat = (id) =>  api.get(`/api/zakat/aides/${id}/`);
 
+export const createAideZakat = (data) => api.post("/api/zakat/aides/", data);
 
 export const updateAideZakat = (id, patch) => api.patch(`/api/zakat/aides/${id}/`, patch);
 
