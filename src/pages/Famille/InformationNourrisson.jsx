@@ -14,13 +14,19 @@ import bunny from "../../assets/images/bunny.svg";
 import { useFamilyForm } from "../../context/FamilyFormContext";
 
 export default function InformationNourrisson() {
-  
- 
   const [errors, setErrors] = useState({});
+  const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
   const { formData, updateNourrisson } = useFamilyForm();
+ if (!formData) return null;
 
-  const nourrisson = formData.nourrisson;
+const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.length
+  ? formData.nourrissons
+  : [{}];
+
+  
+  const total = nourrissons.length;
+  const nourrisson = nourrissons[currentIndex] || {};
 
   const clearError = (field) => {
     setErrors((prev) => {
@@ -30,42 +36,53 @@ export default function InformationNourrisson() {
       return updated;
     });
   };
-const handleNext = () => {
-  const newErrors = {};
 
-  if (!nourrisson.prenom?.trim()) {
-    newErrors.prenom = "Veuillez saisir le prénom";
-  }
+  const handleNext = () => {
+    const newErrors = {};
 
-  if (!nourrisson.poids?.trim()) {
-    newErrors.poids = "Veuillez saisir le poids de naissance";
-  }
+    if (!nourrisson.prenom?.trim()) {
+      newErrors.prenom = "Veuillez saisir le prénom";
+    }
+    if (!nourrisson.poids_naissance?.trim()) {
+      newErrors.poids_naissance = "Veuillez saisir le poids de naissance";
+    }
+    if (!nourrisson.sexe?.trim()) {
+      newErrors.sexe = "Veuillez choisir le sexe";
+    }
+    if (!nourrisson.taille_naissance?.trim()) {
+      newErrors.taille_naissance = "Veuillez saisir la taille de naissance";
+    }
 
-  if (!nourrisson.sexe?.trim()) {
-    newErrors.sexe = "Veuillez choisir le sexe";
-  }
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
 
-  if (!nourrisson.taille?.trim()) {
-    newErrors.taille = "Veuillez saisir la taille de naissance";
-  }
+    if (currentIndex < total - 1) {
+      // Encore des enfants à saisir : on reste sur cette page, enfant suivant
+      setCurrentIndex((i) => i + 1);
+      setErrors({});
+    } else {
+      navigate("/photo-confirmation");
+    }
+  };
 
-  setErrors(newErrors);
+  const handleBack = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex((i) => i - 1);
+      setErrors({});
+    } else {
+      window.history.back();
+    }
+  };
 
-  if (Object.keys(newErrors).length === 0) {
-    navigate("/photo-confirmation");
-  }
-};
+  // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
+  const role = "admin";
+  // const role = "coordinateur";
+  const isAdmin = role === "admin";
 
-    // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
-const role = "admin";
-// const role = "coordinateur"; 
-const isAdmin = role === "admin";
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
-     
-        <Sidebar role={role} />
-      
+      <Sidebar role={role} />
 
       {/* Main Content */}
       <main
@@ -100,6 +117,12 @@ const isAdmin = role === "admin";
             Information sur le nourrisson
           </h1>
 
+          {total > 1 && (
+            <p className="text-[14px] lg:text-[16px] font-medium text-[#4E9F8A] text-center">
+              Enfant {currentIndex + 1} sur {total}
+            </p>
+          )}
+
           {/* Illustration */}
           <div className="flex justify-center">
             <img
@@ -114,39 +137,30 @@ const isAdmin = role === "admin";
             />
           </div>
 
-           
-
           <div className="flex flex-col gap-1">
             <Input
               label="Prénom"
               placeholder="Saisir le prénom"
-            value={nourrisson.prenom || ""}
-onChange={(e) => {
-  updateNourrisson({
-    prenom: e.target.value,
-  });
-  clearError("prenom");
-}}
+              value={nourrisson.prenom || ""}
+              onChange={(e) => {
+                updateNourrisson(currentIndex, { prenom: e.target.value });
+                clearError("prenom");
+              }}
               noPadding
             />
             <ErrorMessage message={errors.prenom} />
           </div>
 
           {/* Date */}
-         
-            <DateContainer
-              label="Date de naissance"
-              value={nourrisson.date_naissance || null}
-onChange={(date) => {
-  updateNourrisson({
-    date_naissance: date,
-  });
-  clearError("dateNaissance");
-}}
-              noPadding
-            />
-           
-          
+          <DateContainer
+            label="Date de naissance"
+            value={nourrisson.date_naissance || null}
+            onChange={(date) => {
+              updateNourrisson(currentIndex, { date_naissance: date });
+              clearError("dateNaissance");
+            }}
+            noPadding
+          />
 
           {/* Weight */}
           <div className="flex flex-col gap-1">
@@ -174,14 +188,12 @@ onChange={(date) => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={nourrisson.poids || ""}
+                      value={nourrisson.poids_naissance || ""}
                       onChange={(e) => {
                         const raw = e.target.value;
                         if (/^\d*$/.test(raw)) {
-                          updateNourrisson({
-                            poids: raw,
-                          });
-                          clearError("poids");
+                          updateNourrisson(currentIndex, { poids_naissance: raw });
+                          clearError("poids_naissance");
                         }
                       }}
                       placeholder="Ex : 3200"
@@ -213,7 +225,7 @@ onChange={(date) => {
                 </div>
               </div>
             </div>
-            <ErrorMessage message={errors.poids} />
+            <ErrorMessage message={errors.poids_naissance} />
           </div>
 
           {/* Gender */}
@@ -222,17 +234,14 @@ onChange={(date) => {
               label="Sexe"
               placeholder="Tapez pour choisir le sexe"
               options={[
-                "Masculin",
-                "Féminin",
+                { label: "Masculin", value: "M" },
+                { label: "Féminin", value: "F" },
               ]}
               value={nourrisson.sexe || ""}
-onChange={(value) => {
-  updateNourrisson({
-    sexe: value,
-  });
-
-  clearError("sexe");
-}}
+              onChange={(value) => {
+                updateNourrisson(currentIndex, { sexe: value });
+                clearError("sexe");
+              }}
               noPadding
             />
             <ErrorMessage message={errors.sexe} />
@@ -264,18 +273,14 @@ onChange={(value) => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={nourrisson.taille || ""}
-                     onChange={(e) => {
-  const raw = e.target.value;
-
-  if (/^\d*$/.test(raw)) {
-    updateNourrisson({
-      taille: raw,
-    });
-
-    clearError("taille");
-  }
-}}
+                      value={nourrisson.taille_naissance || ""}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        if (/^\d*$/.test(raw)) {
+                          updateNourrisson(currentIndex, { taille_naissance: raw });
+                          clearError("taille_naissance");
+                        }
+                      }}
                       placeholder="Ex : 50"
                       className="
                         flex-1
@@ -305,20 +310,17 @@ onChange={(value) => {
                 </div>
               </div>
             </div>
-            <ErrorMessage message={errors.taille} />
+            <ErrorMessage message={errors.taille_naissance} />
           </div>
 
           {/* Step Indicator */}
-          <StepIndicator
-            totalSteps={3}
-            currentStep={2}
-          />
+          <StepIndicator totalSteps={3} currentStep={2} />
 
           {/* Navigation */}
           <Navigation
             showBack
-            nextText="Suivant"
-            onBack={() => window.history.back()}
+            nextText={currentIndex < total - 1 ? "Enfant suivant" : "Suivant"}
+            onBack={handleBack}
             onNext={handleNext}
           />
         </div>
