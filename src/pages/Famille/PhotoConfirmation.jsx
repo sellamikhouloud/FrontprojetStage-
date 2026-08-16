@@ -13,6 +13,10 @@ import CoordinateurSelector from "../../components/Containers/CoordinateurSelect
 import PopupListeCoordinateurs from "../../components/Popups/PopupListeCoordinateurs.jsx";
 import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
 import { useFamilyForm } from "../../context/FamilyFormContext";
+import { searchMere, createFamille } from "../../lib/api/familles";
+import { listCoordinateurs } from "../../lib/api/coordinateurs";
+import { useAuth } from "../../components/Providers/AuthProvider";
+
 
 
 import successImage from "../../assets/Success.svg"; 
@@ -22,11 +26,16 @@ import ArrowRight from "../../assets/right-arrow.png";
 
 
 export default function PhotoConfirmation() {
-  const [dateProgramme, setDateProgramme] = useState(null);
+
   
   const [relecture, setRelecture] = useState("");
   const navigate = useNavigate();
-  const { formData, updateMere, updateFamilyData } = useFamilyForm();
+ const {
+  formData,
+  updateMere,
+  updateFamilyData,
+  resetFamilyForm,
+} = useFamilyForm();
    const [photoPreview, setPhotoPreview] = useState(null);
 
 useEffect(() => {
@@ -53,17 +62,31 @@ useEffect(() => {
     setPhotoPreview(photo);
   }
 }, [formData.mere?.photo]);
+
+useEffect(() => {
+  if (!formData.date_entree) {
+    const today = new Date();
+
+    const formattedDate =
+      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    updateFamilyData({
+      date_entree: formattedDate,
+    });
+  }
+}, [formData.date_entree, updateFamilyData]);
+
   const [showPopup, setShowPopup] = useState(false);
   const [openCoordinateurs, setOpenCoordinateurs] = useState(false);
 
   const [errors, setErrors] = useState({});
 
-  const listeDesCoordinateurs = [
-    { id: 1, name: "Ahmed Ould Sidi", code: "COORD-001", village: "Lexeiba", familles: 24, status: "Actif" },
-    { id: 2, name: "Fatimetou Mint Cheikh", code: "COORD-002", village: "Boghé", familles: 18, status: "Actif" },
-    { id: 3, name: "Mohamed Ould Ahmed", code: "COORD-003", village: "Kaédi", familles: 31, status: "Actif" },
-  ];
-  const selectedCoordinateur = listeDesCoordinateurs.find(
+  // Liste réelle des coordinateurs, chargée depuis l'API (remplace le tableau en dur)
+  const [coordinateurs, setCoordinateurs] = useState([]);
+  const [coordinateursLoading, setCoordinateursLoading] = useState(false);
+  const [coordinateursError, setCoordinateursError] = useState(null);
+
+  const selectedCoordinateur = coordinateurs.find(
   (coordinateur) => coordinateur.id === formData.coordinateur
 );
 
@@ -76,25 +99,294 @@ useEffect(() => {
     });
   };
 
-  const handleSave = () => {
-    const newErrors = {};
+ const [saving, setSaving] = useState(false);
+ const [saveError, setSaveError] = useState(null);
 
-    if (isAdmin && !selectedCoordinateur) {
-    newErrors.coordinateur = "Veuillez sélectionner un coordinateur";
+const handleSave = async () => {
+  const newErrors = {};
+
+  if (isAdmin && !selectedCoordinateur) {
+    newErrors.coordinateur =
+      "Veuillez sélectionner un coordinateur";
   }
 
+  setErrors(newErrors);
 
-    setErrors(newErrors);
+  if (Object.keys(newErrors).length > 0) return;
 
-    if (Object.keys(newErrors).length === 0) {
-      setShowPopup(true);
+  setSaving(true);
+  setSaveError(null);
+
+  try {
+    const nourrissons = formData.nourrissons?.length
+      ? formData.nourrissons
+      : [formData.nourrisson];
+
+    const resultats = [];
+
+    /*
+     * IMPORTANT :
+     *
+     * On garde l'id dans une variable locale.
+     *
+     * On ne fait PAS :
+     *
+     * updateFamilyData({ id_mere: ... })
+     *
+     * puis formData.id_mere immédiatement après,
+     * car React peut encore avoir l'ancienne valeur.
+     */
+    let currentIdMere = formData.id_mere || null;
+
+    for (let i = 0; i < nourrissons.length; i++) {
+
+      // =====================================================
+      // 1️⃣ SEARCH DE LA MÈRE AVANT CHAQUE CRÉATION
+      // =====================================================
+
+      console.log(
+        `🔎 Recherche mère avant création enfant ${i + 1}`
+      );
+
+      const searchResponse = await searchMere({
+        nom: formData.mere.nom,
+        prenom: formData.mere.prenom,
+        date_naissance: formData.mere.date_naissance,
+      });
+
+      console.log(
+        "🔎 Résultat recherche mère :",
+        searchResponse.data
+      );
+
+      const searchedIdMere =
+        searchResponse.data?.id ?? null;
+
+      console.log(
+        "🆔 ID mère trouvé par search :",
+        searchedIdMere
+      );
+
+      // =====================================================
+      // 2️⃣ SI LA MÈRE EXISTE → ON UTILISE SON ID
+      // =====================================================
+
+      if (searchedIdMere) {
+        currentIdMere = searchedIdMere;
+
+        console.log(
+          "♻️ Mère existante utilisée :",
+          currentIdMere
+        );
+
+        // On garde aussi l'id dans le contexte
+        updateFamilyData({
+          id_mere: currentIdMere,
+        });
+      }
+
+      // =====================================================
+      // 3️⃣ CONSTRUCTION DU PAYLOAD
+      // =====================================================
+
+      let payload;
+
+      if (currentIdMere) {
+
+        // ---------------------------------------------------
+        // MÈRE EXISTANTE
+        // ---------------------------------------------------
+
+        payload = {
+          mere: formData.mere,
+          id_mere: currentIdMere,
+
+          nourrisson: nourrissons[i],
+
+          date_entree: formData.date_entree,
+          statut: formData.statut,
+          date_sortie: formData.date_sortie,
+          motif_sortie: formData.motif_sortie,
+          coordinateur: formData.coordinateur,
+        };
+
+        console.log(
+          "♻️ Payload avec mère existante :",
+          payload
+        );
+
+      } else {
+
+        // ---------------------------------------------------
+        // MÈRE NON TROUVÉE
+        // ---------------------------------------------------
+
+        payload = {
+          mere: formData.mere,
+
+          nourrisson: nourrissons[i],
+
+          date_entree: formData.date_entree,
+          statut: formData.statut,
+          date_sortie: formData.date_sortie,
+          motif_sortie: formData.motif_sortie,
+          coordinateur: formData.coordinateur,
+        };
+
+        console.log(
+          "🆕 Payload avec nouvelle mère :",
+          payload
+        );
+      }
+
+      // =====================================================
+      // 4️⃣ CRÉATION DE LA FAMILLE
+      // =====================================================
+
+      console.log(
+        `📦 Création famille enfant ${i + 1}/${nourrissons.length}`
+      );
+      console.log("📸 PHOTO AVANT ENVOI :", formData.mere.photo);
+console.log(
+  "📸 EST UN FILE ?",
+  formData.mere.photo instanceof File
+);
+
+      const response = await createFamille(payload);
+
+      console.log(
+        `✅ Famille enfant ${i + 1} créée :`,
+        response.data
+      );
+
+      resultats.push(response.data);
+
+      // =====================================================
+      // 5️⃣ SI ON VIENT DE CRÉER UNE NOUVELLE MÈRE
+      // =====================================================
+      //
+      // On refait un search immédiatement après.
+      //
+      // Ainsi, pour l'enfant suivant, la mère sera trouvée.
+      //
+
+      if (!currentIdMere) {
+
+        console.log(
+          "🔎 Nouvelle recherche après création de la mère..."
+        );
+
+        const searchAfterCreate =
+          await searchMere({
+            nom: formData.mere.nom,
+            prenom: formData.mere.prenom,
+            date_naissance:
+              formData.mere.date_naissance,
+          });
+
+        console.log(
+          "🔎 Mère après création :",
+          searchAfterCreate.data
+        );
+
+        const newIdMere =
+          searchAfterCreate.data?.id ?? null;
+
+        if (newIdMere) {
+
+          currentIdMere = newIdMere;
+
+          console.log(
+            "🆔 ID mère récupéré après création :",
+            currentIdMere
+          );
+
+          updateFamilyData({
+            id_mere: currentIdMere,
+          });
+        }
+      }
+    }
+
+    console.log(
+      "✅ Toutes les familles créées :",
+      resultats
+    );
+
+    setShowPopup(true);
+
+    resetFamilyForm();
+
+  } catch (error) {
+
+    console.error(
+      "❌ Erreur lors de la création :",
+      error.response?.data || error.message
+    );
+
+    setSaveError(
+      "Une erreur est survenue lors de l'enregistrement."
+    );
+
+  } finally {
+    setSaving(false);
+  }
+};
+
+ 
+const { user, ready } = useAuth();
+const role = user?.role ?? null;
+const isAdmin = role === "admin" || role === "chef_coordinator";
+
+// Charge la liste réelle des coordinateurs dès qu'on sait que l'utilisateur
+// est admin/chef_coordinator (donc après que isAdmin soit calculé ci-dessus)
+useEffect(() => {
+  if (!isAdmin) return;
+
+  let cancelled = false;
+
+  const fetchCoordinateurs = async () => {
+    setCoordinateursLoading(true);
+    setCoordinateursError(null);
+
+    try {
+      const { data } = await listCoordinateurs();
+
+      const mapped = data.map((c) => ({
+        id: c.id,
+        name: `${c.prenom} ${c.nom}`,
+        code: c.id,
+        village: c.village?.nom || "",
+        familles: c.nb_familles,
+        status: c.is_active ? "Actif" : "Inactif",
+      }));
+
+      if (!cancelled) {
+        setCoordinateurs(mapped);
+      }
+    } catch (error) {
+      console.error(
+        "Erreur lors du chargement des coordinateurs :",
+        error.response?.data || error.message
+      );
+      if (!cancelled) {
+        setCoordinateursError(
+          "Impossible de charger la liste des coordinateurs."
+        );
+      }
+    } finally {
+      if (!cancelled) {
+        setCoordinateursLoading(false);
+      }
     }
   };
 
-  // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
-const role = "admin";
-//const role = "coordinateur"; 
-const isAdmin = role === "admin";
+  fetchCoordinateurs();
+
+  return () => {
+    cancelled = true;
+  };
+}, [isAdmin]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -242,7 +534,7 @@ const isAdmin = role === "admin";
   label="Date d'entrée dans le programme"
   value={formData.date_entree || null}
   onChange={(date) => {
-    setDateProgramme(date);
+    
     updateFamilyData({
       date_entree: date,
     });
@@ -258,6 +550,9 @@ const isAdmin = role === "admin";
   onOpenPopup={() => setOpenCoordinateurs(true)}
 />
     <ErrorMessage message={errors.coordinateur} />
+    {coordinateursError && (
+      <ErrorMessage message={coordinateursError} />
+    )}
   </div>
 )}
 
@@ -311,11 +606,13 @@ const isAdmin = role === "admin";
 
           {/* Save Button */}
         <Button
-  title="Enregistrer"
+  title={saving ? "Enregistrement..." : "Enregistrer"}
   variant="primary"
   noWrapperPadding
   onClick={handleSave}
+  disabled={saving}
 />
+{saveError && <ErrorMessage message={saveError} />}
 {showPopup && (
   <Popup
     title="Enregistrer avec succès"
@@ -330,7 +627,8 @@ const isAdmin = role === "admin";
 <PopupListeCoordinateurs
   open={openCoordinateurs}
   onClose={() => setOpenCoordinateurs(false)}
-  coordinateurs={listeDesCoordinateurs}
+  coordinateurs={coordinateurs}
+  loading={coordinateursLoading}
  onSelectCoordinateur={(coordinateur) => {
   updateFamilyData({
     coordinateur: coordinateur.id,
