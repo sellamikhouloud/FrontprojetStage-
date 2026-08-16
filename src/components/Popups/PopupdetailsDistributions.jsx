@@ -15,6 +15,7 @@ const PopupDetailDistribution = ({
   open,
   onClose,
   distribution,
+  famille,
   onEdit,
   onDelete,
 }) => {
@@ -22,14 +23,25 @@ const PopupDetailDistribution = ({
 
   if (!open || !distribution) return null;
 
+  // Séparation lait / produits alimentaires
+  const produitsLait = (distribution.produits || []).filter(
+    (item) => item.produit?.type_produit === "lait"
+  );
+
+  const produitsAlimentaires = (distribution.produits || []).filter(
+    (item) => item.produit?.type_produit !== "lait"
+  );
+
   return (
     <AnimatePresence>
       <div
         className="
           fixed inset-0 z-[60]
           bg-transparent sm:bg-black/40
-          flex items-start sm:items-center justify-center
+          flex items-start sm:items-center
+          justify-center
           overflow-y-auto
+          scrollbar-hide
         "
         onClick={onClose}
       >
@@ -46,7 +58,9 @@ const PopupDetailDistribution = ({
                 setShowDeletePopup(false);
                 onDelete?.(distribution);
               }}
-              onSecondaryClick={() => setShowDeletePopup(false)}
+              onSecondaryClick={() =>
+                setShowDeletePopup(false)
+              }
             />
           </div>
         )}
@@ -58,26 +72,26 @@ const PopupDetailDistribution = ({
           transition={{ duration: 0.2 }}
           onClick={(e) => e.stopPropagation()}
           className="
-             w-full
-    min-h-screen
+            w-full
+            min-h-screen
 
-    sm:min-h-0
-    sm:w-[952px]
-    sm:max-h-[90vh]
+            sm:min-h-0
+            sm:w-[952px]
+            sm:max-h-[90vh]
 
-    overflow-y-auto
-    scrollbar-hide
+            overflow-y-auto
+            scrollbar-hide
 
-    bg-white
+            bg-white
 
-    rounded-none
-    sm:rounded-[20px]
+            rounded-none
+            sm:rounded-[20px]
 
-    border-0
-    sm:border
+            border-0
+            sm:border
 
-    p-4
-    sm:p-6
+            p-4
+            sm:p-6
           "
           style={{
             borderColor: "#4E9F8A",
@@ -87,97 +101,156 @@ const PopupDetailDistribution = ({
           <div className="mb-4">
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-[17px] text-[#202124]"
+              className="
+                flex items-center gap-2
+                text-[17px]
+                text-[#202124]
+              "
             >
-              <img src={quitter} alt="Fermer" className="w-5 h-5" />
+              <img
+                src={quitter}
+                alt="Fermer"
+                className="w-5 h-5"
+              />
               Fermer
             </button>
 
             <h2 className="mt-3 text-center text-[20px] font-bold text-[#202124]">
-              Détail de la distribution {distribution.numeroDistribution}
+              Détail de la distribution{" "}
+              {distribution.numeroDistribution}
             </h2>
           </div>
 
-          {/* Carte */}
+          {/* Carte famille */}
           <Card
-            enfant={distribution.enfant}
-            mere={distribution.mere}
-            sexe={distribution.sexe}
-            region={distribution.region}
-            naissance={distribution.dateNaissance}
-            code={distribution.code}
+            enfant={famille?.nourrisson?.prenom}
+            mere={`${famille?.mere?.prenom ?? ""} ${
+              famille?.mere?.nom ?? ""
+            }`}
+            sexe={
+              famille?.nourrisson?.sexe === "M" ||
+              famille?.nourrisson?.sexe === "Masculin"
+                ? "Fils"
+                : famille?.nourrisson?.sexe === "F" ||
+                  famille?.nourrisson?.sexe === "Féminin"
+                ? "Fille"
+                : "-"
+            }
+            region={famille?.mere?.village?.nom ?? "-"}
+            naissance={
+              famille?.nourrisson?.date_naissance ?? "-"
+            }
+            code={famille?.id ?? "-"}
             badges={[]}
           />
 
           {/* Contenu */}
-<div className="grid grid-cols-1 sm:grid-cols-[62%_36%] gap-3 mt-4">
-            {/* Colonne gauche */}
-           <div className="space-y-3 ">
-              <InfoCard
-  title="Informations générales"
-  data={[
-    {
-      label: "Date",
-      value: distribution.date,
-    },
-    {
-      label: "Distribution n°",
-      value: distribution.numeroDistribution,
-    },
-    {
-      label: "Enregistrée par",
-      value: distribution.enregistrePar,
-    },
-    {
-      label: "Modifié par",
-      value: distribution.modifiePar || "-",
-    },
-    {
-      label: "Date de modification",
-      value: distribution.dateModification || "-",
-    },
-  ]}
-/>
+          <div className="grid grid-cols-1 sm:grid-cols-[62%_36%] gap-3 mt-4">
+            {/* COLONNE GAUCHE */}
+            <div className="space-y-3">
 
+              {/* Informations générales */}
               <InfoCard
-                title="Lait infantile"
+                title="Informations générales"
                 data={[
                   {
-                    label: "Type",
-                    value: distribution.typeLait,
+                    label: "Date",
+                    value: distribution.date_distribution
+                      ? new Date(
+                          distribution.date_distribution
+                        ).toLocaleDateString("fr-FR")
+                      : "-",
                   },
                   {
-                    label: "Nombre de boîtes",
-                    value: distribution.nombreBoites,
+                    label: "Distribution n°",
+                    value:
+                      distribution.numeroDistribution ?? "-",
                   },
                   {
-                    label: "Poids total",
-                    value: distribution.poidsTotal,
+                    label: "Réception confirmée",
+                    value: distribution.reception_confirmee
+                      ? "Oui"
+                      : "Non",
+                  },
+                  {
+                    label: "Enregistrée par",
+                    value:
+                      distribution.audit?.cree_par
+                        ? `${distribution.audit.cree_par.nom} ${distribution.audit.cree_par.prenom}`
+                        : "-",
+                  },
+                  {
+                    label: "Date d'enregistrement",
+                    value: distribution.audit?.date_creation
+                      ? new Date(
+                          distribution.audit.date_creation
+                        ).toLocaleDateString("fr-FR")
+                      : "-",
+                  },
+                  {
+                    label: "Modifié par",
+                    value:
+                      distribution.audit?.modifie_par
+                        ? `${distribution.audit.modifie_par.nom} ${distribution.audit.modifie_par.prenom}`
+                        : "-",
+                  },
+                  {
+                    label: "Date de modification",
+                    value:
+                      distribution.audit?.date_modification
+                        ? new Date(
+                            distribution.audit.date_modification
+                          ).toLocaleDateString("fr-FR")
+                        : "-",
                   },
                 ]}
               />
+
+              {/* Lait */}
+              {produitsLait.length > 0 && (
+                <InfoCard
+                  title="Lait infantile"
+                  data={produitsLait.flatMap((item) => [
+                    {
+                      label: "Produit",
+                      value: item.produit?.nom ?? "-",
+                    },
+                   {
+  label: "Nombre de boîtes",
+  value: `${Number(item.quantite ?? 0)} ${
+    item.produit?.unite === "boite"
+      ? "boîtes"
+      : item.produit?.unite ?? ""
+  }`,
+},
+                    {
+                      label: "Poids total",
+                      value: item.poids_total != null
+                        ? `${item.poids_total} kg`
+                        : "-",
+                    },
+                  ])}
+                />
+              )}
             </div>
 
-            {/* Colonne droite */}
-          <div className="space-y-3 sm:ml-2">
-           <InfoCard
-  title="Colis alimentaire"
-  data={
-    (distribution.produits || [])
-      .filter(
-        (item) =>
-          !item.nom.toLowerCase().includes("lait")
-      )
-      .map((item) => ({
-        label: item.nom,
-        value: item.quantite,
-      }))
-  }
-/>
+            {/* COLONNE DROITE */}
+            <div className="space-y-3 sm:ml-2">
+
+              {/* Colis alimentaire */}
+              <InfoCard
+                title="Colis alimentaire"
+                data={produitsAlimentaires.map((item) => ({
+  label: item.produit?.nom ?? "-",
+  value: `${Number(item.quantite ?? 0)} ${
+    item.produit?.unite ?? ""
+  }`,
+}))}
+              />
             </div>
           </div>
 
-          {/* Boutons Desktop */}
+          {/* Desktop */}
           <div className="hidden sm:grid grid-cols-2 gap-4 mt-6">
             <Button
               title="Modifier"
@@ -196,7 +269,7 @@ const PopupDetailDistribution = ({
             />
           </div>
 
-          {/* Boutons Mobile */}
+          {/* Mobile */}
           <div className="sm:hidden grid grid-cols-1 gap-3 mt-6">
             <Button
               title="Modifier"
@@ -215,7 +288,6 @@ const PopupDetailDistribution = ({
             />
           </div>
         </motion.div>
-
       </div>
     </AnimatePresence>
   );
