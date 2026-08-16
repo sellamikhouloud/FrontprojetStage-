@@ -116,8 +116,7 @@ const PopupDetailDistribution = ({
             </button>
 
             <h2 className="mt-3 text-center text-[20px] font-bold text-[#202124]">
-              Détail de la distribution{" "}
-              {distribution.numeroDistribution}
+              Détail de la distribution n°{distribution.numeroDistribution}
             </h2>
           </div>
 
