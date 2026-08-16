@@ -214,7 +214,7 @@ style={{
   label="Observations complémentaires"
   value={observations}
   onChange={(e) => setObservations(e.target.value)}
-  height="h-[90px]"
+  height="h-[60px]"
 />
 
             </div>
@@ -239,7 +239,7 @@ style={{
   label="Précisions :"
   value={precisions}
   onChange={(e) => setPrecisions(e.target.value)}
-  height="h-[120px]"
+  height="h-[80px]"
 />
 
              <div className="mt-4">
