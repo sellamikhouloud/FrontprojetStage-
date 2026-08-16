@@ -74,11 +74,12 @@ const Popupvisites = ({
               }}
             />
 
-            <PopupDetailVisiteModifier
-              open={openModifier}
-              onClose={() => setOpenModifier(false)}
-              visite={selectedVisite}
-            />
+          <PopupDetailVisiteModifier
+  open={openModifier}
+  onClose={() => setOpenModifier(false)}
+  visite={selectedVisite}
+  famille={famille}
+/>
 
             {/* Header */}
             <div className="mb-5">
