@@ -15,24 +15,78 @@ const PopupZakatFamille = ({
   const [openDetail, setOpenDetail] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
 
+ 
+  // ============================
+  const zakatsFormates = zakats.map((item) => {
+    const famille = item.famille_info || {};
+
+    return {
+      // Zakat
+      id: item.id,
+      numero: item.numero_zakat ?? "-",
+
+      date: item.date_versement
+        ? new Date(item.date_versement).toLocaleDateString("fr-FR")
+        : "-",
+
+      montant: item.montant ?? "0",
+      euro: item.montant_eur ?? "0",
+
+      causePrincipale: item.cause_principale ?? "-",
+      precisions: item.precisions ?? "-",
+      observations: item.observation ?? "",
+
+     modePaiement: item.mode_remise ?? "-",
+
+      enregistrePar: item.cree_par?.nom || "-",
+
+      dateCreation: item.date_creation
+  ? new Date(item.date_creation).toLocaleDateString("fr-FR")
+  : "-",
+
+      modifiePar: item.modifie_par?.nom || "-",
+
+      dateModification: item.date_modification
+        ? new Date(item.date_modification).toLocaleDateString("fr-FR")
+        : "-",
+
+      // ============================
+      // Famille
+      // ============================
+      enfant: famille.enfant_prenom ?? "-",
+
+      mere: famille.mere_nom ?? "-",
+
+      sexe:
+        famille.enfant_sexe === "M" ||
+        famille.enfant_sexe === "Masculin"
+          ? "Fils"
+          : famille.enfant_sexe === "F" ||
+            famille.enfant_sexe === "Féminin"
+          ? "Fille"
+          : "-",
+
+      region: famille.village ?? "-",
+
+      dateNaissance: famille.enfant_date_naissance
+        ? new Date(
+            famille.enfant_date_naissance
+          ).toLocaleDateString("fr-FR")
+        : "-",
+
+      code: item.famille ?? "-",
+    };
+  });
+
   return (
     <AnimatePresence>
       {open && (
         <div
           className="
-            fixed
-            inset-0
-            z-50
-
-            bg-transparent
-            sm:bg-black/30
-
-            flex
-            items-start
-            sm:items-center
-
+            fixed inset-0 z-50
+            bg-transparent sm:bg-black/30
+            flex items-start sm:items-center
             justify-center
-
             overflow-y-auto
             scrollbar-hide
           "
@@ -46,10 +100,8 @@ const PopupZakatFamille = ({
             onClick={(e) => e.stopPropagation()}
             className="
               w-full
-
               min-h-screen
               sm:min-h-0
-
               sm:max-w-[620px]
 
               bg-white
@@ -73,10 +125,8 @@ const PopupZakatFamille = ({
                   flex
                   items-center
                   gap-2
-
                   text-[16px]
                   sm:text-[17px]
-
                   hover:opacity-70
                   transition
                 "
@@ -86,18 +136,16 @@ const PopupZakatFamille = ({
                   alt="Fermer"
                   className="w-5 h-5"
                 />
+
                 Fermer
               </button>
 
               <h2
                 className="
                   mt-5
-
                   text-center
-
                   text-[22px]
                   sm:text-[24px]
-
                   font-semibold
                   text-[#1E1E1E]
                 "
@@ -111,37 +159,38 @@ const PopupZakatFamille = ({
               className="
                 px-5
                 sm:px-6
-
                 pb-6
-
                 mt-5
-
                 flex-1
-
                 max-h-none
                 sm:max-h-[420px]
-
                 overflow-y-auto
                 scrollbar-hide
-
                 space-y-4
               "
             >
-              {zakats.length ? (
-                zakats.map((item) => (
+              {zakatsFormates.length ? (
+                zakatsFormates.map((item) => (
                   <CardListZakat
-  key={item.id}
-  sexe={item.sexe}
-  showNomCode={false}
-  zakat={item.numero}
-  date={item.date}
-  montant="Montant"
-  valeur={`${item.montant} MRU / ${item.euro} EUR`}
-  onClick={() => {
-    setSelectedZakat(item);
-    setOpenDetail(true);
-  }}
-/>
+                    key={item.id}
+
+                    sexe={item.sexe}
+
+                    showNomCode={false}
+
+                    zakat={`Zakat ${item.numero}`}
+
+                    date={item.date}
+
+                    montant="Montant"
+
+                    valeur={`${item.montant} MRU / ${item.euro} EUR`}
+
+                    onClick={() => {
+                      setSelectedZakat(item);
+                      setOpenDetail(true);
+                    }}
+                  />
                 ))
               ) : (
                 <div className="py-10 text-center text-gray-500">
@@ -153,9 +202,15 @@ const PopupZakatFamille = ({
         </div>
       )}
 
+      {/* ============================
+          POPUP DETAIL
+      ============================ */}
+
       <PopupDetailZakat
         open={openDetail}
-        onClose={() => setOpenDetail(false)}
+        onClose={() => {
+          setOpenDetail(false);
+        }}
         zakat={selectedZakat}
         onEdit={() => {
           setOpenDetail(false);
@@ -163,9 +218,15 @@ const PopupZakatFamille = ({
         }}
       />
 
+      {/* ============================
+          POPUP MODIFICATION
+      ============================ */}
+
       <PopupModifierZakat
         open={openModifier}
-        onClose={() => setOpenModifier(false)}
+        onClose={() => {
+          setOpenModifier(false);
+        }}
         zakat={selectedZakat}
       />
     </AnimatePresence>
