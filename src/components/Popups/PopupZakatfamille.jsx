@@ -23,6 +23,7 @@ const PopupZakatFamille = ({
     <AnimatePresence>
       {open && (
         <div
+          key="zakat-overlay"
           className="
             fixed inset-0 z-50
             bg-transparent sm:bg-black/30
@@ -115,38 +116,38 @@ const PopupZakatFamille = ({
                   <Spinner />
                 </div>
               ) : zakats.length ? (
-                zakats.map((item) => {
-                  const famille = item.famille_info || {};
+              zakats.map((item, index) => {
+  const famille = item.famille_info || {};
 
-                  const sexe =
-                    famille.enfant_sexe === "M" ||
-                    famille.enfant_sexe === "Masculin"
-                      ? "Fils"
-                      : famille.enfant_sexe === "F" ||
-                        famille.enfant_sexe === "Féminin"
-                      ? "Fille"
-                      : "-";
+  const sexe =
+    famille.enfant_sexe === "M" ||
+    famille.enfant_sexe === "Masculin"
+      ? "Fils"
+      : famille.enfant_sexe === "F" ||
+        famille.enfant_sexe === "Féminin"
+      ? "Fille"
+      : "-";
 
-                  return (
-                    <CardListZakat
-                      key={item.id}
-                      sexe={sexe}
-                      showNomCode={false}
-                      zakat={`Zakat ${item.numero_zakat ?? "-"}`}
-                      date={
-                        item.date_versement
-                          ? new Date(item.date_versement).toLocaleDateString("fr-FR")
-                          : "-"
-                      }
-                      montant="Montant"
-                      valeur={`${item.montant ?? "0"} MRU / ${item.montant_eur ?? "0"} EUR`}
-                      onClick={() => {
-                        setSelectedZakat(item);
-                        setOpenDetail(true);
-                      }}
-                    />
-                  );
-                })
+  return (
+    <CardListZakat
+      key={item.id || `zakat-${index}`}
+      sexe={sexe}
+      showNomCode={false}
+      zakat={`Zakat ${item.numero_zakat ?? "-"}`}
+      date={
+        item.date_versement
+          ? new Date(item.date_versement).toLocaleDateString("fr-FR")
+          : "-"
+      }
+      montant="Montant"
+      valeur={`${item.montant ?? "0"} MRU / ${item.montant_eur ?? "0"} EUR`}
+      onClick={() => {
+        setSelectedZakat(item);
+        setOpenDetail(true);
+      }}
+    />
+  );
+})
               ) : (
                 <div className="py-10 text-center text-gray-500">
                   Aucun zakat.
@@ -162,6 +163,7 @@ const PopupZakatFamille = ({
       ============================ */}
 
       <PopupDetailZakat
+        key="zakat-detail"
         open={openDetail}
         onClose={() => {
           setOpenDetail(false);
@@ -179,6 +181,7 @@ const PopupZakatFamille = ({
       ============================ */}
 
       <PopupModifierZakat
+        key="zakat-modifier"
         open={openModifier}
         onClose={() => {
           setOpenModifier(false);
