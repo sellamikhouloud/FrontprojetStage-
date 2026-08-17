@@ -153,45 +153,39 @@ const Popupvisites = ({
                       // STATUT NUTRITIONNEL BÉBÉ
                       // =========================
 
-                      (item.statut_nutritionnel === "mam" ||
-                        item.statut_nutritionnel === "Malnutrition Aiguë Modérée") && {
-                        type: "mam",
-                        text: "MAM nourrisson",
-                      },
+                    (item.statut_nutritionnel === "mam") && {
+  type: "mam",
+  text: "MAM nourrisson",
+},
 
-                      (item.statut_nutritionnel === "mas" ||
-                        item.statut_nutritionnel === "Malnutrition Aiguë Sévère") && {
-                        type: "mas",
-                        text: "MAS nourrisson",
-                      },
+(item.statut_nutritionnel === "mas") && {
+  type: "mas",
+  text: "MAS nourrisson",
+},
 
-                      (item.statut_nutritionnel === "normale" ||
-                        item.statut_nutritionnel === "Normale") && {
-                        type: "mere",
-                        text: "Bébé normal",
-                      },
+(item.statut_nutritionnel === "normale") && {
+  type: "mere",
+  text: "Bébé normal",
+},
 
                       // =========================
                       // STATUT NUTRITIONNEL MÈRE
                       // =========================
 
-                      (item.statut_nutritionnel_mere === "normale" ||
-                        item.statut_nutritionnel_mere === "Normale") && {
-                        type: "mere",
-                        text: "Mère normale",
-                      },
+                      (item.statut_nutritionnel_mere === "normale") && {
+  type: "mere",
+  text: "Mère normale",
+},
 
-                      (item.statut_nutritionnel_mere === "a_risque" ||
-                        item.statut_nutritionnel_mere === "À risque") && {
-                        type: "risque",
-                        text: "Mère à risque",
-                      },
+(item.statut_nutritionnel_mere === "a_risque") && {
+  type: "risque",
+  text: "Mère à risque",
+},
 
-                      (item.statut_nutritionnel_mere === "malnutrition" ||
-                        item.statut_nutritionnel_mere === "Malnutrition") && {
-                        type: "mas",
-                        text: "Mère malnutrie",
-                      },
+(item.statut_nutritionnel_mere === "malnutrition") && {
+  type: "mas",
+  text: "Mère malnutrie",
+},
                     ].filter(Boolean)}
                     onClick={() => {
                       setSelectedVisite(item);
