@@ -248,14 +248,12 @@ const laitType = produitLait?.produit?.nom
                 }`.trim()
               : "",
 
-             sexe:
-    famille?.nourrisson?.sexe === "M" ||
-    famille?.nourrisson?.sexe === "Masculin"
-      ? "Fils"
-      : famille?.nourrisson?.sexe === "F" ||
-        famille?.nourrisson?.sexe === "Féminin"
-      ? "Fille"
-      : "-",
+            sexe:
+  famille?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : famille?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : "-",
 
             region: famille?.mere?.village?.nom,
 
