@@ -20,9 +20,7 @@ const PopupDetailVisiteModifier = ({
   onEdit,
   famille,
 }) => {
-  // =====================================================
-  // ÉTATS OBSERVATIONS
-  // =====================================================
+ 
 
   const [observationNourrisson, setObservationNourrisson] =
     useState("");
@@ -33,9 +31,6 @@ const PopupDetailVisiteModifier = ({
   const [evaluationFamiliale, setEvaluationFamiliale] =
     useState("");
 
-  // =====================================================
-  // ÉTATS MESURES NOURRISSON
-  // =====================================================
 
   const [poidsNourrisson, setPoidsNourrisson] =
     useState("");
@@ -46,9 +41,6 @@ const PopupDetailVisiteModifier = ({
   const [muacNourrisson, setMuacNourrisson] =
     useState("");
 
-  // =====================================================
-  // ÉTATS MESURES MÈRE
-  // =====================================================
 
   const [poidsMere, setPoidsMere] =
     useState("");
@@ -59,9 +51,6 @@ const PopupDetailVisiteModifier = ({
   const [muacMere, setMuacMere] =
     useState("");
 
-  // =====================================================
-  // ÉTATS INFORMATIONS COMPLÉMENTAIRES
-  // =====================================================
 
   const [statutImc, setStatutImc] =
     useState("");
@@ -72,17 +61,11 @@ const PopupDetailVisiteModifier = ({
   const [showBanner, setShowBanner] =
     useState(false);
 
-  // =====================================================
-  // CHARGER LES INFORMATIONS DE LA VISITE
-  // =====================================================
 
   useEffect(() => {
     if (!visite) return;
 
-    // -------------------------
-    // Nourrisson
-    // -------------------------
-
+    
     setPoidsNourrisson(
       visite.poids_bebe ??
       ""
@@ -98,9 +81,6 @@ const PopupDetailVisiteModifier = ({
       ""
     );
 
-    // -------------------------
-    // Mère
-    // -------------------------
 
     setPoidsMere(
       visite.poids_mere ??
@@ -117,9 +97,7 @@ const PopupDetailVisiteModifier = ({
       ""
     );
 
-    // -------------------------
-    // Informations complémentaires
-    // -------------------------
+    
 
     setStatutImc(
       visite.statut_imc ??
@@ -131,9 +109,6 @@ const PopupDetailVisiteModifier = ({
       ""
     );
 
-    // -------------------------
-    // Observations
-    // -------------------------
 
     setObservationNourrisson(
       visite.observations_cliniques_bebe ??
@@ -152,10 +127,6 @@ const PopupDetailVisiteModifier = ({
 
   }, [visite]);
 
-  // =====================================================
-  // FORMAT DATE
-  // =====================================================
-
   const formatDate = (date) => {
     if (!date) return "-";
 
@@ -168,9 +139,7 @@ const PopupDetailVisiteModifier = ({
     return parsedDate.toLocaleDateString("fr-FR");
   };
 
-  // =====================================================
-  // SAUVEGARDE
-  // =====================================================
+
 
   const handleSave = () => {
 
@@ -193,10 +162,8 @@ const PopupDetailVisiteModifier = ({
       evaluation_famille: evaluationFamiliale,
     };
 
-    // Envoie les modifications au parent
     onEdit?.(updatedVisite);
 
-    // Affiche le message
     setShowBanner(true);
 
     setTimeout(() => {
@@ -207,9 +174,6 @@ const PopupDetailVisiteModifier = ({
 
   if (!open || !visite) return null;
 
-  // =====================================================
-  // DONNÉES FAMILLE (structure réelle imbriquée du backend)
-  // =====================================================
 
   const enfant =
     famille?.nourrisson?.prenom ||
@@ -219,14 +183,12 @@ const PopupDetailVisiteModifier = ({
     `${famille?.mere?.prenom ?? ""} ${famille?.mere?.nom ?? ""}`.trim() ||
     "-";
 
-  const sexe =
-    famille?.nourrisson?.sexe === "M" ||
-    famille?.nourrisson?.sexe === "Masculin"
-      ? "Fils"
-      : famille?.nourrisson?.sexe === "F" ||
-        famille?.nourrisson?.sexe === "Féminin"
-      ? "Fille"
-      : "-";
+ const sexe =
+  famille?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : famille?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : "-";
 
   const region =
     famille?.mere?.village?.nom ||
@@ -240,9 +202,6 @@ const PopupDetailVisiteModifier = ({
     famille?.id ||
     "-";
 
-  // =====================================================
-  // NUMÉRO VISITE
-  // =====================================================
 
   const numeroVisite =
     visite.numero_visite !== undefined &&
@@ -250,23 +209,15 @@ const PopupDetailVisiteModifier = ({
       ? visite.numero_visite + 1
       : "-";
 
-  // =====================================================
-  // DATE VISITE
-  // =====================================================
+  
 
   const dateVisite =
     formatDate(visite.date_visite);
 
-  // =====================================================
-  // DATE ENREGISTREMENT
-  // =====================================================
 
   const dateEnregistrement =
     formatDate(visite.date_creation);
 
-  // =====================================================
-  // INFOS GÉNÉRALES (réutilisées desktop + mobile)
-  // =====================================================
 
   const infosGenerales = [
     {
@@ -304,40 +255,37 @@ const PopupDetailVisiteModifier = ({
   // =====================================================
   // STATUT CALCULÉ
   // =====================================================
+const statutBadges = [
+  visite?.statut_nutritionnel === "mam" && {
+    type: "mam",
+    text: "MAM nourrisson",
+  },
 
-  const statutBadges = [
-    (visite?.statut_nutritionnel === "mam" ||
-      visite?.statut_nutritionnel === "Malnutrition Aiguë Modérée") && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
-    (visite?.statut_nutritionnel === "mas" ||
-      visite?.statut_nutritionnel === "Malnutrition Aiguë Sévère") && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
-    (visite?.statut_nutritionnel === "normale" ||
-      visite?.statut_nutritionnel === "Normale") && {
-      type: "mere",
-      text: "Bébé normal",
-    },
-    (visite?.statut_nutritionnel_mere === "normale" ||
-      visite?.statut_nutritionnel_mere === "Normale") && {
-      type: "mere",
-      text: "Mère normale",
-    },
-    (visite?.statut_nutritionnel_mere === "a_risque" ||
-      visite?.statut_nutritionnel_mere === "À risque") && {
-      type: "risque",
-      text: "Mère à risque",
-    },
-    (visite?.statut_nutritionnel_mere === "malnutrition" ||
-      visite?.statut_nutritionnel_mere === "Malnutrition") && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
-  ].filter(Boolean);
+  visite?.statut_nutritionnel === "mas" && {
+    type: "mas",
+    text: "MAS nourrisson",
+  },
 
+  visite?.statut_nutritionnel === "normale" && {
+    type: "mere",
+    text: "Bébé normal",
+  },
+
+  visite?.statut_nutritionnel_mere === "normale" && {
+    type: "mere",
+    text: "Mère normale",
+  },
+
+  visite?.statut_nutritionnel_mere === "a_risque" && {
+    type: "risque",
+    text: "Mère à risque",
+  },
+
+  visite?.statut_nutritionnel_mere === "malnutrition" && {
+    type: "mas",
+    text: "Mère malnutrie",
+  },
+].filter(Boolean);
   const StatutCalculeBlock = () => (
     <div
       className="
@@ -415,9 +363,6 @@ const PopupDetailVisiteModifier = ({
     </div>
   );
 
-  // =====================================================
-  // RENDER
-  // =====================================================
 
   return (
     <AnimatePresence>
@@ -494,9 +439,7 @@ const PopupDetailVisiteModifier = ({
           }}
         >
 
-          {/* =====================================================
-              HEADER
-          ===================================================== */}
+        
 
           <div className="mb-4">
 
@@ -530,14 +473,12 @@ const PopupDetailVisiteModifier = ({
                 text-[#202124]
               "
             >
-              Détail de la visite {numeroVisite}
+              Détail de la visite n{numeroVisite}
             </h2>
 
           </div>
 
-          {/* =====================================================
-              CARTE FAMILLE
-          ===================================================== */}
+        
 
           <Card
             enfant={enfant}
@@ -549,13 +490,10 @@ const PopupDetailVisiteModifier = ({
             badges={[]}
           />
 
-          {/* =====================================================
-              DESKTOP (inchangé)
-          ===================================================== */}
+        
 
           <div className="hidden sm:grid sm:grid-cols-2 gap-4 mt-4">
 
-            {/* COLONNE GAUCHE */}
 
             <div className="space-y-3">
 
@@ -582,7 +520,7 @@ const PopupDetailVisiteModifier = ({
                 onChange={(e) =>
                   setObservationNourrisson(e.target.value)
                 }
-                height="h-[90px]"
+                height="h-[100px]"
               />
 
               <div className="mt-4">
@@ -626,7 +564,7 @@ const PopupDetailVisiteModifier = ({
                 onChange={(e) =>
                   setObservationMere(e.target.value)
                 }
-                height="h-[90px]"
+                height="h-[100px]"
               />
 
               <TextareaModifier
@@ -635,16 +573,13 @@ const PopupDetailVisiteModifier = ({
                 onChange={(e) =>
                   setEvaluationFamiliale(e.target.value)
                 }
-                height="h-[90px]"
+                height="h-[100px]"
               />
 
             </div>
 
           </div>
 
-          {/* =====================================================
-              MOBILE (ordre demandé)
-          ===================================================== */}
 
           <div className="flex sm:hidden flex-col gap-4 mt-4">
 
@@ -673,7 +608,7 @@ const PopupDetailVisiteModifier = ({
               onChange={(e) =>
                 setObservationNourrisson(e.target.value)
               }
-              height="h-[45px]"
+              height="h-[55px]"
             />
 
             <ModifierMesure
@@ -705,7 +640,7 @@ const PopupDetailVisiteModifier = ({
               onChange={(e) =>
                 setObservationMere(e.target.value)
               }
-              height="h-[45px]"
+              height="h-[55px]"
             />
 
             <TextareaModifier
@@ -714,7 +649,7 @@ const PopupDetailVisiteModifier = ({
               onChange={(e) =>
                 setEvaluationFamiliale(e.target.value)
               }
-              height="h-[45px]"
+              height="h-[55px]"
             />
 
             <div className="mt-2">
