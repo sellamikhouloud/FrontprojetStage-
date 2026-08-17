@@ -138,17 +138,15 @@ const isMobile = window.innerWidth < 768;
     ? famille.nourrisson.date_naissance.split("-").reverse().join("/")
     : "/",
   },
-  {
-    label: "Sexe",
+ {
+  label: "Sexe",
   value:
-    famille?.nourrisson?.sexe === "M" ||
-    famille?.nourrisson?.sexe === "Masculin"
+    famille?.nourrisson?.sexe === "M"
       ? "Masculin"
-      : famille?.nourrisson?.sexe === "F" ||
-        famille?.nourrisson?.sexe === "Féminin"
+      : famille?.nourrisson?.sexe === "F"
       ? "Féminin"
       : "/",
-  },
+},
   {
     label: "Poids de naissance",
     value: famille?.nourrisson?.poids_naissance
@@ -278,15 +276,7 @@ const STATUT_FAMILLE = {
     text: "Active",
     type: "mereActive",
   },
-  Active: {
-    text: "Active",
-    type: "mereActive",
-  },
   sortie: {
-    text: "Sortie",
-    type: "sortie",
-  },
-  Sortie: {
     text: "Sortie",
     type: "sortie",
   },
@@ -294,13 +284,8 @@ const STATUT_FAMILLE = {
 const statut =
   STATUT_FAMILLE[famille?.statut] || null;
   
-
 const STATUT_BEBE = {
   normale: {
-    text: "Bébé normal",
-    type: "mereNormal",
-  },
-  "Normale": {
     text: "Bébé normal",
     type: "mereNormal",
   },
@@ -308,96 +293,33 @@ const STATUT_BEBE = {
     text: "MAM nourrisson",
     type: "mam",
   },
-  "Malnutrition Aiguë Modérée": {
-    text: "MAM nourrisson",
-    type: "mam",
-  },
   mas: {
     text: "MAS nourrisson",
     type: "mas",
   },
-  "Malnutrition Aiguë Sévère": {
-    text: "MAS nourrisson",
-    type: "mas",
-  },
 };
-
 const STATUT_MERE = {
   normale: {
     text: "Mère normale",
     type: "mereNormal",
   },
-  "Normale": {
-    text: "Mère normale",
-    type: "mereNormal",
-  },
+
   a_risque: {
-    text: "Mère à risque",
-    type: "mereActive",
-  },
-  "À risque": {
     text: "Mère à risque",
     type: "risque",
   },
+
   malnutrition: {
     text: "Malnutrition",
     type: "mas",
   },
-  Malnutrition: {
-    text: "Malnutrition",
-    type: "mas",
-  },
 };
-
 const statutBebe =
   STATUT_BEBE[famille?.statut_nutritionnel_bebe] || null;
 
 const statutMere =
   STATUT_MERE[famille?.statut_nutritionnel_mere] || null;
 
-const zakatList = [
-  {
-    id: 1,
-    numero: "Zakat n°1",
-    date: "15/05/2026",
-    montant: "500 ",
-    euro: "12.45",
-
-    enfant: "Aïcha Mint Mohamed",
-    mere: "Meriem Mint Ahmed",
-    sexe: "Fille",
-    region: "Lexeiba",
-    dateNaissance: "12 mars 2025",
-    code: "GDK-2026-003",
-
-    enregistrePar: "Coordinateur",
-    modePaiement: "Bankily",
-    observations: "Observation...",
-    causePrincipale: "Cause principale",
-    precisions: "Précisions...",
-  },
-
-  {
-    id: 2,
-    numero: "Zakat n°2",
-    date: "20/06/2026",
-    montant: "750 ",
-    euro: "18.67",
-
-    enfant: "Aïcha Mint Mohamed",
-    mere: "Meriem Mint Ahmed",
-    sexe: "Fille",
-    region: "Lexeiba",
-    dateNaissance: "12 mars 2025",
-    code: "GDK-2026-003",
-
-    enregistrePar: "Coordinateur",
-    modePaiement: "Espèces",
-    observations: "",
-    causePrincipale: "",
-    precisions: "",
-  },
-];
 
 const DONNEES_POIDS = [
   { age: 0, poids: 3.1 },
@@ -728,8 +650,7 @@ return (
 <div className="mt-4">
  <OMSGraphs graphs={graphs} />
 </div> 
-
-{(famille?.statut === "active" || famille?.statut === "Active") && (
+{famille?.statut === "active" && (
   <div className="mt-8 w-full">
     <Button
       title="Sortir du programme"
@@ -739,8 +660,7 @@ return (
     />
   </div>
 )}
-
-{(famille?.statut === "sortie" || famille?.statut === "Sortie") && (
+{famille?.statut === "sortie" && (
   <div className="mt-8">
     <InfoCard
       title="Statut sortie"
