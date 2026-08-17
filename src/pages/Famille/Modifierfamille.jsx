@@ -1,4 +1,4 @@
-// SRC/PAGES/FAMILLES/MODIFYFAMILLY.JSX
+
 import { useMemo, useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -132,23 +132,26 @@ function getErrorMessage(err) {
   return "Une erreur est survenue.";
 }
 
-
 const STATUT_BEBE = {
   normale: { text: "Bébé normal", type: "mereNormal" },
-  Normale: { text: "Bébé normal", type: "mereNormal" },
   mam: { text: "MAM nourrisson", type: "mam" },
-  "Malnutrition Aiguë Modérée": { text: "MAM nourrisson", type: "mam" },
   mas: { text: "MAS nourrisson", type: "mas" },
-  "Malnutrition Aiguë Sévère": { text: "MAS nourrisson", type: "mas" },
 };
-
 const STATUT_MERE = {
-  normale: { text: "Mère normale", type: "mereNormal" },
-  Normale: { text: "Mère normale", type: "mereNormal" },
-  a_risque: { text: "Mère à risque", type: "mereActive" },
-  "À risque": { text: "Mère à risque", type: "risque" },
-  malnutrition: { text: "Malnutrition", type: "mas" },
-  Malnutrition: { text: "Malnutrition", type: "mas" },
+  normale: {
+    text: "Mère normale",
+    type: "mereNormal",
+  },
+
+  a_risque: {
+    text: "Mère à risque",
+    type: "risque",
+  },
+
+  malnutrition: {
+    text: "Malnutrition",
+    type: "mas",
+  },
 };
 
 const STATUT_MATRIMONIAL_LABELS = {
