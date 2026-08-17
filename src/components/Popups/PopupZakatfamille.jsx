@@ -119,15 +119,12 @@ const PopupZakatFamille = ({
               zakats.map((item, index) => {
   const famille = item.famille_info || {};
 
-  const sexe =
-    famille.enfant_sexe === "M" ||
-    famille.enfant_sexe === "Masculin"
-      ? "Fils"
-      : famille.enfant_sexe === "F" ||
-        famille.enfant_sexe === "Féminin"
-      ? "Fille"
-      : "-";
-
+const sexe =
+  famille.enfant_sexe === "M"
+    ? "Fils"
+    : famille.enfant_sexe === "F"
+    ? "Fille"
+    : "-";
   return (
     <CardListZakat
       key={item.id || `zakat-${index}`}
@@ -158,10 +155,7 @@ const PopupZakatFamille = ({
         </div>
       )}
 
-      {/* ============================
-          POPUP DETAIL
-      ============================ */}
-
+      
       <PopupDetailZakat
         key="zakat-detail"
         open={openDetail}
@@ -176,9 +170,7 @@ const PopupZakatFamille = ({
         }}
       />
 
-      {/* ============================
-          POPUP MODIFICATION
-      ============================ */}
+      
 
       <PopupModifierZakat
         key="zakat-modifier"
