@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient  } from "@tanstack/react-query";
 import { getFamille } from "@/lib/api/familles";
 import { marquerSortie} from "@/lib/api/familles";
 import {getVisites} from "@/lib/api/familles";
@@ -32,7 +32,7 @@ const FamilyProfile = () => {
   const location = useLocation();
     const navigate = useNavigate();
 const { id } = useParams();
-
+ const queryClient = useQueryClient();
 
 const [openDistribution, setOpenDistribution] = useState(false);
 const [openVisites, setOpenVisites] = useState(false);
@@ -186,6 +186,13 @@ const mere = [
     label: "Nombre d'enfants à charge",
     value: famille?.mere?.nb_enfants ?? "/",
   },
+
+   {
+    label: "Motif de prise en charge",
+    value: famille?.mere?.motif_prise_en_charge || "/",
+  },
+
+ 
   {
     label: "Référent médical",
     value: famille?.mere?.referent_medical || "/",
@@ -210,6 +217,13 @@ const mere = [
     label: "Enregistré par",
     value: famille?.audit?.cree_par
       ? `${famille.audit.cree_par.prenom} ${famille.audit.cree_par.nom}`
+      : "/",
+  },
+
+   {
+    label: "Date de création",
+    value: famille?.date_creation
+      ? new Date(famille.date_creation).toLocaleDateString("fr-FR")
       : "/",
   },
 ];
@@ -490,14 +504,14 @@ return (
   famille={famille}
   isLoading={distributionsLoading}
 />
-
-<PopupZakatFamille
+ <PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
   zakats={zakatsData}
   famille={famille}
   isLoading={zakatLoading}
-/>
+/> 
+
 
 
 <Popupvisites
@@ -508,30 +522,28 @@ return (
   isLoading={visitesLoading}
 />
 
-
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
   onConfirm={async (motif, dateSortie) => {
     try {
       await marquerSortie(famille.id, {
-        date_sortie: dateSortie.toISOString().split("T")[0],
+        date_sortie: dateSortie,
         motif_sortie: motif,
       });
 
-         // Fermer le popup
       setOpenFinSuivi(false);
 
-      // Recharger les données de la famille
-      await refetch();
+      await queryClient.invalidateQueries({
+        queryKey: ["famille", famille.id],
+      });
 
-   
-     
-    } catch (error) {
-      console.error("Erreur lors de la sortie :", error);
+    } catch (err) {
+      setErrorMessage(getErrorMessage(err));
     }
   }}
 />
+ 
 {openSuccess && (
   <Popup
   title="Fin de suivi avec succès"
