@@ -127,7 +127,13 @@ if (isError) {
   );
 }
 
-
+const STATUT_MATRIMONIAL_LABELS = {
+  mariee: "Mariée",
+  celibataire: "Célibataire",
+  divorcee: "Divorcée",
+  veuve: "Veuve",
+  decedee: "Décédée",
+};
 const isMobile = window.innerWidth < 768;
 
 
@@ -178,7 +184,10 @@ const mere = [
   },
   {
     label: "Statut matrimonial",
-    value: famille?.mere?.statut_matrimonial || "/",
+    value:
+      STATUT_MATRIMONIAL_LABELS[famille?.mere?.statut_matrimonial] ||
+      famille?.mere?.statut_matrimonial ||
+      "/",
   },
   {
     label: "Nombre d'enfants à charge",
