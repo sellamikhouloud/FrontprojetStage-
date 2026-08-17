@@ -60,39 +60,37 @@ const PopupDetailVisite = ({
         : "-",
     },
   ];
+const statutBadges = [
+  visite?.statut_nutritionnel === "mam" && {
+    type: "mam",
+    text: "MAM nourrisson",
+  },
 
-  const statutBadges = [
-    (visite?.statut_nutritionnel === "mam" ||
-      visite?.statut_nutritionnel === "Malnutrition Aiguë Modérée") && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
-    (visite?.statut_nutritionnel === "mas" ||
-      visite?.statut_nutritionnel === "Malnutrition Aiguë Sévère") && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
-    (visite?.statut_nutritionnel === "normale" ||
-      visite?.statut_nutritionnel === "Normale") && {
-      type: "mere",
-      text: "Bébé normal",
-    },
-    (visite?.statut_nutritionnel_mere === "normale" ||
-      visite?.statut_nutritionnel_mere === "Normale") && {
-      type: "mere",
-      text: "Mère normale",
-    },
-    (visite?.statut_nutritionnel_mere === "a_risque" ||
-      visite?.statut_nutritionnel_mere === "À risque") && {
-      type: "risque",
-      text: "Mère à risque",
-    },
-    (visite?.statut_nutritionnel_mere === "malnutrition" ||
-      visite?.statut_nutritionnel_mere === "Malnutrition") && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
-  ].filter(Boolean);
+  visite?.statut_nutritionnel === "mas" && {
+    type: "mas",
+    text: "MAS nourrisson",
+  },
+
+  visite?.statut_nutritionnel === "normale" && {
+    type: "mere",
+    text: "Bébé normal",
+  },
+
+  visite?.statut_nutritionnel_mere === "normale" && {
+    type: "mere",
+    text: "Mère normale",
+  },
+
+  visite?.statut_nutritionnel_mere === "a_risque" && {
+    type: "risque",
+    text: "Mère à risque",
+  },
+
+  visite?.statut_nutritionnel_mere === "malnutrition" && {
+    type: "mas",
+    text: "Mère malnutrie",
+  },
+].filter(Boolean);
 
   const StatutCalculeBlock = () => (
     <div
@@ -236,15 +234,13 @@ const PopupDetailVisite = ({
           <Card
             enfant={famille?.nourrisson?.prenom}
             mere={`${famille?.mere?.prenom ?? ""} ${famille?.mere?.nom ?? ""}`}
-            sexe={
-              famille?.nourrisson?.sexe === "M" ||
-              famille?.nourrisson?.sexe === "Masculin"
-                ? "Fils"
-                : famille?.nourrisson?.sexe === "F" ||
-                  famille?.nourrisson?.sexe === "Féminin"
-                ? "Fille"
-                : "-"
-            }
+           sexe={
+  famille?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : famille?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : "-"
+}
             region={famille?.mere?.village?.nom ?? "-"}
             naissance={famille?.nourrisson?.date_naissance ?? "-"}
             code={famille?.id ?? "-"}
