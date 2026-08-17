@@ -126,15 +126,13 @@ const PopupDetailDistribution = ({
             mere={`${famille?.mere?.prenom ?? ""} ${
               famille?.mere?.nom ?? ""
             }`}
-            sexe={
-              famille?.nourrisson?.sexe === "M" ||
-              famille?.nourrisson?.sexe === "Masculin"
-                ? "Fils"
-                : famille?.nourrisson?.sexe === "F" ||
-                  famille?.nourrisson?.sexe === "Féminin"
-                ? "Fille"
-                : "-"
-            }
+          sexe={
+  famille?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : famille?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : "-"
+}
             region={famille?.mere?.village?.nom ?? "-"}
             naissance={
               famille?.nourrisson?.date_naissance ?? "-"
