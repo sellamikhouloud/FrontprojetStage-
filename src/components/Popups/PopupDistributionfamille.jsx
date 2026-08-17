@@ -83,6 +83,7 @@ const laitType = produitLait?.produit?.nom
     <AnimatePresence>
       {open && (
         <div
+          key="distribution-overlay"
           className="
             fixed inset-0 z-50
             bg-transparent sm:bg-black/30
@@ -171,31 +172,31 @@ const laitType = produitLait?.produit?.nom
                   <Spinner />
                 </div>
               ) : distributionsTriees.length ? (
-                distributionsTriees.map((item) => (
-                  <CardPopupDistribution
-                    key={item.id}
-                    distribution={`Distribution ${item.numeroDistribution}`}
-                    date={
-                      item.date_distribution
-                        ? new Date(
-                            item.date_distribution
-                          ).toLocaleDateString("fr-FR")
-                        : "-"
-                    }
-                    produits={(item.produits || []).map((prod) => ({
-  nom: prod.produit?.nom ?? "-",
-  quantite: `${Number(prod.quantite ?? 0)} ${
-  prod.produit?.unite === "boite"
-    ? "boîtes"
-    : prod.produit?.unite ?? ""
-}`.trim(),
-}))}
-                    onClick={() => {
-                      setSelectedDistribution(item);
-                      setOpenDetail(true);
-                    }}
-                  />
-                ))
+                distributionsTriees.map((item, index) => (
+  <CardPopupDistribution
+    key={item.id || `distribution-${index}`}
+    distribution={`Distribution ${item.numeroDistribution}`}
+    date={
+      item.date_distribution
+        ? new Date(
+            item.date_distribution
+          ).toLocaleDateString("fr-FR")
+        : "-"
+    }
+    produits={(item.produits || []).map((prod) => ({
+      nom: prod.produit?.nom ?? "-",
+      quantite: `${Number(prod.quantite ?? 0)} ${
+        prod.produit?.unite === "boite"
+          ? "boîtes"
+          : prod.produit?.unite ?? ""
+      }`.trim(),
+    }))}
+    onClick={() => {
+      setSelectedDistribution(item);
+      setOpenDetail(true);
+    }}
+  />
+))
               ) : (
                 <div className="py-10 text-center text-gray-500">
                   Aucune distribution.
@@ -207,6 +208,7 @@ const laitType = produitLait?.produit?.nom
       )}
 
       <PopupDetailDistribution
+  key="distribution-detail"
   open={openDetail}
   onClose={() => {
     setOpenDetail(false);
