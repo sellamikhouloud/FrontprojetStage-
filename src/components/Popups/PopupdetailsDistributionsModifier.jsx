@@ -79,8 +79,8 @@ const boites = splitValueUnit(distribution.nombreBoites);
     label: "Type",
     value: distribution.typeLait,
     options: [
-      "1er âge (0 à 6 mois)",
-      "2ème âge (6 à 12 mois)",
+      " Lait 1er Age (0 à 6 mois)",
+      "Lait 2ème Age (6 à 12 mois)",
     ],
   },
   {
@@ -124,7 +124,7 @@ const handleSave = () => {
 
   produits: [
   {
-    nom: distribution.produits[0].nom, // le lait reste inchangé
+    nom: distribution.produits[0].nom, 
     quantite: distribution.produits[0].quantite,
   },
   ...colisInfo.map((item) => ({
