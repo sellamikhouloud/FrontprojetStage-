@@ -1,10 +1,11 @@
-
+// SRC/PAGES/FAMILLES/MODIFYFAMILLY.JSX
 import { useMemo, useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { diffPatch, isEmptyPatch } from "@/lib/diff";
 import { getFamille, updateFamille, marquerSortie, getVisites, getDistributions, getFamilleZakat } from "@/lib/api/familles";
+import { listVillages } from "@/lib/api/Parametres"; 
 
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -78,7 +79,7 @@ function buildFamillePayload(patch) {
         payload.date_entree = toApiDateString(value);
         break;
       case "mere_village_id":
-        mere.village_id = value;
+        mere.village = value;
         break;
       case "mere_telephone":
         mere.telephone = value;
@@ -226,6 +227,23 @@ const Modifyfamilly = () => {
     ? zakatResponse
     : zakatResponse?.results || (zakatResponse ? [zakatResponse] : []);
 
+    const {
+  data: villagesData,
+  isLoading: villagesLoading,
+} = useQuery({
+  queryKey: ["villages"],
+  queryFn: async () => {
+    const response = await listVillages();
+    return response.data;
+  },
+});
+
+const villageOptions = (villagesData || []).map((village) => ({
+  value: village.id,
+  label: village.nom,
+}));
+
+
   
   const baseline = useMemo(
     () => (famille ? extractEditableFields(famille) : null),
@@ -247,25 +265,45 @@ const Modifyfamilly = () => {
 
  
   const saveMut = useMutation({
-    
-    mutationFn: (patch) =>
-      updateFamille(id, buildFamillePayload(patch)).then((r) => r.data),
-    onSuccess: (updated) => {
-      setForm(extractEditableFields(updated));
-      queryClient.setQueryData(["famille", id], updated);
-      queryClient.invalidateQueries({ queryKey: ["familles"] });
-      setErrors({});
-      setErrorMessage(null);
-      setOpenSuccess(true);
-    },
-    onError: (err) => {
-      const data = err?.response?.data;
-      if (data && typeof data === "object" && !data.detail) {
-        setErrors(data);
-      }
-      setErrorMessage(getErrorMessage(err));
-    },
-  });
+  mutationFn: (patch) =>
+    updateFamille(id, buildFamillePayload(patch)).then((r) => r.data),
+  onSuccess: (updated) => {
+    // Fix ciblé : si mere.village est renvoyé comme un id brut (pas un objet {id, nom}),
+    // on le reconstruit à partir de villageOptions qu'on a déjà chargé.
+    const villageId =
+      typeof updated?.mere?.village === "object"
+        ? updated.mere.village?.id
+        : updated?.mere?.village;
+
+    const villageMatch = villageOptions.find(
+      (opt) => String(opt.value) === String(villageId)
+    );
+
+    const fixedUpdated = {
+      ...updated,
+      mere: {
+        ...updated.mere,
+        village: villageMatch
+          ? { id: villageMatch.value, nom: villageMatch.label }
+          : updated.mere?.village, 
+      },
+    };
+
+    setForm(extractEditableFields(fixedUpdated));
+    queryClient.setQueryData(["famille", id], fixedUpdated);
+    queryClient.invalidateQueries({ queryKey: ["familles"] });
+    setErrors({});
+    setErrorMessage(null);
+    setOpenSuccess(true);
+  },
+  onError: (err) => {
+    const data = err?.response?.data;
+    if (data && typeof data === "object" && !data.detail) {
+      setErrors(data);
+    }
+    setErrorMessage(getErrorMessage(err));
+  },
+});
 
  
   const handleSave = () => {
@@ -362,15 +400,14 @@ const Modifyfamilly = () => {
   ];
 
   const mere = [
-    {
-      key: "mere_village_id",
-      label: "Village",
-      value: form.mere_village_id,
-      options: [
-        { value: 1, label: "Lexeiba" },
-        { value: 2, label: "Rosso" },
-      ],
-    },
+  
+  {
+    key: "mere_village_id",
+    label: "Village",
+    value: form.mere_village_id,
+    options: villageOptions,
+  },
+
     {
       key: "mere_telephone",
       label: "Téléphone",
@@ -479,20 +516,26 @@ const Modifyfamilly = () => {
   const statut = famille?.statut;
   const statutBebe = STATUT_BEBE[famille?.statut_nutritionnel_bebe] || null;
   const statutMere = STATUT_MERE[famille?.statut_nutritionnel_mere] || null;
+const makeHandler = (fields) => (index, value) => {
+  const field = fields[index];
+  if (field?.readOnly) return;
+  const key = field.key;
+  let finalValue = value;
 
-  const makeHandler = (fields) => (index, value) => {
-    const field = fields[index];
-    if (field?.readOnly) return;
-    const key = field.key;
-    let finalValue = value;
-    if (key === "nourrisson_sexe") {
-      finalValue = value === "Masculin" ? "M" : "F";
-    } else if (key === "mere_statut_matrimonial") {
-   
-      finalValue = STATUT_MATRIMONIAL_REVERSE[value] || value;
-    }
-    setForm((prev) => ({ ...prev, [key]: finalValue }));
-  };
+  if (key === "nourrisson_sexe") {
+    finalValue = value === "Masculin" ? "M" : "F";
+  } else if (key === "mere_statut_matrimonial") {
+    finalValue = STATUT_MATRIMONIAL_REVERSE[value] || value;
+  } else if (key === "mere_village_id") {
+    // Options peut renvoyer soit le label (nom du village), soit déjà l'id
+    const match = villageOptions.find(
+      (opt) => opt.label === value || String(opt.value) === String(value)
+    );
+    finalValue = match ? match.value : value;
+  }
+
+  setForm((prev) => ({ ...prev, [key]: finalValue }));
+};
 
   const handleProgrammeChange = makeHandler(programme);
   const handleNourrissonChange = makeHandler(nourrisson);
