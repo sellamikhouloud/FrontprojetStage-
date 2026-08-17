@@ -58,14 +58,13 @@ const PopupModifierZakat = ({
         editable: false,
       },
 
-       {
+        {
         label: "Date d'enregistrement",
         value: zakat.date_creation
           ? new Date(zakat.date_creation).toLocaleDateString("fr-FR")
           : "-",
         editable: false,
       },
-      
       {
         label: "Modifié par",
         value: zakat.modifie_par?.nom || "-",
@@ -91,11 +90,11 @@ const PopupModifierZakat = ({
   const mere = famille?.mere_nom || "-";
 
   const sexe =
-    famille?.enfant_sexe === "M" || famille?.enfant_sexe === "Masculin"
-      ? "Fils"
-      : famille?.enfant_sexe === "F" || famille?.enfant_sexe === "Féminin"
-      ? "Fille"
-      : "-";
+  famille?.enfant_sexe === "M"
+    ? "Fils"
+    : famille?.enfant_sexe === "F"
+    ? "Fille"
+    : "-";
 
   const region = famille?.village || "-";
 
