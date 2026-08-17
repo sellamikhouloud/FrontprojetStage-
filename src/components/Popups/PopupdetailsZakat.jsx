@@ -31,12 +31,12 @@ const PopupDetailZakat = ({
   const enfant = famille?.enfant_prenom || "-";
   const mere = famille?.mere_nom || "-";
 
-  const sexe =
-    famille?.enfant_sexe === "M" || famille?.enfant_sexe === "Masculin"
-      ? "Fils"
-      : famille?.enfant_sexe === "F" || famille?.enfant_sexe === "Féminin"
-      ? "Fille"
-      : "-";
+ const sexe =
+  famille?.enfant_sexe === "M"
+    ? "Fils"
+    : famille?.enfant_sexe === "F"
+    ? "Fille"
+    : "-";
 
   const region = famille?.village || "-";
   const dateNaissance = formatDate(famille?.enfant_date_naissance);
@@ -211,7 +211,7 @@ const PopupDetailZakat = ({
                 Motif de sélection
               </h2>
 
-              {/* CAUSE */}
+            
               <div>
                 <p className="text-[#4E9F8A] font-medium mb-2">
                   Cause principale :
@@ -230,7 +230,7 @@ const PopupDetailZakat = ({
                 </div>
               </div>
 
-              {/* PRECISIONS */}
+           
               <div>
                 <p className="text-[#4E9F8A] font-medium mb-2">
                   Précisions :
@@ -252,7 +252,7 @@ const PopupDetailZakat = ({
                 </div>
               </div>
 
-              {/* MODIFIER */}
+             
               <Button
                 title="Modifier"
                 variant="modifier"
