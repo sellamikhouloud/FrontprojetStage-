@@ -78,7 +78,8 @@ const [appliedFilters, setAppliedFilters] = useState({
     queryKey: ["villages"],
     queryFn: () => listVillages().then((r) => r.data),
   });
- const villages = villagesData?.results ?? [];
+ 
+  const villages = villagesData?.results ?? villagesData ?? [];
 
 const villageOptions = villages.map((village) => ({
   label: village.nom,
@@ -185,16 +186,18 @@ const filtersContent = (
       title="Annuler les filtres"
       variant="outline"
       noPadding
-      onClick={() => {
-        const empty = {
-          village: "",
-          villageLabel: "",
-          statut: "",
-          mois_entree: "",
-        };
-        setFilters(empty);
-        setAppliedFilters(empty);
-      }}
+     onClick={() => {
+  const empty = {
+    village: "",
+    villageLabel: "",
+    statut: "",
+    statutLabel: "",
+    mois_entree: "",
+    moisLabel: "",
+  };
+  setFilters(empty);
+  setAppliedFilters(empty);
+}}
     />
   </div>
 );
@@ -225,17 +228,18 @@ const filterTagsContent = (
       />
     )}
 
-    {appliedFilters.village && (
-      <FilterTag
-        text={appliedFilters.village}
-        onRemove={() =>
-          setAppliedFilters((prev) => ({
-            ...prev,
-            village: "",
-          }))
-        }
-      />
-    )}
+   {appliedFilters.village && (
+  <FilterTag
+    text={appliedFilters.villageLabel || appliedFilters.village}
+    onRemove={() =>
+      setAppliedFilters((prev) => ({
+        ...prev,
+        village: "",
+        villageLabel: "",
+      }))
+    }
+  />
+)}
 
  
   </div>
@@ -436,10 +440,12 @@ if  (isFilterOpen && isMobile)  {
   enfant={famille.nourrisson?.prenom}
   mere={`${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`}
   sexe={
-    famille.nourrisson?.sexe === "M"
-      ? "Fils"
-      : "Fille"
-  }
+  famille?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : famille?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : "-"
+}
   region={famille.mere?.village?.nom ?? "-"}
   naissance={famille.nourrisson?.date_naissance}
   code={famille.id}
@@ -448,47 +454,38 @@ if  (isFilterOpen && isMobile)  {
     // STATUT NUTRITIONNEL BÉBÉ
     // =========================
 
-    (famille?.statut_nutritionnel_bebe === "mam" ||
-    famille?.statut_nutritionnel_bebe ===
-      "Malnutrition Aiguë Modérée") && {
+     famille?.statut_nutritionnel_bebe === "mam" && {
     type: "mam",
     text: "MAM nourrisson",
   },
 
-  (famille?.statut_nutritionnel_bebe === "mas" ||
-    famille?.statut_nutritionnel_bebe ===
-      "Malnutrition Aiguë Sévère") && {
+  famille?.statut_nutritionnel_bebe === "mas" && {
     type: "mas",
     text: "MAS nourrisson",
   },
 
-  (famille?.statut_nutritionnel_bebe === "normale" ||
-    famille?.statut_nutritionnel_bebe === "Normale") && {
+  famille?.statut_nutritionnel_bebe === "normale" && {
     type: "mere",
     text: "Bébé normal",
   },
-
     // =========================
     // STATUT NUTRITIONNEL MÈRE
     // =========================
 
-   (famille?.statut_nutritionnel_mere === "normale" ||
-  famille?.statut_nutritionnel_mere === "Normale") && {
-  type: "mere",
-  text: "Mère normale",
-},
+   famille?.statut_nutritionnel_mere === "normale" && {
+    type: "mere",
+    text: "Mère normale",
+  },
 
-(famille?.statut_nutritionnel_mere === "a_risque" ||
-  famille?.statut_nutritionnel_mere === "À risque") && {
-  type: "risque",
-  text: "Mère à risque",
-},
+  famille?.statut_nutritionnel_mere === "a_risque" && {
+    type: "risque",
+    text: "Mère à risque",
+  },
 
-(famille?.statut_nutritionnel_mere === "malnutrition" ||
-  famille?.statut_nutritionnel_mere === "Malnutrition") && {
-  type: "mas",
-  text: "Mère malnutrie",
-},
+  famille?.statut_nutritionnel_mere === "malnutrition" && {
+    type: "mas",
+    text: "Mère malnutrie",
+  },
 
    
     // =========================
@@ -514,7 +511,13 @@ if  (isFilterOpen && isMobile)  {
 >
  <CardPopup
   enfant={famille.nourrisson?.prenom}
-  sexe={famille.nourrisson?.sexe === "M" ? "Fils" : "Fille"}
+ sexe={
+  famille?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : famille?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : "-"
+}
   region={famille.mere?.village?.nom ?? "-"}
   naissance={famille.nourrisson?.date_naissance}
   code={famille.id}
@@ -522,49 +525,38 @@ if  (isFilterOpen && isMobile)  {
     // =========================
     // STATUT NUTRITIONNEL BÉBÉ
     // =========================
-
-  
-    (famille?.statut_nutritionnel_bebe === "mam" ||
-    famille?.statut_nutritionnel_bebe ===
-      "Malnutrition Aiguë Modérée") && {
+  famille?.statut_nutritionnel_bebe === "mam" && {
     type: "mam",
     text: "MAM nourrisson",
   },
 
-  (famille?.statut_nutritionnel_bebe === "mas" ||
-    famille?.statut_nutritionnel_bebe ===
-      "Malnutrition Aiguë Sévère") && {
+  famille?.statut_nutritionnel_bebe === "mas" && {
     type: "mas",
     text: "MAS nourrisson",
   },
 
-  (famille?.statut_nutritionnel_bebe === "normale" ||
-    famille?.statut_nutritionnel_bebe === "Normale") && {
+  famille?.statut_nutritionnel_bebe === "normale" && {
     type: "mere",
     text: "Bébé normal",
   },
-
     // =========================
     // STATUT NUTRITIONNEL MÈRE
     // =========================
 
-     (famille?.statut_nutritionnel_mere === "normale" ||
-  famille?.statut_nutritionnel_mere === "Normale") && {
-  type: "mere",
-  text: "Mère normale",
-},
+     famille?.statut_nutritionnel_mere === "normale" && {
+    type: "mere",
+    text: "Mère normale",
+  },
 
-(famille?.statut_nutritionnel_mere === "a_risque" ||
-  famille?.statut_nutritionnel_mere === "À risque") && {
-  type: "risque",
-  text: "Mère à risque",
-},
+  famille?.statut_nutritionnel_mere === "a_risque" && {
+    type: "risque",
+    text: "Mère à risque",
+  },
 
-(famille?.statut_nutritionnel_mere === "malnutrition" ||
-  famille?.statut_nutritionnel_mere === "Malnutrition") && {
-  type: "mas",
-  text: "Mère malnutrie",
-},
+  famille?.statut_nutritionnel_mere === "malnutrition" && {
+    type: "mas",
+    text: "Mère malnutrie",
+  },
    
 
     // =========================
