@@ -1,4 +1,4 @@
-// SRC/PAGES/FAMILLES/MODIFYFAMILLY.JSX
+
 import { useMemo, useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -124,15 +124,110 @@ function buildFamillePayload(patch) {
 
   return payload;
 }
+// Libellés français pour les champs, utilisés dans les messages d'erreur de validation
+const FIELD_LABELS = {
+  taille_naissance: "Taille de naissance",
+  poids_naissance: "Poids de naissance",
+  date_naissance: "Date de naissance",
+  village: "Village",
+  telephone: "Téléphone",
+  statut_matrimonial: "Statut matrimonial",
+  nb_enfants: "Nombre d'enfants à charge",
+  motif_prise_en_charge: "Motif de prise en charge",
+  referent_medical: "Référent médical",
+  informations_complementaires: "Informations complémentaires",
+  sexe: "Sexe",
+  date_entree: "Date d'entrée",
+  date_sortie: "Date de sortie",
+  motif_sortie: "Motif de sortie",
+  mere: "Informations mère",
+  nourrisson: "Informations nourrisson",
+};
 
-function getErrorMessage(err) {
-  const data = err?.response?.data;
-  if (!data) return "Erreur réseau. Vérifiez votre connexion.";
-  if (data.detail) return data.detail;
-  if (typeof data === "object") return "Certains champs sont invalides.";
-  return "Une erreur est survenue.";
+// Messages pour les codes d'erreur métier renvoyés par le backend
+const ERROR_CODE_MESSAGES = {
+  INVALID_EXIT_DATE: "La date de sortie ne peut pas être antérieure à la date d'entrée.",
+  EXIT_DATE_REQUIRED: "Veuillez renseigner la date de sortie.",
+  EXIT_REASON_REQUIRED: "Veuillez préciser le motif de sortie.",
+  FAMILY_ACCESS_DENIED: "Vous n'êtes pas autorisé à modifier cette famille.",
+  COORDINATOR_CHANGE_FORBIDDEN: "Vous n'êtes pas autorisé à changer le coordinateur de cette famille.",
+  INTERNAL_ERROR: "Une erreur est survenue. Veuillez réessayer plus tard.",
+};
+
+// Traduit une erreur DRF générique
+function translateFieldError(message) {
+  if (typeof message !== "string") return message;
+
+  if (message.includes("no more than 2 decimal places")) {
+    return "Ne doit pas contenir plus de 2 chiffres après la virgule.";
+  }
+  if (message.includes("A valid number is required")) {
+    return "Veuillez entrer un nombre valide.";
+  }
+  if (message.includes("This field may not be blank")) {
+    return "Ce champ ne peut pas être vide.";
+  }
+  if (message.includes("This field is required")) {
+    return "Ce champ est requis.";
+  }
+  return message;
 }
 
+// Extrait récursivement les messages d'erreur d'un objet de validation DRF
+function collectFieldErrors(data, parentLabel = "") {
+  const messages = [];
+
+  for (const [key, value] of Object.entries(data)) {
+    const label = FIELD_LABELS[key] || key;
+    const fullLabel = parentLabel ? `${parentLabel} > ${label}` : label;
+
+    if (Array.isArray(value)) {
+      value.forEach((msg) => {
+        messages.push(`${fullLabel} : ${translateFieldError(msg)}`);
+      });
+    } else if (value && typeof value === "object") {
+      messages.push(...collectFieldErrors(value, fullLabel));
+    } else if (typeof value === "string") {
+      messages.push(`${fullLabel} : ${translateFieldError(value)}`);
+    }
+  }
+
+  return messages;
+}
+
+function getErrorMessage(err) {
+  if (!err?.response) {
+    return "Erreur réseau. Vérifiez votre connexion.";
+  }
+
+  const { status, data } = err.response;
+
+  if (status >= 500) {
+    return ERROR_CODE_MESSAGES.INTERNAL_ERROR;
+  }
+
+  if (!data) {
+    return "Une erreur est survenue.";
+  }
+
+  if (data.code && ERROR_CODE_MESSAGES[data.code]) {
+    return ERROR_CODE_MESSAGES[data.code];
+  }
+
+  if (typeof data.detail === "string") {
+    return data.detail;
+  }
+
+  if (typeof data === "object") {
+    const fieldErrors = collectFieldErrors(data);
+    if (fieldErrors.length > 0) {
+      return fieldErrors.slice(0, 3).join(" | ");
+    }
+    return "Certains champs sont invalides.";
+  }
+
+  return "Une erreur est survenue.";
+}
 const STATUT_BEBE = {
   normale: { text: "Bébé normal", type: "mereNormal" },
   mam: { text: "MAM nourrisson", type: "mam" },
