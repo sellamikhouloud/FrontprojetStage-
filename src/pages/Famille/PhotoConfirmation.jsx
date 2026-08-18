@@ -354,7 +354,10 @@ useEffect(() => {
     try {
       const { data } = await listCoordinateurs();
 
-      const mapped = data.map((c) => ({
+      // On ne garde que les coordinateurs actifs
+      const activeOnly = data.filter((c) => c.is_active);
+
+      const mapped = activeOnly.map((c) => ({
         id: c.id,
         name: `${c.prenom} ${c.nom}`,
         code: c.id,
