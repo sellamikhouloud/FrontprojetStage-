@@ -72,7 +72,7 @@ function App() {
          <Route
           path="/ajout-coordinateur" element={<AjoutCoordinateur />}
         />
-        <Route  path="/fiche-coordinateur"  element={<ModifierCoordinateur />} />
+        <Route path="/fiche-coordinateur/:id" element={<ModifierCoordinateur />} />
 
          {/* Donateur */}
          <Route
