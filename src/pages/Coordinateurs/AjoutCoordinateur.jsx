@@ -24,7 +24,6 @@ export default function AjoutCoordinateur() {
   const navigate = useNavigate();
   const [createdCoordinatorId, setCreatedCoordinatorId] = useState(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
-
   const [username, setUsername] = useState("");
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
