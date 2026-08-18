@@ -3,7 +3,7 @@ import Location3 from "../../assets/Location3.svg";
 
 const CardCoordinateur = ({
   name,
-  code,
+ 
   village,
   familles,
   status = "Actif",
@@ -26,9 +26,7 @@ const CardCoordinateur = ({
           </span>
         </div>
 
-        <span className="text-[18px] font-semibold text-[#111827] shrink-0">
-          {code}
-        </span>
+      
       </div>
 
       {/* Deuxième ligne */}
