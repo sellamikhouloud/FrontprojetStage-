@@ -29,6 +29,7 @@ export default function PhotoConfirmation() {
 
   
   const [relecture, setRelecture] = useState("");
+  const [createdFamilleId, setCreatedFamilleId] = useState(null);
   const navigate = useNavigate();
  const {
   formData,
@@ -312,6 +313,7 @@ console.log(
       "✅ Toutes les familles créées :",
       resultats
     );
+    setCreatedFamilleId(resultats[0]?.id ?? null);
 
     setShowPopup(true);
 
@@ -617,10 +619,10 @@ useEffect(() => {
   <Popup
     title="Enregistrer avec succès"
     image={successImage}
-    id="GDK-2026-003"
+    id={createdFamilleId}
     primaryButtonText="Voir la fiche de la famille"
     secondaryButtonText="Revenir à l'accueil"
-    onPrimaryClick={() => navigate("/famille/1")}
+    onPrimaryClick={() => navigate(`/famille/${createdFamilleId}`)}
     onSecondaryClick={() => navigate("/dashboard")}
   />
 )}
