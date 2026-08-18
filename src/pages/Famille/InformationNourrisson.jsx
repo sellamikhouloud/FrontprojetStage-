@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
@@ -28,6 +28,32 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
   const total = nourrissons.length;
   const nourrisson = nourrissons[currentIndex] || {};
 
+  useEffect(() => {
+  console.log(
+    `🕵️ [effet date_naissance] index=${currentIndex} valeur actuelle =`,
+    nourrisson.date_naissance
+  );
+
+  if (!nourrisson.date_naissance) {
+    const today = new Date();
+    const formattedDate =
+      `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+    console.log(
+      `📅 [effet date_naissance] valeur vide -> on écrit`,
+      formattedDate,
+      `pour l'index`,
+      currentIndex
+    );
+
+    updateNourrisson(currentIndex, { date_naissance: formattedDate });
+  } else {
+    console.log(
+      `✅ [effet date_naissance] déjà renseignée, on ne touche pas`
+    );
+  }
+}, [currentIndex, nourrisson.date_naissance, updateNourrisson]);
+
   const clearError = (field) => {
     setErrors((prev) => {
       if (!prev[field]) return prev;
@@ -52,6 +78,11 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
     if (!nourrisson.taille_naissance?.trim()) {
       newErrors.taille_naissance = "Veuillez saisir la taille de naissance";
     }
+
+    console.log(
+      `➡️ [handleNext] avant de continuer, nourrisson[${currentIndex}] =`,
+      nourrisson
+    );
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
