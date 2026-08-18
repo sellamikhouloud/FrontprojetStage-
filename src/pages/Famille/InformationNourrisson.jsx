@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader.jsx";
 import DateContainer from "../../components/Containers/DateContainer.jsx";
-import ChoiceContainer from "../../components/Containers/ChoiceContainer.jsx";
+import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import StepIndicator from "../../components/Progress/StepIndicator.jsx";
 import Navigation from "../../components/Navigation,Pageheader/Navigation.jsx";
 import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
@@ -261,7 +261,7 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
 
           {/* Gender */}
           <div className="flex flex-col gap-1">
-            <ChoiceContainer
+            <SelectInput2
               label="Sexe"
               placeholder="Tapez pour choisir le sexe"
               options={[
@@ -269,8 +269,8 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
                 { label: "Féminin", value: "F" },
               ]}
               value={nourrisson.sexe || ""}
-              onChange={(value) => {
-                updateNourrisson(currentIndex, { sexe: value });
+              onChange={(selected) => {
+                updateNourrisson(currentIndex, { sexe: selected.value });
                 clearError("sexe");
               }}
               noPadding
