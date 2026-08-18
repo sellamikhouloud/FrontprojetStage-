@@ -180,7 +180,7 @@ const PopupDetailVisiteModifier = ({
     "-";
 
   const mere =
-    `${famille?.mere?.prenom ?? ""} ${famille?.mere?.nom ?? ""}`.trim() ||
+    `${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`.trim() ||
     "-";
 
  const sexe =
@@ -481,8 +481,8 @@ const statutBadges = [
         
 
           <Card
+           mere={mere}
             enfant={enfant}
-            mere={mere}
             sexe={sexe}
             region={region}
             naissance={dateNaissance}
