@@ -92,16 +92,9 @@ const CardDonateur = ({
           "
         >
           {/* Date d'adhésion */}
-          <span
-            className="
-              text-[15px]
-              font-medium
-              text-[#111827]
-              whitespace-nowrap
-            "
-          >
-            {date}
-          </span>
+         <span className="text-[15px] sm:text-[16px] md:text-[18px] text-[#1E1E1E]">
+          {date}
+        </span>
 
           {/* Créé par */}
           <div
