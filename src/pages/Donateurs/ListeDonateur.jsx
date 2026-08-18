@@ -119,11 +119,8 @@ export default function ListeDonateur() {
   name={`${donateur.nom} ${donateur.prenom}`}
   email={donateur.email}
   date={formatDate(donateur.date_adhesion)}
-  status={
-    donateur.is_active
-      ? "Actif"
-      : "Inactif"
-  }
+  status={donateur.is_active ? "Actif" : "Inactif"}
+  creePar={donateur.cree_par}
 />
               </div>
             ))}
