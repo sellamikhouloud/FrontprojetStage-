@@ -486,14 +486,15 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
                   selectedFamille: {
                     id: famille?.id,
 
+                    mere: famille?.mere
+    ? `${famille.mere.nom || ""} ${famille.mere.prenom || ""}`.trim()
+    : "",
+
                     enfant: famille?.nourrisson
                       ? `${famille.nourrisson.prenom || ""}`.trim()
                       : "",
 
-                    mere: famille?.mere
-                      ? `${famille.mere.prenom || ""} ${famille.mere.nom || ""}`.trim()
-                      : "",
-
+                 
                     sexe:
                       famille?.nourrisson?.sexe === "M"
                         ? "Fils"
