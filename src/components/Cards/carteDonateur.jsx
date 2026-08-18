@@ -2,7 +2,7 @@ const CardDonateur = ({
   name,
   email,
   date,
-  code,
+ 
   status = "Actif",
 }) => {
   return (
@@ -21,9 +21,7 @@ const CardDonateur = ({
           </span>
         </div>
 
-        <span className="text-[18px] font-semibold text-[#111827] shrink-0">
-          {code}
-        </span>
+        
       </div>
 
       {/* Deuxième ligne */}
