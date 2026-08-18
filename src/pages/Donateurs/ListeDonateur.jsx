@@ -32,6 +32,14 @@ export default function ListeDonateur() {
     keepPreviousData: true,
   });
 
+  const formatDate = (date) => {
+  if (!date) return "";
+
+  const [annee, mois, jour] = date.split("-");
+
+  return `${jour}/${mois}/${annee}`;
+};
+
   return (
     <div className="flex h-screen overflow-hidden bg-white">
 
@@ -107,16 +115,16 @@ export default function ListeDonateur() {
                   navigate(`/fiche-donateur/${donateur.id}`)
                 }
               >
-                <CardDonateur
-                  name={`${donateur.nom} ${donateur.prenom}`}
-                  email={donateur.email}
-                  date={donateur.date_adhesion} 
-                  status={
-                    donateur.is_active
-                      ? "Actif"
-                      : "Inactif"
-                  }
-                />
+              <CardDonateur
+  name={`${donateur.nom} ${donateur.prenom}`}
+  email={donateur.email}
+  date={formatDate(donateur.date_adhesion)}
+  status={
+    donateur.is_active
+      ? "Actif"
+      : "Inactif"
+  }
+/>
               </div>
             ))}
           </div>
