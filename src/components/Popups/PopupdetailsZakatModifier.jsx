@@ -209,8 +209,8 @@ const PopupModifierZakat = ({
           {/* Carte */}
 
           <Card
+           mere={mere}
             enfant={enfant}
-            mere={mere}
             sexe={sexe}
             region={region}
             naissance={dateNaissance}
