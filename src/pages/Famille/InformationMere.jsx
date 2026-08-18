@@ -1,10 +1,11 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader.jsx";
 import Input from "../../components/Containers/ContainerEcriture.jsx";
 import DateContainer from "../../components/Containers/DateContainer.jsx";
-import ChoiceContainer from "../../components/Containers/ChoiceContainer";
+import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import StepIndicator from "../../components/Progress/StepIndicator.jsx";
 import Navigation from "../../components/Navigation,Pageheader/Navigation.jsx";
 
@@ -15,6 +16,7 @@ import motherbaby from "../../assets/images/motherbaby.png";
 import { useNavigate } from "react-router-dom";
 import { useFamilyForm } from "../../context/FamilyFormContext";
 import { searchMere } from "../../lib/api/familles";
+import { listVillages } from "../../lib/api/Parametres";
 
 
 export default function InformationMere() {
@@ -25,6 +27,30 @@ export default function InformationMere() {
   const { formData, updateMere, updateFamilyData, setNourrissonsCount } = useFamilyForm();
 
   const mere = formData.mere;
+
+  // Liste réelle des villages (même source que FamiliesPage.jsx)
+  const {
+    data: villagesData,
+    isLoading: villagesLoading,
+    isError: villagesError,
+  } = useQuery({
+    queryKey: ["villages"],
+    queryFn: () => listVillages().then((r) => r.data),
+  });
+
+  const villages = villagesData?.results ?? villagesData ?? [];
+
+  const villageOptions = villages.map((village) => ({
+    label: village.nom,
+    value: village.id,
+  }));
+
+  const situationOptions = [
+    { label: "Mariée", value: "mariee" },
+    { label: "Célibataire", value: "celibataire" },
+    { label: "Divorcée", value: "divorcee" },
+    { label: "Veuve", value: "veuve" },
+  ];
 
   // Efface l'erreur d'un champ précis
   const clearError = (field) => {
@@ -222,25 +248,26 @@ onChange={(date) => {
           </div>
 
           <div className="flex flex-col gap-1">
-  <ChoiceContainer
-  label="Village"
-  placeholder="Tapez pour choisir le village"
-  options={[
-    { label: "Village 1", value: 1 },
-    { label: "Village 2", value: 2 },
-    { label: "Village 3", value: 3 },
-    { label: "Village 4", value: 4 },
-  ]}
-  value={mere.village || ""}
-  onChange={(value) => {
-    updateMere({ village: value });
-    clearError("village");
-  }}
-  noPadding
-/>
-
-  <ErrorMessage message={errors.village} />
-</div>
+            <SelectInput2
+              label="Village"
+              placeholder={
+                villagesLoading
+                  ? "Chargement des villages..."
+                  : "Tapez pour choisir le village"
+              }
+              options={villageOptions}
+              value={mere.village || ""}
+              onChange={(village) => {
+                updateMere({ village: village.value });
+                clearError("village");
+              }}
+              noPadding
+            />
+            <ErrorMessage message={errors.village} />
+            {villagesError && (
+              <ErrorMessage message="Impossible de charger la liste des villages." />
+            )}
+          </div>
 
           <div className="flex flex-col gap-1">
             <Input
@@ -258,24 +285,19 @@ onChange={(e) => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <ChoiceContainer
-  label="Situation familiale"
-  placeholder="Tapez pour choisir le statut matrimonial"
-  options={[
-    { label: "Mariée", value: "mariee" },
-    { label: "Célibataire", value: "celibataire" },
-    { label: "Divorcée", value: "divorcee" },
-    { label: "Veuve", value: "veuve" },
-  ]}
-  value={mere.statut_matrimonial || ""}
-  onChange={(value) => {
-    updateMere({
-      statut_matrimonial: value,
-    });
-    clearError("situation");
-  }}
-  noPadding
-/>
+            <SelectInput2
+              label="Situation familiale"
+              placeholder="Tapez pour choisir le statut matrimonial"
+              options={situationOptions}
+              value={mere.statut_matrimonial || ""}
+              onChange={(selected) => {
+                updateMere({
+                  statut_matrimonial: selected.value,
+                });
+                clearError("situation");
+              }}
+              noPadding
+            />
             <ErrorMessage message={errors.situation} />
           </div>
           <div className="flex flex-col gap-1">
