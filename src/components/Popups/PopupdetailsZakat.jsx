@@ -1,37 +1,95 @@
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
+import TextareaModifier from "../Containers/TextAreaModifier";
 import Card from "../Cards/Card";
-import InfoCard from "../Containers/AfficherContainer";
+import EditableInfoCard from "../Containers/ModifierContainer";
 import Button from "../Button/Button";
-
+import SuccessBanner from "./SuccessBanner";
 import quitter from "../../assets/quitter.svg";
-import EditIcon from "../../assets/Container.svg";
 
-const PopupDetailZakat = ({
+const PopupModifierZakat = ({
   open,
   onClose,
   zakat,
   famille,
-  onEdit,
+  onSave,
 }) => {
+  const [infos, setInfos] = useState([]);
+  const [observations, setObservations] = useState("");
+  const [cause, setCause] = useState("");
+  const [precisions, setPrecisions] = useState("");
+  const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    if (!zakat) return;
+
+    setInfos([
+      {
+        label: "Date",
+        value: zakat.date_versement
+          ? new Date(zakat.date_versement)
+          : null,
+        type: "date",
+      },
+      {
+        label: "Zakat n°",
+        value: zakat.numero_zakat ?? "-",
+        editable: false,
+      },
+      {
+        label: "Montant versé",
+        value: zakat.montant ?? "",
+        type: "number",
+        unit: "MRU",
+      },
+      {
+        label: "Mode de paiement",
+        value: zakat.mode_remise ?? "",
+        options: [
+          "Espèces",
+          "Bankily",
+          "Masrivi",
+          "Chèque",
+        ],
+      },
+      {
+        label: "Enregistrée par",
+        value: zakat.cree_par?.nom || "-",
+        editable: false,
+      },
+
+        {
+        label: "Date d'enregistrement",
+        value: zakat.date_creation
+          ? new Date(zakat.date_creation).toLocaleDateString("fr-FR")
+          : "-",
+        editable: false,
+      },
+      {
+        label: "Modifié par",
+        value: zakat.modifie_par?.nom || "-",
+        editable: false,
+      },
+      {
+        label: "Date de modification",
+        value: zakat.date_modification
+          ? new Date(zakat.date_modification).toLocaleDateString("fr-FR")
+          : "-",
+        editable: false,
+      },
+    ]);
+
+    setObservations(zakat.observation || "");
+    setCause(zakat.cause_principale || "");
+    setPrecisions(zakat.precisions || "");
+  }, [zakat]);
+
   if (!open || !zakat) return null;
-
-  const formatDate = (date) => {
-    if (!date) return "-";
-
-    const parsedDate = new Date(date);
-
-    if (isNaN(parsedDate.getTime())) {
-      return date;
-    }
-
-    return parsedDate.toLocaleDateString("fr-FR");
-  };
 
   const enfant = famille?.enfant_prenom || "-";
   const mere = famille?.mere_nom || "-";
 
- const sexe =
+  const sexe =
   famille?.enfant_sexe === "M"
     ? "Fils"
     : famille?.enfant_sexe === "F"
@@ -39,22 +97,55 @@ const PopupDetailZakat = ({
     : "-";
 
   const region = famille?.village || "-";
-  const dateNaissance = formatDate(famille?.enfant_date_naissance);
+
+  const dateNaissance = famille?.enfant_date_naissance
+    ? new Date(famille.enfant_date_naissance).toLocaleDateString("fr-FR")
+    : "-";
+
   const code = zakat.famille || "-";
 
-  const numeroZakat = zakat.numero_zakat ?? "-";
-  const dateVersement = formatDate(zakat.date_versement);
-  const dateCreation = formatDate(zakat.date_creation);
-  const dateModification = formatDate(zakat.date_modification);
+  const handleChange = (index, value) => {
+    setInfos((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? { ...item, value }
+          : item
+      )
+    );
+  };
+
+  const handleSave = () => {
+    const updatedZakat = {
+      ...zakat,
+
+      date_versement: infos[0]?.value,
+      numero_zakat: infos[1]?.value,
+      montant: infos[2]?.value,
+      mode_remise: infos[3]?.value,
+
+      observation: observations,
+      cause_principale: cause,
+      precisions,
+    };
+
+    setShowBanner(true);
+
+    setTimeout(() => {
+      setShowBanner(false);
+
+      onSave?.(updatedZakat);
+
+      onClose();
+    }, 1500);
+  };
 
   return (
     <AnimatePresence>
       <div
         className="
-          fixed inset-0 z-[60]
+          fixed inset-0 z-[70]
           bg-transparent sm:bg-black/40
-          flex items-start sm:items-center
-          justify-center
+          flex items-start sm:items-center justify-center
           overflow-y-auto
         "
         onClick={onClose}
@@ -68,16 +159,22 @@ const PopupDetailZakat = ({
           className="
             w-full
             min-h-screen
+
             sm:min-h-0
             sm:w-[952px]
             sm:max-h-[90vh]
+
             overflow-y-auto
             scrollbar-hide
+
             bg-white
+
             rounded-none
             sm:rounded-[20px]
+
             border-0
             sm:border
+
             p-4
             sm:p-6
           "
@@ -85,43 +182,35 @@ const PopupDetailZakat = ({
             borderColor: "#4E9F8A",
           }}
         >
-          {/* HEADER */}
+          {/* Header */}
+
           <div className="mb-4">
+
             <button
               onClick={onClose}
-              className="
-                flex
-                items-center
-                gap-2
-                text-[17px]
-                text-[#202124]
-              "
+              className="flex items-center gap-2 text-[17px]"
             >
               <img
                 src={quitter}
-                alt="Fermer"
+                alt=""
                 className="w-5 h-5"
               />
 
-              Fermer
+              Annuler
+
             </button>
 
-            <h2
-              className="
-                mt-3
-                text-center
-                text-[20px]
-                font-bold
-              "
-            >
-              Détail du Zakat n°{numeroZakat}
+            <h2 className="mt-3 text-center text-[22px] font-bold">
+              Détail du zakat {zakat.numero_zakat}
             </h2>
+
           </div>
 
-          {/* CARTE FAMILLE */}
+          {/* Carte */}
+
           <Card
+           mere={mere}
             enfant={enfant}
-            mere={mere}
             sexe={sexe}
             region={region}
             naissance={dateNaissance}
@@ -129,144 +218,75 @@ const PopupDetailZakat = ({
             badges={[]}
           />
 
-          {/* CONTENU */}
-          <div
-            className="
-              grid
-              grid-cols-1
-              sm:grid-cols-[58%_40%]
-              gap-5
-              mt-4
-            "
-          >
-            {/* ======================
-                COLONNE GAUCHE
-            ====================== */}
+          <div className="grid grid-cols-1 sm:grid-cols-[58%_40%] gap-5 mt-4">
+            {/* Colonne gauche */}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
 
-              <InfoCard
+              <EditableInfoCard
                 title="Informations générales"
-                data={[
-                  {
-                    label: "Date",
-                    value: dateVersement,
-                  },
-                  {
-                    label: "Zakat n°",
-                    value: `${numeroZakat}`,
-                  },
-                  {
-                    label: "Montant versé",
-                    value: (
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold">
-                          {zakat.montant ?? "0"} MRU
-                        </span>
-
-                        <span className="text-[12px] text-[#8A8A8A]">
-                          ≈ {zakat.montant_eur ?? "0"} EUR
-                        </span>
-                      </div>
-                    ),
-                  },
-                  {
-                    label: "Mode de paiement",
-                    value: zakat.mode_remise ?? "-",
-                  },
-                  {
-                    label: "Enregistrée par",
-                    value: zakat.cree_par?.nom || "-",
-                  },
-                  {
-                    label: "Date d'enregistrement",
-                    value: dateCreation,
-                  },
-                  {
-                    label: "Modifié par",
-                    value: zakat.modifie_par?.nom || "-",
-                  },
-                  {
-                    label: "Date de modification",
-                    value: dateModification,
-                  },
-                ]}
+                data={infos}
+                editable={true}
+                onChange={handleChange}
               />
 
-              <InfoCard
-                title="Observations complémentaires"
-                text={zakat.observation || "-"}
-                textHeight="90px"
+              <TextareaModifier
+                label="Observations complémentaires"
+                value={observations}
+                onChange={(e) => setObservations(e.target.value)}
+                height="h-[60px]"
               />
 
             </div>
 
-            {/* ======================
-                COLONNE DROITE
-            ====================== */}
+            {/* Colonne droite */}
 
-            <div className="space-y-3">
+            <div className="space-y-4">
 
               <h2 className="text-[18px] font-semibold">
                 Motif de sélection
               </h2>
 
-            
-              <div>
-                <p className="text-[#4E9F8A] font-medium mb-2">
-                  Cause principale :
-                </p>
-
-                <div
-                  className="
-                    border
-                    border-[#84D6D0]
-                    rounded-[15px]
-                    px-4
-                    py-3
-                  "
-                >
-                  {zakat.cause_principale || "-"}
-                </div>
-              </div>
-
-           
-              <div>
-                <p className="text-[#4E9F8A] font-medium mb-2">
-                  Précisions :
-                </p>
-
-                <div
-                  className="
-                    border
-                    border-[#84D6D0]
-                    rounded-[15px]
-                    px-4
-                    py-3
-                    h-[86px]
-                  "
-                >
-                  <p className="text-[#7B7B7B]">
-                    {zakat.precisions || "-"}
-                  </p>
-                </div>
-              </div>
-
-             
-              <Button
-                title="Modifier"
-                variant="modifier"
-                icon={EditIcon}
-                noWrapperPadding
-                onClick={() => onEdit?.(zakat)}
+              <TextareaModifier
+                label="Cause principale :"
+                value={cause}
+                onChange={(e) => setCause(e.target.value)}
+                placeholder="Saisir la cause principale"
+                height="h-[60px]"
               />
 
+              <TextareaModifier
+                label="Précisions :"
+                value={precisions}
+                onChange={(e) => setPrecisions(e.target.value)}
+                height="h-[80px]"
+              />
+
+              <div className="mt-4">
+
+                {showBanner && (
+                  <SuccessBanner text="Enregistré avec succès" />
+                )}
+
+                <Button
+                  title="Enregistrer"
+                  variant="modifier"
+                  noWrapperPadding
+                  onClick={handleSave}
+                />
+
+              </div>
             </div>
+
           </div>
+
         </motion.div>
+
       </div>
+
     </AnimatePresence>
+
   );
 };
 
-export default PopupDetailZakat;
+export default PopupModifierZakat;
