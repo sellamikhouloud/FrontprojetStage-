@@ -232,8 +232,9 @@ const statutBadges = [
 
           {/* Carte famille */}
           <Card
+           mere={`${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`}
             enfant={famille?.nourrisson?.prenom}
-            mere={`${famille?.mere?.prenom ?? ""} ${famille?.mere?.nom ?? ""}`}
+          
            sexe={
   famille?.nourrisson?.sexe === "M"
     ? "Fils"
