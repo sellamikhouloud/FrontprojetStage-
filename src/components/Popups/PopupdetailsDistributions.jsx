@@ -122,10 +122,8 @@ const PopupDetailDistribution = ({
 
           {/* Carte famille */}
           <Card
-            enfant={famille?.nourrisson?.prenom}
-            mere={`${famille?.mere?.prenom ?? ""} ${
-              famille?.mere?.nom ?? ""
-            }`}
+            mere={`${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`.trim()}
+  enfant={famille?.nourrisson?.prenom ?? "-"}
           sexe={
   famille?.nourrisson?.sexe === "M"
     ? "Fils"
