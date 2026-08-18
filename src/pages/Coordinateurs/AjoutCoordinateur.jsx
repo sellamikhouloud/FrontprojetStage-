@@ -20,10 +20,13 @@ import SuccessImage from "../../assets/Success.svg";
 import { createUser } from "../../lib/api/coordinateurs";
 import { listVillages } from "../../lib/api/Parametres";
 
+// probleme d email
+
 export default function AjoutCoordinateur() {
   const navigate = useNavigate();
   const [createdCoordinatorId, setCreatedCoordinatorId] = useState(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
   const [username, setUsername] = useState("");
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
