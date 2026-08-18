@@ -8,6 +8,7 @@ import CardCoordinateur from "../../components/Cards/carteCoordinateur";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NoResultImage from "../../assets/no result picture.svg";
 import { listCoordinateurs } from "../../lib/api/coordinateurs";
+import Spinner from "../../components/Spinner";
 
 export default function ListeCoordinateurs() {
   const navigate = useNavigate();
@@ -18,9 +19,6 @@ export default function ListeCoordinateurs() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Chargement de la liste réelle des coordinateurs depuis l'API.
-  // On ne filtre PAS sur le statut ici : on affiche Actifs ET Inactifs,
-  // exactement comme dans la popup PopupListeCoordinateurs (PhotoConfirmation.jsx).
   useEffect(() => {
     let cancelled = false;
 
@@ -34,7 +32,7 @@ export default function ListeCoordinateurs() {
         const mapped = data.map((c) => ({
           id: c.id,
           name: `${c.prenom} ${c.nom}`,
-          code: c.id,
+         
           village: c.village?.nom || "",
           familles: c.nb_familles ?? 0,
           status: c.is_active ? "Actif" : "Inactif",
@@ -71,18 +69,17 @@ export default function ListeCoordinateurs() {
     if (!keyword) return true;
 
     return (
-      item.name.toLowerCase().includes(keyword) ||
-      String(item.code).toLowerCase().includes(keyword) ||
-      item.village.toLowerCase().includes(keyword) ||
-      item.familles.toString().includes(keyword) ||
-      item.status.toLowerCase() === keyword
-    );
+  item.name.toLowerCase().includes(keyword) ||
+  item.village.toLowerCase().includes(keyword) ||
+  item.familles.toString().includes(keyword) ||
+  item.status.toLowerCase() === keyword
+);
   });
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
-      <Sidebar role="admin" />
+      <Sidebar  />
 
       {/* Contenu */}
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
@@ -109,11 +106,11 @@ export default function ListeCoordinateurs() {
           />
         </div>
 
-        {loading && (
-          <div className="flex-1 flex items-center justify-center py-10 md:py-20">
-            <p className="text-gray-500">Chargement des coordinateurs...</p>
-          </div>
-        )}
+      {loading && (
+  <div className="flex-1 flex items-center justify-center py-10 md:py-20">
+    <Spinner />
+  </div>
+)}
 
         {!loading && error && (
           <div className="flex-1 flex items-center justify-center py-10 md:py-20">
@@ -143,7 +140,7 @@ export default function ListeCoordinateurs() {
                   name={coordinateur.name}
                   village={coordinateur.village}
                   familles={coordinateur.familles}
-                  code={coordinateur.code}
+                 
                   status={coordinateur.status}
                 />
               </div>
