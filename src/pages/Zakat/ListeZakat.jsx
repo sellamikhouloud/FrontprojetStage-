@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { listAidesZakat } from "@/lib/api/zakat";
-import { useQuery } from "@tanstack/react-query";
+import { listAidesZakat ,createVersementSolde } from "@/lib/api/zakat";
+import { useQuery ,useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -28,6 +28,7 @@ export default function ZakatPage() {
 
   const navigate = useNavigate();
 
+const queryClient = useQueryClient();
  
   const causePrincipaleOptions = [
     { value: "veuvage", label: "Veuvage" },
@@ -107,11 +108,34 @@ export default function ZakatPage() {
       )}
     </div>
   );
+const handleAlimenterSolde = async (data) => {
+  try {
+    const response = await createVersementSolde(data);
 
+    console.log("Versement solde créé :", response.data);
+
+   
+    await queryClient.invalidateQueries({
+      queryKey: ["versements-solde"],
+    });
+
+    return response.data;
+
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'alimentation du solde :",
+      error.response?.data || error
+    );
+
+    // Permet au PopupAlimenterSolde de savoir que l'API a échoué
+    throw error;
+  }
+};
   const [selectedZakat, setSelectedZakat] = useState(null);
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
   const [openAlimenterSolde, setOpenAlimenterSolde] = useState(false);
+  const [isSavingSolde, setIsSavingSolde] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -350,13 +374,10 @@ export default function ZakatPage() {
       />
 
       <PopupAlimenterSolde
-        open={openAlimenterSolde}
-        onClose={() => setOpenAlimenterSolde(false)}
-        onSave={(data) => {
-          console.log(data);
-          setOpenAlimenterSolde(false);
-        }}
-      />
+  open={openAlimenterSolde}
+  onClose={() => setOpenAlimenterSolde(false)}
+  onSave={handleAlimenterSolde}
+/>
 
       <PopupHistoriqueVersements
         open={showHistoriqueVersements}
