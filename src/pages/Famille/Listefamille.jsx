@@ -512,6 +512,7 @@ if  (isFilterOpen && isMobile)  {
 >
  <CardPopup
   mere={`${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`}
+   enfant={famille.nourrisson?.prenom}
  sexe={
   famille?.nourrisson?.sexe === "M"
     ? "Fils"
