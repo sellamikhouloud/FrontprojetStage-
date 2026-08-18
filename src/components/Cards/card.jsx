@@ -53,7 +53,7 @@ const Card = ({
               leading-tight
             "
           >
-            {enfant}
+            {mere}
           </h2>
 
           <p
@@ -65,7 +65,7 @@ const Card = ({
               text-[#222]
             "
           >
-            {mere}
+            {enfant}
           </p>
 
           <div
