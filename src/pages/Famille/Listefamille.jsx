@@ -437,8 +437,9 @@ if  (isFilterOpen && isMobile)  {
   }
 >
   <Card
+   mere={`${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`}
   enfant={famille.nourrisson?.prenom}
-  mere={`${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`}
+  
   sexe={
   famille?.nourrisson?.sexe === "M"
     ? "Fils"
@@ -510,7 +511,7 @@ if  (isFilterOpen && isMobile)  {
   }
 >
  <CardPopup
-  enfant={famille.nourrisson?.prenom}
+  mere={`${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`}
  sexe={
   famille?.nourrisson?.sexe === "M"
     ? "Fils"
