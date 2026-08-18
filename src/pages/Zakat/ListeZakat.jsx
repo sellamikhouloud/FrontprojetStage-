@@ -1,6 +1,5 @@
-import { useState } from "react";
-import { useEffect } from "react";
-import { listAidesZakat } from  "@/lib/api/zakat";
+import { useState, useEffect } from "react";
+import { listAidesZakat } from "@/lib/api/zakat";
 import { useQuery } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -9,12 +8,13 @@ import SearchBar from "../../components/Filter/Searchbar";
 import Button from "../../components/Button/Button";
 import FilterTag from "../../components/Filter/FilterTag";
 import CardListZakat from "../../components/Cards/CarteListeZakat";
-import SelectInput  from "../../components/Containers/ChoiceContainer";
+import SelectInput2 from "../../components/Containers/ChoiceContainer2";
+import DateSelect from "../../components/Containers/DateSelect.jsx";
 import PopupDetailZakat from "../../components/Popups/PopupdetailsZakat";
 import PopupModifierZakat from "../../components/Popups/PopupdetailsZakatModifier";
-import  PopupAlimenterSolde from "../../components/Popups/PopupAlimenterSolde";
-import  SoldeCard from "../../components/Cards/SoldeCard";
-import  RepartitionAides from "../../components/Cards/RepartitionAides";
+import PopupAlimenterSolde from "../../components/Popups/PopupAlimenterSolde";
+import SoldeCard from "../../components/Cards/SoldeCard";
+import RepartitionAides from "../../components/Cards/RepartitionAides";
 import NoResultImage from "../../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
@@ -25,570 +25,344 @@ export default function ZakatPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
   const [showHistoriqueVersements, setShowHistoriqueVersements] = useState(false);
- 
 
   const navigate = useNavigate();
-const [filters, setFilters] = useState({
-  motif: "",
+
  
-});
+  const causePrincipaleOptions = [
+    { value: "veuvage", label: "Veuvage" },
+    { value: "urgence", label: "Situation d'urgence" },
+    { value: "vulnerabilite", label: "Vulnérabilité extrême" },
+    { value: "autre", label: "Autre" },
+  ];
 
-const [appliedFilters, setAppliedFilters] = useState({
-  motif: "",
   
-});
-const motifOptions = [
-  "Veuvage",
-  "Situation d'urgence",
-  "Vulnérabilité extreme",
-  "Autre",
-];
+  const [filters, setFilters] = useState({
+    causePrincipale: "",
+    dateVersement: null,
+  });
 
+  const [appliedFilters, setAppliedFilters] = useState({
+    causePrincipale: "",
+    dateVersement: null,
+  });
 
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["zakats", appliedFilters],
+  // Le backend attend  JJ/MM/AAAA (pas de format ISO, pas d'objet Date brut)
+  function formatDateJJMMAAAA(date) {
+    if (!date) return undefined;
+    const d = String(date.getDate()).padStart(2, "0");
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const y = date.getFullYear();
+    return `${d}/${m}/${y}`;
+  }
 
+ 
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["zakats", search, appliedFilters],
     queryFn: () =>
       listAidesZakat({
-        ...appliedFilters,
+        search: search || undefined,
+        cause_principale: appliedFilters.causePrincipale || undefined,
+        date_versement: appliedFilters.dateVersement
+          ? formatDateJJMMAAAA(appliedFilters.dateVersement)
+          : undefined,
       }).then((response) => response.data),
   });
 
-
   const zakats = data?.results ?? data ?? [];
 
-const versements = [
-  {
-    id: 1,
-    date: "04/08/2026",
-    commentaire: "Ce mantant était a cause de l'aid",
-    montantMRU: 100,
-    montantEUR: 47,
-  },
-  {
-    id: 2,
-    date: "04/08/2026",
-    commentaire: "",
-    montantMRU: 100,
-    montantEUR: 47,
-  },
-  {
-    id: 3,
-    date: "04/08/2027",
-    commentaire: "",
-    montantMRU: 23000,
-    montantEUR: 4744,
-    commentaire: "Ce mantant était a cause de l'aid",
-  },
-  {
-    id: 4,
-    date: "04/04/2027",
-    commentaire: "",
-    montantMRU: 500,
-    montantEUR: 25,
-  },
-  {
-    id: 5,
-    date: "04/04/2027",
-    commentaire: "",
-    montantMRU: 500,
-    montantEUR: 25,
-  },
-  {
-    id: 6,
-    date: "04/04/2027",
-    commentaire: "",
-    montantMRU: 500,
-    montantEUR: 25,
-  },
-  {
-    id: 7,
-    date: "04/04/2027",
-    commentaire: "",
-    montantMRU: 500,
-    montantEUR: 25,
-  },
-  // ...
-];
+  const versements = [
+    { id: 1, date: "04/08/2026", commentaire: "Ce mantant était a cause de l'aid", montantMRU: 100, montantEUR: 47 },
+    { id: 2, date: "04/08/2026", commentaire: "", montantMRU: 100, montantEUR: 47 },
+    { id: 3, date: "04/08/2027", montantMRU: 23000, montantEUR: 4744, commentaire: "Ce mantant était a cause de l'aid" },
+    { id: 4, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
+    { id: 5, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
+    { id: 6, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
+    { id: 7, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
+  ];
 
- const filteredZakats = zakats.filter((item) => {
-    const keyword = search.trim().toLowerCase();
+  const causePrincipaleLabel = (value) =>
+    causePrincipaleOptions.find((o) => o.value === value)?.label ?? value;
 
-    if (!keyword) {
-      return true;
-    }
-
-    const famille = item.famille_info ?? {};
-
-    const nomEnfant =
-      famille.enfant_prenom?.toLowerCase() ?? "";
-
-    const nomMere =
-      famille.mere_nom?.toLowerCase() ?? "";
-
-    const codeFamille =
-      item.famille?.toLowerCase() ?? "";
-
-    const numeroZakat =
-      String(item.numero_zakat ?? "").toLowerCase();
-
-    const cause =
-      item.cause_principale?.toLowerCase() ?? "";
-
-    const date =
-      item.date_versement?.toLowerCase() ?? "";
-
-    const montant =
-      String(item.montant ?? "").toLowerCase();
-
-
-    return (
-      nomEnfant.includes(keyword) ||
-      nomMere.includes(keyword) ||
-      codeFamille.includes(keyword) ||
-      numeroZakat.includes(keyword) ||
-      cause.includes(keyword) ||
-      date.includes(keyword) ||
-      montant.includes(keyword)
-    );
-  });
- 
-  
-
- 
-
- const filterTagsContent = (
+  const filterTagsContent = (
     <div className="flex flex-wrap gap-2 my-4">
-
-      {appliedFilters.motif && (
+      {appliedFilters.causePrincipale && (
         <FilterTag
-          text={`Motif : ${appliedFilters.motif}`}
+          text={`Cause : ${causePrincipaleLabel(appliedFilters.causePrincipale)}`}
           onRemove={() => {
-            setAppliedFilters((prev) => ({
-              ...prev,
-              motif: "",
-            }));
-
-            setFilters((prev) => ({
-              ...prev,
-              motif: "",
-            }));
+            setAppliedFilters((prev) => ({ ...prev, causePrincipale: "" }));
+            setFilters((prev) => ({ ...prev, causePrincipale: "" }));
           }}
         />
       )}
 
+      {appliedFilters.dateVersement && (
+        <FilterTag
+          text={`Date : ${appliedFilters.dateVersement.toLocaleDateString("fr-FR")}`}
+          onRemove={() => {
+            setAppliedFilters((prev) => ({ ...prev, dateVersement: null }));
+            setFilters((prev) => ({ ...prev, dateVersement: null }));
+          }}
+        />
+      )}
     </div>
   );
 
-const [selectedZakat, setSelectedZakat] = useState(null);
-const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [selectedZakat, setSelectedZakat] = useState(null);
+  const [showDetailPopup, setShowDetailPopup] = useState(false);
+  const [openModifier, setOpenModifier] = useState(false);
+  const [openAlimenterSolde, setOpenAlimenterSolde] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
-const [openModifier, setOpenModifier] = useState(false);
- const [openAlimenterSolde, setOpenAlimenterSolde] = useState(false);
-const [isMobile, setIsMobile] = useState(
-  window.innerWidth < 768
-);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-useEffect(() => {
-  const handleResize = () => {
-    setIsMobile(window.innerWidth < 768);
-  };
-
-  window.addEventListener("resize", handleResize);
-
-  return () =>
-    window.removeEventListener(
-      "resize",
-      handleResize
-    );
-}, []);
- const filtersContent = (
+  const filtersContent = (
     <div className="space-y-4">
-
       <div className="w-full">
-
-        <SelectInput
-          label="Motif"
-          placeholder="Tapez pour choisir la cause principale"
-          value={filters.motif}
-          options={motifOptions}
+        <SelectInput2
+          label="Cause principale"
+          placeholder="Toutes les causes"
+          options={causePrincipaleOptions}
+          value={filters.causePrincipale}
+          onChange={(option) =>
+            setFilters((prev) => ({ ...prev, causePrincipale: option.value }))
+          }
           noPadding
-
-          onChange={(value) => {
-            setFilters((prev) => ({
-              ...prev,
-              motif: value,
-            }));
-          }}
         />
-
       </div>
 
-
-      {/* FILTRER */}
+      <DateSelect
+        placeholder="Tapez pour choisir la date de versement"
+        value={filters.dateVersement}
+        onChange={(date) => setFilters((prev) => ({ ...prev, dateVersement: date }))}
+      />
 
       <div className="mt-3 space-y-2">
-
         <Button
           title="Filtrer"
           variant="filter"
           noPadding
-
           onClick={() => {
             setAppliedFilters(filters);
             setIsFilterOpen(false);
           }}
         />
 
-
-        {/* ANNULER */}
-
         <Button
           title="Annuler les filtres"
           variant="outline"
           noPadding
-
           onClick={() => {
-
-            const emptyFilters = {
-              motif: "",
-            };
-
-            setFilters(emptyFilters);
-
-            setAppliedFilters(emptyFilters);
+            const empty = { causePrincipale: "", dateVersement: null };
+            setFilters(empty);
+            setAppliedFilters(empty);
           }}
         />
-
-      </div>
-
-    </div>
-  );
-
-if (isFilterOpen && isMobile) {
-  return (
-    <div className="min-h-screen bg-white p-6 md:hidden">
-      <PageHeader
-        leftTitle="Revenir"
-        showRight={false}
-        onBack={() => setIsFilterOpen(false)}
-      />
-
-      <div className="mt-6">
-        <SearchBar
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onFilterClick={() => {}}
-          maxWidth="max-w-full"
-        />
-      </div>
-
-    {appliedFilters.motif && filterTagsContent}
-
-      <div className="mt-6">
-        {filtersContent}
       </div>
     </div>
   );
-}
 
- if (isLoading) {
-
+  if (isFilterOpen && isMobile) {
     return (
-      <div className="min-h-screen grid place-items-center">
+      <div className="min-h-screen bg-white p-6 md:hidden">
+        <PageHeader leftTitle="Revenir" showRight={false} onBack={() => setIsFilterOpen(false)} />
 
-        <Spinner />
+        <div className="mt-6">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onFilterClick={() => {}}
+            maxWidth="max-w-full"
+          />
+        </div>
 
+        {(appliedFilters.causePrincipale || appliedFilters.dateVersement) && filterTagsContent}
+
+        <div className="mt-6">{filtersContent}</div>
       </div>
     );
   }
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen grid place-items-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
+      <Sidebar />
 
-      <Sidebar  />
+      <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+        <div className="h-full overflow-y-auto px-5 pt-18 md:pt-0 lg:p-8 pb-[50px]">
+          <NavigationHeader
+            title="Statistiques des zakats"
+            type="historique"
+            actionTitle="Voir l'historique des versements"
+            onAction={() => setShowHistoriqueVersements(true)}
+            secondType="add"
+            secondActionTitle="Alimenter le solde"
+            onSecondAction={() => setOpenAlimenterSolde(true)}
+          />
 
-       <main
-      className="
-        relative
-        flex-1
-        min-h-0
-        overflow-hidden
-        bg-white
-      "
-    >
-        <div
-    className="
-      h-full
-      overflow-y-auto
-      px-5
-      pt-18
-      md:pt-0
-      lg:p-8
-      pb-[50px]
-    "
-  >
-       
-<NavigationHeader
-  title="Statistiques des zakats"
-  type="historique"
-  actionTitle="Voir l'historique des versements"
-  onAction={() => setShowHistoriqueVersements(true)}
-  secondType="add"
-  secondActionTitle="Alimenter le solde"
-  onSecondAction={() => setOpenAlimenterSolde(true)}
-/>
- <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
-  <SoldeCard
-    soldeDisponible="34 000"
-    soldeEnEuros="850"
-    entreesMois="52 000"
-    entreesMoisEnEuros="1 300"
-    sortiesMois="18 000"
-    sortiesMoisEnEuros="450"
-    famillesAidees="12"
-    versementsRealises="35"
-    tauxActuel="0.022"
-  />
+          <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
+            <SoldeCard
+              soldeDisponible="34 000"
+              soldeEnEuros="850"
+              entreesMois="52 000"
+              entreesMoisEnEuros="1 300"
+              sortiesMois="18 000"
+              sortiesMoisEnEuros="450"
+              famillesAidees="12"
+              versementsRealises="35"
+              tauxActuel="0.022"
+            />
 
-  <RepartitionAides
-    data={[
-      { label: "Veuvage", percentage: 45 },
-      { label: "Urgence", percentage: 25 },
-      { label: "Vulnérabilité", percentage: 20 },
-      { label: "Autre", percentage: 10 },
-    ]}
-  />
-</div>
+            <RepartitionAides
+              data={[
+                { label: "Veuvage", percentage: 45 },
+                { label: "Urgence", percentage: 25 },
+                { label: "Vulnérabilité", percentage: 20 },
+                { label: "Autre", percentage: 10 },
+              ]}
+            />
+          </div>
 
-<NavigationHeader
-  title="Liste des Zakat"
+          <NavigationHeader
+            title="Liste des Zakat"
+            type="share"
+            actionTitle="Exporter la liste des Zakat"
+            onAction={() => console.log("Exporter")}
+            secondType="add"
+            secondActionTitle="Ajouter une zakat"
+            onSecondAction={() => navigate("/ajout-zakat")}
+          />
 
-   type="share"
-  actionTitle="Exporter la liste des Zakat"
-  onAction={() => console.log("Exporter")}
-
-  secondType="add"
-  secondActionTitle="Ajouter une zakat"
-  onSecondAction={() => navigate("/ajout-zakat")}
-/>
-        <div className="my-6">
-          <SearchBar
+          <div className="my-6">
+            <SearchBar
               value={search}
-
-              onChange={(e) => {
-                setSearch(e.target.value);
-
-                setIsFilterOpen(false);
-              }}
-
-              onFilterClick={() =>
-                setIsFilterOpen((prev) => !prev)
-              }
-
+              onChange={(e) => setSearch(e.target.value)}
+              onFilterClick={() => setIsFilterOpen((prev) => !prev)}
               maxWidth="max-w-full"
             />
-        </div>
-{appliedFilters.motif && filterTagsContent}
+          </div>
 
-  {isError && (
+          {(appliedFilters.causePrincipale || appliedFilters.dateVersement) && filterTagsContent}
 
-            <div
-              className="
-                text-center
-                text-red-500
-                py-6
-              "
-            >
-
-              <p>
-                Impossible de charger les zakats.
-              </p>
-
-              <button
-                onClick={() => refetch()}
-                className="mt-2 underline"
-              >
+          {isError && (
+            <div className="text-center text-red-500 py-6">
+              <p>Impossible de charger les zakats.</p>
+              <button onClick={() => refetch()} className="mt-2 underline">
                 Réessayer
               </button>
-
             </div>
-
           )}
 
+          {!isError && zakats.length === 0 && (
+            <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
+              <img src={NoResultImage} alt="Aucun résultat" className="w-56 sm:w-72 md:w-96 h-auto" />
+            </div>
+          )}
 
- {!isError &&
-            filteredZakats.length === 0 && (
-  <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
-    <img
-      src={NoResultImage}
-      alt="Aucun résultat"
-      className="w-56 sm:w-72 md:w-96 h-auto"
-    />
-  </div>
-)}
-        <div className="flex gap-6">
+          <div className="flex gap-6">
+            <div className="flex-1 space-y-3">
+              {zakats.map((item, index) => {
+                const famille = item.famille_info ?? {};
+                const nomEnfant = famille.enfant_prenom || "-";
+                const codeFamille = item.famille || "-";
 
-          {/* Liste */}
-
-          <div className="flex-1 space-y-3">
-
-           {filteredZakats.map((item, index) => {
-
-                const famille =
-                  item.famille_info ?? {};
-
-                const nomEnfant =
-                  famille.enfant_prenom || "-";
-
-                const codeFamille =
-                  item.famille || "-";
-
-              const sexe =
-  famille.enfant_sexe === "M" ||
-  famille.enfant_sexe === "Masculin"
-    ? "Garçon"
-    : famille.enfant_sexe === "F" ||
-      famille.enfant_sexe === "Féminin" ||
-      famille.enfant_sexe === "Fille"
-    ? "Fille"
-    : "-";
-
-                const numeroZakat =
-                  item.numero_zakat ?? "-";
-
-                const dateVersement =
-                  item.date_versement
-                    ? new Date(
-                        item.date_versement
-                      ).toLocaleDateString("fr-FR")
+                const sexe =
+                  famille?.enfant_sexe === "M"
+                    ? "Garçon"
+                    : famille?.enfant_sexe === "F"
+                    ? "Fille"
                     : "-";
 
-                const montant =
-                  item.montant ?? "0";
+                const numeroZakat = item.numero_zakat ?? "-";
 
-                const montantEuro =
-                  item.montant_eur ?? "0";
+                const dateVersement = item.date_versement
+                  ? new Date(item.date_versement).toLocaleDateString("fr-FR")
+                  : "-";
 
+                const montant = item.montant ?? "0";
+                const montantEuro = item.montant_eur ?? "0";
 
                 return (
-
                   <CardListZakat
-                    key={
-                      item.id ??
-                      `zakat-${index}`
-                    }
+                    key={item.id ?? `zakat-${index}`}
                     nom={nomEnfant}
-
                     code={codeFamille}
                     sexe={sexe}
                     zakat={`Zakat ${numeroZakat}`}
                     date={dateVersement}
                     montant="Montant"
-
                     valeur={`${montant} MRU / ${montantEuro} Euros`}
                     onClick={() => {
-
                       setSelectedZakat(item);
-
                       setShowDetailPopup(true);
-
                     }}
                   />
-
                 );
               })}
+            </div>
 
-
+            {isFilterOpen && !isMobile && (
+              <div className="w-[320px] shrink-0">{filtersContent}</div>
+            )}
           </div>
-
-          {/* Filtres */}
-{isFilterOpen && !isMobile && (
-  <div className="w-[320px] shrink-0">
-    {filtersContent}
-  </div>
-)}
         </div>
-        </div>
-  <div
-    className="
-      absolute
-      bottom-0
-      left-0
-      right-0
-      h-[15px]
-      bg-white
-      z-20
-    "
-  />
-</main>
-     
-   <PopupDetailZakat
 
+        <div className="absolute bottom-0 left-0 right-0 h-[15px] bg-white z-20" />
+      </main>
+
+      <PopupDetailZakat
         open={showDetailPopup}
         zakat={selectedZakat}
-        famille={
-          selectedZakat?.famille_info
-        }
-        onClose={() => {
-          setShowDetailPopup(false);
-        }}
+        famille={selectedZakat?.famille_info}
+        onClose={() => setShowDetailPopup(false)}
         onEdit={(zakat) => {
           setShowDetailPopup(false);
           setSelectedZakat(zakat);
           setOpenModifier(true);
-
         }}
-
       />
 
       <PopupModifierZakat
-
         open={openModifier}
         zakat={selectedZakat}
-        famille={
-          selectedZakat?.famille_info
-        }
+        famille={selectedZakat?.famille_info}
         onClose={() => {
-  setOpenModifier(false);
+          setOpenModifier(false);
           setShowDetailPopup(true);
-
         }}
         onSave={(updated) => {
-          console.log(
-            "Zakat modifié :",
-            updated
-          );
-
+          console.log("Zakat modifié :", updated);
           setSelectedZakat(updated);
           setOpenModifier(false);
           setShowDetailPopup(true);
-
         }}
-
       />
 
-<PopupAlimenterSolde
-  open={openAlimenterSolde}
-  onClose={() => setOpenAlimenterSolde(false)}
-  onSave={(data) => {
-    console.log(data);
+      <PopupAlimenterSolde
+        open={openAlimenterSolde}
+        onClose={() => setOpenAlimenterSolde(false)}
+        onSave={(data) => {
+          console.log(data);
+          setOpenAlimenterSolde(false);
+        }}
+      />
 
-    setOpenAlimenterSolde(false);
-  }}
-/>
-<PopupHistoriqueVersements
-  open={showHistoriqueVersements}
-  onClose={() => setShowHistoriqueVersements(false)}
-  versements={versements}
-/>
+      <PopupHistoriqueVersements
+        open={showHistoriqueVersements}
+        onClose={() => setShowHistoriqueVersements(false)}
+        versements={versements}
+      />
     </div>
-   
   );
 }
