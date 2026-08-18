@@ -91,8 +91,13 @@ function App() {
         />
 
          <Route
-          path="/liste-distributions" element={<DistributionPage />}
-        />
+  path="/liste-distributions"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+      <DistributionPage />
+    </ProtectedRoute>
+  }
+/>
         {/* Zakat*/}
           <Route
   path="/zakat"
