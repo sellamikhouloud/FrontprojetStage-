@@ -11,6 +11,7 @@ import TimerBlue from "../../assets/Timer.svg";
 
 const CardPopup = ({
   sexe = "Fille",
+  mere,
   enfant,
   region,
   naissance,
@@ -38,7 +39,7 @@ const CardPopup = ({
       className="
         w-full
         rounded-[18px]
-        p-5
+        p-4 sm:p-5
         transition
         hover:shadow-md
       "
@@ -46,22 +47,46 @@ const CardPopup = ({
         background: isGirl ? "#FFF2F5" : "#ECF8F7",
       }}
     >
-      {/* Ligne 1 */}
-
+      {/* Ligne 1 : Mère + Code */}
       <div className="flex items-start justify-between gap-3">
-        <h2
+        <div className="min-w-0 flex-1">
+          {/* Nom + prénom mère */}
+          <h2
+            className="
+              text-[17px]
+              sm:text-[20px]
+              font-bold
+              text-[#1E1E1E]
+              break-words
+            "
+          >
+            {mere}
+          </h2>
+
+          {/* Prénom bébé */}
+          <p
+            className="
+              mt-1
+              text-[15px]
+              sm:text-[17px]
+              font-medium
+              text-[#222]
+              break-words
+            "
+          >
+            {enfant}
+          </p>
+        </div>
+
+        {/* Code */}
+        <span
           className="
-            text-[18px]
+            text-[17px]
             sm:text-[20px]
             font-bold
-            text-[#1E1E1E]
+            whitespace-nowrap
+            shrink-0
           "
-        >
-          {enfant}
-        </h2>
-
-        <span
-          className="text-[18px] sm:text-[20px] font-bold whitespace-nowrap"
           style={{
             color: isGirl ? "#EF4444" : "#528583",
           }}
@@ -71,28 +96,41 @@ const CardPopup = ({
       </div>
 
       {/* Sexe */}
-
       <div className="flex items-center gap-2 mt-2">
         <img
           src={isGirl ? GenderFemale : GenderMale}
-          className="w-4 h-4"
+          className="w-4 h-4 shrink-0"
           alt=""
         />
 
-        <span className="text-[16px]">{sexe}</span>
+        <span className="text-[14px] sm:text-[16px]">
+          {sexe}
+        </span>
       </div>
 
       {/* Région + Date */}
-
-      <div className="flex flex-wrap items-center gap-2 mt-2 text-[16px]">
+      <div
+        className="
+          flex
+          flex-wrap
+          items-center
+          gap-x-2
+          gap-y-1
+          mt-2
+          text-[14px]
+          sm:text-[16px]
+        "
+      >
         <div className="flex items-center gap-1">
           <img
             src={isGirl ? LocationRed : LocationBlue}
-            className="w-4 h-4"
+            className="w-4 h-4 shrink-0"
             alt=""
           />
 
-          {region}
+          <span className="break-words">
+            {region}
+          </span>
         </div>
 
         <span>•</span>
@@ -100,17 +138,18 @@ const CardPopup = ({
         <div className="flex items-center gap-1">
           <img
             src={isGirl ? TimerRed : TimerBlue}
-            className="w-4 h-4"
+            className="w-4 h-4 shrink-0"
             alt=""
           />
 
-          né : {naissance}
+          <span>
+            né : {naissance}
+          </span>
         </div>
       </div>
 
       {/* Deux badges */}
-
-      <div className="grid grid-cols-2 gap-2 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
         {mamBadge && (
           <StatusBadge
             type={mamBadge.type}
@@ -129,7 +168,6 @@ const CardPopup = ({
       </div>
 
       {/* Badge retard */}
-
       {retardBadge && (
         <StatusBadge
           type={retardBadge.type}
