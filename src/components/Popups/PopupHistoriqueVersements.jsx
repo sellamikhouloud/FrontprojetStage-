@@ -7,6 +7,7 @@ export default function PopupHistoriqueVersements({
   open,
   versements = [],
   onClose,
+  onVersementClick,
 }) {
   const [search, setSearch] = useState("");
 
@@ -103,19 +104,24 @@ export default function PopupHistoriqueVersements({
             ) : (
               filtered.map((v) => (
                 <div
-                  key={v.id}
-                  className="
-                    flex flex-col
-                    sm:flex-row sm:items-center sm:justify-between
-                    gap-2 sm:gap-3
-                    rounded-[15px]
-                    border
-                    border-[#E2E8F0]
-                    bg-[#F8FBFC]
-                    px-4
-                    py-2
-                  "
-                >
+  key={v.id}
+  onClick={() => onVersementClick?.(v)}
+  className="
+    flex flex-col
+    sm:flex-row sm:items-center sm:justify-between
+    gap-2 sm:gap-3
+    rounded-[15px]
+    border
+    border-[#E2E8F0]
+    bg-[#F8FBFC]
+    px-4
+    py-2
+
+    cursor-pointer
+    hover:bg-[#F0F7F5]
+    transition
+  "
+>
                   {/* Date + commentaire */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
@@ -163,3 +169,4 @@ export default function PopupHistoriqueVersements({
     </div>
   );
 }
+
