@@ -231,22 +231,21 @@ const laitType = produitLait?.produit?.nom
         distributionAModifier: {
           ...distribution,
 
-             numeroDistribution: distribution.numeroDistribution,
+           
 
           selectedFamille: {
             id: famille?.id,
 
-            enfant: famille?.nourrisson
-              ? `${famille.nourrisson.prenom || ""} ${
-                  famille.nourrisson.nom || ""
-                }`.trim()
-              : "",
+          
 
-            mere: famille?.mere
-              ? `${famille.mere.prenom || ""} ${
-                  famille.mere.nom || ""
-                }`.trim()
-              : "",
+  mere: famille?.mere
+    ? `${famille.mere.nom || ""} ${
+        famille.mere.prenom || ""
+      }`.trim()
+    : "",
+
+      enfant: famille?.nourrisson?.prenom || "",
+
 
             sexe:
   famille?.nourrisson?.sexe === "M"
