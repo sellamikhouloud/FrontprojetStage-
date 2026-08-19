@@ -73,11 +73,11 @@ const {
 
   keepPreviousData: true,
 });
-
-  const distributionsData = Array.isArray(distributionsResponse)
-    ? distributionsResponse
-    : distributionsResponse?.results ||
-      (distributionsResponse ? [distributionsResponse] : []);
+const distributionsData = Array.isArray(distributionsResponse)
+  ? distributionsResponse
+  : Array.isArray(distributionsResponse?.results)
+  ? distributionsResponse.results
+  : [];
 
   // ==================== STOCK (mock, inchangé) ====================
   const [products, setProducts] = useState([
