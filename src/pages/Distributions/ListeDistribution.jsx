@@ -47,24 +47,31 @@ const { user } = useAuth();
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
-
-  
-  const {
+const {
   data: distributionsResponse,
   isLoading: distributionsLoading,
   isError: distributionsError,
   refetch: refetchDistributions,
 } = useQuery({
-  queryKey: ["distributions-list", appliedFilters],
+  queryKey: ["distributions-list", search, appliedFilters],
+
   queryFn: () =>
     listDistributions({
+      // Recherche dans search bar 
+      search: search.trim() || undefined,
+
+      // Filtre date début
       date_debut: appliedFilters.dateDebut
         ? formatDateYYYYMMDD(appliedFilters.dateDebut)
         : undefined,
+
+      // Filtre date fin
       date_fin: appliedFilters.dateFin
         ? formatDateYYYYMMDD(appliedFilters.dateFin)
         : undefined,
     }).then((r) => r.data),
+
+  keepPreviousData: true,
 });
 
   const distributionsData = Array.isArray(distributionsResponse)
@@ -164,36 +171,6 @@ const isAdmin = role === "admin";
   };
 
  
-  const filtered = distributionsData.filter((item) => {
-    const keyword = search.trim().toLowerCase();
-
-    const code = item.famille?.id?.toLowerCase() ?? "";
-    const nomEnfant = item.famille?.nourrisson?.prenom?.toLowerCase() ?? "";
-    const nomMere =
-      `${item.famille?.mere?.prenom ?? ""} ${item.famille?.mere?.nom ?? ""}`
-        .toLowerCase();
-
-    const matchSearch =
-      !keyword ||
-      code.includes(keyword) ||
-       nomMere.includes(keyword);
-    
-
-    
-    const itemDate = item.date_distribution
-      ? new Date(item.date_distribution)
-      : null;
-
-    const matchDateDebut =
-      !appliedFilters.dateDebut ||
-      (itemDate && itemDate >= appliedFilters.dateDebut);
-
-    const matchDateFin =
-      !appliedFilters.dateFin ||
-      (itemDate && itemDate <= appliedFilters.dateFin);
-
-    return matchSearch && matchDateDebut && matchDateFin;
-  });
 
   const [selectedDistribution, setSelectedDistribution] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -396,7 +373,9 @@ const isAdmin = role === "admin";
           </div>
         )}
 
-        {!distributionsLoading && !distributionsError && filtered.length === 0 && (
+      {!distributionsLoading &&
+  !distributionsError &&
+  distributionsData.length === 0 && (
           <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
             <img
               src={NoResultImage}
@@ -410,7 +389,7 @@ const isAdmin = role === "admin";
           <div className="flex gap-6">
             {/* Liste */}
             <div className="flex-1 space-y-3">
-              {filtered.map((item, index) => {
+             {distributionsData.map((item, index) =>  {
                 const merePrenom = item.famille?.mere?.prenom ?? "";
 const mereNom = item.famille?.mere?.nom ?? "";
 const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
@@ -567,3 +546,4 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     </div>
   );
 }
+
