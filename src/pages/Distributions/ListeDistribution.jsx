@@ -353,7 +353,7 @@ const isAdmin = role === "admin";
                 quantity={item.quantity}
                 unite={item.unite}
                 statut={item.statut}
-                showStatusColor={role}
+                showStatusColor={isAdmin}
                 onClick={() => handleCardClick(item, index)}
               />
             ))}
