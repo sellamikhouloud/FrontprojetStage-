@@ -520,7 +520,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
               <InfoHeader title="Dernière distribution" value="15/05/2026" />
             )}
 
-            {/* Date + Distribution number */}
+            {/* Date  */}
             <div className="flex flex-col gap-0">
               <h3
                 className="
@@ -537,7 +537,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
                 className={`
                   grid
                   grid-cols-1
-                  ${selectedFamille ? "lg:grid-cols-2" : "lg:grid-cols-1"}
+                  "lg:grid-cols-1"}
                   gap-3
                   lg:gap-2
                   items-end
@@ -545,27 +545,6 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
               >
                 <DateContainer value={date} onChange={setDate} noPadding />
 
-                {selectedFamille && (
-                  <div className="w-full">
-                    <div
-                      className="
-                        h-[45px]
-                        rounded-[15px]
-                        border
-                        border-[#4E9F8A]
-                        bg-white
-                        px-4
-                        pr-12
-                        flex
-                        items-center
-                      "
-                    >
-                      <p className="text-[14px] leading-[20px] text-[#374151]">
-                        Distribution numéro 03
-                      </p>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
