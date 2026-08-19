@@ -19,7 +19,24 @@ const PopupModifierZakat = ({
   const [cause, setCause] = useState("");
   const [precisions, setPrecisions] = useState("");
   const [showBanner, setShowBanner] = useState(false);
-
+const causePrincipaleOptions = [
+  {
+    value: "veuvage",
+    label: "Veuvage",
+  },
+  {
+    value: "urgence",
+    label: "Situation d'urgence",
+  },
+  {
+    value: "vulnerabilite",
+    label: "Vulnérabilité extrême",
+  },
+  {
+    value: "autre",
+    label: "Autre",
+  },
+];
   useEffect(() => {
     if (!zakat) return;
 
@@ -247,13 +264,14 @@ const PopupModifierZakat = ({
                 Motif de sélection
               </h2>
 
-              <TextareaModifier
-                label="Cause principale :"
-                value={cause}
-                onChange={(e) => setCause(e.target.value)}
-                placeholder="Saisir la cause principale"
-                height="h-[60px]"
-              />
+             <TextareaModifier
+  label="Cause principale :"
+  value={cause}
+  onChange={(e) => setCause(e.target.value)}
+  placeholder="Saisir la cause principale"
+  height="h-[50px]"
+  options={causePrincipaleOptions}
+/>
 
               <TextareaModifier
                 label="Précisions :"
