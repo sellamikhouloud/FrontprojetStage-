@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { diffPatch, isEmptyPatch } from "@/lib/diff";
 import { getFamille, updateFamille, marquerSortie, getVisites, getDistributions, getFamilleZakat } from "@/lib/api/familles";
 import { listVillages } from "@/lib/api/Parametres"; 
-
+import { listCoordinateurs } from "@/lib/api/coordinateurs";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../../components/Containers/AfficherContainer";
@@ -78,6 +78,10 @@ function buildFamillePayload(patch) {
       case "date_entree":
         payload.date_entree = toApiDateString(value);
         break;
+         case "coordinateur_id":
+        payload.coordinateur = value;
+        break;
+
       case "mere_village_id":
         mere.village = value;
         break;
@@ -338,7 +342,26 @@ const villageOptions = (villagesData || []).map((village) => ({
   label: village.nom,
 }));
 
-
+const {
+  data: coordinateursData,
+  isLoading: coordinateursLoading,
+  isError: coordinateursError,
+} = useQuery({
+  queryKey: ["coordinateurs"],
+  queryFn: () => listCoordinateurs().then((res) => res.data),
+});
+const coordinateurs = (coordinateursData ?? [])
+  .filter((coordinateur) => coordinateur.is_active)
+  .map((coordinateur) => ({
+    id: coordinateur.id,
+    nom: coordinateur.nom,
+    prenom: coordinateur.prenom,
+    name: `${coordinateur.nom} ${coordinateur.prenom}`,
+    code: String(coordinateur.id),
+    village: coordinateur.village?.nom ?? "",
+    familles: coordinateur.nb_familles ?? 0,
+    status: coordinateur.is_active ? "Actif" : "Inactif",
+  }));
   
   const baseline = useMemo(
     () => (famille ? extractEditableFields(famille) : null),
@@ -362,35 +385,77 @@ const villageOptions = (villagesData || []).map((village) => ({
   const saveMut = useMutation({
   mutationFn: (patch) =>
     updateFamille(id, buildFamillePayload(patch)).then((r) => r.data),
-  onSuccess: (updated) => {
-    // Fix ciblé : si mere.village est renvoyé comme un id brut (pas un objet {id, nom}),
-    // on le reconstruit à partir de villageOptions qu'on a déjà chargé.
-    const villageId =
-      typeof updated?.mere?.village === "object"
-        ? updated.mere.village?.id
-        : updated?.mere?.village;
+ onSuccess: (updated) => {
+  // =========================
+  // VILLAGE
+  // =========================
+  const villageId =
+    typeof updated?.mere?.village === "object"
+      ? updated.mere.village?.id
+      : updated?.mere?.village;
 
-    const villageMatch = villageOptions.find(
-      (opt) => String(opt.value) === String(villageId)
-    );
+  const villageMatch = villageOptions.find(
+    (opt) => String(opt.value) === String(villageId)
+  );
 
-    const fixedUpdated = {
-      ...updated,
-      mere: {
-        ...updated.mere,
-        village: villageMatch
-          ? { id: villageMatch.value, nom: villageMatch.label }
-          : updated.mere?.village, 
-      },
-    };
+  // =========================
+  // COORDINATEUR
+  // =========================
+  const coordinateurId =
+    typeof updated?.coordinateur === "object"
+      ? updated.coordinateur?.id
+      : updated?.coordinateur ?? form.coordinateur_id;
 
-    setForm(extractEditableFields(fixedUpdated));
-    queryClient.setQueryData(["famille", id], fixedUpdated);
-    queryClient.invalidateQueries({ queryKey: ["familles"] });
-    setErrors({});
-    setErrorMessage(null);
-    setOpenSuccess(true);
-  },
+  const coordinateurMatch = coordinateurs.find(
+    (coordinateur) =>
+      String(coordinateur.id) === String(coordinateurId)
+  );
+
+  // =========================
+  // OBJET FINAL
+  // =========================
+  const fixedUpdated = {
+    ...updated,
+
+    coordinateur: coordinateurMatch
+      ? {
+          id: coordinateurMatch.id,
+          nom: coordinateurMatch.nom,
+          prenom: coordinateurMatch.prenom,
+        }
+      : updated?.coordinateur,
+
+    mere: {
+      ...updated?.mere,
+      village: villageMatch
+        ? {
+            id: villageMatch.value,
+            nom: villageMatch.label,
+          }
+        : updated?.mere?.village,
+    },
+  };
+
+  console.log("Coordinateur sélectionné :", coordinateurMatch);
+  console.log("Famille finale :", fixedUpdated);
+
+  // Mettre à jour le formulaire
+  setForm(extractEditableFields(fixedUpdated));
+
+  // Mettre à jour React Query
+  queryClient.setQueryData(
+    ["famille", id],
+    fixedUpdated
+  );
+
+  queryClient.invalidateQueries({
+    queryKey: ["familles"],
+  });
+
+  setErrors({});
+  setErrorMessage(null);
+  setOpenSuccess(true);
+},
   onError: (err) => {
     const data = err?.response?.data;
     if (data && typeof data === "object" && !data.detail) {
@@ -604,13 +669,21 @@ const villageOptions = (villagesData || []).map((village) => ({
     },
   ];
 
-  const coordinateurNom = famille?.coordinateur
-    ? `${famille.coordinateur.nom} ${famille.coordinateur.prenom}`
-    : "/";
+  const selectedCoordinateur = coordinateurs.find(
+  (coordinateur) =>
+    String(coordinateur.id) === String(form.coordinateur_id)
+);
+
+const coordinateurNom = selectedCoordinateur
+  ? selectedCoordinateur.name
+  : famille?.coordinateur
+  ? `${famille.coordinateur.nom} ${famille.coordinateur.prenom}`
+  : "/";
 
   const statut = famille?.statut;
   const statutBebe = STATUT_BEBE[famille?.statut_nutritionnel_bebe] || null;
   const statutMere = STATUT_MERE[famille?.statut_nutritionnel_mere] || null;
+
 const makeHandler = (fields) => (index, value) => {
   const field = fields[index];
   if (field?.readOnly) return;
@@ -854,14 +927,20 @@ const makeHandler = (fields) => (index, value) => {
           </div>
         )}
 
-        <PopupListeCoordinateurs
-          open={openCoordinateur}
-          onClose={() => setOpenCoordinateur(false)}
-          onSelectCoordinateur={(coordinateur) => {
-            setForm((prev) => ({ ...prev, coordinateur_id: coordinateur.id }));
-            setOpenCoordinateur(false);
-          }}
-        />
+       <PopupListeCoordinateurs
+  open={openCoordinateur}
+  onClose={() => setOpenCoordinateur(false)}
+  coordinateurs={coordinateurs}
+  loading={coordinateursLoading}
+  onSelectCoordinateur={(coordinateur) => {
+    setForm((prev) => ({
+      ...prev,
+      coordinateur_id: coordinateur.id,
+    }));
+
+    setOpenCoordinateur(false);
+  }}
+/>
       </main>
     </div>
   );
