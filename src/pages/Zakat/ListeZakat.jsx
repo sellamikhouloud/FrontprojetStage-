@@ -19,6 +19,7 @@ import NoResultImage from "../../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import PopupHistoriqueVersements from "../../components/Popups/PopupHistoriqueVersements";
+import { useAuth } from "../../components/providers/AuthProvider";
 
 export default function ZakatPage() {
   const [search, setSearch] = useState("");
@@ -27,6 +28,10 @@ export default function ZakatPage() {
   const [showHistoriqueVersements, setShowHistoriqueVersements] = useState(false);
 
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "admin";
+
 
 const queryClient = useQueryClient();
  
@@ -276,14 +281,16 @@ const handleExportZakat = async () => {
       <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
         <div className="h-full overflow-y-auto px-5 pt-18 md:pt-0 lg:p-8 pb-[50px]">
           <NavigationHeader
-            title="Statistiques des zakats"
-            type="historique"
-            actionTitle="Voir l'historique des versements"
-            onAction={() => setShowHistoriqueVersements(true)}
-            secondType="add"
-            secondActionTitle="Alimenter le solde"
-            onSecondAction={() => setOpenAlimenterSolde(true)}
-          />
+  title="Statistiques des zakats"
+  type="historique"
+  actionTitle="Voir l'historique des versements"
+  onAction={() => setShowHistoriqueVersements(true)}
+  {...( isAdmin && {
+    secondType: "add",
+    secondActionTitle: "Alimenter le solde",
+    onSecondAction: () => setOpenAlimenterSolde(true),
+  })}
+/>
 
           <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
             <SoldeCard
@@ -442,8 +449,8 @@ const handleExportZakat = async () => {
         }}
       />
 
-      <PopupAlimenterSolde
-  open={openAlimenterSolde}
+     <PopupAlimenterSolde
+  open={isAdmin && openAlimenterSolde}
   onClose={() => setOpenAlimenterSolde(false)}
   onSave={handleAlimenterSolde}
 />
