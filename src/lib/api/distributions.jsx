@@ -17,3 +17,6 @@ export const validerProduit = (id) =>  api.patch(`/api/produits/${id}/valider/`)
 export const ajouterStock = (id, payload) => api.patch(`/api/produits/${id}/ajouter-stock/`, payload);
 
 export const modifierSeuil = (id, payload) => api.patch(`/api/produits/${id}/modifier_seuil/`, payload);
+
+export const createDistribution = (payload) => api.post("api/distributions/", payload);
+
