@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 
 import SearchBar from "../Filter/Searchbar";
-import CardPopup from "../Cards/Card2";
+import CardPopup from "../Cards/card2";
 
 const PopupListeFamilles = ({
   open,
@@ -20,6 +20,7 @@ const PopupListeFamilles = ({
 
     return familles.filter(
       (item) =>
+        item.mere.toLowerCase().includes(value) ||
         item.enfant.toLowerCase().includes(value) ||
         item.code.toLowerCase().includes(value)
     );
@@ -150,6 +151,7 @@ const PopupListeFamilles = ({
                   <CardPopup
                     key={item.id}
                     enfant={item.enfant}
+                    mere={item.mere}
                     sexe={item.sexe}
                     region={item.region}
                     naissance={item.naissance}
