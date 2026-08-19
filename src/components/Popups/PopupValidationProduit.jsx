@@ -9,9 +9,9 @@ import quitter from "../../assets/quitter.svg";
 
 export default function PopupValidationProduit({
   open,
-  produit, // { id, nom, quantite, unite, date, enregistrePar }
+  produit, 
   onClose,
-  onValider, // (data) => void  — data = { id, quantite }  (quantite = 0 si non modifiée)
+  onValider, /
   onRefuser, // (data) => void  — data = { id }
 }) {
   const [quantite, setQuantite] = useState("");
@@ -39,23 +39,27 @@ export default function PopupValidationProduit({
     onClose?.();
   };
 
-  const handleValider = () => {
-    // Si l'admin n'a pas touché le champ, on envoie 0 au backend (comme demandé)
-    const quantiteFinale = quantite === "" ? 0 : Number(quantite);
+      const handleValider = async () => {
+    // Si l'admin n'a pas touché le champ, on garde la valeur actuelle du produit
+    const quantiteFinale =
+      quantite === "" ? Number(produit.quantite) : Number(quantite);
 
     const data = {
       id: produit.id,
       quantite: quantiteFinale,
     };
-
-    setBannerMessage("Le produit a été validé avec succès.");
-    setShowBanner(true);
-
-    setTimeout(() => {
-      setShowBanner(false);
-      onValider?.(data);
-      handleClose();
-    }, 1500);
+    try {
+      await onValider?.(data);
+      setBannerMessage("Le produit a été validé avec succès.");
+      setShowBanner(true);
+      setTimeout(() => {
+        setShowBanner(false);
+        handleClose();
+      }, 1500);
+    } catch (err) {
+      console.error("Erreur validation:", err);
+      // pas de bannière succès, le popup reste ouvert pour réessayer
+    }
   };
 
   const handleRefuser = () => {
