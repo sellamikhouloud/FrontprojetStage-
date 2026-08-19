@@ -57,18 +57,46 @@ const queryClient = useQueryClient();
     return `${d}/${m}/${y}`;
   }
 
- 
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ["zakats", search, appliedFilters],
-    queryFn: () =>
-      listAidesZakat({
-        search: search || undefined,
-        cause_principale: appliedFilters.causePrincipale || undefined,
-        date_versement: appliedFilters.dateVersement
-          ? formatDateJJMMAAAA(appliedFilters.dateVersement)
-          : undefined,
-      }).then((response) => response.data),
-  });
+ const { data, isLoading, isError, refetch } = useQuery({
+  queryKey: ["zakats", search, appliedFilters],
+
+  queryFn: async () => {
+    const params = {};
+
+    const trimmedSearch = search.trim();
+
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    if (appliedFilters.causePrincipale) {
+      params.cause_principale = appliedFilters.causePrincipale;
+    }
+
+    if (appliedFilters.dateVersement) {
+      params.date_versement = formatDateJJMMAAAA(
+        appliedFilters.dateVersement
+      );
+    }
+
+    const response = await listAidesZakat(params);
+
+    const responseData = response?.data;
+
+    if (Array.isArray(responseData)) {
+      return responseData;
+    }
+
+    if (Array.isArray(responseData?.results)) {
+      return responseData.results;
+    }
+
+    return [];
+  },
+
+  keepPreviousData: true,
+  retry: 1,
+});
 
   const zakats = data?.results ?? data ?? [];
 
@@ -211,13 +239,7 @@ const handleAlimenterSolde = async (data) => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen grid place-items-center">
-        <Spinner />
-      </div>
-    );
-  }
+ 
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -277,7 +299,16 @@ const handleAlimenterSolde = async (data) => {
             />
           </div>
 
+
+
           {(appliedFilters.causePrincipale || appliedFilters.dateVersement) && filterTagsContent}
+
+ {/* Chargement */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-10">
+            <Spinner />
+          </div>
+        )}
 
           {isError && (
             <div className="text-center text-red-500 py-6">
@@ -288,58 +319,68 @@ const handleAlimenterSolde = async (data) => {
             </div>
           )}
 
-          {!isError && zakats.length === 0 && (
-            <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
-              <img src={NoResultImage} alt="Aucun résultat" className="w-56 sm:w-72 md:w-96 h-auto" />
-            </div>
-          )}
+        {!isLoading && !isError && zakats.length === 0 && (
+  <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
+    <img
+      src={NoResultImage}
+      alt="Aucun résultat"
+      className="w-56 sm:w-72 md:w-96 h-auto"
+    />
+  </div>
+)}
+{!isLoading && !isError && zakats.length > 0 && (
+  <div className="flex gap-6">
+    {/* Liste des Zakat */}
+    <div className="flex-1 space-y-3">
+      {zakats.map((item, index) => {
+        const famille = item.famille_info ?? {};
 
-          <div className="flex gap-6">
-            <div className="flex-1 space-y-3">
-              {zakats.map((item, index) => {
-                const famille = item.famille_info ?? {};
-                const nomEnfant = famille.enfant_prenom || "-";
-                const codeFamille = item.famille || "-";
+        const nomMere = famille.mere_nom || "-";
+        const codeFamille = item.famille || "-";
 
-                const sexe =
-                  famille?.enfant_sexe === "M"
-                    ? "Garçon"
-                    : famille?.enfant_sexe === "F"
-                    ? "Fille"
-                    : "-";
+        const sexe =
+          famille.enfant_sexe === "M"
+            ? "Garçon"
+            : famille.enfant_sexe === "F"
+            ? "Fille"
+            : "-";
 
-                const numeroZakat = item.numero_zakat ?? "-";
+        const numeroZakat = item.numero_zakat ?? "-";
 
-                const dateVersement = item.date_versement
-                  ? new Date(item.date_versement).toLocaleDateString("fr-FR")
-                  : "-";
+        const dateVersement = item.date_versement
+          ? new Date(item.date_versement).toLocaleDateString("fr-FR")
+          : "-";
 
-                const montant = item.montant ?? "0";
-                const montantEuro = item.montant_eur ?? "0";
+        const montant = item.montant ?? "0";
+        const montantEuro = item.montant_eur ?? "0";
 
-                return (
-                  <CardListZakat
-                    key={item.id ?? `zakat-${index}`}
-                    nom={nomEnfant}
-                    code={codeFamille}
-                    sexe={sexe}
-                    zakat={`Zakat ${numeroZakat}`}
-                    date={dateVersement}
-                    montant="Montant"
-                    valeur={`${montant} MRU / ${montantEuro} Euros`}
-                    onClick={() => {
-                      setSelectedZakat(item);
-                      setShowDetailPopup(true);
-                    }}
-                  />
-                );
-              })}
-            </div>
+        return (
+          <CardListZakat
+            key={item.id ?? `zakat-${index}`}
+            nom={nomMere}
+            code={codeFamille}
+            sexe={sexe}
+            zakat={`Zakat ${numeroZakat}`}
+            date={dateVersement}
+            montant="Montant"
+            valeur={`${montant} MRU / ${montantEuro} Euros`}
+            onClick={() => {
+              setSelectedZakat(item);
+              setShowDetailPopup(true);
+            }}
+          />
+        );
+      })}
+    </div>
 
-            {isFilterOpen && !isMobile && (
-              <div className="w-[320px] shrink-0">{filtersContent}</div>
-            )}
-          </div>
+    {/* Filtres desktop */}
+    {isFilterOpen && !isMobile && (
+      <div className="w-[320px] shrink-0">
+        {filtersContent}
+      </div>
+    )}
+  </div>
+)}
         </div>
 
         <div className="absolute bottom-0 left-0 right-0 h-[15px] bg-white z-20" />
