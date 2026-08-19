@@ -17,6 +17,7 @@ import PopupHistoriqueProduit from "../../components/Popups/Popuphistoriqueprodu
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
 import { useNavigate } from "react-router-dom";
+import { listProduits, validerProduit } from "@/lib/api/stock";
 import { listDistributions } from "@/lib/api/distributions";
 import { useAuth } from "../../components/providers/AuthProvider";
 
@@ -79,96 +80,61 @@ const distributionsData = Array.isArray(distributionsResponse)
   ? distributionsResponse.results
   : [];
 
-  // ==================== STOCK (mock, inchangé) ====================
-  const [products, setProducts] = useState([
-    { nom: "Lait", quantity: 38, unite: "boîtes", threshold: 1, statut: "valide" },
-    {
-      nom: "Céréales",
-      quantity: 38,
-      unite: "Kg",
-      threshold: 1,
-      statut: "en_attente",
-      date: "12/06/2026",
-      enregistrePar: "nom Coor",
-    },
-    { nom: "Huile", quantity: 38, unite: "Litres", threshold: 1, statut: "valide" },
-    { nom: "Sucre", quantity: 38, unite: "Kg", threshold: 1, statut: "valide" },
-    {
-      nom: "Sel iodé",
-      quantity: 38,
-      unite: "Kg",
-      threshold: 1,
-      statut: "en_attente",
-      date: "12/06/2026",
-      enregistrePar: "nom Coor",
-    },
-    { nom: "Légumineuses", quantity: 38, unite: "Kg", threshold: 1, statut: "valide" },
-    { nom: "Lait", quantity: 38, unite: "boîtes", threshold: 1, statut: "valide" },
-    {
-      nom: "Légumineuses",
-      quantity: 38,
-      unite: "Kg",
-      threshold: 1,
-      statut: "en_attente",
-      date: "12/06/2026",
-      enregistrePar: "nom Coor",
-    },
-    { nom: "Huile", quantity: 38, unite: "Litres", threshold: 1, statut: "valide" },
-  ]);
+ const {
+  data: produitsResponse,
+  isLoading: produitsLoading,
+  isError: produitsError,
+  refetch: refetchProduits,
+} = useQuery({
+  queryKey: ["produits-list"],
+  queryFn: () => listProduits().then((r) => r.data),
+});
 
-  const historiqueParProduit = {
-    Lait: [
-      { id: 1, type: "ajout", quantite: 20, unite: "boîtes", par: "Coordinateur Ahmed", date: "10/06/2026" },
-      { id: 2, type: "retrait", quantite: 5, unite: "boîtes", par: "Coordinateur sarah", date: "12/06/2026" },
-      { id: 3, type: "ajout", quantite: 23, unite: "boîtes", par: "Coordinateur Ahmed", date: "18/06/2026" },
-    ],
-    Céréales: [
-      { id: 1, type: "ajout", quantite: 40, unite: "Kg", par: "Coordinateur Sarah", date: "05/06/2026" },
-      { id: 2, type: "retrait", quantite: 2, unite: "Kg", par: "Coordinateur ahmed", date: "08/06/2026" },
-    ],
-    Huile: [
-      { id: 1, type: "ajout", quantite: 38, unite: "Litres", par: "Coordinateur Ahmed", date: "01/06/2026" },
-    ],
-    Sucre: [
-      { id: 1, type: "ajout", quantite: 30, unite: "Kg", par: "Coordinateur Sarah", date: "03/06/2026" },
-      { id: 2, type: "retrait", quantite: 8, unite: "Kg", par: "Coordinateur ahmed", date: "09/06/2026" },
-      { id: 3, type: "ajout", quantite: 16, unite: "Kg", par: "Coordinateur Sarah", date: "15/06/2026" },
-    ],
-    "Sel iodé": [
-      { id: 1, type: "ajout", quantite: 38, unite: "Kg", par: "Coordinateur Ahmed", date: "12/06/2026" },
-    ],
-    Légumineuses: [
-      { id: 1, type: "ajout", quantite: 25, unite: "Kg", par: "Coordinateur Sarah", date: "02/06/2026" },
-      { id: 2, type: "retrait", quantite: 3, unite: "Kg", par: "Coordinateur Sarah", date: "07/06/2026" },
-      { id: 3, type: "ajout", quantite: 16, unite: "Kg", par: "Coordinateur Ahmed", date: "14/06/2026" },
-    ],
-  };
+const produitsData = produitsResponse?.results || [];
+
+const [products, setProducts] = useState([]);
+
+useEffect(() => {
+  if (produitsData.length) {
+    setProducts(
+      produitsData.map((p) => ({
+        id: p.id,
+        nom: p.nom,
+        quantity: Number(p.stock_courant),
+        unite: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "Kg" : p.unite,
+        threshold: Number(p.alerte_seuil),
+        statut: p.validee ? "valide" : "en_attente",
+      }))
+    );
+  }
+}, [produitsResponse]);
+ 
 
   const role = user?.role;
 const isAdmin = role === "admin";
 
   const handleCardClick = (item, index) => {
-    if (item.statut === "en_attente") {
-      if (role === "admin") {
-        setProduitSelectionne({
-          id: index,
-          nom: item.nom,
-          quantite: item.quantity,
-          unite: item.unite,
-          date: item.date,
-          enregistrePar: item.enregistrePar,
-        });
-        setShowValidation(true);
-      }
-    } else {
-      setProduitHistorique({
+  if (item.statut === "en_attente") {
+    if (role === "admin") {
+      setProduitSelectionne({
+        id: item.id, // <-- was `index`
         nom: item.nom,
+        quantite: item.quantity,
         unite: item.unite,
-        mouvements: historiqueParProduit[item.nom] || [],
+        date: item.date,
+        enregistrePar: item.enregistrePar,
       });
-      setShowHistorique(true);
+      setShowValidation(true);
     }
-  };
+  } else {
+    setProduitHistorique({
+      nom: item.nom,
+      unite: item.unite,
+      mouvements: historiqueParProduit[item.nom] || [],
+    });
+    setShowHistorique(true);
+  }
+};
 
  
 
@@ -321,21 +287,23 @@ const isAdmin = role === "admin";
         />
 
         {/* Stock cards */}
-        <div className="mt-6 mb-5 w-full overflow-x-auto scrollbar-hide">
-          <div className="flex gap-[4px] md:gap-[10px] w-max">
-            {products.map((item, index) => (
-              <StockCard
-                key={index}
-                nom={item.nom}
-                quantity={item.quantity}
-                unite={item.unite}
-                statut={item.statut}
-                showStatusColor={isAdmin}
-                onClick={() => handleCardClick(item, index)}
-              />
-            ))}
-          </div>
-        </div>
+       <div className="mt-6 mb-5 w-full overflow-x-auto scrollbar-hide">
+  {produitsLoading && <Spinner />}
+  {produitsError && <p className="text-red-500">Impossible de charger le stock.</p>}
+  <div className="flex gap-[4px] md:gap-[10px] w-max">
+    {products.map((item, index) => (
+      <StockCard
+        key={item.id ?? index}
+        nom={item.nom}
+        quantity={item.quantity}
+        unite={item.unite}
+        statut={item.statut}
+        showStatusColor={isAdmin}   
+        onClick={() => handleCardClick(item, index)}
+      />
+    ))}
+  </div>
+</div>
 
         <NavigationHeader
           title="Liste des distributions"
@@ -510,29 +478,27 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
           />
         )}
 
-        <PopupValidationProduit
-          open={showValidation}
-          produit={produitSelectionne}
-          onClose={() => {
-            setShowValidation(false);
-            setProduitSelectionne(null);
-          }}
-          onValider={({ id, quantite }) => {
-            setProducts((prev) =>
-              prev.map((p, i) =>
-                i === id ? { ...p, statut: "valide", quantity: quantite || p.quantity } : p
-              )
-            );
-            setProduitSelectionne(null);
-          }}
-          onRefuser={({ id }) => {
-            setProducts((prev) =>
-              prev.map((p, i) => (i === id ? { ...p, statut: "refuse" } : p))
-            );
-            setProduitSelectionne(null);
-          }}
-        />
-
+      <PopupValidationProduit
+  open={showValidation}
+  produit={produitSelectionne}
+  onClose={() => {
+    setShowValidation(false);
+    setProduitSelectionne(null);
+  }}
+  onValider={async ({ id, quantite }) => {
+    await validerProduit(id, { stock_initial: String(quantite) });
+    await refetchProduits();
+    setShowValidation(false);
+    setProduitSelectionne(null);
+  }}
+  onRefuser={({ id }) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, statut: "refuse" } : p))
+    );
+    setShowValidation(false);
+    setProduitSelectionne(null);
+  }}
+/>
         <PopupHistoriqueProduit
           open={showHistorique}
           produit={produitHistorique}
