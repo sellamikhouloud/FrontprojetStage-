@@ -11,7 +11,7 @@ export default function PopupValidationProduit({
   open,
   produit, 
   onClose,
-  onValider, /
+  onValider, 
   onRefuser, // (data) => void  — data = { id }
 }) {
   const [quantite, setQuantite] = useState("");
