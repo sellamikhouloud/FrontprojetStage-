@@ -1,160 +1,159 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import TextareaModifier from "../Containers/TextAreaModifier";
-import Card from "../Cards/Card";
-import EditableInfoCard from "../Containers/ModifierContainer";
-import Button from "../Button/Button";
-import SuccessBanner from "./SuccessBanner";
-import quitter from "../../assets/quitter.svg";
 
-const PopupModifierZakat = ({
+import Card from "../Cards/Card";
+import InfoCard from "../Containers/AfficherContainer";
+import Button from "../Button/Button";
+
+import quitter from "../../assets/quitter.svg";
+import EditIcon from "../../assets/Container.svg";
+import DeleteIcon from "../../assets/Delete.svg";
+
+import Popup from "./SuccessPopup";
+import SuccessImage from "../../assets/Confirm.svg";
+
+const PopupDetailZakat = ({
   open,
   onClose,
   zakat,
   famille,
-  onSave,
+  onEdit,
+  onDelete,
 }) => {
-  const [infos, setInfos] = useState([]);
-  const [observations, setObservations] = useState("");
-  const [cause, setCause] = useState("");
-  const [precisions, setPrecisions] = useState("");
-  const [showBanner, setShowBanner] = useState(false);
-
-  useEffect(() => {
-    if (!zakat) return;
-
-    setInfos([
-      {
-        label: "Date",
-        value: zakat.date_versement
-          ? new Date(zakat.date_versement)
-          : null,
-        type: "date",
-      },
-      {
-        label: "Zakat n°",
-        value: zakat.numero_zakat ?? "-",
-        editable: false,
-      },
-      {
-        label: "Montant versé",
-        value: zakat.montant ?? "",
-        type: "number",
-        unit: "MRU",
-      },
-      {
-        label: "Mode de paiement",
-        value: zakat.mode_remise ?? "",
-        options: [
-          "Espèces",
-          "Bankily",
-          "Masrivi",
-          "Chèque",
-        ],
-      },
-      {
-        label: "Enregistrée par",
-        value: zakat.cree_par?.nom || "-",
-        editable: false,
-      },
-
-        {
-        label: "Date d'enregistrement",
-        value: zakat.date_creation
-          ? new Date(zakat.date_creation).toLocaleDateString("fr-FR")
-          : "-",
-        editable: false,
-      },
-      {
-        label: "Modifié par",
-        value: zakat.modifie_par?.nom || "-",
-        editable: false,
-      },
-      {
-        label: "Date de modification",
-        value: zakat.date_modification
-          ? new Date(zakat.date_modification).toLocaleDateString("fr-FR")
-          : "-",
-        editable: false,
-      },
-    ]);
-
-    setObservations(zakat.observation || "");
-    setCause(zakat.cause_principale || "");
-    setPrecisions(zakat.precisions || "");
-  }, [zakat]);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
 
   if (!open || !zakat) return null;
+
+  const formatDate = (date) => {
+    if (!date) return "-";
+
+    const parsedDate = new Date(date);
+
+    if (isNaN(parsedDate.getTime())) {
+      return date;
+    }
+
+    return parsedDate.toLocaleDateString("fr-FR");
+  };
+
+
+  const causePrincipaleLabels = {
+  veuvage: "Veuvage",
+  urgence: "Situation d'urgence",
+  vulnerabilite: "Vulnérabilité extrême",
+  autre: "Autre",
+};
+
+const causePrincipale =
+  causePrincipaleLabels[zakat.cause_principale] ??
+  zakat.cause_principale ??
+  "-";
 
   const enfant = famille?.enfant_prenom || "-";
   const mere = famille?.mere_nom || "-";
 
   const sexe =
-  famille?.enfant_sexe === "M"
-    ? "Fils"
-    : famille?.enfant_sexe === "F"
-    ? "Fille"
-    : "-";
+    famille?.enfant_sexe === "M"
+      ? "Fils"
+      : famille?.enfant_sexe === "F"
+      ? "Fille"
+      : "-";
 
   const region = famille?.village || "-";
-
-  const dateNaissance = famille?.enfant_date_naissance
-    ? new Date(famille.enfant_date_naissance).toLocaleDateString("fr-FR")
-    : "-";
+  const dateNaissance = formatDate(
+    famille?.enfant_date_naissance
+  );
 
   const code = zakat.famille || "-";
 
-  const handleChange = (index, value) => {
-    setInfos((prev) =>
-      prev.map((item, i) =>
-        i === index
-          ? { ...item, value }
-          : item
-      )
-    );
-  };
+  const numeroZakat = zakat.numero_zakat ?? "-";
+  const dateVersement = formatDate(zakat.date_versement);
+  const dateCreation = formatDate(zakat.date_creation);
+  const dateModification = formatDate(
+    zakat.date_modification
+  );
 
-  const handleSave = () => {
-    const updatedZakat = {
-      ...zakat,
+  const ActionButtons = ({ className }) => (
+    <div className={className}>
+      <Button
+        title="Modifier"
+        variant="modifier"
+        icon={EditIcon}
+        noWrapperPadding
+        onClick={() => onEdit?.(zakat)}
+      />
 
-      date_versement: infos[0]?.value,
-      numero_zakat: infos[1]?.value,
-      montant: infos[2]?.value,
-      mode_remise: infos[3]?.value,
-
-      observation: observations,
-      cause_principale: cause,
-      precisions,
-    };
-
-    setShowBanner(true);
-
-    setTimeout(() => {
-      setShowBanner(false);
-
-      onSave?.(updatedZakat);
-
-      onClose();
-    }, 1500);
-  };
+      <Button
+        title="Supprimer"
+        variant="supprimer"
+        icon={DeleteIcon}
+        noWrapperPadding
+        onClick={() => setShowDeletePopup(true)}
+      />
+    </div>
+  );
 
   return (
     <AnimatePresence>
       <div
         className="
-          fixed inset-0 z-[70]
-          bg-transparent sm:bg-black/40
-          flex items-start sm:items-center justify-center
+          fixed
+          inset-0
+          z-[60]
+
+          bg-transparent
+          sm:bg-black/40
+
+          flex
+          items-start
+          sm:items-center
+          justify-center
+
           overflow-y-auto
+          scrollbar-hide
         "
         onClick={onClose}
       >
+       
+        {showDeletePopup && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+          >
+            <Popup
+              title="Confirmer la suppression"
+              image={SuccessImage}
+              description="Êtes-vous sûr de vouloir supprimer ce Zakat ? Cette action est irréversible."
+              primaryButtonText="Supprimer"
+              secondaryButtonText="Annuler"
+              primaryButtonVariant="danger"
+              onPrimaryClick={() => {
+                setShowDeletePopup(false);
+                onDelete?.(zakat);
+              }}
+              onSecondaryClick={() =>
+                setShowDeletePopup(false)
+              }
+            />
+          </div>
+        )}
+
         <motion.div
-          initial={{ opacity: 0, scale: 0.96 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.96 }}
-          transition={{ duration: 0.2 }}
+          initial={{
+            opacity: 0,
+            scale: 0.96,
+          }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+          }}
+          exit={{
+            opacity: 0,
+            scale: 0.96,
+          }}
+          transition={{
+            duration: 0.2,
+          }}
           onClick={(e) => e.stopPropagation()}
           className="
             w-full
@@ -182,34 +181,46 @@ const PopupModifierZakat = ({
             borderColor: "#4E9F8A",
           }}
         >
-          {/* Header */}
-
+        
           <div className="mb-4">
-
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-[17px]"
+              className="
+                flex
+                items-center
+                gap-2
+
+                text-[17px]
+                text-[#202124]
+
+                hover:opacity-70
+                transition
+              "
             >
               <img
                 src={quitter}
-                alt=""
+                alt="Fermer"
                 className="w-5 h-5"
               />
 
-              Annuler
-
+              Fermer
             </button>
 
-            <h2 className="mt-3 text-center text-[22px] font-bold">
-              Détail du zakat {zakat.numero_zakat}
+            <h2
+              className="
+                mt-3
+                text-center
+                text-[20px]
+                font-bold
+              "
+            >
+              Détail du Zakat n°{numeroZakat}
             </h2>
-
           </div>
 
-          {/* Carte */}
-
+        
           <Card
-           mere={mere}
+            mere={mere}
             enfant={enfant}
             sexe={sexe}
             region={region}
@@ -218,75 +229,148 @@ const PopupModifierZakat = ({
             badges={[]}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-[58%_40%] gap-5 mt-4">
-            {/* Colonne gauche */}
+          <div
+            className="
+              grid
+              grid-cols-1
+              sm:grid-cols-[58%_40%]
 
-            <div className="space-y-4">
-
-              <EditableInfoCard
+              gap-5
+              mt-4
+            "
+          >
+           
+            <div className="space-y-3">
+              <InfoCard
                 title="Informations générales"
-                data={infos}
-                editable={true}
-                onChange={handleChange}
+                data={[
+                  {
+                    label: "Date",
+                    value: dateVersement,
+                  },
+
+                  {
+                    label: "Zakat n°",
+                    value: `${numeroZakat}`,
+                  },
+
+                  {
+                    label: "Montant versé",
+                    value: (
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold">
+                          {zakat.montant ?? "0"} MRU
+                        </span>
+
+                        <span className="text-[12px] text-[#8A8A8A]">
+                          ≈ {zakat.montant_eur ?? "0"} EUR
+                        </span>
+                      </div>
+                    ),
+                  },
+
+                  {
+                    label: "Mode de paiement",
+                    value:
+                      zakat.mode_remise ?? "-",
+                  },
+
+                  {
+                    label: "Enregistrée par",
+                    value:
+                      zakat.cree_par?.nom || "-",
+                  },
+
+                  {
+                    label: "Date d'enregistrement",
+                    value: dateCreation,
+                  },
+
+                  {
+                    label: "Modifié par",
+                    value:
+                      zakat.modifie_par?.nom || "-",
+                  },
+
+                  {
+                    label: "Date de modification",
+                    value: dateModification,
+                  },
+                ]}
               />
 
-              <TextareaModifier
-                label="Observations complémentaires"
-                value={observations}
-                onChange={(e) => setObservations(e.target.value)}
-                height="h-[60px]"
+              <InfoCard
+                title="Observations complémentaires"
+                text={zakat.observation || "-"}
+                textHeight="90px"
               />
-
             </div>
 
-            {/* Colonne droite */}
-
-            <div className="space-y-4">
-
+            <div className="space-y-3">
               <h2 className="text-[18px] font-semibold">
                 Motif de sélection
               </h2>
 
-              <TextareaModifier
-                label="Cause principale :"
-                value={cause}
-                onChange={(e) => setCause(e.target.value)}
-                placeholder="Saisir la cause principale"
-                height="h-[60px]"
-              />
+              {/* CAUSE */}
+              <div>
+                <p className="text-[#4E9F8A] font-medium mb-2">
+                  Cause principale :
+                </p>
 
-              <TextareaModifier
-                label="Précisions :"
-                value={precisions}
-                onChange={(e) => setPrecisions(e.target.value)}
-                height="h-[80px]"
-              />
+                <div
+                  className="
+                    border
+                    border-[#84D6D0]
+                    rounded-[15px]
 
-              <div className="mt-4">
-
-                {showBanner && (
-                  <SuccessBanner text="Enregistré avec succès" />
-                )}
-
-                <Button
-                  title="Enregistrer"
-                  variant="modifier"
-                  noWrapperPadding
-                  onClick={handleSave}
-                />
-
+                    px-4
+                    py-3
+                  "
+                >
+                  {causePrincipale}
+                
+                </div>
               </div>
+
+              {/* PRECISIONS */}
+              <div>
+                <p className="text-[#4E9F8A] font-medium mb-2">
+                  Précisions :
+                </p>
+
+                <div
+                  className="
+                    border
+                    border-[#84D6D0]
+                    rounded-[15px]
+
+                    px-4
+                    py-3
+
+                    h-[86px]
+                  "
+                >
+                  <p className="text-[#7B7B7B]">
+                    {zakat.precisions || "-"}
+                  </p>
+                </div>
+              </div>
+
+              <ActionButtons
+                className="
+                  mt-6
+                  grid
+                  grid-cols-1
+                  gap-3
+                  w-full
+                "
+              />
             </div>
-
           </div>
-
         </motion.div>
-
       </div>
-
     </AnimatePresence>
-
   );
 };
 
-export default PopupModifierZakat;
+export default PopupDetailZakat;
