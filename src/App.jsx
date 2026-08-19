@@ -93,7 +93,7 @@ function App() {
          <Route
   path="/liste-distributions"
   element={
-    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+    <ProtectedRoute>
       <DistributionPage />
     </ProtectedRoute>
   }
