@@ -1,7 +1,7 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
-import Card from "../../components/Cards/Card";
-import CardPopup from "../../components/Cards/Card2";
+import Card from "../../components/Cards/card";
+import CardPopup from "../../components/Cards/card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import { useState } from "react";
@@ -44,6 +44,7 @@ const MOIS_OPTIONS = [
 ];
 
 const POSITION_OPTIONS = ["Debout", "Couché"];
+
 
 export default function AjoutVisite() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -179,6 +180,55 @@ export default function AjoutVisite() {
       dt.getDate()
     ).padStart(2, "0")}`;
   };
+ 
+  
+  const extractErrorMessage = (error) => {
+    const data = error.response?.data;
+
+    if (!data) {
+      return error.message || "Une erreur est survenue lors de l'enregistrement de la visite.";
+    }
+
+    if (typeof data === "string") {
+      return data;
+    }
+
+    if (Array.isArray(data)) {
+      const messages = data.filter((m) => typeof m === "string");
+      if (messages.length > 0) {
+        return messages.join(" — ");
+      }
+    }
+
+    if (data?.detail) {
+      return data.detail;
+    }
+
+    if (typeof data === "object" && !Array.isArray(data)) {
+      const messages = [];
+
+      Object.entries(data).forEach(([field, value]) => {
+        const values = Array.isArray(value) ? value : [value];
+
+        values.forEach((msg) => {
+          if (typeof msg !== "string") return;
+          if (field === "non_field_errors" || field === "detail") {
+            messages.push(msg);
+          } else {
+            messages.push(`${field} : ${msg}`);
+          }
+        });
+      });
+
+      if (messages.length > 0) {
+        return messages.join(" — ");
+      }
+    }
+
+    return "Une erreur est survenue lors de l'enregistrement de la visite.";
+  };
+  
+
 
   const handleSave = async () => {
     if (!validateForm()) return;
@@ -193,6 +243,7 @@ export default function AjoutVisite() {
     const payload = {
       famille: selectedFamille?.code, // ex: "GDK-2026-008"
       date_visite: formatDate(date),
+      cycle: numeroCycle ? Number(numeroCycle) : null,
 
       poids_bebe: Number(poidsNourrisson),
       taille_bebe: Number(tailleNourrisson),
@@ -217,6 +268,8 @@ export default function AjoutVisite() {
     try {
       const response = await createVisite(payload);
 
+        console.log("✅ Réponse backend complète :", JSON.stringify(response.data, null, 2));
+
       // 🔧 Adapte ces clés selon la vraie forme de la réponse backend
       setResultatVisite({
         zScores: response.data?.z_scores ?? response.data?.zScores,
@@ -231,9 +284,8 @@ export default function AjoutVisite() {
         "❌ Erreur lors de la création de la visite :",
         error.response?.data || error.message
       );
-      setSaveError(
-        "Une erreur est survenue lors de l'enregistrement de la visite."
-      );
+     
+      setSaveError(extractErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -491,6 +543,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
               >
                 <CardPopup
                   enfant={selectedFamille.enfant}
+                  mere={selectedFamille.mere} 
                   sexe={selectedFamille.sexe}
                   region={selectedFamille.region}
                   naissance={selectedFamille.naissance}
@@ -535,7 +588,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
         )}
 
         {/* Main content */}
-        <div className="mt-5 grid grid-cols-1 lg:grid-cols-2 gap-6">
+   <div className="mt-5 grid grid-cols-1 lg:grid-cols-[11fr_9fr] gap-6">
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-4">
             {/* Date + Visite number */}
@@ -679,7 +732,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
                     "
                   >
                     <p className="text-[14px] leading-[20px] text-[#374151]">
-                      Visite numero 03
+                      Visite numero 
                     </p>
                   </div>
                 </div>
@@ -791,39 +844,35 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
               </h2>
 
               {/* Champs de saisie */}
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <div className="flex flex-col gap-1">
+              <div className="grid grid-cols-2 gap-1 sm:gap-2">
+                <div className="flex flex-col gap-0">
                   <MesureInput
                     label="Poids"
-                    unit="g"
+                    unit="Kg"
                     value={poidsMere}
                     onChange={(e) => handlePoidsMereChange(e.target.value)}
                   />
                   <ErrorMessage message={errors.poidsMere ? "Requis" : null} />
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0">
                   <MesureInput
                     label="Taille"
-                    unit="cm"
+                    unit="m"
                     value={tailleMere}
                     onChange={(e) => handleTailleMereChange(e.target.value)}
                   />
                   <ErrorMessage message={errors.tailleMere ? "Requis" : null} />
                 </div>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0">
                   <MesureInput
                     label="MUAC"
-                    unit="mm"
+                    unit="cm"
                     value={muacMere}
                     onChange={(e) => handleMuacMereChange(e.target.value)}
                   />
                   <ErrorMessage message={errors.muacMere ? "Requis" : null} />
                 </div>
-              </div>
-
-              {/* Hémoglobine */}
-              <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0">
                   <MesureInput
                     label="Hémoglobine"
                     unit="g/dL"
@@ -832,6 +881,8 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
                   />
                 </div>
               </div>
+
+             
 
               <h2 className="text-[18px] font-semibold text-[#000000] mb-2 mt-6">
                 Observations cliniques mère
