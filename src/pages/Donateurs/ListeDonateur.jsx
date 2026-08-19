@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-
+import StatusFilter from "../../components/Filter/StatusFilter";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import SearchBar from "../../components/Filter/Searchbar";
 import CardDonateur from "../../components/Cards/carteDonateur";
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
-import { listDonateurs } from  "@/lib/api/donateurs";
+import { listDonateurs } from "@/lib/api/donateurs";
 
 export default function ListeDonateur() {
   const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const {
     data: donateurs = [],
@@ -21,45 +22,66 @@ export default function ListeDonateur() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["donateurs", search],
+    queryKey: ["donateurs", search, statusFilter],
     queryFn: async () => {
-      const response = await listDonateurs({
-        search: search.trim(),
-      });
+      // On ne construit que les params réellement nécessaires,
+      // pour éviter d'envoyer des valeurs vides ou mal typées au backend.
+      const params = {};
 
-      return response.data;
+      const trimmedSearch = search.trim();
+      if (trimmedSearch) {
+        params.search = trimmedSearch;
+      }
+
+      // Actif / Inactif : on n'ajoute is_active QUE si un filtre est choisi.
+      // ⚠️ Si le backend attend un booléen réel (et non la string "true"/"false"),
+      // c'est une cause fréquente d'erreur 500. Vérifie côté API comment
+      // ce paramètre est parsé (ex: Django DRF avec BooleanField/BooleanFilter,
+      // FastAPI avec `is_active: bool = None`, etc.).
+      if (statusFilter === "active") {
+        params.is_active = true;
+      } else if (statusFilter === "inactive") {
+        params.is_active = false;
+      }
+
+      const response = await listDonateurs(params);
+
+      // Défense supplémentaire : garantir un tableau même si l'API
+      // renvoie un format inattendu (objet paginé, null, etc.)
+      const data = response?.data;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.results)) return data.results;
+      return [];
     },
     keepPreviousData: true,
+    retry: 1,
   });
 
   const formatDate = (date) => {
-  if (!date) return "";
+    if (!date) return "";
 
-  const [annee, mois, jour] = date.split("-");
+    const parts = date.split("-");
+    if (parts.length !== 3) return date;
 
-  return `${jour}/${mois}/${annee}`;
-};
+    const [annee, mois, jour] = parts;
+    return `${jour}/${mois}/${annee}`;
+  };
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-
       {/* Sidebar */}
-      <Sidebar  />
+      <Sidebar />
 
       {/* Contenu */}
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-
         <NavigationHeader
           title="Liste des donateurs"
-
           type="share"
           actionTitle="Exporter la liste des donateurs"
           onAction={() => console.log("Exporter")}
-
           secondType="add"
           secondActionTitle="Ajouter un donateur"
           onSecondAction={() => navigate("/ajout-donateur")}
-
           thirdType="export"
           thirdActionTitle="Importer un fichier"
           onThirdAction={() => console.log("Importer")}
@@ -76,12 +98,16 @@ export default function ListeDonateur() {
           />
         </div>
 
+        <div className="my-6">
+          <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+        </div>
+
         {/* Chargement */}
         {isLoading && (
-  <div className="flex justify-center items-center py-10">
-    <Spinner />
-  </div>
-)}
+          <div className="flex justify-center items-center py-10">
+            <Spinner />
+          </div>
+        )}
 
         {/* Erreur */}
         {isError && (
@@ -111,22 +137,19 @@ export default function ListeDonateur() {
               <div
                 key={donateur.id}
                 className="cursor-pointer"
-                onClick={() =>
-                  navigate(`/fiche-donateur/${donateur.id}`)
-                }
+                onClick={() => navigate(`/fiche-donateur/${donateur.id}`)}
               >
-              <CardDonateur
-  name={`${donateur.nom} ${donateur.prenom}`}
-  email={donateur.email}
-  date={formatDate(donateur.date_adhesion)}
-  status={donateur.is_active ? "Actif" : "Inactif"}
-  creePar={donateur.cree_par}
-/>
+                <CardDonateur
+                  name={`${donateur.nom ?? ""} ${donateur.prenom ?? ""}`.trim()}
+                  email={donateur.email}
+                  date={formatDate(donateur.date_adhesion)}
+                  status={donateur.is_active ? "Actif" : "Inactif"}
+                  creePar={donateur.cree_par}
+                />
               </div>
             ))}
           </div>
         )}
-
       </main>
     </div>
   );
