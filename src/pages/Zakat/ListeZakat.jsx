@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listAidesZakat ,createVersementSolde } from "@/lib/api/zakat";
+import { listAidesZakat ,createVersementSolde,exportAidesZakat } from "@/lib/api/zakat";
 import { useQuery ,useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -159,6 +159,34 @@ const handleAlimenterSolde = async (data) => {
     throw error;
   }
 };
+
+
+const handleExportZakat = async () => {
+  try {
+    const response = await exportAidesZakat();
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "zakat.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'export des zakats :",
+      error.response?.data || error
+    );
+  }
+};
   const [selectedZakat, setSelectedZakat] = useState(null);
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
@@ -284,7 +312,7 @@ const handleAlimenterSolde = async (data) => {
             title="Liste des Zakat"
             type="share"
             actionTitle="Exporter la liste des Zakat"
-            onAction={() => console.log("Exporter")}
+          onAction={handleExportZakat}
             secondType="add"
             secondActionTitle="Ajouter une zakat"
             onSecondAction={() => navigate("/ajout-zakat")}
