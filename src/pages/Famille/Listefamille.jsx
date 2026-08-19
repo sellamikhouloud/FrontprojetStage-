@@ -20,6 +20,18 @@ import { useNavigate } from "react-router-dom";
 export default function FamiliesPage() {
     const { user, ready } = useAuth();
   const [search, setSearch] = useState("");
+
+    const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+
  const [selectedVillage, setSelectedVillage] = useState("");
 const [selectedStatut, setSelectedStatut] = useState("");
 const [selectedMois, setSelectedMois] = useState("");
@@ -86,40 +98,44 @@ const villageOptions = villages.map((village) => ({
   value: village.id,
 }));
 
-   const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: ["familles", appliedFilters],
-    queryFn: () => listFamilles(appliedFilters).then((r) => r.data),
-  });
-const familles = data?.results ?? data ?? [];
+const {
+  data,
+  isLoading,
+  isError,
+  error,
+} = useQuery({
+  queryKey: ["familles", search],
 
-if (isLoading) {
-  return (
-    <div className="min-h-screen grid place-items-center">
-      <Spinner />
-    </div>
-  );
-}
-if (isError) {
-  return (
-    <div className="min-h-screen grid place-items-center">
-      <div className="text-center text-red-500">
-        <p>Impossible de charger les familles.</p>
+  queryFn: async () => {
+    const params = {};
 
-        <button
-          onClick={refetch}
-          className="mt-2 underline"
-        >
-          Réessayer
-        </button>
-      </div>
-    </div>
-  );
+  const trimmedSearch = search.trim();
+
+if (trimmedSearch) {
+  params.search = trimmedSearch;
 }
+
+    const response = await listFamilles(params);
+
+    const data = response?.data;
+
+    if (Array.isArray(data)) {
+      return data;
+    }
+
+    if (Array.isArray(data?.results)) {
+      return data.results;
+    }
+
+    return [];
+  },
+
+  keepPreviousData: true,
+  retry: 1,
+});
+
+const familles = Array.isArray(data) ? data : [];
+
 
 
 
@@ -246,81 +262,6 @@ const filterTagsContent = (
 );
  
 
- const filteredFamilies = familles.filter((famille) => {
-  const keyword = search.trim().toLowerCase();
-
-  if (!keyword) return true;
-
-  const normalizedKeyword = keyword.replace(/^0/, "");
-
-  const enfant =
-    famille.nourrisson?.prenom?.toLowerCase() ?? "";
-
-  const mere =
-    `${famille.mere?.prenom ?? ""} ${famille.mere?.nom ?? ""}`
-      .toLowerCase();
-
-  const code =
-    famille.id?.toLowerCase() ?? "";
-const sexeCode =
-  famille.nourrisson?.sexe?.toLowerCase() ?? "";
-
-const sexe =
-  sexeCode === "m"
-    ? "m masculin fils"
-    : sexeCode === "f"
-    ? "f feminin féminin fille"
-    : "";
-
-
- const village =
-  famille.mere?.village?.nom?.toLowerCase() ?? "";
-
-  // Date venant du backend : "2025-04-05"
-  const dateNaissance =
-    famille.nourrisson?.date_naissance ?? "";
-
-  let matchDate = false;
-
-  if (dateNaissance) {
-    const date = new Date(dateNaissance);
-
-    if (!isNaN(date.getTime())) {
-      const jour = String(date.getDate()).padStart(2, "0");
-      const jourSansZero = String(date.getDate());
-
-      const mois = date.toLocaleDateString("fr-FR", {
-        month: "long",
-      });
-
-      const annee = String(date.getFullYear());
-
-      matchDate = [
-        dateNaissance.toLowerCase(),        // 2025-04-05
-        `${jour} ${mois} ${annee}`,         // 05 avril 2025
-        `${jourSansZero} ${mois} ${annee}`, // 5 avril 2025
-        jour,                               // 05
-        jourSansZero,                       // 5
-        mois,                               // avril
-        annee,                              // 2025
-        `${jour} ${mois}`,                  // 05 avril
-        `${jourSansZero} ${mois}`,          // 5 avril
-      ].some((value) =>
-        value.toLowerCase().includes(normalizedKeyword)
-      );
-    }
-  }
-
-  return (
-    enfant.includes(normalizedKeyword) ||
-    mere.includes(normalizedKeyword) ||
-    code.includes(normalizedKeyword) ||
-    sexe.includes(normalizedKeyword) ||
-    village.includes(normalizedKeyword) ||
-    matchDate
-  );
-});
-
 
 if  (isFilterOpen && isMobile)  {
   return (
@@ -410,7 +351,25 @@ if  (isFilterOpen && isMobile)  {
   </div>
 )}
 
-      {!isError && filteredFamilies.length === 0 && (
+
+{isLoading && (
+  <div className="flex justify-center items-center py-10 md:py-20">
+    <Spinner />
+  </div>
+)}
+
+{isError && (
+  <div className="flex justify-center py-10 md:py-20">
+    <p className="text-red-500">
+      {error?.response?.data?.detail ||
+        "Impossible de charger la liste des familles."}
+    </p>
+  </div>
+)}
+
+       {!isLoading &&
+          !isError &&
+          familles.length === 0 && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
@@ -423,9 +382,9 @@ if  (isFilterOpen && isMobile)  {
 )}
           <div className="flex gap-6">
            <div className="flex-1 space-y-4">
- {filteredFamilies.length > 0 && (
+ {familles.length > 0 && (
   <div className="w-full flex-1 space-y-3">
-    {filteredFamilies.map((famille) => (
+    { familles.map((famille) => (
       <div key={famille.id}>
         {/* Desktop */}
        <div
@@ -448,7 +407,7 @@ if  (isFilterOpen && isMobile)  {
     : "-"
 }
   region={famille.mere?.village?.nom ?? "-"}
-  naissance={famille.nourrisson?.date_naissance}
+   naissance={famille.nourrisson?.date_naissance ?? "-"}
   code={famille.id}
   badges={[
     // =========================
@@ -521,7 +480,7 @@ if  (isFilterOpen && isMobile)  {
     : "-"
 }
   region={famille.mere?.village?.nom ?? "-"}
-  naissance={famille.nourrisson?.date_naissance}
+  naissance={famille.nourrisson?.date_naissance ?? "-"}
   code={famille.id}
   badges={[
     // =========================
