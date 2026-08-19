@@ -35,6 +35,7 @@ export default function FamiliesPage() {
  const [selectedVillage, setSelectedVillage] = useState("");
 const [selectedStatut, setSelectedStatut] = useState("");
 const [selectedMois, setSelectedMois] = useState("");
+const [selectedSexe, setSelectedSexe] = useState("");
  const [isFilterOpen, setIsFilterOpen] = useState(false);
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
@@ -71,15 +72,18 @@ const [appliedFilters, setAppliedFilters] = useState({
   statutLabel: "",
   mois_entree: "",
   moisLabel: "",
+  sexe: "",
+  sexeLabel: "",
 });
-
- const [filters, setFilters] = useState({
+const [filters, setFilters] = useState({
   village: "",
   villageLabel: "",
   statut: "",
   statutLabel: "",
   mois_entree: "",
   moisLabel: "",
+  sexe: "",
+  sexeLabel: "",
 });
 
  const {
@@ -104,16 +108,32 @@ const {
   isError,
   error,
 } = useQuery({
-  queryKey: ["familles", search],
+  queryKey: ["familles", search, appliedFilters],
 
   queryFn: async () => {
     const params = {};
 
-  const trimmedSearch = search.trim();
+    const trimmedSearch = search.trim();
 
-if (trimmedSearch) {
-  params.search = trimmedSearch;
-}
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    if (appliedFilters.village) {
+      params.village = appliedFilters.village;
+    }
+
+    if (appliedFilters.statut) {
+      params.statut = appliedFilters.statut;
+    }
+
+    if (appliedFilters.mois_entree) {
+      params.mois_entree = appliedFilters.mois_entree;
+    }
+
+    if (appliedFilters.sexe) {
+      params.sexe = appliedFilters.sexe;
+    }
 
     const response = await listFamilles(params);
 
@@ -173,6 +193,25 @@ const filtersContent = (
       noPadding
     />
 
+<SelectInput2
+  label="Sexe"
+  placeholder="Choisir un sexe"
+  value={filters.sexe}
+  onChange={(selected) => {
+    setFilters((prev) => ({
+      ...prev,
+      sexe: selected.value,
+      sexeLabel: selected.label,
+    }));
+  }}
+  options={[
+    { label: "Masculin", value: "M" },
+    { label: "Féminin", value: "F" },
+  ]}
+  noPadding
+/>
+
+
     <SelectInput2
       label="Mois d'entrée"
       placeholder="Choisir un mois"
@@ -204,13 +243,15 @@ const filtersContent = (
       noPadding
      onClick={() => {
   const empty = {
-    village: "",
-    villageLabel: "",
-    statut: "",
-    statutLabel: "",
-    mois_entree: "",
-    moisLabel: "",
-  };
+  village: "",
+  villageLabel: "",
+  statut: "",
+  statutLabel: "",
+  mois_entree: "",
+  moisLabel: "",
+  sexe: "",
+  sexeLabel: "",
+};
   setFilters(empty);
   setAppliedFilters(empty);
 }}
@@ -232,13 +273,27 @@ const filterTagsContent = (
   />
 )}
 
-    {appliedFilters.statut && (
+   {appliedFilters.statut && (
       <FilterTag
         text={appliedFilters.statut}
         onRemove={() =>
           setAppliedFilters((prev) => ({
             ...prev,
             statut: "",
+            statutLabel: "",
+          }))
+        }
+      />
+    )}
+
+     {appliedFilters.sexe && (
+      <FilterTag
+        text={appliedFilters.sexeLabel}
+        onRemove={() =>
+          setAppliedFilters((prev) => ({
+            ...prev,
+            sexe: "",
+            sexeLabel: "",
           }))
         }
       />
@@ -281,10 +336,11 @@ if  (isFilterOpen && isMobile)  {
         />
       </div>
 
-
-      {(appliedFilters.village ||
+{(appliedFilters.village ||
   appliedFilters.statut ||
-  appliedFilters.mois_entree ) && filterTagsContent}
+  appliedFilters.mois_entree ||
+  appliedFilters.sexe) &&
+  filterTagsContent}
 
       <div className="mt-6">
     {filtersContent}
@@ -328,10 +384,11 @@ if  (isFilterOpen && isMobile)  {
   onFilterClick={() => setIsFilterOpen((prev) => !prev)}
   maxWidth="max-w-full"
 />
-
 {(appliedFilters.village ||
   appliedFilters.statut ||
-  appliedFilters.mois_entree) && filterTagsContent}
+  appliedFilters.mois_entree ||
+  appliedFilters.sexe) &&
+  filterTagsContent}
 
 
           </div>
