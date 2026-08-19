@@ -22,6 +22,11 @@ import PopupListeFamilles from "../../components/Popups/PopupListeFamilles";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { listFamilles } from "@/lib/api/familles";
+
+
+import { createVisite } from "../../lib/api/visites";
 
 const MOIS_OPTIONS = [
   { label: "Janvier", value: "janvier" },
@@ -76,6 +81,9 @@ export default function AjoutVisite() {
   const [evaluationVisuelle, setEvaluationVisuelle] = useState(
     draft?.evaluationVisuelle || ""
   );
+
+  // --- Hémoglobine (nécessaire pour le payload de l'API) ---
+  const [hemoglobine, setHemoglobine] = useState(draft?.hemoglobine || "");
 
   // --- Résultat renvoyé par le backend après enregistrement ---
   // (statuts MAS/MAM/Normal, Mère normale/à risque, et z-scores : calculés côté backend, pas côté front)
@@ -160,20 +168,76 @@ export default function AjoutVisite() {
     return !Object.values(newErrors).some(Boolean);
   };
 
+  // --- État de sauvegarde (appel API) ---
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
-  const handleSave = () => {
-    if (!validateForm()) return;
-
-    // 🔧 DONNÉES FACTICES POUR TEST UI — à retirer une fois l'API branchée
-    setResultatVisite({
-      zScores: { pa: -0.8, ta: -2.4, pt: -2.1 },
-      statutNourrisson: { type: "mam", label: "MAM nourrisson" },
-      statutMere: { type: "mereNormal", label: "Mère normale" },
-    });
-    setShowSuccessPopup(true);
+  // Convertit une date (Date ou string) en format "YYYY-MM-DD"
+  const formatDate = (d) => {
+    const dt = d instanceof Date ? d : new Date(d);
+    return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(
+      dt.getDate()
+    ).padStart(2, "0")}`;
   };
 
- 
+  const handleSave = async () => {
+    if (!validateForm()) return;
+
+    setSaving(true);
+    setSaveError(null);
+
+    // "mois" (dropdown) -> numéro 1-12 pour le champ "month" attendu par l'API
+    const monthIndex = MOIS_OPTIONS.findIndex((m) => m.value === mois) + 1;
+    const monthNumber = monthIndex > 0 ? monthIndex : null;
+
+    const payload = {
+      famille: selectedFamille?.code, // ex: "GDK-2026-008"
+      date_visite: formatDate(date),
+
+      poids_bebe: Number(poidsNourrisson),
+      taille_bebe: Number(tailleNourrisson),
+      muac_bebe: Number(muacNourrisson),
+
+      poids_mere: Number(poidsMere),
+      taille_mere: Number(tailleMere),
+      muac_mere: Number(muacMere),
+
+      observations_cliniques_bebe: observationsNourrisson,
+      observations_cliniques_mere: observationsMere,
+      evaluation_famille: evaluationVisuelle,
+
+      // positionNourrisson === true  -> "Debout"
+      // positionNourrisson === false -> "Couché" => mesure_couchee = true
+      mesure_couchee: positionNourrisson === false,
+
+      month: monthNumber,
+      hemoglobine: hemoglobine || null,
+    };
+
+    try {
+      const response = await createVisite(payload);
+
+      // 🔧 Adapte ces clés selon la vraie forme de la réponse backend
+      setResultatVisite({
+        zScores: response.data?.z_scores ?? response.data?.zScores,
+        statutNourrisson:
+          response.data?.statut_nourrisson ?? response.data?.statutNourrisson,
+        statutMere: response.data?.statut_mere ?? response.data?.statutMere,
+      });
+
+      setShowSuccessPopup(true);
+    } catch (error) {
+      console.error(
+        "❌ Erreur lors de la création de la visite :",
+        error.response?.data || error.message
+      );
+      setSaveError(
+        "Une erreur est survenue lors de l'enregistrement de la visite."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // --- Handlers qui nettoient l'erreur au fur et à mesure ---
   const handleMoisChange = (value) => {
@@ -223,49 +287,70 @@ export default function AjoutVisite() {
 
   const navigate = useNavigate();
 
-  const listeDesFamilles = [
-    {
-      id: 1,
-      enfant: "Aïcha Mint Mohamed",
-      sexe: "Fille",
-      region: "Lexeiba",
-      naissance: "12 mars 2026",
-      code: "GDK-2026-003",
-      badges: [
-        { type: "mam", text: "MAM nourrisson" },
-        { type: "mere", text: "Mère normale" },
-        { type: "retard", text: "Visite en retard" },
-      ],
-    },
-    {
-      id: 2,
-      enfant: "Aïcha Mint Mohamed",
-      sexe: "Garçon",
-      region: "Lexeiba",
-      naissance: "22 mars 2025",
-      code: "GDK-2026-003",
-      badges: [
-        { type: "mas", text: "MAS nourrisson" },
-        { type: "mere", text: "Mère normale" },
-        { type: "retard", text: "Visite en retard" },
-      ],
-    },
-    {
-      id: 3,
-      enfant: "Aïcha Mint Mohamed",
-      sexe: "Fille",
-      region: "Lexeiba",
-      naissance: "12 mars 2026",
-      code: "GDK-2026-003",
-      badges: [
-        { type: "mam", text: "MAM nourrisson" },
-        { type: "mere", text: "Mère normale" },
-      ],
-    },
-  ];
-
   const [openFamilles, setOpenFamilles] = useState(false);
-  const [openOptions, setOpenOptions] = useState(false);
+const [openOptions, setOpenOptions] = useState(false);
+
+  // --- Récupération des vraies familles depuis l'API ---
+const {
+  data: famillesData,
+  isLoading: famillesLoading,
+  isError: famillesError,
+  refetch: refetchFamilles,
+} = useQuery({
+  queryKey: ["familles-popup"],
+  queryFn: () => listFamilles().then((r) => r.data),
+  enabled: openFamilles, // 👈 ne fetch que quand le popup s'ouvre (optionnel, tu peux retirer si tu veux précharger)
+});
+
+const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+
+// Mapping vers le format attendu par le popup / les cartes
+// (même logique que dans la page "Liste des familles")
+const listeDesFamilles = famillesBrutes.map((famille) => ({
+  id: famille.id,
+  enfant: famille.nourrisson?.prenom,
+  mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
+  sexe:
+    famille?.nourrisson?.sexe === "M"
+      ? "Fils"
+      : famille?.nourrisson?.sexe === "F"
+      ? "Fille"
+      : "-",
+  region: famille.mere?.village?.nom ?? "-",
+  naissance: famille.nourrisson?.date_naissance,
+  code: famille.id,
+  badges: [
+    famille?.statut_nutritionnel_bebe === "mam" && {
+      type: "mam",
+      text: "MAM nourrisson",
+    },
+    famille?.statut_nutritionnel_bebe === "mas" && {
+      type: "mas",
+      text: "MAS nourrisson",
+    },
+    famille?.statut_nutritionnel_bebe === "normale" && {
+      type: "mere",
+      text: "Bébé normal",
+    },
+    famille?.statut_nutritionnel_mere === "normale" && {
+      type: "mere",
+      text: "Mère normale",
+    },
+    famille?.statut_nutritionnel_mere === "a_risque" && {
+      type: "risque",
+      text: "Mère à risque",
+    },
+    famille?.statut_nutritionnel_mere === "malnutrition" && {
+      type: "mas",
+      text: "Mère malnutrie",
+    },
+    famille.est_visite_en_retard && {
+      type: "retard",
+      text: "Visite en retard",
+    },
+  ].filter(Boolean),
+}));
+
 
   const familyOptions = [
     { label: "Changer la famille", value: "changer" },
@@ -298,6 +383,7 @@ export default function AjoutVisite() {
             muacMere,
             observationsMere,
             evaluationVisuelle,
+            hemoglobine,
           },
         },
       });
@@ -735,6 +821,18 @@ export default function AjoutVisite() {
                 </div>
               </div>
 
+              {/* Hémoglobine */}
+              <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="flex flex-col gap-1">
+                  <MesureInput
+                    label="Hémoglobine"
+                    unit="g/dL"
+                    value={hemoglobine}
+                    onChange={(e) => setHemoglobine(e.target.value)}
+                  />
+                </div>
+              </div>
+
               <h2 className="text-[18px] font-semibold text-[#000000] mb-2 mt-6">
                 Observations cliniques mère
               </h2>
@@ -779,11 +877,13 @@ export default function AjoutVisite() {
         {/* Save button */}
         <div className="mt-2">
           <Button
-            title="Enregistrer"
+            title={saving ? "Enregistrement..." : "Enregistrer"}
             variant="save"
             noPadding
             onClick={handleSave}
+            disabled={saving}
           />
+          {saveError && <ErrorMessage message={saveError} />}
         </div>
 
         {showSuccessPopup && (
@@ -807,16 +907,19 @@ export default function AjoutVisite() {
         )}
       </main>
 
-      <PopupListeFamilles
-        open={openFamilles}
-        onClose={() => setOpenFamilles(false)}
-        familles={listeDesFamilles}
-        onSelectFamille={(famille) => {
-          setSelectedFamille(famille);
-          setOpenFamilles(false);
-          setErrors((prev) => ({ ...prev, famille: false }));
-        }}
-      />
+    <PopupListeFamilles
+  open={openFamilles}
+  onClose={() => setOpenFamilles(false)}
+  familles={listeDesFamilles}
+  loading={famillesLoading}
+  error={famillesError}
+  onRetry={refetchFamilles}
+  onSelectFamille={(famille) => {
+    setSelectedFamille(famille);
+    setOpenFamilles(false);
+    setErrors((prev) => ({ ...prev, famille: false }));
+  }}
+/>
     </div>
   );
 }
