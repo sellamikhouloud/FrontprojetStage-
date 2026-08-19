@@ -280,18 +280,18 @@ const handleExportZakat = async () => {
 
       <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
         <div className="h-full overflow-y-auto px-5 pt-18 md:pt-0 lg:p-8 pb-[50px]">
-          <NavigationHeader
-  title="Statistiques des zakats"
-  type="historique"
-  actionTitle="Voir l'historique des versements"
-  onAction={() => setShowHistoriqueVersements(true)}
-  {...( isAdmin && {
-    secondType: "add",
-    secondActionTitle: "Alimenter le solde",
-    onSecondAction: () => setOpenAlimenterSolde(true),
-  })}
-/>
-
+      {user?.role === "admin" && (
+  <NavigationHeader
+    title="Statistiques des zakats"
+    type="historique"
+    actionTitle="Voir l'historique des versements"
+    onAction={() => setShowHistoriqueVersements(true)}
+    secondType="add"
+    secondActionTitle="Alimenter le solde"
+    onSecondAction={() => setOpenAlimenterSolde(true)}
+  />
+)}
+{user?.role === "admin" && (
           <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
             <SoldeCard
               soldeDisponible="34 000"
@@ -314,17 +314,19 @@ const handleExportZakat = async () => {
               ]}
             />
           </div>
+          )}
 
-          <NavigationHeader
-            title="Liste des Zakat"
-            type="share"
-            actionTitle="Exporter la liste des Zakat"
-          onAction={handleExportZakat}
-            secondType="add"
-            secondActionTitle="Ajouter une zakat"
-            onSecondAction={() => navigate("/ajout-zakat")}
-          />
-
+      <NavigationHeader
+  title="Liste des Zakat"
+  {...(user?.role === "admin" && {
+    type: "share",
+    actionTitle: "Exporter la liste des Zakat",
+    onAction: handleExportZakat,
+  })}
+  secondType="add"
+  secondActionTitle="Ajouter une zakat"
+  onSecondAction={() => navigate("/ajout-zakat")}
+/>
           <div className="my-6">
             <SearchBar
               value={search}
@@ -456,7 +458,7 @@ const handleExportZakat = async () => {
 />
 
       <PopupHistoriqueVersements
-        open={showHistoriqueVersements}
+        open={isAdmin && showHistoriqueVersements}
         onClose={() => setShowHistoriqueVersements(false)}
         versements={versements}
       />
