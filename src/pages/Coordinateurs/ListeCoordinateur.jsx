@@ -186,8 +186,8 @@ export default function ListeCoordinateurs() {
 
                     creePar={
                       coordinateur.cree_par
-                        ? `${coordinateur.cree_par.nom ?? ""} ${
-                            coordinateur.cree_par.prenom ?? ""
+                        ? `${coordinateur.created_by.nom ?? ""} ${
+                            coordinateur.created_by.prenom ?? ""
                           }`.trim()
                         : "/"
                     }
