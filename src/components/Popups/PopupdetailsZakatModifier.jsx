@@ -278,11 +278,13 @@ const PopupModifierZakat = ({
       unit: "MRU",
     },
 
-    {
-      label: "Mode de paiement",
-      value: form.mode_remise,
-      options: modeRemiseOptions,
-    },
+   {
+  label: "Mode de paiement",
+  value:
+    modeRemiseOptions.find((opt) => opt.value === form.mode_remise)?.label ||
+    "",
+  options: modeRemiseOptions,
+},
 
     {
       label: "Enregistrée par",
@@ -318,28 +320,33 @@ const PopupModifierZakat = ({
   ];
 
   const handleInfoChange = (index, value) => {
-    const fieldMap = [
-      "date_versement",
-      "numero_zakat",
-      "montant",
-      "mode_remise",
-    ];
+  const fieldMap = [
+    "date_versement",
+    "numero_zakat",
+    "montant",
+    "mode_remise",
+  ];
 
-    const field = fieldMap[index];
+  const field = fieldMap[index];
 
-    if (
-      !field ||
-      field === "numero_zakat"
-    ) {
-      return;
-    }
+  if (!field || field === "numero_zakat") {
+    return;
+  }
 
-    setForm((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  let finalValue = value;
 
+  if (field === "mode_remise") {
+    const match = modeRemiseOptions.find(
+      (opt) => opt.label === value || opt.value === value
+    );
+    finalValue = match ? match.value : value;
+  }
+
+  setForm((prev) => ({
+    ...prev,
+    [field]: finalValue,
+  }));
+};
   return (
     <AnimatePresence>
       <div
