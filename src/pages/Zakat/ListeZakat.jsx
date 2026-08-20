@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listAidesZakat ,createVersementSolde,exportAidesZakat } from "@/lib/api/zakat";
+import { listAidesZakat ,createVersementSolde,exportAidesZakat , annulerAideZakat, } from "@/lib/api/zakat";
 import { useQuery ,useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -31,7 +31,6 @@ export default function ZakatPage() {
   const { user } = useAuth();
 
   const isAdmin = user?.role === "admin";
-
 
 const queryClient = useQueryClient();
  
@@ -164,7 +163,34 @@ const handleAlimenterSolde = async (data) => {
     throw error;
   }
 };
+const handleDeleteZakat = async (zakat) => {
+  try {
+    console.log("Annulation de la Zakat :", zakat.id);
 
+    // Appel API
+    const response = await annulerAideZakat(zakat.id);
+
+    console.log("Zakat annulée :", response.data);
+
+    // Fermer le popup détail
+    setShowDetailPopup(false);
+
+    // Nettoyer la sélection
+    setSelectedZakat(null);
+
+    // Recharger la liste des zakats
+    await queryClient.invalidateQueries({
+      queryKey: ["zakats"],
+    });
+
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'annulation de la Zakat :",
+      error.response?.data || error
+    );
+    throw error;
+  }
+};
 
 const handleExportZakat = async () => {
   try {
@@ -423,17 +449,18 @@ const handleExportZakat = async () => {
         <div className="absolute bottom-0 left-0 right-0 h-[15px] bg-white z-20" />
       </main>
 
-      <PopupDetailZakat
-        open={showDetailPopup}
-        zakat={selectedZakat}
-        famille={selectedZakat?.famille_info}
-        onClose={() => setShowDetailPopup(false)}
-        onEdit={(zakat) => {
-          setShowDetailPopup(false);
-          setSelectedZakat(zakat);
-          setOpenModifier(true);
-        }}
-      />
+     <PopupDetailZakat
+  open={showDetailPopup}
+  zakat={selectedZakat}
+  famille={selectedZakat?.famille_info}
+  onClose={() => setShowDetailPopup(false)}
+  onEdit={(zakat) => {
+    setShowDetailPopup(false);
+    setSelectedZakat(zakat);
+    setOpenModifier(true);
+  }}
+  onDelete={handleDeleteZakat}
+/>
 
       <PopupModifierZakat
         open={openModifier}
