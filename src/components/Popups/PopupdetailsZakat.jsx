@@ -86,25 +86,25 @@ const modeRemise =
   zakat.mode_remise ??
   "-";
   
-  const ActionButtons = ({ className }) => (
-    <div className={className}>
-      <Button
-        title="Modifier"
-        variant="modifier"
-        icon={EditIcon}
-        noWrapperPadding
-        onClick={() => onEdit?.(zakat)}
-      />
+ const ActionButtons = ({ className }) => (
+  <div className={className}>
+    <Button
+      title="Modifier"
+      variant="modifier"
+      icon={EditIcon}
+      noWrapperPadding
+      onClick={() => onEdit?.(zakat)}
+    />
 
-      <Button
-        title="Supprimer"
-        variant="supprimer"
-        icon={DeleteIcon}
-        noWrapperPadding
-        onClick={() => setShowDeletePopup(true)}
-      />
-    </div>
-  );
+    <Button
+      title="Supprimer"
+      variant="supprimer"
+      icon={DeleteIcon}
+      noWrapperPadding
+      onClick={() => setShowDeletePopup(true)}
+    />
+  </div>
+);
 
 
   return (
@@ -378,15 +378,17 @@ const modeRemise =
                 </div>
               </div>
 
-              <ActionButtons
-                className="
-                  mt-6
-                  grid
-                  grid-cols-1
-                  gap-3
-                  w-full
-                "
-              />
+            {!zakat.est_annule && (
+  <ActionButtons
+    className="
+      mt-6
+      grid
+      grid-cols-1
+      gap-3
+      w-full
+    "
+  />
+)}
             </div>
           </div>
         </motion.div>
