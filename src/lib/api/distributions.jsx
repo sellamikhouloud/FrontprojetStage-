@@ -20,3 +20,5 @@ export const modifierSeuil = (id, payload) => api.patch(`/api/produits/${id}/mod
 
 export const createDistribution = (payload) => api.post("api/distributions/", payload);
 
+export const exportDistributions = (params) => api.get("/api/distributions/export/", {   params, responseType: "blob",});
+
