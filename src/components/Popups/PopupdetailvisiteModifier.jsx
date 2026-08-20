@@ -108,9 +108,7 @@ const PopupDetailVisiteModifier = ({
     return parsedDate.toLocaleDateString("fr-FR");
   };
 
-  // =====================================================
-  // ENREGISTREMENT
-  // =====================================================
+ 
 
   const handleSave = async () => {
     setErrorMessage(null);
@@ -164,10 +162,7 @@ const PopupDetailVisiteModifier = ({
 
   if (!open || !visite || !form) return null;
 
-  // =====================================================
-  // INFORMATIONS FAMILLE
-  // =====================================================
-
+ 
   const enfant = famille?.nourrisson?.prenom || "-";
 
   const mere =
@@ -185,9 +180,7 @@ const PopupDetailVisiteModifier = ({
   const dateNaissance = famille?.nourrisson?.date_naissance || "-";
   const code = famille?.id || "-";
 
-  // =====================================================
-  // NUMÉRO VISITE
-  // =====================================================
+  
 
   const numeroVisite =
     visite.numero_visite !== undefined && visite.numero_visite !== null
@@ -196,9 +189,7 @@ const PopupDetailVisiteModifier = ({
 
   const dateEnregistrement = formatDate(visite.date_creation);
 
-  // =====================================================
-  // INFORMATIONS GÉNÉRALES (éditable — seule la date est modifiable)
-  // =====================================================
+ 
 
   const infosGenerales = [
     {
@@ -252,9 +243,6 @@ const PopupDetailVisiteModifier = ({
     }
   };
 
-  // =====================================================
-  // STATUT CALCULÉ
-  // =====================================================
 
   const statutBadges = [
     visite?.statut_nutritionnel === "mam" && {
@@ -302,9 +290,7 @@ const PopupDetailVisiteModifier = ({
     </div>
   );
 
-  // =====================================================
-  // BOUTON ENREGISTRER
-  // =====================================================
+ 
 
   const SaveButtonBlock = () => (
     <div className="w-full">
@@ -327,10 +313,7 @@ const PopupDetailVisiteModifier = ({
     </div>
   );
 
-  // =====================================================
-  // RENDER
-  // =====================================================
-
+ 
   return (
     <AnimatePresence>
       <div
@@ -416,21 +399,31 @@ const PopupDetailVisiteModifier = ({
             <div className="space-y-3">
               <StatutCalculeBlock />
 
-              <ModifierMesure
-                title="Mesure mère"
-                poids={form.poids_mere}
-                taille={form.taille_mere}
-                muac={form.muac_mere}
-                setPoids={(v) =>
-                  setForm((prev) => ({ ...prev, poids_mere: v }))
-                }
-                setTaille={(v) =>
-                  setForm((prev) => ({ ...prev, taille_mere: v }))
-                }
-                setMuac={(v) =>
-                  setForm((prev) => ({ ...prev, muac_mere: v }))
-                }
-              />
+             <ModifierMesure
+  title="Mesure mère"
+  variant="mere"
+  poids={form.poids_mere}
+  taille={form.taille_mere}
+  muac={form.muac_mere}
+  setPoids={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      poids_mere: v,
+    }))
+  }
+  setTaille={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      taille_mere: v,
+    }))
+  }
+  setMuac={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      muac_mere: v,
+    }))
+  }
+/>
 
               <AfficherMesure
                 title="Informations complémentaires"
@@ -504,21 +497,31 @@ const PopupDetailVisiteModifier = ({
               height="h-[55px]"
             />
 
-            <ModifierMesure
-              title="Mesure mère"
-              poids={form.poids_mere}
-              taille={form.taille_mere}
-              muac={form.muac_mere}
-              setPoids={(v) =>
-                setForm((prev) => ({ ...prev, poids_mere: v }))
-              }
-              setTaille={(v) =>
-                setForm((prev) => ({ ...prev, taille_mere: v }))
-              }
-              setMuac={(v) =>
-                setForm((prev) => ({ ...prev, muac_mere: v }))
-              }
-            />
+           <ModifierMesure
+  title="Mesure mère"
+  variant="mere"
+  poids={form.poids_mere}
+  taille={form.taille_mere}
+  muac={form.muac_mere}
+  setPoids={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      poids_mere: v,
+    }))
+  }
+  setTaille={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      taille_mere: v,
+    }))
+  }
+  setMuac={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      muac_mere: v,
+    }))
+  }
+/>
 
             <AfficherMesure
               title="Informations complémentaires"
