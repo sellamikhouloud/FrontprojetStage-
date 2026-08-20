@@ -460,7 +460,7 @@ const CoordinatorDashboard = () => {
               compliancePercentage={compliancePercentage}
               progressValue={compliancePercentage}
               progressMax={100}
-              fillColor="#69B89C"
+              fillColor="#7BC8C4"
               trackColor="#E8ECEF"
               onClick={() => navigate("/liste-visites")}
             />

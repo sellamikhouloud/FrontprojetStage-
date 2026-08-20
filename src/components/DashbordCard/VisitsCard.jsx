@@ -11,7 +11,7 @@ const VisitsCard = ({
   trackColor,
   height,
   radius,
-  showPercentage,
+  showPercentage = false,
   percentageColor,
   className,
   animate,
@@ -203,7 +203,6 @@ const VisitsCard = ({
           <span
             className="
               text-[48px]
-              font-semibold
               leading-[32px]
               text-[#595C5E]
             "
