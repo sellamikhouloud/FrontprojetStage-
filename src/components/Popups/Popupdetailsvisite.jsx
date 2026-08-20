@@ -254,12 +254,14 @@ const statutBadges = [
             <div className="space-y-3">
               <InfoCard title="Informations générales" data={infosGenerales} />
 
-              <AfficherMesure
-                title="Mesure nourrisson"
-                poids={visite.poids_bebe}
-                taille={visite.taille_bebe}
-                muac={visite.muac_bebe}
-              />
+              
+            <AfficherMesure
+  title="Mesure nourrisson"
+  type="nourrisson"
+  poids={visite.poids_bebe}
+  taille={visite.taille_bebe}
+  muac={visite.muac_bebe}
+/>
 
               <div className="flex gap-3">
                 <ZScoreBox label="P/A" value={visite.score_z_pa} />
@@ -279,12 +281,14 @@ const statutBadges = [
             <div className="space-y-3">
               <StatutCalculeBlock />
 
-              <AfficherMesure
-                title="Mesure mère"
-                poids={visite.poids_mere}
-                taille={visite.taille_mere}
-                muac={visite.muac_mere}
-              />
+             
+           <AfficherMesure
+  title="Mesure mère"
+  type="mere"
+  poids={visite.poids_mere}
+  taille={visite.taille_mere}
+  muac={visite.muac_mere}
+/>
 
 <AfficherMesure
   title="Informations complémentaires"
@@ -312,11 +316,12 @@ const statutBadges = [
             <StatutCalculeBlock />
 
             <AfficherMesure
-              title="Mesure nourrisson"
-              poids={visite.poids_bebe}
-              taille={visite.taille_bebe}
-              muac={visite.muac_bebe}
-            />
+  title="Mesure nourrisson"
+  type="nourrisson"
+  poids={visite.poids_bebe}
+  taille={visite.taille_bebe}
+  muac={visite.muac_bebe}
+/>
 
             <div className="flex gap-3">
               <ZScoreBox label="P/A" value={visite.score_z_pa} />
@@ -329,12 +334,13 @@ const statutBadges = [
               text={visite.observations_cliniques_bebe || "-"}
             />
 
-            <AfficherMesure
-              title="Mesure mère"
-              poids={visite.poids_mere}
-              taille={visite.taille_mere}
-              muac={visite.muac_mere}
-            />
+           <AfficherMesure
+  title="Mesure mère"
+  type="mere"
+  poids={visite.poids_mere}
+  taille={visite.taille_mere}
+  muac={visite.muac_mere}
+/>
 
 
 <AfficherMesure
