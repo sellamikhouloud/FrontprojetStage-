@@ -77,16 +77,15 @@ const AlertBanner = ({
         className={`
           flex-1
           flex
-          ${title ? "flex-col items-start gap-[6px]" : "items-center"}
+          ${title ? "flex-col items-start gap-[4px]" : "items-center"}
         `}
       >
         {title && (
           <h3
             className="
-              text-[18px]
+              text-[17px]
               font-semibold
               leading-5
-              text-[#2E2E2E]
             "
           >
             {title}
@@ -95,7 +94,7 @@ const AlertBanner = ({
 
         <p
           className={`
-            text-[16px]
+            text-[15px]
             font-medium
             leading-5
           `}

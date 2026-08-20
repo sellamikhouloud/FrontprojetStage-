@@ -6,10 +6,16 @@ const CardStatistic = ({
 }) => {
   return (
     <div
-      className={`flex flex-col items-${align} justify-center gap-[16px] flex-1`}
+      className={`flex flex-col items-${align} justify-center gap-[16px] flex-1 max-md:gap-[3px]`}
     >
       <span
-        className="text-[32px] font-bold leading-[28px]"
+        className="
+          text-[25px]
+          font-bold
+          leading-[28px]
+          max-md:text-[20px]
+          max-md:leading-[20px]
+        "
       >
         {value}
       </span>
@@ -17,9 +23,10 @@ const CardStatistic = ({
       <span
         className="
           text-[16px]
-          font-medium
           leading-[15px]
           text-center
+          max-md:text-[11px]
+          max-md:leading-[13px]
         "
         style={{ color: Color }}
       >

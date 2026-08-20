@@ -203,10 +203,10 @@ const coordinatorTitle = "Coordinateurs";
 const coordinatorCount = 12;
 const coordinatorLabel = "Coordinateurs";
 
-const lastConnection = "Aujourd'hui";
+const lastConnection = "+30min";
 const lastConnectionLabel = "Dernière connexion";
 
-const manageCoordinatorText = "Gérer";
+const manageCoordinatorText = "Gerer les coordinateurs";
 
 /* ==========================
     Zakat
@@ -401,7 +401,7 @@ const handleAlertClick = (alert) => {
           <DistributionCard
             title={distributionTitle}
             products={products}
-            dividerColor="#73C8C5"
+            dividerColor="#4E9F8A"
             viewAllText="Voir tous"
             onClick={() => navigate("/liste-distributions")}
             onViewAllClick={() => setShowHistorique(true)}
@@ -497,7 +497,7 @@ const handleAlertClick = (alert) => {
           <DistributionCard
            title={distributionTitle}
             products={products}
-            dividerColor="#73C8C5"
+            dividerColor="#4E9F8A"
             viewAllText="Voir tous"
             onClick={() => navigate("/liste-distributions")}
             onViewAllClick={() => setShowHistorique(true)}
@@ -529,7 +529,7 @@ const handleAlertClick = (alert) => {
               compliancePercentage={compliancePercentage}
               progressValue={compliancePercentage}
               progressMax={100}
-              fillColor="#69B89C"
+              fillColor="#7BC8C4"
               trackColor="#E8ECEF"
               onClick={()=>console.log("Visits")}
             />
