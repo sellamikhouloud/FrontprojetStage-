@@ -80,22 +80,22 @@ const CoordinatorDashboard = () => {
       id: 1,
       value: 38,
       label: "Actives",
-      color: "#4E9F8A",
-      borderColor: "#4E9F8A",
+      color: "#22C55E",
+      borderColor: "#22C55E",
     },
     {
       id: 2,
       value: 1,
       label: "Alertées",
-      color: "#F2B94B",
-      borderColor: "#F2B94B",
+      color: "#F59E0B",
+      borderColor: "#F59E0B",
     },
     {
       id: 3,
       value: 5,
       label: "Sorties",
-      color: "#808080",
-      borderColor: "#BDBDBD",
+      color: "#6D6D6D",
+      borderColor: "#6D6D6D",
     },
   ];
 
@@ -103,7 +103,7 @@ const CoordinatorDashboard = () => {
         VISITS
   ========================== */
 
-  const visitsTitle = "Visites";
+  const visitsTitle = "Nombre de visites";
 
   const completedVisits = 9;
 
@@ -354,11 +354,6 @@ const CoordinatorDashboard = () => {
             onClick={() => navigate("/liste-famille")}
           />
 
-          <UpcomingVisitsCard
-            visits={upcomingVisits}
-            onClick={() => navigate("/liste-visites")}
-          />
-
           <VisitsCard
             title={visitsTitle}
             completedVisits={completedVisits}
@@ -371,14 +366,19 @@ const CoordinatorDashboard = () => {
             onClick={() => navigate("/liste-visites")}
           />
 
+          <UpcomingVisitsCard
+            visits={upcomingVisits}
+            onClick={() => navigate("/liste-visites")}
+          />
+
           <NutritionCard
             title={nutritionTitle}
             normalPercentage={normalPercentage}
             mamPercentage={mamPercentage}
             masPercentage={masPercentage}
-            normalColor="#69B89C"
-            mamColor="#F4B860"
-            masColor="#EB5757"
+            normalColor="#22C55E"
+            mamColor="#F59E0B"
+            masColor="#EF4444"
             trackColor="#E8ECEF"
             onClick={() => console.log("Nutrition")}
           />
@@ -424,9 +424,9 @@ const CoordinatorDashboard = () => {
               normalPercentage={normalPercentage}
               mamPercentage={mamPercentage}
               masPercentage={masPercentage}
-              normalColor="#69B89C"
-              mamColor="#F4B860"
-              masColor="#EB5757"
+              normalColor="#22C55E"
+              mamColor="#F59E0B"
+              masColor="#EF4444"
               trackColor="#E8ECEF"
               onClick={() => console.log("Nutrition")}
             />

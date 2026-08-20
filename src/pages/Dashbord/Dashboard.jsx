@@ -85,26 +85,26 @@ const familyStatusTitle = "Statut des familles";
 
 const familyStats = [
   {
-    id: 1,
-    value: 98,
-    label: "Active",
-    color: "#4E9F8A",
-    borderColor: "#4E9F8A",
-  },
-  {
-    id: 2,
-    value: 26,
-    label: "En attente",
-    color: "#F2B94B",
-    borderColor: "#F2B94B",
-  },
-  {
-    id: 3,
-    value: 9,
-    label: "Inactive",
-    color: "#EB5757",
-    borderColor: "#EB5757",
-  },
+      id: 1,
+      value: 38,
+      label: "Actives",
+      color: "#22C55E",
+      borderColor: "#22C55E",
+    },
+    {
+      id: 2,
+      value: 1,
+      label: "Alertées",
+      color: "#F59E0B",
+      borderColor: "#F59E0B",
+    },
+    {
+      id: 3,
+      value: 5,
+      label: "Sorties",
+      color: "#6D6D6D",
+      borderColor: "#6D6D6D",
+    },
 ];
 
 /* ==========================

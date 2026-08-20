@@ -38,24 +38,143 @@ const VisitsCard = ({
         gap-[18px]
         border
         border-[#BCCAC14D]
+
+        max-md:bg-transparent
+        max-md:border-0
+        max-md:rounded-none
+        max-md:px-0
+        max-md:py-0
+        max-md:shadow-none
+        max-md:hover:shadow-none
+        max-md:hover:scale-100
+        max-md:gap-0
       "
+      onClick={onClick}
     >
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div
+        className="
+          flex
+          justify-between
+          items-center
+
+          max-md:mb-[7px]
+        "
+      >
         <h2
           className="
             text-[24px]
             font-semibold
             leading-[20px]
+
+            max-md:text-[16px]
+            max-md:leading-[20px]
           "
         >
           {title}
         </h2>
       </div>
 
-      {/* Statistics */}
-      <div className="flex justify-between">
+      {/* ========================= */}
+      {/* MOBILE STATISTICS          */}
+      {/* ========================= */}
 
+      <div
+        className="
+          hidden
+          max-md:flex
+          w-full
+          h-[55px]
+          rounded-[12px]
+          border
+          border-[#8BC9C9]
+          bg-[#F8FBFC]
+          overflow-hidden
+        "
+      >
+        {/* Completed */}
+        <div
+          className="
+            w-1/2
+            flex
+            flex-col
+            items-center
+            justify-center
+            gap-[2px]
+          "
+        >
+          <span
+            className="
+              text-[14px]
+              font-semibold
+              leading-[14px]
+            "
+          >
+            réalisées
+          </span>
+
+          <span
+            className="
+              text-[20px]
+              font-extrabold
+              leading-[20px]
+              text-[#22C55E]
+            "
+          >
+            {completedVisits}
+          </span>
+        </div>
+
+        {/* Divider */}
+        <div
+          className="
+            w-[2px]
+            h-[40px]
+            self-center
+            bg-[#5E9F92]
+          "
+        />
+
+        {/* Expected */}
+        <div
+          className="
+            w-1/2
+            flex
+            flex-col
+            items-center
+            justify-center
+            gap-[2px]
+          "
+        >
+          <span
+            className="
+              text-[14px]
+              font-semibold
+              leading-[14px]
+              text-center
+            "
+          >
+            prévues ce mois
+          </span>
+
+          <span
+            className="
+              text-[20px]
+              font-extrabold
+              leading-[20px]
+              text-[#91A09F]
+            "
+          >
+            {expectedVisits}
+          </span>
+        </div>
+      </div>
+
+      {/* ========================= */}
+      {/* DESKTOP STATISTICS         */}
+      {/* ========================= */}
+
+      <div className="flex justify-between max-md:hidden">
         {/* Completed */}
         <div className="flex flex-col items-start gap-[6px]">
           <span
@@ -95,18 +214,15 @@ const VisitsCard = ({
           <span
             className="
               text-[16px]
-              text-[#5E6064]            
+              text-[#5E6064]
             "
           >
             Prévues ce mois
           </span>
         </div>
-
       </div>
 
-      {/* Compliance */}
-      <div className="flex flex-col gap-[14px]">
-
+      <div className="flex flex-col gap-[14px] max-md:hidden">
         <div className="flex justify-between items-center">
           <span
             className="
@@ -143,7 +259,6 @@ const VisitsCard = ({
           className={className}
           animate={animate}
         />
-
       </div>
     </div>
   );

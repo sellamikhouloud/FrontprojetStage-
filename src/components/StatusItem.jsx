@@ -12,6 +12,7 @@ const StatusItem = ({
         items-center
         justify-center
         gap-[1px]
+        bg-white
         border-[1.5px]
         rounded-[20px]
         px-[10px]

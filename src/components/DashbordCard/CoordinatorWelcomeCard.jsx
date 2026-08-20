@@ -9,12 +9,13 @@ const CoordinatorWelcomeCard = ({
   return (
     <div
       className="
+        hidden
+        md:flex
         w-full
         bg-[#F8FBFC]
         rounded-[20px]
         px-[22px]
         py-[18px]
-        flex
         items-center
         justify-between
       "
