@@ -73,6 +73,18 @@ const causePrincipale =
     zakat.date_modification
   );
 
+
+  const modeRemiseLabels = {
+  espece: "Espèce",
+  transfert_mobile: "Transfert mobile",
+  autre: "Autre",
+};
+
+const modeRemise =
+  modeRemiseLabels[zakat.mode_remise] ??
+  zakat.mode_remise ??
+  "-";
+  
   const ActionButtons = ({ className }) => (
     <div className={className}>
       <Button
@@ -92,6 +104,7 @@ const causePrincipale =
       />
     </div>
   );
+
 
   return (
     <AnimatePresence>
@@ -270,10 +283,9 @@ const causePrincipale =
                   },
 
                   {
-                    label: "Mode de paiement",
-                    value:
-                      zakat.mode_remise ?? "-",
-                  },
+  label: "Mode de paiement",
+  value: modeRemise,
+},
 
                   {
                     label: "Enregistrée par",
