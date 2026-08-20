@@ -1,14 +1,113 @@
 export default function ModifierMesure({
   title = "Mesure nourrisson",
 
-  // Mesures classiques
   poids,
   taille,
   muac,
+
   setPoids,
   setTaille,
   setMuac,
+
+  // "nourrisson" par défaut
+  // "mere" pour la mère
+  variant = "nourrisson",
 }) {
+  const isMere = variant === "mere";
+
+  // =====================================================
+  // VALEURS AFFICHÉES
+  // =====================================================
+
+  // API : grammes → affichage mère : kg
+  const poidsAffiche =
+    poids === "" || poids === null || poids === undefined
+      ? ""
+      : isMere
+      ? Number(poids) / 1000
+      : poids;
+
+  // API : cm → affichage mère : m
+  const tailleAffiche =
+    taille === "" || taille === null || taille === undefined
+      ? ""
+      : isMere
+      ? Number(taille) / 100
+      : taille;
+
+  // API : mm → affichage mère : cm
+  const muacAffiche =
+    muac === "" || muac === null || muac === undefined
+      ? ""
+      : isMere
+      ? Number(muac) / 10
+      : muac;
+
+  // =====================================================
+  // MODIFICATION POIDS
+  // =====================================================
+
+  const handlePoidsChange = (value) => {
+    if (value === "") {
+      setPoids?.("");
+      return;
+    }
+
+    const number = Number(value);
+
+    if (isNaN(number)) return;
+
+    // Mère : kg → grammes pour l'API
+    // Nourrisson : on garde les grammes
+    setPoids?.(isMere ? number * 1000 : value);
+  };
+
+  // =====================================================
+  // MODIFICATION TAILLE
+  // =====================================================
+
+  const handleTailleChange = (value) => {
+    if (value === "") {
+      setTaille?.("");
+      return;
+    }
+
+    const number = Number(value);
+
+    if (isNaN(number)) return;
+
+    // Mère : mètres → cm pour l'API
+    // Nourrisson : on garde les cm
+    setTaille?.(isMere ? number * 100 : value);
+  };
+
+  // =====================================================
+  // MODIFICATION MUAC
+  // =====================================================
+
+  const handleMuacChange = (value) => {
+    if (value === "") {
+      setMuac?.("");
+      return;
+    }
+
+    const number = Number(value);
+
+    if (isNaN(number)) return;
+
+    // Mère : cm → mm pour l'API
+    // Nourrisson : on garde les mm
+    setMuac?.(isMere ? number * 10 : value);
+  };
+
+  // =====================================================
+  // UNITÉS
+  // =====================================================
+
+  const poidsUnit = isMere ? "kg" : "g";
+  const tailleUnit = isMere ? "m" : "cm";
+  const muacUnit = isMere ? "cm" : "mm";
+
   return (
     <div className="w-full">
 
@@ -40,9 +139,10 @@ export default function ModifierMesure({
             <div className="flex justify-center items-center gap-1">
               <input
                 type="number"
-                value={poids ?? ""}
+                step="any"
+                value={poidsAffiche}
                 onChange={(e) =>
-                  setPoids?.(e.target.value)
+                  handlePoidsChange(e.target.value)
                 }
                 className="
                   w-auto
@@ -60,7 +160,7 @@ export default function ModifierMesure({
               />
 
               <span className="text-[14px] font-bold">
-                g
+                {poidsUnit}
               </span>
             </div>
           </div>
@@ -88,9 +188,10 @@ export default function ModifierMesure({
             <div className="flex justify-center items-center gap-1">
               <input
                 type="number"
-                value={taille ?? ""}
+                step="any"
+                value={tailleAffiche}
                 onChange={(e) =>
-                  setTaille?.(e.target.value)
+                  handleTailleChange(e.target.value)
                 }
                 className="
                   w-auto
@@ -108,7 +209,7 @@ export default function ModifierMesure({
               />
 
               <span className="text-[14px] font-bold">
-                cm
+                {tailleUnit}
               </span>
             </div>
 
@@ -135,9 +236,10 @@ export default function ModifierMesure({
             <div className="flex justify-center items-center gap-1">
               <input
                 type="number"
-                value={muac ?? ""}
+                step="any"
+                value={muacAffiche}
                 onChange={(e) =>
-                  setMuac?.(e.target.value)
+                  handleMuacChange(e.target.value)
                 }
                 className="
                   w-auto
@@ -155,7 +257,7 @@ export default function ModifierMesure({
               />
 
               <span className="text-[14px] font-bold">
-                mm
+                {muacUnit}
               </span>
             </div>
           </div>
