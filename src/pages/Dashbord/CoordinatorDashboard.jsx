@@ -235,9 +235,18 @@ const CoordinatorDashboard = () => {
       naissance: "12 mars 2026",
       code: "GDK-2026-003",
       badges: [
-        { type: "mam", text: "MAM nourrisson" },
-        { type: "mere", text: "Mère normale" },
-        { type: "retard", text: "Visite en retard" },
+        {
+          type: "mam",
+          text: "MAM nourrisson",
+        },
+        {
+          type: "mere",
+          text: "Mère normale",
+        },
+        {
+          type: "retard",
+          text: "Visite en retard",
+        },
       ],
     },
   ];
@@ -251,8 +260,14 @@ const CoordinatorDashboard = () => {
       naissance: "12 mars 2026",
       code: "GDK-2026-003",
       badges: [
-        { type: "mas", text: "MAS sévère" },
-        { type: "mere", text: "Mère normale" },
+        {
+          type: "mas",
+          text: "MAS sévère",
+        },
+        {
+          type: "mere",
+          text: "Mère normale",
+        },
       ],
     },
   ];
@@ -279,145 +294,162 @@ const CoordinatorDashboard = () => {
         break;
     }
   };
-    return (
+
+  return (
     <div className="flex h-screen overflow-hidden bg-white">
-      {/* Sidebar */}
+      {/* =========================
+            SIDEBAR
+      ========================= */}
+
       <Sidebar role="coordinator" />
 
-      {/* Main */}
-      <main className="flex-1 overflow-y-auto bg-white px-5 pt-18 pb-8 md:pt-0 lg:p-10">
+      {/* =========================
+            MAIN
+      ========================= */}
 
-        {/* ================= MOBILE HEADER ================= */}
+      <main
+        className="
+          flex-1
+          overflow-y-auto
+          bg-white
+          px-[15px]
+          pt-18
+          pb-8
+          md:px-[20px]
+          md:pt-0
+          lg:px-10
+          lg:pt-10
+          lg:pb-10
+        "
+      >
+        {/* 
+          IMPORTANT:
+          One single container for EVERYTHING.
+          This guarantees that the welcome card,
+          alerts, titles and cards have the same
+          left and right boundaries.
+        */}
+        <div className="w-full">
+          {/* =========================
+                WELCOME
+          ========================= */}
 
-        <div className="lg:hidden">
+          <div className="hidden lg:block w-full">
             <CoordinatorWelcomeCard
-            greeting={greeting}
-            userName={userName}
-            message={message}
+              greeting={greeting}
+              userName={userName}
+              message={message}
             />
-        </div>
+          </div>
 
-        {/* ================= DESKTOP HEADER ================= */}
+          {/* =========================
+                ALERTS TITLE
+          ========================= */}
 
-        <div className="hidden lg:block">
-            <CoordinatorWelcomeCard
-            greeting={greeting}
-            userName={userName}
-            message={message}
-            />
-        </div>
+          <h3
+            className="
+              w-full
+              mt-2
+              mb-1
+              text-[20px]
+              font-bold
+              leading-[20px]
+            "
+          >
+            Alertes prioritaires
+          </h3>
 
-        {/* ================= ALERTS ================= */}
-        <h3 className="mt-2 mb-2 text-[20px] font-bold leading-[20px]">Alertes prioritaires</h3>
-        <div
-          className="
-            flex
-            flex-col
-            gap-[8px]
-            lg:grid
-            lg:grid-cols-2
-            pt-3
-            pb-3
-          "
-        >
-          {alerts.map((alert) => (
-            <AlertBanner
-              key={alert.id}
-              icon={alert.icon}
-              title={alert.title}
-              subtitle={alert.subtitle}
-              count={alert.count}
-              bgColor={alert.bgColor}
-              iconBgColor={alert.iconBgColor}
-              borderColor={alert.borderColor}
-              hasLeftBorder={alert.hasLeftBorder}
-              onClick={() => handleAlertClick(alert)}
-            />
-          ))}
-        </div>
+          {/* =========================
+                ALERTS
+          ========================= */}
 
-        <h3 className=" mb-4 text-[20px] font-bold leading-[20px]">Indications clés</h3>
+          <div
+            className="
+              w-full
+              flex
+              flex-col
+              gap-[8px]
+              pt-2
+              pb-3
+              lg:grid
+              lg:grid-cols-2
+            "
+          >
+            {alerts.map((alert) => (
+              <AlertBanner
+                key={alert.id}
+                icon={alert.icon}
+                title={alert.title}
+                subtitle={alert.subtitle}
+                count={alert.count}
+                bgColor={alert.bgColor}
+                iconBgColor={alert.iconBgColor}
+                borderColor={alert.borderColor}
+                hasLeftBorder={alert.hasLeftBorder}
+                onClick={() => handleAlertClick(alert)}
+              />
+            ))}
+          </div>
 
-        {/* ================= MOBILE ================= */}
+          {/* =========================
+                KEY INDICATIONS TITLE
+          ========================= */}
 
-        <div
-          className="
-            flex
-            flex-col
-            gap-[18px]
-            lg:hidden
-          "
-        >
-          <FamilyStatusCard
-            title={familyStatusTitle}
-            stats={familyStats}
-            onClick={() => navigate("/liste-famille")}
-          />
+          <h3
+            className="
+              w-full
+              mb-4
+              text-[20px]
+              font-bold
+              leading-[20px]
+            "
+          >
+            Indications clés
+          </h3>
 
-          <VisitsCard
-            title={visitsTitle}
-            completedVisits={completedVisits}
-            expectedVisits={expectedVisits}
-            compliancePercentage={compliancePercentage}
-            progressValue={compliancePercentage}
-            progressMax={100}
-            fillColor="#69B89C"
-            trackColor="#E8ECEF"
-            onClick={() => navigate("/liste-visites")}
-          />
+          {/* =====================================================
+                MOBILE
+          ===================================================== */}
 
-          <UpcomingVisitsCard
-            visits={upcomingVisits}
-            onClick={() => navigate("/liste-visites")}
-          />
-
-          <NutritionCard
-            title={nutritionTitle}
-            normalPercentage={normalPercentage}
-            mamPercentage={mamPercentage}
-            masPercentage={masPercentage}
-            normalColor="#22C55E"
-            mamColor="#F59E0B"
-            masColor="#EF4444"
-            trackColor="#E8ECEF"
-            onClick={() => console.log("Nutrition")}
-          />
-
-          <DistributionCard
-            title={distributionTitle}
-            products={products}
-            dividerColor="#4E9F8A"
-            viewAllText="Voir tous"
-            onClick={() => navigate("/liste-distributions")}
-            onViewAllClick={() => setShowHistorique(true)}
-          />
-
-            <ZakatCard
-            variant="coordinator"
-            title="Zakat aid"
-            remainingBalanceMRU="34 000,00 MRU"
-            remainingBalanceEUR="500 Euros"
-            />
-        </div>
-        {/* ================= DESKTOP GRID ================= */}
-
-        <div
-          className="
-            hidden
-            lg:grid
-            grid-cols-[1.15fr_1fr]
-            gap-[18px]
-          "
-        >
-          {/* ================= LEFT COLUMN ================= */}
-
-          <div className="flex flex-col gap-[18px]">
+          <div
+            className="
+              w-full
+              flex
+              flex-col
+              gap-[18px]
+              lg:hidden
+            "
+          >
+            {/* FAMILY STATUS */}
 
             <FamilyStatusCard
               title={familyStatusTitle}
               stats={familyStats}
               onClick={() => navigate("/liste-famille")}
             />
+
+            {/* VISITS */}
+
+            <VisitsCard
+              title={visitsTitle}
+              completedVisits={completedVisits}
+              expectedVisits={expectedVisits}
+              compliancePercentage={compliancePercentage}
+              progressValue={compliancePercentage}
+              progressMax={100}
+              fillColor="#69B89C"
+              trackColor="#E8ECEF"
+              onClick={() => navigate("/liste-visites")}
+            />
+
+            {/* UPCOMING VISITS */}
+
+            <UpcomingVisitsCard
+              visits={upcomingVisits}
+              onClick={() => navigate("/liste-visites")}
+            />
+
+            {/* NUTRITION */}
 
             <NutritionCard
               title={nutritionTitle}
@@ -431,6 +463,8 @@ const CoordinatorDashboard = () => {
               onClick={() => console.log("Nutrition")}
             />
 
+            {/* DISTRIBUTION */}
+
             <DistributionCard
               title={distributionTitle}
               products={products}
@@ -440,68 +474,177 @@ const CoordinatorDashboard = () => {
               onViewAllClick={() => setShowHistorique(true)}
             />
 
+            {/* ZAKAT */}
+
             <ZakatCard
-            variant="coordinator"
-            title="Zakat aid"
-            remainingBalanceMRU="34 000,00 MRU"
-            remainingBalanceEUR="500 Euros"
+              variant="coordinator"
+              title={zakatTitle}
+              remainingBalanceMRU="34 000,00 MRU"
+              remainingBalanceEUR="500 Euros"
             />
-
           </div>
 
-          {/* ================= RIGHT COLUMN ================= */}
+          {/* =====================================================
+                DESKTOP
+          ===================================================== */}
 
-          <div className="flex flex-col gap-[18px]">
+          <div
+            className="
+              hidden
+              lg:grid
+              w-full
+              grid-cols-[1.15fr_1fr]
+              gap-[18px]
+              items-start
+            "
+          >
+            {/* =========================
+                  LEFT COLUMN
+            ========================= */}
 
-            <VisitsCard
-              title={visitsTitle}
-              completedVisits={completedVisits}
-              expectedVisits={expectedVisits}
-              compliancePercentage={compliancePercentage}
-              progressValue={compliancePercentage}
-              progressMax={100}
-              fillColor="#7BC8C4"
-              trackColor="#E8ECEF"
-              onClick={() => navigate("/liste-visites")}
-            />
+            <div
+              className="
+                w-full
+                min-w-0
+                flex
+                flex-col
+                gap-[18px]
+              "
+            >
+              {/* FAMILY STATUS */}
 
-            <UpcomingVisitsCard
-              visits={upcomingVisits}
-              onClick={() => navigate("/liste-visites")}
-            />
+              <FamilyStatusCard
+                title={familyStatusTitle}
+                stats={familyStats}
+                onClick={() => navigate("/liste-famille")}
+              />
 
+              {/* NUTRITION */}
+
+              <NutritionCard
+                title={nutritionTitle}
+                normalPercentage={normalPercentage}
+                mamPercentage={mamPercentage}
+                masPercentage={masPercentage}
+                normalColor="#22C55E"
+                mamColor="#F59E0B"
+                masColor="#EF4444"
+                trackColor="#E8ECEF"
+                onClick={() => console.log("Nutrition")}
+              />
+
+              {/* DISTRIBUTION */}
+
+              <DistributionCard
+                title={distributionTitle}
+                products={products}
+                dividerColor="#4E9F8A"
+                viewAllText="Voir tous"
+                onClick={() => navigate("/liste-distributions")}
+                onViewAllClick={() => setShowHistorique(true)}
+              />
+
+              {/* ZAKAT */}
+
+              <ZakatCard
+                variant="coordinator"
+                title={zakatTitle}
+                remainingBalanceMRU="34 000,00 MRU"
+                remainingBalanceEUR="500 Euros"
+              />
+            </div>
+
+            {/* =========================
+                  RIGHT COLUMN
+            ========================= */}
+
+            <div
+              className="
+                w-full
+                min-w-0
+                flex
+                flex-col
+                gap-[18px]
+              "
+            >
+              {/* VISITS */}
+
+              <VisitsCard
+                title={visitsTitle}
+                completedVisits={completedVisits}
+                expectedVisits={expectedVisits}
+                compliancePercentage={compliancePercentage}
+                progressValue={compliancePercentage}
+                progressMax={100}
+                fillColor="#7BC8C4"
+                trackColor="#E8ECEF"
+                onClick={() => navigate("/liste-visites")}
+              />
+
+              {/* UPCOMING VISITS */}
+
+              <UpcomingVisitsCard
+                visits={upcomingVisits}
+                onClick={() => navigate("/liste-visites")}
+              />
+            </div>
           </div>
 
-        </div>
-                {/* ================= POPUPS ================= */}
+          {/* =========================
+                POPUPS
+          ========================= */}
 
-        {showHistorique && (
-          <PopupDistribution
-            title="Distributions ce mois"
-            items={[
-              { name: "Lait", value: 38, unit: "Kg" },
-              { name: "Céréales", value: 14, unit: "Kg" },
-              { name: "Huile", value: 8, unit: "L" },
-              { name: "Sucre", value: 8, unit: "Kg" },
-              { name: "Sélodié", value: 8, unit: "Kg" },
-              { name: "Légumineuses", value: 8, unit: "Kg" },
-            ]}
-            onClose={() => setShowHistorique(false)}
+          {showHistorique && (
+            <PopupDistribution
+              title="Distributions ce mois"
+              items={[
+                {
+                  name: "Lait",
+                  value: 38,
+                  unit: "Kg",
+                },
+                {
+                  name: "Céréales",
+                  value: 14,
+                  unit: "Kg",
+                },
+                {
+                  name: "Huile",
+                  value: 8,
+                  unit: "L",
+                },
+                {
+                  name: "Sucre",
+                  value: 8,
+                  unit: "Kg",
+                },
+                {
+                  name: "Sélodié",
+                  value: 8,
+                  unit: "Kg",
+                },
+                {
+                  name: "Légumineuses",
+                  value: 8,
+                  unit: "Kg",
+                },
+              ]}
+              onClose={() => setShowHistorique(false)}
+            />
+          )}
+
+          <PopupRetard
+            open={showRetard}
+            onClose={() => setShowRetard(false)}
+            familleretard={familleRetard}
           />
-        )}
 
-        <PopupRetard
-          open={showRetard}
-          onClose={() => setShowRetard(false)}
-          familleretard={familleRetard}
-        />
-
-        <PopupMas
-          open={showMas}
-          onClose={() => setShowMas(false)}
-          familleMas={familleMas}
-        />
-
+          <PopupMas
+            open={showMas}
+            onClose={() => setShowMas(false)}
+            familleMas={familleMas}
+          />
+        </div>
       </main>
     </div>
   );
