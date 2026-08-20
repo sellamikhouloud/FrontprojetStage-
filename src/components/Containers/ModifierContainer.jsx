@@ -59,7 +59,7 @@ const EditableInfoCard = ({
             </span>
 
             {/* ================= DATE ================= */}
-            {item.type === "date" ? (
+             {item.type === "date" ? (
               <div className="relative w-[220px] max-w-full min-w-0">
                 <div
                   onClick={() =>
@@ -103,6 +103,7 @@ const EditableInfoCard = ({
                         return isSelected
                           ? "bg-[#4E9F8A] text-white rounded-full"
                           : "hover:bg-[#D9F0EA] hover:text-[#4E9F8A] rounded-full transition-colors duration-200";
+                          
                       }}
                       renderCustomHeader={({
                         date,
@@ -140,10 +141,7 @@ const EditableInfoCard = ({
                     />
                   </div>
                 )}
-              </div>
-
-
-            ) 
+              </div>  ) 
           : item.popup ? (
   <div className="relative w-[220px] max-w-full min-w-0">
     <div
@@ -163,42 +161,56 @@ const EditableInfoCard = ({
   </div>
 )
             
-            : item.options ? (
-              /* ================= OPTIONS ================= */
-              <div className="relative w-[220px] max-w-full min-w-0">
-                <div
-                  onClick={() =>
-                    editable &&
-                    setOpenedIndex(
-                      openedIndex === index
-                        ? null
-                        : index
-                    )
-                  }
-                  className="w-full text-right cursor-pointer text-[#202124] truncate overflow-hidden whitespace-nowrap"
-                >
-                  {item.value}
-                </div>
+           : item.options ? (
+  <div className="relative w-[220px] max-w-full min-w-0">
 
-                {openedIndex === index && (
-                  <div
-                    className="absolute right-0 mt-2 w-full bg-white border border-[#E5E7EB] rounded-xl shadow-lg z-50"
-                    onClick={(e) =>
-                      e.stopPropagation()
-                    }
-                  >
-                    <Options
-                      options={item.options}
-                      handleSelect={(value) => {
-                        onChange(index, value);
-                        setOpenedIndex(null);
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* ================= INPUT ================= */
+    <div
+      onClick={() =>
+        editable &&
+        setOpenedIndex(
+          openedIndex === index ? null : index
+        )
+      }
+      className="
+        w-full
+        text-right
+        cursor-pointer
+        text-[#202124]
+        truncate
+        overflow-hidden
+        whitespace-nowrap
+      "
+    > {item.displayValue ?? item.value}
+    </div>
+
+    {openedIndex === index && (
+      <div
+        className="
+          absolute
+          right-0
+          mt-2
+          w-full
+          bg-white
+          border
+          border-[#E5E7EB]
+          rounded-xl
+          shadow-lg
+          z-50
+        "
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Options
+          options={item.options}
+          handleSelect={(value) => {
+            onChange(index, value);
+            setOpenedIndex(null);
+          }}
+        />
+      </div>
+    )}
+
+  </div>
+): ( /* ================= INPUT ================= */
                             <div className="flex items-center justify-end gap-2 w-[220px] max-w-full min-w-0 overflow-hidden">
                 <input
   type={
@@ -234,8 +246,7 @@ const EditableInfoCard = ({
   }
 
   onChange(index, value);
-}
-                  }
+}  }
 
 
                   onKeyDown={(e) => {
@@ -278,3 +289,4 @@ const EditableInfoCard = ({
 
 export default EditableInfoCard;
 
+ 
