@@ -561,12 +561,15 @@ const coordinateurs = (coordinateursData ?? [])
 
   const mere = [
   
-  {
-    key: "mere_village_id",
-    label: "Village",
-    value: form.mere_village_id,
-    options: villageOptions,
-  },
+{
+  key: "mere_village_id",
+  label: "Village",
+  value:
+    villageOptions.find(
+      (opt) => String(opt.value) === String(form.mere_village_id)
+    )?.label || "",
+  options: villageOptions,
+},
 
     {
       key: "mere_telephone",
