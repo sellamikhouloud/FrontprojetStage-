@@ -98,11 +98,13 @@ function App() {
     </ProtectedRoute>
   }
 />
+       
+        
         {/* Zakat*/}
           <Route
   path="/zakat"
   element={
-    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+    <ProtectedRoute >
       <ZakatPage />
     </ProtectedRoute>
   }

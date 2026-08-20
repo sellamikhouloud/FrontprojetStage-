@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listAidesZakat ,createVersementSolde } from "@/lib/api/zakat";
+import { listAidesZakat ,createVersementSolde,exportAidesZakat } from "@/lib/api/zakat";
 import { useQuery ,useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -19,6 +19,7 @@ import NoResultImage from "../../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import PopupHistoriqueVersements from "../../components/Popups/PopupHistoriqueVersements";
+import { useAuth } from "../../components/providers/AuthProvider";
 
 export default function ZakatPage() {
   const [search, setSearch] = useState("");
@@ -27,6 +28,10 @@ export default function ZakatPage() {
   const [showHistoriqueVersements, setShowHistoriqueVersements] = useState(false);
 
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "admin";
+
 
 const queryClient = useQueryClient();
  
@@ -159,6 +164,34 @@ const handleAlimenterSolde = async (data) => {
     throw error;
   }
 };
+
+
+const handleExportZakat = async () => {
+  try {
+    const response = await exportAidesZakat();
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "zakat.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'export des zakats :",
+      error.response?.data || error
+    );
+  }
+};
   const [selectedZakat, setSelectedZakat] = useState(null);
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
@@ -247,16 +280,18 @@ const handleAlimenterSolde = async (data) => {
 
       <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
         <div className="h-full overflow-y-auto px-5 pt-18 md:pt-0 lg:p-8 pb-[50px]">
-          <NavigationHeader
-            title="Statistiques des zakats"
-            type="historique"
-            actionTitle="Voir l'historique des versements"
-            onAction={() => setShowHistoriqueVersements(true)}
-            secondType="add"
-            secondActionTitle="Alimenter le solde"
-            onSecondAction={() => setOpenAlimenterSolde(true)}
-          />
-
+      {user?.role === "admin" && (
+  <NavigationHeader
+    title="Statistiques des zakats"
+    type="historique"
+    actionTitle="Voir l'historique des versements"
+    onAction={() => setShowHistoriqueVersements(true)}
+    secondType="add"
+    secondActionTitle="Alimenter le solde"
+    onSecondAction={() => setOpenAlimenterSolde(true)}
+  />
+)}
+{user?.role === "admin" && (
           <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
             <SoldeCard
               soldeDisponible="34 000"
@@ -279,17 +314,19 @@ const handleAlimenterSolde = async (data) => {
               ]}
             />
           </div>
+          )}
 
-          <NavigationHeader
-            title="Liste des Zakat"
-            type="share"
-            actionTitle="Exporter la liste des Zakat"
-            onAction={() => console.log("Exporter")}
-            secondType="add"
-            secondActionTitle="Ajouter une zakat"
-            onSecondAction={() => navigate("/ajout-zakat")}
-          />
-
+      <NavigationHeader
+  title="Liste des Zakat"
+  {...(user?.role === "admin" && {
+    type: "share",
+    actionTitle: "Exporter la liste des Zakat",
+    onAction: handleExportZakat,
+  })}
+  secondType="add"
+  secondActionTitle="Ajouter une zakat"
+  onSecondAction={() => navigate("/ajout-zakat")}
+/>
           <div className="my-6">
             <SearchBar
               value={search}
@@ -414,14 +451,14 @@ const handleAlimenterSolde = async (data) => {
         }}
       />
 
-      <PopupAlimenterSolde
-  open={openAlimenterSolde}
+     <PopupAlimenterSolde
+  open={isAdmin && openAlimenterSolde}
   onClose={() => setOpenAlimenterSolde(false)}
   onSave={handleAlimenterSolde}
 />
 
       <PopupHistoriqueVersements
-        open={showHistoriqueVersements}
+        open={isAdmin && showHistoriqueVersements}
         onClose={() => setShowHistoriqueVersements(false)}
         versements={versements}
       />
