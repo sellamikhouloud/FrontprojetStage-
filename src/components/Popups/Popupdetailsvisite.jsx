@@ -286,12 +286,11 @@ const statutBadges = [
                 muac={visite.muac_mere}
               />
 
-
 <AfficherMesure
   title="Informations complémentaires"
   variant="complement"
   statutImc={visite.statut_imc}
-  hemoglobine={visite.hemoglobine}
+  statutHemoglobine={visite.statut_hemoglobine}
 />
 
               <InfoCard
