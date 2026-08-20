@@ -63,22 +63,29 @@ const Popupvisites = ({
               sm:p-6
             "
           >
-            <PopupDetailVisite
-              open={openDetail}
-              onClose={() => setOpenDetail(false)}
-              visite={selectedVisite}
-              famille={famille}
-              onEdit={() => {
-                setOpenDetail(false);
-                setOpenModifier(true);
-              }}
-            />
-
-          <PopupDetailVisiteModifier
-  open={openModifier}
-  onClose={() => setOpenModifier(false)}
+          <PopupDetailVisite
+  open={openDetail}
+  onClose={() => setOpenDetail(false)}
   visite={selectedVisite}
   famille={famille}
+  onEdit={() => {
+    setOpenDetail(false);
+    setOpenModifier(true);
+  }}
+/>
+
+<PopupDetailVisiteModifier
+  open={openModifier}
+  onClose={() => {
+    setOpenModifier(false);
+    setOpenDetail(true); 
+  }}
+  visite={selectedVisite}
+  famille={famille}
+  onSave={(updatedVisite) => {
+    setSelectedVisite((prev) => ({ ...prev, ...updatedVisite }));
+    
+  }}
 />
 
             {/* Header */}
