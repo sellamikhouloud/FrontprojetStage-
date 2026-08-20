@@ -20,7 +20,9 @@ const PopupDetailVisiteModifier = ({
   onEdit,
   famille,
 }) => {
- 
+  // =====================================================
+  // ÉTATS
+  // =====================================================
 
   const [observationNourrisson, setObservationNourrisson] =
     useState("");
@@ -31,7 +33,6 @@ const PopupDetailVisiteModifier = ({
   const [evaluationFamiliale, setEvaluationFamiliale] =
     useState("");
 
-
   const [poidsNourrisson, setPoidsNourrisson] =
     useState("");
 
@@ -40,7 +41,6 @@ const PopupDetailVisiteModifier = ({
 
   const [muacNourrisson, setMuacNourrisson] =
     useState("");
-
 
   const [poidsMere, setPoidsMere] =
     useState("");
@@ -51,81 +51,56 @@ const PopupDetailVisiteModifier = ({
   const [muacMere, setMuacMere] =
     useState("");
 
-
-  const [statutImc, setStatutImc] =
-    useState("");
-
-  const [hemoglobine, setHemoglobine] =
-    useState("");
-
   const [showBanner, setShowBanner] =
     useState(false);
 
+  // =====================================================
+  // INITIALISATION DES DONNÉES
+  // =====================================================
 
   useEffect(() => {
     if (!visite) return;
 
-    
     setPoidsNourrisson(
-      visite.poids_bebe ??
-      ""
+      visite.poids_bebe ?? ""
     );
 
     setTailleNourrisson(
-      visite.taille_bebe ??
-      ""
+      visite.taille_bebe ?? ""
     );
 
     setMuacNourrisson(
-      visite.muac_bebe ??
-      ""
+      visite.muac_bebe ?? ""
     );
 
-
     setPoidsMere(
-      visite.poids_mere ??
-      ""
+      visite.poids_mere ?? ""
     );
 
     setTailleMere(
-      visite.taille_mere ??
-      ""
+      visite.taille_mere ?? ""
     );
 
     setMuacMere(
-      visite.muac_mere ??
-      ""
+      visite.muac_mere ?? ""
     );
-
-    
-
-    setStatutImc(
-      visite.statut_imc ??
-      ""
-    );
-
-    setHemoglobine(
-      visite.hemoglobine ??
-      ""
-    );
-
 
     setObservationNourrisson(
-      visite.observations_cliniques_bebe ??
-      ""
+      visite.observations_cliniques_bebe ?? ""
     );
 
     setObservationMere(
-      visite.observations_cliniques_mere ??
-      ""
+      visite.observations_cliniques_mere ?? ""
     );
 
     setEvaluationFamiliale(
-      visite.evaluation_famille ??
-      ""
+      visite.evaluation_famille ?? ""
     );
-
   }, [visite]);
+
+  // =====================================================
+  // FORMAT DATE
+  // =====================================================
 
   const formatDate = (date) => {
     if (!date) return "-";
@@ -139,10 +114,11 @@ const PopupDetailVisiteModifier = ({
     return parsedDate.toLocaleDateString("fr-FR");
   };
 
-
+  // =====================================================
+  // ENREGISTREMENT
+  // =====================================================
 
   const handleSave = () => {
-
     const updatedVisite = {
       ...visite,
 
@@ -154,12 +130,14 @@ const PopupDetailVisiteModifier = ({
       taille_mere: tailleMere,
       muac_mere: muacMere,
 
-      statut_imc: statutImc,
-      hemoglobine: hemoglobine,
+      observations_cliniques_bebe:
+        observationNourrisson,
 
-      observations_cliniques_bebe: observationNourrisson,
-      observations_cliniques_mere: observationMere,
-      evaluation_famille: evaluationFamiliale,
+      observations_cliniques_mere:
+        observationMere,
+
+      evaluation_famille:
+        evaluationFamiliale,
     };
 
     onEdit?.(updatedVisite);
@@ -174,34 +152,36 @@ const PopupDetailVisiteModifier = ({
 
   if (!open || !visite) return null;
 
+  // =====================================================
+  // INFORMATIONS FAMILLE
+  // =====================================================
 
   const enfant =
-    famille?.nourrisson?.prenom ||
-    "-";
+    famille?.nourrisson?.prenom || "-";
 
   const mere =
     `${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`.trim() ||
     "-";
 
- const sexe =
-  famille?.nourrisson?.sexe === "M"
-    ? "Fils"
-    : famille?.nourrisson?.sexe === "F"
-    ? "Fille"
-    : "-";
+  const sexe =
+    famille?.nourrisson?.sexe === "M"
+      ? "Fils"
+      : famille?.nourrisson?.sexe === "F"
+      ? "Fille"
+      : "-";
 
   const region =
-    famille?.mere?.village?.nom ||
-    "-";
+    famille?.mere?.village?.nom || "-";
 
   const dateNaissance =
-    famille?.nourrisson?.date_naissance ||
-    "-";
+    famille?.nourrisson?.date_naissance || "-";
 
   const code =
-    famille?.id ||
-    "-";
+    famille?.id || "-";
 
+  // =====================================================
+  // NUMÉRO VISITE
+  // =====================================================
 
   const numeroVisite =
     visite.numero_visite !== undefined &&
@@ -209,15 +189,15 @@ const PopupDetailVisiteModifier = ({
       ? visite.numero_visite + 1
       : "-";
 
-  
-
   const dateVisite =
     formatDate(visite.date_visite);
-
 
   const dateEnregistrement =
     formatDate(visite.date_creation);
 
+  // =====================================================
+  // INFORMATIONS GÉNÉRALES
+  // =====================================================
 
   const infosGenerales = [
     {
@@ -248,44 +228,48 @@ const PopupDetailVisiteModifier = ({
     },
     {
       label: "Date de modification",
-      value: formatDate(visite.date_modification),
+      value: formatDate(
+        visite.date_modification
+      ),
     },
   ];
 
   // =====================================================
   // STATUT CALCULÉ
   // =====================================================
-const statutBadges = [
-  visite?.statut_nutritionnel === "mam" && {
-    type: "mam",
-    text: "MAM nourrisson",
-  },
 
-  visite?.statut_nutritionnel === "mas" && {
-    type: "mas",
-    text: "MAS nourrisson",
-  },
+  const statutBadges = [
+    visite?.statut_nutritionnel === "mam" && {
+      type: "mam",
+      text: "MAM nourrisson",
+    },
 
-  visite?.statut_nutritionnel === "normale" && {
-    type: "mere",
-    text: "Bébé normal",
-  },
+    visite?.statut_nutritionnel === "mas" && {
+      type: "mas",
+      text: "MAS nourrisson",
+    },
 
-  visite?.statut_nutritionnel_mere === "normale" && {
-    type: "mere",
-    text: "Mère normale",
-  },
+    visite?.statut_nutritionnel === "normale" && {
+      type: "mere",
+      text: "Bébé normal",
+    },
 
-  visite?.statut_nutritionnel_mere === "a_risque" && {
-    type: "risque",
-    text: "Mère à risque",
-  },
+    visite?.statut_nutritionnel_mere === "normale" && {
+      type: "mere",
+      text: "Mère normale",
+    },
 
-  visite?.statut_nutritionnel_mere === "malnutrition" && {
-    type: "mas",
-    text: "Mère malnutrie",
-  },
-].filter(Boolean);
+    visite?.statut_nutritionnel_mere === "a_risque" && {
+      type: "risque",
+      text: "Mère à risque",
+    },
+
+    visite?.statut_nutritionnel_mere === "malnutrition" && {
+      type: "mas",
+      text: "Mère malnutrie",
+    },
+  ].filter(Boolean);
+
   const StatutCalculeBlock = () => (
     <div
       className="
@@ -347,6 +331,10 @@ const statutBadges = [
     </div>
   );
 
+  // =====================================================
+  // BOUTON ENREGISTRER
+  // =====================================================
+
   const SaveButtonBlock = () => (
     <div className="w-full">
       {showBanner && (
@@ -363,6 +351,9 @@ const statutBadges = [
     </div>
   );
 
+  // =====================================================
+  // RENDER
+  // =====================================================
 
   return (
     <AnimatePresence>
@@ -371,78 +362,59 @@ const statutBadges = [
           fixed
           inset-0
           z-[70]
-
           bg-transparent
           sm:bg-black/40
-
           flex
           items-start
           sm:items-center
-
           justify-center
-
           overflow-y-auto
           scrollbar-hide
         "
         onClick={onClose}
       >
-
         <motion.div
           initial={{
             opacity: 0,
             scale: 0.96,
           }}
-
           animate={{
             opacity: 1,
             scale: 1,
           }}
-
           exit={{
             opacity: 0,
             scale: 0.96,
           }}
-
           transition={{
             duration: 0.2,
           }}
-
           onClick={(e) =>
             e.stopPropagation()
           }
-
           className="
             w-full
             min-h-screen
-
             sm:min-h-0
             sm:w-[952px]
             sm:max-h-[90vh]
-
             overflow-y-auto
             scrollbar-hide
-
             bg-white
-
             rounded-none
             sm:rounded-[20px]
-
             border-0
             sm:border
-
             p-4
             sm:p-6
           "
-
           style={{
             borderColor: "#4E9F8A",
           }}
         >
-
-        
+          {/* HEADER */}
 
           <div className="mb-4">
-
             <button
               onClick={onClose}
               className="
@@ -473,15 +445,14 @@ const statutBadges = [
                 text-[#202124]
               "
             >
-              Détail de la visite n{numeroVisite}
+              Détail de la visite n°{numeroVisite}
             </h2>
-
           </div>
 
-        
+          {/* CARTE FAMILLE */}
 
           <Card
-           mere={mere}
+            mere={mere}
             enfant={enfant}
             sexe={sexe}
             region={region}
@@ -490,10 +461,13 @@ const statutBadges = [
             badges={[]}
           />
 
-        
+          {/* =====================================================
+              DESKTOP
+          ===================================================== */}
 
           <div className="hidden sm:grid sm:grid-cols-2 gap-4 mt-4">
 
+            {/* COLONNE GAUCHE */}
 
             <div className="space-y-3">
 
@@ -504,11 +478,9 @@ const statutBadges = [
 
               <ModifierMesure
                 title="Mesure nourrisson"
-
                 poids={poidsNourrisson}
                 taille={tailleNourrisson}
                 muac={muacNourrisson}
-
                 setPoids={setPoidsNourrisson}
                 setTaille={setTailleNourrisson}
                 setMuac={setMuacNourrisson}
@@ -518,7 +490,9 @@ const statutBadges = [
                 label="Observations cliniques nourrisson"
                 value={observationNourrisson}
                 onChange={(e) =>
-                  setObservationNourrisson(e.target.value)
+                  setObservationNourrisson(
+                    e.target.value
+                  )
                 }
                 height="h-[100px]"
               />
@@ -526,7 +500,6 @@ const statutBadges = [
               <div className="mt-4">
                 <SaveButtonBlock />
               </div>
-
             </div>
 
             {/* COLONNE DROITE */}
@@ -537,32 +510,21 @@ const statutBadges = [
 
               <ModifierMesure
                 title="Mesure mère"
-
                 poids={poidsMere}
                 taille={tailleMere}
                 muac={muacMere}
-
                 setPoids={setPoidsMere}
                 setTaille={setTailleMere}
                 setMuac={setMuacMere}
-              />
-
-              <ModifierMesure
-                title="Informations complémentaires"
-                variant="complement"
-
-                statutImc={statutImc}
-                hemoglobine={hemoglobine}
-
-                setStatutImc={setStatutImc}
-                setHemoglobine={setHemoglobine}
               />
 
               <TextareaModifier
                 label="Observations cliniques mère"
                 value={observationMere}
                 onChange={(e) =>
-                  setObservationMere(e.target.value)
+                  setObservationMere(
+                    e.target.value
+                  )
                 }
                 height="h-[100px]"
               />
@@ -571,15 +533,18 @@ const statutBadges = [
                 label="Évaluation visuelle de la situation familiale"
                 value={evaluationFamiliale}
                 onChange={(e) =>
-                  setEvaluationFamiliale(e.target.value)
+                  setEvaluationFamiliale(
+                    e.target.value
+                  )
                 }
                 height="h-[100px]"
               />
-
             </div>
-
           </div>
 
+          {/* =====================================================
+              MOBILE
+          ===================================================== */}
 
           <div className="flex sm:hidden flex-col gap-4 mt-4">
 
@@ -592,11 +557,9 @@ const statutBadges = [
 
             <ModifierMesure
               title="Mesure nourrisson"
-
               poids={poidsNourrisson}
               taille={tailleNourrisson}
               muac={muacNourrisson}
-
               setPoids={setPoidsNourrisson}
               setTaille={setTailleNourrisson}
               setMuac={setMuacNourrisson}
@@ -606,39 +569,30 @@ const statutBadges = [
               label="Observations cliniques nourrisson"
               value={observationNourrisson}
               onChange={(e) =>
-                setObservationNourrisson(e.target.value)
+                setObservationNourrisson(
+                  e.target.value
+                )
               }
               height="h-[55px]"
             />
 
             <ModifierMesure
               title="Mesure mère"
-
               poids={poidsMere}
               taille={tailleMere}
               muac={muacMere}
-
               setPoids={setPoidsMere}
               setTaille={setTailleMere}
               setMuac={setMuacMere}
-            />
-
-            <ModifierMesure
-              title="Informations complémentaires"
-              variant="complement"
-
-              statutImc={statutImc}
-              hemoglobine={hemoglobine}
-
-              setStatutImc={setStatutImc}
-              setHemoglobine={setHemoglobine}
             />
 
             <TextareaModifier
               label="Observations cliniques mère"
               value={observationMere}
               onChange={(e) =>
-                setObservationMere(e.target.value)
+                setObservationMere(
+                  e.target.value
+                )
               }
               height="h-[55px]"
             />
@@ -647,7 +601,9 @@ const statutBadges = [
               label="Évaluation visuelle de la situation familiale"
               value={evaluationFamiliale}
               onChange={(e) =>
-                setEvaluationFamiliale(e.target.value)
+                setEvaluationFamiliale(
+                  e.target.value
+                )
               }
               height="h-[55px]"
             />
@@ -655,11 +611,8 @@ const statutBadges = [
             <div className="mt-2">
               <SaveButtonBlock />
             </div>
-
           </div>
-
         </motion.div>
-
       </div>
     </AnimatePresence>
   );
