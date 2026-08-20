@@ -12,6 +12,7 @@ import DeleteIcon from "../../assets/Delete.svg";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
 
+
 const PopupDetailZakat = ({
   open,
   onClose,
@@ -128,28 +129,37 @@ const modeRemise =
         onClick={onClose}
       >
        
-        {showDeletePopup && (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="fixed inset-0 z-[100] flex items-center justify-center"
-          >
-            <Popup
-              title="Confirmer la suppression"
-              image={SuccessImage}
-              description="Êtes-vous sûr de vouloir supprimer ce Zakat ? Cette action est irréversible."
-              primaryButtonText="Supprimer"
-              secondaryButtonText="Annuler"
-              primaryButtonVariant="danger"
-              onPrimaryClick={() => {
-                setShowDeletePopup(false);
-                onDelete?.(zakat);
-              }}
-              onSecondaryClick={() =>
-                setShowDeletePopup(false)
-              }
-            />
-          </div>
-        )}
+      {showDeletePopup && (
+  <div
+    onClick={(e) => e.stopPropagation()}
+    className="fixed inset-0 z-[100] flex items-center justify-center"
+  >
+    <Popup
+      title="Confirmer la suppression"
+      image={SuccessImage}
+      description="Êtes-vous sûr de vouloir supprimer ce Zakat ? Cette action est irréversible."
+      primaryButtonText="Supprimer"
+      secondaryButtonText="Annuler"
+      primaryButtonVariant="danger"
+
+      onPrimaryClick={async () => {
+        try {
+          await onDelete?.(zakat);
+          setShowDeletePopup(false);
+        } catch (error) {
+          console.error(
+            "Erreur lors de la suppression du Zakat :",
+            error
+          );
+        }
+      }}
+
+      onSecondaryClick={() => {
+        setShowDeletePopup(false);
+      }}
+    />
+  </div>
+)}
 
         <motion.div
           initial={{
