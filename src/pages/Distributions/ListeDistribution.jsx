@@ -18,10 +18,13 @@ import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
 import { useNavigate } from "react-router-dom";
 import { listProduits, validerProduit } from "@/lib/api/stock";
-import { listDistributions } from "@/lib/api/distributions";
+import { listDistributions , exportDistributions } from "@/lib/api/distributions";
 import { useAuth } from "../../components/providers/AuthProvider";
 
 export default function DistributionPage() {
+  const { user } = useAuth();
+   const role = user?.role;
+const isAdmin = role === "admin";
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
@@ -30,7 +33,7 @@ export default function DistributionPage() {
   const [produitSelectionne, setProduitSelectionne] = useState(null);
   const [showHistorique, setShowHistorique] = useState(false);
   const [produitHistorique, setProduitHistorique] = useState(null);
-const { user } = useAuth();
+
   const [filters, setFilters] = useState({
     dateDebut: null,
     dateFin: null,
@@ -48,6 +51,44 @@ const { user } = useAuth();
   const d = String(date.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+  
+const handleExport = async () => {
+  try {
+    const response = await exportDistributions({
+      search: search.trim() || undefined,
+
+      date_debut: appliedFilters.dateDebut
+        ? formatDateYYYYMMDD(appliedFilters.dateDebut)
+        : undefined,
+
+      date_fin: appliedFilters.dateFin
+        ? formatDateYYYYMMDD(appliedFilters.dateFin)
+        : undefined,
+    });
+
+    // Création du fichier à télécharger
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "distributions.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+
+    // Nettoyage
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'export des distributions :",
+      error?.response?.data || error
+    );
+  }
+};
+  
 const {
   data: distributionsResponse,
   isLoading: distributionsLoading,
@@ -110,8 +151,7 @@ useEffect(() => {
 }, [produitsResponse]);
  
 
-  const role = user?.role;
-const isAdmin = role === "admin";
+ 
 
   const handleCardClick = (item, index) => {
   if (item.statut === "en_attente") {
@@ -305,15 +345,25 @@ const isAdmin = role === "admin";
   </div>
 </div>
 
-        <NavigationHeader
-          title="Liste des distributions"
-          type="share"
-          actionTitle="Exporter la liste des distributions"
-          onAction={() => console.log("Exporter")}
-          secondType="add"
-          secondActionTitle="Ajouter une distribution"
-          onSecondAction={() => navigate("/ajout-distribution")}
-        />
+         {user?.role === "admin" ? (
+  <NavigationHeader
+    title="Liste des distributions"
+    type="share"
+    actionTitle="Exporter la liste des distributions"
+    onAction={handleExport}
+    secondType="add"
+    secondActionTitle="Ajouter une distribution"
+    onSecondAction={() => navigate("/ajout-distribution")}
+  />
+) : (
+  <NavigationHeader
+    title="Liste des distributions"
+    secondType="add"
+    secondActionTitle="Ajouter une distribution"
+    onSecondAction={() => navigate("/ajout-distribution")}
+  />
+)}
+
 
         <div className="my-6">
           <SearchBar
