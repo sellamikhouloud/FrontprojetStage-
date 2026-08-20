@@ -1,6 +1,6 @@
 import Card from "../Cards/Card";
 import StatusBadge from "../Cards/Badge";
-import InfoCard from "../Containers/AfficherContainer";
+import EditableInfoCard from "../Containers/ModifierContainer";
 import ModifierMesure from "../Containers/ModifierMesure";
 import AfficherMesure from "../Containers/AfficherMesure";
 import TextareaModifier from "../Containers/TextAreaModifier";
@@ -19,6 +19,8 @@ import { updateVisite } from "@/lib/api/visites";
 
 function extractEditableVisiteFields(visite) {
   return {
+    date_visite: visite?.date_visite ?? null,
+
     poids_bebe: visite?.poids_bebe ?? "",
     taille_bebe: visite?.taille_bebe ?? "",
     muac_bebe: visite?.muac_bebe ?? "",
@@ -35,11 +37,29 @@ function extractEditableVisiteFields(visite) {
   };
 }
 
+// Convertit un objet Date (ou une string) en "YYYY-MM-DD"
+function toApiDateString(value) {
+  if (!value) return value;
+
+  if (typeof value === "string") {
+    return value.includes("T") ? value.slice(0, 10) : value;
+  }
+
+  if (value instanceof Date && !isNaN(value)) {
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, "0");
+    const d = String(value.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  return value;
+}
+
 const PopupDetailVisiteModifier = ({
   open,
   onClose,
   visite,
-  onSave, // renommé depuis onEdit — appelé APRÈS succès de l'API
+  onSave,
   famille,
 }) => {
   // =====================================================
@@ -65,10 +85,15 @@ const PopupDetailVisiteModifier = ({
     }
   }, [baseline]);
 
-  const patch = useMemo(
-    () => (baseline && form ? diffPatch(baseline, form) : {}),
-    [baseline, form]
-  );
+  const patch = useMemo(() => {
+    if (!baseline || !form) return {};
+    const rawPatch = diffPatch(baseline, form);
+    // La date doit être envoyée au format YYYY-MM-DD
+    if ("date_visite" in rawPatch) {
+      rawPatch.date_visite = toApiDateString(rawPatch.date_visite);
+    }
+    return rawPatch;
+  }, [baseline, form]);
 
   const nothingChanged = isEmptyPatch(patch);
 
@@ -87,7 +112,7 @@ const PopupDetailVisiteModifier = ({
   // ENREGISTREMENT
   // =====================================================
 
- const handleSave = async () => {
+  const handleSave = async () => {
     setErrorMessage(null);
 
     if (nothingChanged) {
@@ -108,7 +133,6 @@ const PopupDetailVisiteModifier = ({
         onSave?.(updatedVisite);
         onClose();
       }, 1500);
-
     } catch (error) {
       console.error(
         "Erreur lors de la modification de la visite :",
@@ -120,27 +144,24 @@ const PopupDetailVisiteModifier = ({
       let message = "Une erreur est survenue lors de l'enregistrement.";
 
       if (Array.isArray(data) && data.length > 0) {
-        // ex: ["La visite ne peut plus être modifiée après 30 jours."]
         message = data.join(" ");
       } else if (typeof data?.detail === "string") {
         message = data.detail;
       } else if (data && typeof data === "object") {
-        // erreurs de validation par champ, ex: { poids_bebe: ["..."] }
-        const fieldErrors = Object.entries(data)
-          .flatMap(([field, msgs]) =>
-            Array.isArray(msgs)
-              ? msgs.map((m) => `${field} : ${m}`)
-              : [`${field} : ${msgs}`]
-          );
+        const fieldErrors = Object.entries(data).flatMap(([field, msgs]) =>
+          Array.isArray(msgs)
+            ? msgs.map((m) => `${field} : ${m}`)
+            : [`${field} : ${msgs}`]
+        );
         if (fieldErrors.length) message = fieldErrors.slice(0, 3).join(" | ");
       }
 
       setErrorMessage(message);
-
     } finally {
       setIsSaving(false);
     }
   };
+
   if (!open || !visite || !form) return null;
 
   // =====================================================
@@ -173,34 +194,63 @@ const PopupDetailVisiteModifier = ({
       ? visite.numero_visite + 1
       : "-";
 
-  const dateVisite = formatDate(visite.date_visite);
   const dateEnregistrement = formatDate(visite.date_creation);
 
   // =====================================================
-  // INFORMATIONS GÉNÉRALES
+  // INFORMATIONS GÉNÉRALES (éditable — seule la date est modifiable)
   // =====================================================
 
   const infosGenerales = [
-    { label: "Date", value: dateVisite },
-    { label: "Visite n°", value: numeroVisite },
     {
+      key: "date_visite",
+      label: "Date",
+      value: form.date_visite ? new Date(form.date_visite) : null,
+      type: "date",
+    },
+    {
+      key: "numero_visite",
+      label: "Visite n°",
+      value: numeroVisite,
+      editable: false,
+    },
+    {
+      key: "enregistre_par",
       label: "Enregistrée par",
       value: visite.audit?.cree_par
         ? `${visite.audit.cree_par.nom} ${visite.audit.cree_par.prenom}`
         : "-",
+      editable: false,
     },
-    { label: "Date d'enregistrement", value: dateEnregistrement },
     {
+      key: "date_enregistrement",
+      label: "Date d'enregistrement",
+      value: dateEnregistrement,
+      editable: false,
+    },
+    {
+      key: "modifie_par",
       label: "Modifié par",
       value: visite.audit?.modifie_par
         ? `${visite.audit.modifie_par.nom} ${visite.audit.modifie_par.prenom}`
         : "-",
+      editable: false,
     },
     {
+      key: "date_modification",
       label: "Date de modification",
       value: formatDate(visite.date_modification),
+      editable: false,
     },
   ];
+
+  const handleInfosGeneralesChange = (index, value) => {
+    const field = infosGenerales[index];
+    if (!field || field.editable === false) return;
+
+    if (field.key === "date_visite") {
+      setForm((prev) => ({ ...prev, date_visite: value }));
+    }
+  };
 
   // =====================================================
   // STATUT CALCULÉ
@@ -323,7 +373,12 @@ const PopupDetailVisiteModifier = ({
           {/* DESKTOP */}
           <div className="hidden sm:grid sm:grid-cols-2 gap-4 mt-4">
             <div className="space-y-3">
-              <InfoCard title="Informations générales" data={infosGenerales} />
+              <EditableInfoCard
+                title="Informations générales"
+                data={infosGenerales}
+                editable={true}
+                onChange={handleInfosGeneralesChange}
+              />
 
               <ModifierMesure
                 title="Mesure nourrisson"
@@ -412,7 +467,12 @@ const PopupDetailVisiteModifier = ({
 
           {/* MOBILE */}
           <div className="flex sm:hidden flex-col gap-4 mt-4">
-            <InfoCard title="Informations générales" data={infosGenerales} />
+            <EditableInfoCard
+              title="Informations générales"
+              data={infosGenerales}
+              editable={true}
+              onChange={handleInfosGeneralesChange}
+            />
 
             <StatutCalculeBlock />
 
