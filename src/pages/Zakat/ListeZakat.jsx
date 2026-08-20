@@ -22,15 +22,18 @@ import PopupHistoriqueVersements from "../../components/Popups/PopupHistoriqueVe
 import { useAuth } from "../../components/providers/AuthProvider";
 
 export default function ZakatPage() {
+
+  const { user } = useAuth();
+
+  const isAdmin = user?.role === "admin";
+  
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
   const [showHistoriqueVersements, setShowHistoriqueVersements] = useState(false);
 
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const isAdmin = user?.role === "admin";
+  
 
 const queryClient = useQueryClient();
  
