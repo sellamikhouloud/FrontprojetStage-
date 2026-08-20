@@ -2,6 +2,7 @@ import Card from "../Cards/Card";
 import StatusBadge from "../Cards/Badge";
 import InfoCard from "../Containers/AfficherContainer";
 import ModifierMesure from "../Containers/ModifierMesure";
+import AfficherMesure from "../Containers/AfficherMesure";
 import TextareaModifier from "../Containers/TextAreaModifier";
 import Button from "../Button/Button";
 
@@ -122,14 +123,17 @@ const PopupDetailVisiteModifier = ({
     const updatedVisite = {
       ...visite,
 
+      // Mesures nourrisson
       poids_bebe: poidsNourrisson,
       taille_bebe: tailleNourrisson,
       muac_bebe: muacNourrisson,
 
+      // Mesures mère
       poids_mere: poidsMere,
       taille_mere: tailleMere,
       muac_mere: muacMere,
 
+      // Observations
       observations_cliniques_bebe:
         observationNourrisson,
 
@@ -138,6 +142,11 @@ const PopupDetailVisiteModifier = ({
 
       evaluation_famille:
         evaluationFamiliale,
+
+      // IMPORTANT :
+      // statut_imc et statut_hemoglobine
+      // ne sont PAS modifiés ici.
+      // Ils restent ceux de visite.
     };
 
     onEdit?.(updatedVisite);
@@ -160,8 +169,9 @@ const PopupDetailVisiteModifier = ({
     famille?.nourrisson?.prenom || "-";
 
   const mere =
-    `${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`.trim() ||
-    "-";
+    `${famille?.mere?.nom ?? ""} ${
+      famille?.mere?.prenom ?? ""
+    }`.trim() || "-";
 
   const sexe =
     famille?.nourrisson?.sexe === "M"
@@ -412,7 +422,10 @@ const PopupDetailVisiteModifier = ({
             borderColor: "#4E9F8A",
           }}
         >
-          {/* HEADER */}
+
+          {/* =====================================================
+              HEADER
+          ===================================================== */}
 
           <div className="mb-4">
             <button
@@ -449,7 +462,9 @@ const PopupDetailVisiteModifier = ({
             </h2>
           </div>
 
-          {/* CARTE FAMILLE */}
+          {/* =====================================================
+              CARTE FAMILLE
+          ===================================================== */}
 
           <Card
             mere={mere}
@@ -467,7 +482,7 @@ const PopupDetailVisiteModifier = ({
 
           <div className="hidden sm:grid sm:grid-cols-2 gap-4 mt-4">
 
-            {/* COLONNE GAUCHE */}
+            {/* ================= GAUCHE ================= */}
 
             <div className="space-y-3">
 
@@ -502,7 +517,7 @@ const PopupDetailVisiteModifier = ({
               </div>
             </div>
 
-            {/* COLONNE DROITE */}
+            {/* ================= DROITE ================= */}
 
             <div className="space-y-3">
 
@@ -516,6 +531,22 @@ const PopupDetailVisiteModifier = ({
                 setPoids={setPoidsMere}
                 setTaille={setTailleMere}
                 setMuac={setMuacMere}
+              />
+
+              {/* =================================================
+                  INFORMATIONS COMPLÉMENTAIRES
+                  AFFICHAGE UNIQUEMENT
+              ================================================= */}
+
+              <AfficherMesure
+                title="Informations complémentaires"
+                variant="complement"
+                statutImc={
+                  visite.statut_imc
+                }
+                statutHemoglobine={
+                  visite.statut_hemoglobine
+                }
               />
 
               <TextareaModifier
@@ -586,6 +617,22 @@ const PopupDetailVisiteModifier = ({
               setMuac={setMuacMere}
             />
 
+            {/* =================================================
+                INFORMATIONS COMPLÉMENTAIRES
+                AFFICHAGE UNIQUEMENT
+            ================================================= */}
+
+            <AfficherMesure
+              title="Informations complémentaires"
+              variant="complement"
+              statutImc={
+                visite.statut_imc
+              }
+              statutHemoglobine={
+                visite.statut_hemoglobine
+              }
+            />
+
             <TextareaModifier
               label="Observations cliniques mère"
               value={observationMere}
@@ -612,6 +659,7 @@ const PopupDetailVisiteModifier = ({
               <SaveButtonBlock />
             </div>
           </div>
+
         </motion.div>
       </div>
     </AnimatePresence>
