@@ -33,7 +33,7 @@ export default function AfficherMesure({
             {/* Hémoglobine */}
             <div>
               <p className="text-[16px] text-[#666666]">
-                Hémoglobine
+                 Statut Hémoglobine
               </p>
 
               <p className="text-[18px] font-bold text-[#202124]">
@@ -99,3 +99,4 @@ export default function AfficherMesure({
     </div>
   );
 }
+
