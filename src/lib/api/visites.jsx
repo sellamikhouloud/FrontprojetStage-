@@ -7,3 +7,5 @@ export const getVisite = (id) => api.get(`/api/visites/${id}/`);
 export const updateVisite = (id, patch) => api.patch(`/api/visites/${id}/`, patch);
 
 export const createVisite = (payload) => api.post("/api/visites/", payload);
+
+export const annulerVisite = (id) => api.post(`/api/visites/${id}/annuler/`);
