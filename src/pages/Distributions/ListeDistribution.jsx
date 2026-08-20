@@ -23,8 +23,7 @@ import { useAuth } from "../../components/providers/AuthProvider";
 
 export default function DistributionPage() {
   const { user } = useAuth();
-   const role = user?.role;
-const isAdmin = role === "admin";
+   const isAdmin = user?.role === "admin";
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
