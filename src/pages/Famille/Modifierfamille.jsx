@@ -343,14 +343,19 @@ const villageOptions = (villagesData || []).map((village) => ({
 }));
 
 const {
-  data: coordinateursData,
+  data: coordinateursResponse,
   isLoading: coordinateursLoading,
   isError: coordinateursError,
 } = useQuery({
   queryKey: ["coordinateurs"],
   queryFn: () => listCoordinateurs().then((res) => res.data),
 });
-const coordinateurs = (coordinateursData ?? [])
+
+const coordinateursData = Array.isArray(coordinateursResponse)
+  ? coordinateursResponse
+  : coordinateursResponse?.results ?? [];
+
+const coordinateurs = coordinateursData
   .filter((coordinateur) => coordinateur.is_active)
   .map((coordinateur) => ({
     id: coordinateur.id,
