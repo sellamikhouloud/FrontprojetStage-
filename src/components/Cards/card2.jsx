@@ -21,6 +21,16 @@ const CardPopup = ({
 }) => {
   const isGirl = sexe === "Fille";
 
+  // Badges qui doivent être affichés dans la première partie
+  const firstRowBadges = badges.filter(
+    (badge) => badge.type !== "retard"
+  );
+
+  // Badge retard reste seul sur sa ligne
+  const retardBadges = badges.filter(
+    (badge) => badge.type === "retard"
+  );
+
   return (
     <div
       onClick={onClick}
@@ -38,6 +48,7 @@ const CardPopup = ({
       {/* Ligne 1 : Mère + Code */}
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
+          {/* Nom + prénom mère */}
           <h2
             className="
               text-[17px]
@@ -50,6 +61,7 @@ const CardPopup = ({
             {mere}
           </h2>
 
+          {/* Prénom bébé */}
           <p
             className="
               mt-1
@@ -134,19 +146,29 @@ const CardPopup = ({
         </div>
       </div>
 
-      {/* Tous les badges */}
-      {badges.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {badges.map((badge, index) => (
+      {/* Tous les badges sauf retard */}
+      {firstRowBadges.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+          {firstRowBadges.map((badge, index) => (
             <StatusBadge
               key={index}
               type={badge.type}
               text={badge.text}
-              className="justify-center"
+              className="justify-center w-full"
             />
           ))}
         </div>
       )}
+
+      {/* Badge retard */}
+      {retardBadges.map((badge, index) => (
+        <StatusBadge
+          key={`retard-${index}`}
+          type={badge.type}
+          text={badge.text}
+          className="justify-center w-full mt-3"
+        />
+      ))}
     </div>
   );
 };
