@@ -27,10 +27,7 @@ const Popupvisites = ({
   const visitesActives = Visites?.actives ?? [];
   const visitesAnnulees = Visites?.annulees ?? [];
 
-  // 🔑 Dès que la liste des visites est rafraîchie (après invalidateQueries
-  // suite à un enregistrement ou une suppression), on resynchronise la
-  // visite sélectionnée avec sa version fraîche pour que le popup détail
-  // affiche immédiatement les valeurs à jour.
+  
   useEffect(() => {
     if (!selectedVisite) return;
     const toutes = [...visitesActives, ...visitesAnnulees];
@@ -44,7 +41,6 @@ const Popupvisites = ({
   const visitesAffichees =
     statusFilter === "active" ? visitesActives : visitesAnnulees;
 
-  // 🔑 Suppression / annulation réelle de la visite
   const handleDeleteVisite = async (visite) => {
     try {
       await annulerVisite(visite.id);
