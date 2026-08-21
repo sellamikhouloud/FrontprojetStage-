@@ -2,11 +2,13 @@ import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import PopupDetailVisite from "./Popupdetailsvisite";
 import CardPopupvisite from "../Cards/cardvisite";
 import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
 import Spinner from "../Spinner";
 import VDZStatusFilter from "../Filter/VDZStatusFilter";
+import { annulerVisite } from "@/lib/api/visites";
 
 const Popupvisites = ({
   open,
@@ -15,6 +17,8 @@ const Popupvisites = ({
   famille,
   isLoading = false,
 }) => {
+  const queryClient = useQueryClient();
+
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedVisite, setSelectedVisite] = useState(null);
   const [openModifier, setOpenModifier] = useState(false);
@@ -24,9 +28,9 @@ const Popupvisites = ({
   const visitesAnnulees = Visites?.annulees ?? [];
 
   // 🔑 Dès que la liste des visites est rafraîchie (après invalidateQueries
-  // suite à un enregistrement), on resynchronise la visite sélectionnée
-  // avec sa version fraîche pour que le popup détail affiche immédiatement
-  // les valeurs à jour, sans avoir à fermer/rouvrir le popup.
+  // suite à un enregistrement ou une suppression), on resynchronise la
+  // visite sélectionnée avec sa version fraîche pour que le popup détail
+  // affiche immédiatement les valeurs à jour.
   useEffect(() => {
     if (!selectedVisite) return;
     const toutes = [...visitesActives, ...visitesAnnulees];
@@ -39,6 +43,26 @@ const Popupvisites = ({
 
   const visitesAffichees =
     statusFilter === "active" ? visitesActives : visitesAnnulees;
+
+  // 🔑 Suppression / annulation réelle de la visite
+  const handleDeleteVisite = async (visite) => {
+    try {
+      await annulerVisite(visite.id);
+
+      setOpenDetail(false);
+      setSelectedVisite(null);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["visites", famille?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["famille", famille?.id] }),
+      ]);
+    } catch (err) {
+      console.error(
+        "Erreur lors de la suppression de la visite :",
+        err?.response?.data || err
+      );
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -94,6 +118,7 @@ const Popupvisites = ({
                 setOpenDetail(false);
                 setOpenModifier(true);
               }}
+              onDelete={handleDeleteVisite}
             />
 
             <PopupDetailVisiteModifier
@@ -106,6 +131,8 @@ const Popupvisites = ({
               famille={famille}
               onSave={(updatedVisite) => {
                 setSelectedVisite((prev) => ({ ...prev, ...updatedVisite }));
+                setOpenModifier(false);
+                setOpenDetail(true);
               }}
             />
 
