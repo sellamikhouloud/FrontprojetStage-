@@ -4,7 +4,7 @@ const StatusBadge = ({
   type = "mere",
   text,
   className = "",
-  pill = false, // 👈 nouveau : true = forme pilule (comme le badge Chef)
+  pill = false, 
 }) => {
   const styles = {
     mam: { border: "#F59E0B", background: "#FFFFFF", text: "#F59E0B" },
@@ -16,7 +16,7 @@ const StatusBadge = ({
     mereNormal: { border: "#22C55E", background: "#DDF5E5", text: "#22C55E" },
     retard: { border: "#F59E0B", background: "#F59E0B", text: "#FFFFFF" },
 
-    // ⭐ Chef
+ 
     chef: { border: "#D3EDEB", background: "#D3EDEB", text: "#4E9F8A" },
   };
 
