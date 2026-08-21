@@ -11,7 +11,7 @@ import Spinner from "../../components/Spinner";
 import PopupDetailVisite from "../../components/Popups/Popupdetailsvisite";
 import PopupDetailVisiteModifier from "../../components/Popups/PopupdetailvisiteModifier";
 
-import { listVisites, getVisite } from "../../lib/api/visites";
+import { listVisites, getVisite, annulerVisite } from "../../lib/api/visites";
 
 const getBadgeBebe = (statut) => {
   switch (statut) {
@@ -91,10 +91,10 @@ export default function ListeVisites() {
     mere: item.famille_info?.mere ?? null,
   });
 
+  // 🔑 Suppression / annulation réelle de la visite
   const handleDeleteVisite = async (visite) => {
     try {
-      // TODO: brancher l'appel API de suppression/annulation de visite
-      // await annulerVisite(visite.id);
+      await annulerVisite(visite.id);
 
       setShowDetailPopup(false);
       setSelectedVisite(null);
@@ -103,7 +103,7 @@ export default function ListeVisites() {
     } catch (err) {
       console.error(
         "Erreur lors de la suppression de la visite :",
-        err.response?.data || err
+        err?.response?.data || err
       );
     }
   };
@@ -215,11 +215,11 @@ export default function ListeVisites() {
           setShowDetailPopup(true);
         }}
         onSave={async (updated) => {
-          // Fusion immédiate pour éviter un flash de données vides
+       
           let finalVisite = { ...selectedVisite, ...updated };
 
           try {
-            // Récupère la version complète et à jour (statuts recalculés inclus)
+          
             const response = await getVisite(finalVisite.id);
             finalVisite = response?.data ?? finalVisite;
           } catch (err) {
@@ -229,7 +229,6 @@ export default function ListeVisites() {
             );
           }
 
-          
           setSelectedVisite(finalVisite);
           setOpenModifier(false);
           setShowDetailPopup(true);
