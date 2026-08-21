@@ -33,6 +33,17 @@ const variants = {
     iconWithTitle: true,
     radius: "rounded-[10px]",
   },
+
+  // Visite pas en retard : dernière visite affichée en bleu, avec l'icône calendrier
+  notice: {
+    bg: "bg-[#EFF6FF]",
+    border: "border-[#BFDBFE]",
+    padding: "pt-[10px] pb-[10px] pl-[16px] pr-[16px]",
+    text: "text-[#1E3A8A]",
+    icon: Calendar,
+    iconWithTitle: true,
+    radius: "rounded-[10px]",
+  },
 };
 
 const AlertBox = ({
@@ -68,7 +79,7 @@ const AlertBox = ({
         </div>
       ) : (
         <>
-          {/* WARNING TITLE */}
+          {/* WARNING / NOTICE TITLE */}
           {title && style.iconWithTitle && (
             <div className="flex items-center gap-3 mb-3">
               {style.icon && (
