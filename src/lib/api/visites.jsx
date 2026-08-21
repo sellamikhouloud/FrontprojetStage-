@@ -9,3 +9,7 @@ export const updateVisite = (id, patch) => api.patch(`/api/visites/${id}/`, patc
 export const createVisite = (payload) => api.post("/api/visites/", payload);
 
 export const annulerVisite = (id) => api.post(`/api/visites/${id}/annuler/`);
+
+export const getPreCreationVisite = (familleCode) => api.get("/api/visites/pre_creation/", {
+    params: { famille: familleCode },
+  });
