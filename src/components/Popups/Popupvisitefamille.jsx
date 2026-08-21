@@ -1,7 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PopupDetailVisite from "./Popupdetailsvisite";
 import CardPopupvisite from "../Cards/cardvisite";
 import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
@@ -22,6 +22,20 @@ const Popupvisites = ({
 
   const visitesActives = Visites?.actives ?? [];
   const visitesAnnulees = Visites?.annulees ?? [];
+
+  // 🔑 Dès que la liste des visites est rafraîchie (après invalidateQueries
+  // suite à un enregistrement), on resynchronise la visite sélectionnée
+  // avec sa version fraîche pour que le popup détail affiche immédiatement
+  // les valeurs à jour, sans avoir à fermer/rouvrir le popup.
+  useEffect(() => {
+    if (!selectedVisite) return;
+    const toutes = [...visitesActives, ...visitesAnnulees];
+    const fraiche = toutes.find((v) => v.id === selectedVisite.id);
+    if (fraiche && fraiche !== selectedVisite) {
+      setSelectedVisite(fraiche);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Visites]);
 
   const visitesAffichees =
     statusFilter === "active" ? visitesActives : visitesAnnulees;
