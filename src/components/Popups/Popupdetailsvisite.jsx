@@ -26,7 +26,7 @@ const PopupDetailVisite = ({
 
   if (!open || !visite) return null;
 
-  // 🔑 Une visite annulée ne peut plus être modifiée ni supprimée
+  
   const isAnnulee = visite?.annule === true;
 
   // Contenu réutilisé dans les deux layouts
@@ -141,7 +141,7 @@ const statutBadges = [
   );
 
   const ActionButtons = ({ className }) => {
-    // 🔑 Pas de boutons Modifier / Supprimer pour une visite annulée
+  
     if (isAnnulee) return null;
 
     return (
