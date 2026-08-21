@@ -45,6 +45,18 @@ const MOIS_OPTIONS = [
 
 const POSITION_OPTIONS = ["Debout", "Couché"];
 
+const STATUT_BEBE_MAP = {
+  mas: { type: "mas", label: "MAS nourrisson" },
+  mam: { type: "mam", label: "MAM nourrisson" },
+  normale: { type: "mere", label: "Bébé normal" },
+};
+
+const STATUT_MERE_MAP = {
+  a_risque: { type: "risque", label: "Mère à risque" },
+  normale: { type: "mere", label: "Mère normale" },
+  malnutrition: { type: "mas", label: "Mère malnutrie" },
+};
+
 // "YYYY-MM-DD" -> "DD/MM/YYYY"
 const formatDateFr = (isoDate) => {
   if (!isoDate) return "";
@@ -272,30 +284,34 @@ export default function AjoutVisite() {
       hemoglobine: hemoglobine || null,
     };
 
-    try {
-      const response = await createVisite(payload);
+   try {
+  const response = await createVisite(payload);
 
-        console.log("✅ Réponse backend complète :", JSON.stringify(response.data, null, 2));
+  console.log("✅ Réponse backend complète :", JSON.stringify(response.data, null, 2));
 
-      // 🔧 Adapte ces clés selon la vraie forme de la réponse backend
-      setResultatVisite({
-        zScores: response.data?.z_scores ?? response.data?.zScores,
-        statutNourrisson:
-          response.data?.statut_nourrisson ?? response.data?.statutNourrisson,
-        statutMere: response.data?.statut_mere ?? response.data?.statutMere,
-      });
+  const data = response.data;
 
-      setShowSuccessPopup(true);
-    } catch (error) {
-      console.error(
-        "❌ Erreur lors de la création de la visite :",
-        error.response?.data || error.message
-      );
+  setResultatVisite({
+    zScores: {
+      pa: data?.score_z_pa,
+      ta: data?.score_z_ta,
+      pt: data?.score_z_pt,
+    },
+    statutNourrisson: STATUT_BEBE_MAP[data?.statut_bebe] ?? null,
+    statutMere: STATUT_MERE_MAP[data?.statut_mere] ?? null,
+  });
 
-      setSaveError(extractErrorMessage(error));
-    } finally {
-      setSaving(false);
-    }
+  setShowSuccessPopup(true);
+} catch (error) {
+  console.error(
+    "❌ Erreur lors de la création de la visite :",
+    error.response?.data || error.message
+  );
+
+  setSaveError(extractErrorMessage(error));
+} finally {
+  setSaving(false);
+}
   };
 
   // --- Handlers qui nettoient l'erreur au fur et à mesure ---
@@ -481,87 +497,81 @@ export default function AjoutVisite() {
   }, [preCreationData]);
 
   return (
-  <div className="min-h-screen bg-white lg:flex">
-  {/* Desktop sidebar — in flex flow, but pinned via sticky */}
-  <div
-    className="
-      hidden
-      lg:flex
-      lg:sticky
-      lg:top-0
-      lg:h-screen
-      lg:items-center
-      lg:py-0
-      lg:pl-0
-      lg:shrink-0
-    "
-  >
+  <div className="flex h-screen bg-white overflow-hidden">
+
     <Sidebar role="coordinator" />
-  </div>
+  
 
-  {/* Mobile sidebar (hamburger) — unchanged */}
-  <div className="lg:hidden">
-    <Sidebar role="coordinator" />
-  </div>
+  <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+      {/* Espace blanc FIXE en haut — desktop only, mobile déjà géré par Sidebar */}
+      <div
+        className="
+          hidden
+          lg:block
+          lg:absolute
+          lg:top-0
+          lg:left-0
+          lg:right-0
+          lg:h-4
+          bg-white
+          z-20
+        "
+      />
 
-  {/* Mobile fixed white header — unchanged */}
-  <div
-    className="
-      fixed
-      top-0
-      left-0
-      right-0
-      h-20
-      bg-white
-      z-40
-      lg:hidden
-    "
-  />
+      {/* Zone scrollable UNIQUE */}
+      <div
+        className="
+          h-full
+          overflow-y-auto
 
-  {/* Page content */}
-  <main
-    className="
-      flex-1
-      overflow-y-auto
-      bg-white
+          pt-20
+          lg:pt-4
 
-      pt-20
-      lg:pt-4
+          px-4
+          lg:px-10
 
-      px-4
-      lg:px-10
+          pb-8
+          lg:pb-2
+        "
+      >
 
-      pb-8
-      lg:pb-2
-    "
-  >
-        {/* Header */}
-        <div className="mb-3 lg:mb-6">
-          <PageHeader
-            leftTitle="Annuler"
-            showRight={false}
-            onBack={() => window.history.back()}
-          />
+      
+      
+
+      <div className="mb-4">
+  {/* Basé sur la réponse réelle du backend (pre_creation), pas sur les badges de la liste */}
+  {preCreationData?.date_derniere_visite && (
+    preCreationData?.est_visite_retard ? (
+      <AlertBox variant="warning">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-0 sm:gap-0">
+          <span className="font-bold text-[#78350F]">Visite en retard</span>
+          <span className="text-[13px] text-[#92400E]">
+            Dernière visite le {formatDateFr(preCreationData.date_derniere_visite)}
+            {preCreationData.nb_jours != null &&
+              ` (il y a ${preCreationData.nb_jours} jour${
+                preCreationData.nb_jours > 1 ? "s" : ""
+              })`}
+            .
+          </span>
         </div>
-
-        <div className="mb-4">
-          {/* Basé sur la réponse réelle du backend (pre_creation), pas sur les badges de la liste */}
-          {preCreationData?.est_visite_retard && preCreationData?.date_derniere_visite && (
-            <AlertBox variant="warning">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-0 sm:gap-0">
-                <span className="font-bold text-[#78350F]">Visite en retard</span>
-                <span className="text-[13px] text-[#92400E]">
-                  Dernière visite le {formatDateFr(preCreationData.date_derniere_visite)}
-                  {preCreationData.nb_jours != null &&
-                    ` (il y a ${preCreationData.nb_jours} jour${
-                      preCreationData.nb_jours > 1 ? "s" : ""
-                    })`}
-                  .
-                </span>
-              </div>
-            </AlertBox>
-          )}
+      </AlertBox>
+    ) : (
+      <AlertBox variant="notice">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-0 sm:gap-0">
+          <span className="font-bold text-[#1E3A8A]">Dernière visite</span>
+          <span className="text-[13px] text-[#1E3A8A]">
+            Le {formatDateFr(preCreationData.date_derniere_visite)}
+            {preCreationData.nb_jours != null &&
+              ` (il y a ${preCreationData.nb_jours} jour${
+                preCreationData.nb_jours > 1 ? "s" : ""
+              })`}
+            .
+          </span>
         </div>
+      </AlertBox>
+    )
+  )}
+</div>
 
         {!selectedFamille && (
           <div className="flex flex-col gap-2">
@@ -740,7 +750,7 @@ export default function AjoutVisite() {
                     "
                   >
                     <p className="text-[14px] leading-[20px] text-[#374151]">
-                      Visite numero{" "}
+                      Visite N°{" "}
                       {preCreationLoading
                         ? "..."
                         : preCreationData?.numero_visite ?? "-"}
@@ -904,7 +914,7 @@ export default function AjoutVisite() {
                 placeholder="Tapez ici si il y a des observations"
                 value={observationsMere}
                 onChange={(e) => setObservationsMere(e.target.value)}
-                height="h-[110px]"
+                height="h-[70px]"
                 bgColor="bg-white"
               />
             </div>
@@ -929,7 +939,7 @@ export default function AjoutVisite() {
                 placeholder="Tapez ici si il y a des observations"
                 value={evaluationVisuelle}
                 onChange={(e) => setEvaluationVisuelle(e.target.value)}
-                height="h-[115px]"
+                height="h-[70px]"
                 bgColor="bg-white"
               />
             </div>
@@ -967,7 +977,21 @@ export default function AjoutVisite() {
             }}
           />
         )}
-      </main>
+        </div>
+
+        {/* Espace blanc FIXE en bas */}
+      <div
+        className="
+          absolute
+          bottom-0
+          left-0
+          right-0
+          h-4
+          bg-white
+          z-20
+        "
+      />
+    </main>
 
     <PopupListeFamilles
   open={openFamilles}
