@@ -303,28 +303,19 @@ const Modifyfamilly = () => {
     queryFn: () => getVisites(id).then((r) => r.data),
     enabled: !!id && openVisites,
   });
-  const visitesData = Array.isArray(visitesResponse)
-    ? visitesResponse
-    : visitesResponse?.results || (visitesResponse ? [visitesResponse] : []);
-
+ 
   const { data: distributionsResponse, isLoading: distributionsLoading , isError: distributionsError, } = useQuery({
     queryKey: ["distributions", id],
     queryFn: () => getDistributions(id).then((res) => res.data),
     enabled: !!id && openDistribution,
   });
-  const distributionsData = Array.isArray(distributionsResponse)
-    ? distributionsResponse
-    : distributionsResponse?.results ||
-      (distributionsResponse ? [distributionsResponse] : []);
-
+ 
   const { data: zakatResponse, isLoading: zakatLoading } = useQuery({
     queryKey: ["zakat", id],
     queryFn: () => getFamilleZakat(id).then((res) => res.data),
     enabled: !!id && openZakat,
   });
-  const zakatsData = Array.isArray(zakatResponse)
-    ? zakatResponse
-    : zakatResponse?.results || (zakatResponse ? [zakatResponse] : []);
+ 
 
     const {
   data: villagesData,
@@ -722,29 +713,32 @@ const makeHandler = (fields) => (index, value) => {
     <div className="flex h-screen overflow-hidden bg-white">
       <Sidebar  />
 
-      <PopupDistributionfamille
-        open={openDistribution}
-        onClose={() => setOpenDistribution(false)}
-        Distribution={distributionsData}
-        famille={famille}
-        isLoading={distributionsLoading}
-      />
+     // Supprime distributionsData et zakatsData (les blocs qui aplatissent)
 
-      <PopupZakatFamille
-        open={openZakat}
-        onClose={() => setOpenZakat(false)}
-        zakats={zakatsData}
-        famille={famille}
-        isLoading={zakatLoading}
-      />
+// Dans le rendu :
+<PopupDistributionfamille
+  open={openDistribution}
+  onClose={() => setOpenDistribution(false)}
+  Distribution={distributionsResponse}  
+  famille={famille}
+  isLoading={distributionsLoading}
+/>
 
-      <Popupvisites
-        open={openVisites}
-        onClose={() => setOpenVisites(false)}
-        Visites={visitesData}
-        famille={famille}
-        isLoading={visitesLoading}
-      />
+<PopupZakatFamille
+  open={openZakat}
+  onClose={() => setOpenZakat(false)}
+  zakats={zakatResponse}   
+  famille={famille}
+  isLoading={zakatLoading}
+/>
+
+     <Popupvisites
+  open={openVisites}
+  onClose={() => setOpenVisites(false)}
+  Visites={visitesResponse}   
+  famille={famille}
+  isLoading={visitesLoading}
+/>
 
       <PopupFinSuivi
         open={openFinSuivi}
