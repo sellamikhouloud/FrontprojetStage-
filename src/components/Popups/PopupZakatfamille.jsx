@@ -7,37 +7,42 @@ import CardListZakat from "../Cards/CarteListeZakat";
 import PopupDetailZakat from "./PopupdetailsZakat";
 import PopupModifierZakat from "./PopupdetailsZakatModifier";
 import Spinner from "../Spinner";
+import VDZStatusFilter from "../Filter/VDZStatusFilter";
 import { annulerAideZakat } from "@/lib/api/zakat";
 
 const PopupZakatFamille = ({
   open,
   onClose,
-  zakats = [],
+  zakats, // { actives: [...], annulees: [...] }
   famille,
   isLoading = false,
 }) => {
   const [selectedZakat, setSelectedZakat] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
-  const [localZakats, setLocalZakats] = useState(zakats);
+  const [statusFilter, setStatusFilter] = useState("active");
+
+  const [localActives, setLocalActives] = useState(zakats?.actives ?? []);
+  const [localAnnulees, setLocalAnnulees] = useState(zakats?.annulees ?? []);
 
   const queryClient = useQueryClient();
 
   const selectedFamille = selectedZakat?.famille_info || null;
 
   useEffect(() => {
-    setLocalZakats(zakats);
+    setLocalActives(zakats?.actives ?? []);
+    setLocalAnnulees(zakats?.annulees ?? []);
   }, [zakats]);
+
+  const localZakats = statusFilter === "active" ? localActives : localAnnulees;
 
   const handleDeleteZakat = async (zakat) => {
     try {
       const response = await annulerAideZakat(zakat.id);
       const updatedZakat = response?.data ?? response;
 
-      // Retirer la zakat annulée de la liste locale
-      setLocalZakats((prev) =>
-        prev.filter((item) => item.id !== zakat.id)
-      );
+      // Retirer la zakat annulée des actives (elle sera dans annulees après refetch)
+      setLocalActives((prev) => prev.filter((item) => item.id !== zakat.id));
 
       // Fermer le popup détail et nettoyer la sélection
       setOpenDetail(false);
@@ -87,6 +92,11 @@ const PopupZakatFamille = ({
               </h2>
             </div>
 
+            {/* Filtre statut */}
+            <div className="px-5 sm:px-6 mt-4">
+              <VDZStatusFilter value={statusFilter} onChange={setStatusFilter} />
+            </div>
+
             <div className="px-5 sm:px-6 pb-6 mt-5 flex-1 max-h-none sm:max-h-[420px] overflow-y-auto scrollbar-hide space-y-4">
               {isLoading ? (
                 <div className="flex justify-center py-10">
@@ -109,11 +119,15 @@ const PopupZakatFamille = ({
                       zakat={`Zakat ${item.numero_zakat ?? "-"}`}
                       date={
                         item.date_versement
-                          ? new Date(item.date_versement).toLocaleDateString("fr-FR")
+                          ? new Date(item.date_versement).toLocaleDateString(
+                              "fr-FR"
+                            )
                           : "-"
                       }
                       montant="Montant"
-                      valeur={`${item.montant ?? "0"} MRU / ${item.montant_eur ?? "0"} EUR`}
+                      valeur={`${item.montant ?? "0"} MRU / ${
+                        item.montant_eur ?? "0"
+                      } EUR`}
                       onClick={() => {
                         setSelectedZakat(item);
                         setOpenDetail(true);
@@ -123,7 +137,9 @@ const PopupZakatFamille = ({
                 })
               ) : (
                 <div className="py-10 text-center text-gray-500">
-                  Aucun zakat.
+                  {statusFilter === "active"
+                    ? "Aucun zakat actif."
+                    : "Aucun zakat annulé."}
                 </div>
               )}
             </div>
@@ -154,11 +170,9 @@ const PopupZakatFamille = ({
           setOpenDetail(true);
         }}
         onSave={(updatedZakat) => {
-          setLocalZakats((prev) =>
+          setLocalActives((prev) =>
             prev.map((item) =>
-              item.id === updatedZakat.id
-                ? { ...item, ...updatedZakat }
-                : item
+              item.id === updatedZakat.id ? { ...item, ...updatedZakat } : item
             )
           );
           setSelectedZakat((prev) => ({ ...prev, ...updatedZakat }));
