@@ -91,7 +91,7 @@ export default function ListeVisites() {
     mere: item.famille_info?.mere ?? null,
   });
 
-  // 🔑 Suppression / annulation réelle de la visite
+ 
   const handleDeleteVisite = async (visite) => {
     try {
       await annulerVisite(visite.id);
