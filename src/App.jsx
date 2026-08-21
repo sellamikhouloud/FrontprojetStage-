@@ -25,6 +25,7 @@ import RapportAnnuel from "./pages/Rapports/RapportAnnuel";
 import Parametres from "./pages/Account/Parametres";
 import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
+import ListeVisites from "./pages/Visites/Listevisites";
 import { AuthProvider } from "./components/Providers/AuthProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { FamilyFormProvider } from "./context/FamilyFormContext";
@@ -114,6 +115,10 @@ function App() {
         />
 
         {/* Visite*/}
+         <Route
+          path="/liste-visite" element={< ListeVisites/>}
+        />
+           
          <Route
           path="/ajout-visite" element={<AjoutVisite />}
         />
