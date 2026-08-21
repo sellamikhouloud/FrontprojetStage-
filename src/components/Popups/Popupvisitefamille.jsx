@@ -6,17 +6,25 @@ import PopupDetailVisite from "./Popupdetailsvisite";
 import CardPopupvisite from "../Cards/cardvisite";
 import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
 import Spinner from "../Spinner";
+import VDZStatusFilter from "../Filter/VDZStatusFilter";
 
 const Popupvisites = ({
   open,
   onClose,
-  Visites = [],
+  Visites, // { actives: [...], annulees: [...] }
   famille,
   isLoading = false,
 }) => {
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedVisite, setSelectedVisite] = useState(null);
   const [openModifier, setOpenModifier] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("active");
+
+  const visitesActives = Visites?.actives ?? [];
+  const visitesAnnulees = Visites?.annulees ?? [];
+
+  const visitesAffichees =
+    statusFilter === "active" ? visitesActives : visitesAnnulees;
 
   return (
     <AnimatePresence>
@@ -63,30 +71,29 @@ const Popupvisites = ({
               sm:p-6
             "
           >
-          <PopupDetailVisite
-  open={openDetail}
-  onClose={() => setOpenDetail(false)}
-  visite={selectedVisite}
-  famille={famille}
-  onEdit={() => {
-    setOpenDetail(false);
-    setOpenModifier(true);
-  }}
-/>
+            <PopupDetailVisite
+              open={openDetail}
+              onClose={() => setOpenDetail(false)}
+              visite={selectedVisite}
+              famille={famille}
+              onEdit={() => {
+                setOpenDetail(false);
+                setOpenModifier(true);
+              }}
+            />
 
-<PopupDetailVisiteModifier
-  open={openModifier}
-  onClose={() => {
-    setOpenModifier(false);
-    setOpenDetail(true); 
-  }}
-  visite={selectedVisite}
-  famille={famille}
-  onSave={(updatedVisite) => {
-    setSelectedVisite((prev) => ({ ...prev, ...updatedVisite }));
-    
-  }}
-/>
+            <PopupDetailVisiteModifier
+              open={openModifier}
+              onClose={() => {
+                setOpenModifier(false);
+                setOpenDetail(true);
+              }}
+              visite={selectedVisite}
+              famille={famille}
+              onSave={(updatedVisite) => {
+                setSelectedVisite((prev) => ({ ...prev, ...updatedVisite }));
+              }}
+            />
 
             {/* Header */}
             <div className="mb-5">
@@ -99,11 +106,7 @@ const Popupvisites = ({
                   transition
                 "
               >
-                <img
-                  src={quitter}
-                  alt="Fermer"
-                  className="w-5 h-5"
-                />
+                <img src={quitter} alt="Fermer" className="w-5 h-5" />
                 Fermer
               </button>
 
@@ -119,6 +122,14 @@ const Popupvisites = ({
               >
                 Visites
               </h2>
+            </div>
+
+            {/* Filtre statut */}
+            <div className="mb-4">
+              <VDZStatusFilter
+                value={statusFilter}
+                onChange={setStatusFilter}
+              />
             </div>
 
             {/* Cartes */}
@@ -139,60 +150,48 @@ const Popupvisites = ({
                 <div className="flex justify-center py-10">
                   <Spinner />
                 </div>
-              ) : Visites.length ? (
-                Visites.map((item, index) => (
+              ) : visitesAffichees.length ? (
+                visitesAffichees.map((item, index) => (
                   <CardPopupvisite
                     key={item.id ?? `visite-${index}`}
                     visite={
-                      item.numero_visite !== undefined && item.numero_visite !== null
+                      item.numero_visite !== undefined &&
+                      item.numero_visite !== null
                         ? `Visite ${item.numero_visite + 1}`
                         : `Visite ${index + 1}`
                     }
-                   date={
-  item.date_visite
-    ? new Date(item.date_visite).toLocaleDateString("fr-FR")
-    : "-"
-}
+                    date={
+                      item.date_visite
+                        ? new Date(item.date_visite).toLocaleDateString("fr-FR")
+                        : "-"
+                    }
                     poids={item.poids_bebe ?? "-"}
                     taille={item.taille_bebe ?? "-"}
                     badges={[
-                      // =========================
-                      // STATUT NUTRITIONNEL BÉBÉ
-                      // =========================
-
-                    (item.statut_nutritionnel === "mam") && {
-  type: "mam",
-  text: "MAM nourrisson",
-},
-
-(item.statut_nutritionnel === "mas") && {
-  type: "mas",
-  text: "MAS nourrisson",
-},
-
-(item.statut_nutritionnel === "normale") && {
-  type: "mere",
-  text: "Bébé normal",
-},
-
-                      // =========================
-                      // STATUT NUTRITIONNEL MÈRE
-                      // =========================
-
-                      (item.statut_nutritionnel_mere === "normale") && {
-  type: "mere",
-  text: "Mère normale",
-},
-
-(item.statut_nutritionnel_mere === "a_risque") && {
-  type: "risque",
-  text: "Mère à risque",
-},
-
-(item.statut_nutritionnel_mere === "malnutrition") && {
-  type: "mas",
-  text: "Mère malnutrie",
-},
+                      item.statut_nutritionnel === "mam" && {
+                        type: "mam",
+                        text: "MAM nourrisson",
+                      },
+                      item.statut_nutritionnel === "mas" && {
+                        type: "mas",
+                        text: "MAS nourrisson",
+                      },
+                      item.statut_nutritionnel === "normale" && {
+                        type: "mere",
+                        text: "Bébé normal",
+                      },
+                      item.statut_nutritionnel_mere === "normale" && {
+                        type: "mere",
+                        text: "Mère normale",
+                      },
+                      item.statut_nutritionnel_mere === "a_risque" && {
+                        type: "risque",
+                        text: "Mère à risque",
+                      },
+                      item.statut_nutritionnel_mere === "malnutrition" && {
+                        type: "mas",
+                        text: "Mère malnutrie",
+                      },
                     ].filter(Boolean)}
                     onClick={() => {
                       setSelectedVisite(item);
@@ -201,7 +200,11 @@ const Popupvisites = ({
                   />
                 ))
               ) : (
-                <div className="py-10 text-center text-gray-500">Aucune visite.</div>
+                <div className="py-10 text-center text-gray-500">
+                  {statusFilter === "active"
+                    ? "Aucune visite active."
+                    : "Aucune visite annulée."}
+                </div>
               )}
             </div>
           </motion.div>
