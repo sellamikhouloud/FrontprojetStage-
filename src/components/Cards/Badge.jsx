@@ -4,59 +4,23 @@ const StatusBadge = ({
   type = "mere",
   text,
   className = "",
+  pill = false, // 👈 nouveau : true = forme pilule (comme le badge Chef)
 }) => {
   const styles = {
-    // MAM nourrisson
-    mam: {
-      border: "#F59E0B",
-      background: "#FFFFFF",
-      text: "#F59E0B",
-    },
+    mam: { border: "#F59E0B", background: "#FFFFFF", text: "#F59E0B" },
+    mas: { border: "#EF4444", background: "#FAC1C1B2", text: "#EF4444" },
+    mere: { border: "#22C55E", background: "#FFFFFF", text: "#22C55E" },
+    mereActive: { border: "#22C55E", background: "#B5ECC980", text: "#22C55E" },
+    sortie: { border: "#969696", background: "#BEBEBE80", text: "#4B5563" },
+    risque: { border: "#EF4444", background: "#FFFFFF", text: "#EF4444" },
+    mereNormal: { border: "#22C55E", background: "#DDF5E5", text: "#22C55E" },
+    retard: { border: "#F59E0B", background: "#F59E0B", text: "#FFFFFF" },
 
-    mas: {
-      border: "#EF4444",
-      background: "#FAC1C1B2",
-      text: "#EF4444",
-    },
-
-    mere: {
-      border: "#22C55E",
-      background: "#FFFFFF",
-      text: "#22C55E",
-    },
-
-      // Mère normale active 
-    mereActive: {
-    border: "#22C55E",
-    background: "#B5ECC980",
-    text: "#22C55E",
-  },
-sortie: {
-  border: "#969696",
-  background: "#BEBEBE80",
-  text: "#4B5563",
-},
-
-risque: {
-  border: "#EF4444",
-  background: "#FFFFFF",
-  text: "#EF4444",
-},
-    // Mère normale (fond vert clair utiliser dans fiche famille meme que status mere )
-  mereNormal: {
-    border: "#22C55E",
-    background: "#DDF5E5",
-    text: "#22C55E",
-  },
-
-    retard: {
-      border: "#F59E0B",
-      background: "#F59E0B",
-      text: "#FFFFFF",
-    },
+    // ⭐ Chef
+    chef: { border: "#D3EDEB", background: "#D3EDEB", text: "#4E9F8A" },
   };
 
-  const current = styles[type];
+  const current = styles[type] || styles.mere;
 
   return (
     <div
@@ -66,20 +30,14 @@ risque: {
         justify-center
         gap-1 sm:gap-2
 
-    h-auto
-min-h-[34px]
-sm:min-h-[36px]
-        px-3
-        sm:px-4
-
-        rounded-[8px]
+        ${pill ? "h-auto min-h-[28px] sm:min-h-[30px] px-3 sm:px-4 rounded-full" : "h-auto min-h-[34px] sm:min-h-[36px] px-3 sm:px-4 rounded-[8px]"}
 
         border
 
-        text-[12px]
+        text-[13px]
         sm:text-[14px]
 
-        font-medium
+        ${pill ? "font-bold" : "font-medium"}
 
         whitespace-nowrap
 
@@ -105,7 +63,3 @@ sm:min-h-[36px]
 };
 
 export default StatusBadge;
-
-
-
-
