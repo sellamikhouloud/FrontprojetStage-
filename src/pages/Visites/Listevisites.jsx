@@ -229,16 +229,12 @@ export default function ListeVisites() {
             );
           }
 
-          // Ferme puis rouvre le popup détail pour qu'il se remonte avec les nouvelles données
+          
+          setSelectedVisite(finalVisite);
           setOpenModifier(false);
-          setShowDetailPopup(false);
+          setShowDetailPopup(true);
 
-          setTimeout(() => {
-            setSelectedVisite(finalVisite);
-            setShowDetailPopup(true);
-          }, 150);
-
-          await queryClient.invalidateQueries({ queryKey: ["visites"] });
+          queryClient.invalidateQueries({ queryKey: ["visites"] });
         }}
       />
     </div>
