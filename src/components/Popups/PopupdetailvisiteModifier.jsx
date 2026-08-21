@@ -7,6 +7,7 @@ import TextareaModifier from "../Containers/TextAreaModifier";
 import Button from "../Button/Button";
 
 import { useState, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 
 import quitter from "../../assets/quitter.svg";
@@ -66,6 +67,8 @@ const PopupDetailVisiteModifier = ({
   // ÉTATS
   // =====================================================
 
+  const queryClient = useQueryClient();
+
   const baseline = useMemo(
     () => (visite ? extractEditableVisiteFields(visite) : null),
     [visite]
@@ -123,6 +126,17 @@ const PopupDetailVisiteModifier = ({
 
       const response = await updateVisite(visite.id, patch);
       const updatedVisite = response?.data ?? response;
+
+      // 🔑 On invalide le cache React Query pour forcer un refetch
+      // des données à jour (statuts, z-scores, etc. recalculés côté backend)
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["visites", famille?.id],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["famille", famille?.id],
+        }),
+      ]);
 
       setShowBanner(true);
 
