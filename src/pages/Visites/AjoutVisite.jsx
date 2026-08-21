@@ -1,10 +1,10 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
-import Card from "../../components/Cards/card";
-import CardPopup from "../../components/Cards/card2";
+import Card from "../../components/Cards/Card";
+import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AlertBox from "../../components/AlertComposant/AlertBox";
 import MesureInput from "../../components/Containers/MesureInput";
 import TextArea from "../../components/Containers/Textarea";
@@ -26,7 +26,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listFamilles } from "@/lib/api/familles";
 
 
-import { createVisite } from "../../lib/api/visites";
+import { createVisite, getPreCreationVisite } from "../../lib/api/visites";
 
 const MOIS_OPTIONS = [
   { label: "Janvier", value: "janvier" },
@@ -45,6 +45,13 @@ const MOIS_OPTIONS = [
 
 const POSITION_OPTIONS = ["Debout", "Couché"];
 
+// "YYYY-MM-DD" -> "DD/MM/YYYY"
+const formatDateFr = (isoDate) => {
+  if (!isoDate) return "";
+  const [y, m, d] = isoDate.split("-");
+  if (!y || !m || !d) return isoDate;
+  return `${d}/${m}/${y}`;
+};
 
 export default function AjoutVisite() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -180,8 +187,8 @@ export default function AjoutVisite() {
       dt.getDate()
     ).padStart(2, "0")}`;
   };
- 
-  
+
+
   const extractErrorMessage = (error) => {
     const data = error.response?.data;
 
@@ -227,7 +234,7 @@ export default function AjoutVisite() {
 
     return "Une erreur est survenue lors de l'enregistrement de la visite.";
   };
-  
+
 
 
   const handleSave = async () => {
@@ -284,7 +291,7 @@ export default function AjoutVisite() {
         "❌ Erreur lors de la création de la visite :",
         error.response?.data || error.message
       );
-     
+
       setSaveError(extractErrorMessage(error));
     } finally {
       setSaving(false);
@@ -295,11 +302,6 @@ export default function AjoutVisite() {
   const handleMoisChange = (value) => {
     setMois(value);
     setErrors((prev) => ({ ...prev, mois: false }));
-  };
-
-  const handleNumeroCycleChange = (value) => {
-    setNumeroCycle(value);
-    if (value) setErrors((prev) => ({ ...prev, numeroCycle: false }));
   };
 
   const handlePoidsNourrissonChange = (value) => {
@@ -340,68 +342,68 @@ export default function AjoutVisite() {
   const navigate = useNavigate();
 
   const [openFamilles, setOpenFamilles] = useState(false);
-const [openOptions, setOpenOptions] = useState(false);
+  const [openOptions, setOpenOptions] = useState(false);
 
   // --- Récupération des vraies familles depuis l'API ---
-const {
-  data: famillesData,
-  isLoading: famillesLoading,
-  isError: famillesError,
-  refetch: refetchFamilles,
-} = useQuery({
-  queryKey: ["familles-popup"],
-  queryFn: () => listFamilles().then((r) => r.data),
-  enabled: openFamilles, // 👈 ne fetch que quand le popup s'ouvre (optionnel, tu peux retirer si tu veux précharger)
-});
+  const {
+    data: famillesData,
+    isLoading: famillesLoading,
+    isError: famillesError,
+    refetch: refetchFamilles,
+  } = useQuery({
+    queryKey: ["familles-popup"],
+    queryFn: () => listFamilles().then((r) => r.data),
+    enabled: openFamilles, // 👈 ne fetch que quand le popup s'ouvre (optionnel, tu peux retirer si tu veux précharger)
+  });
 
-const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+  const famillesBrutes = famillesData?.results ?? famillesData ?? [];
 
-// Mapping vers le format attendu par le popup / les cartes
-// (même logique que dans la page "Liste des familles")
-const listeDesFamilles = famillesBrutes.map((famille) => ({
-  id: famille.id,
-  enfant: famille.nourrisson?.prenom,
-  mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
-  sexe:
-    famille?.nourrisson?.sexe === "M"
-      ? "Fils"
-      : famille?.nourrisson?.sexe === "F"
-      ? "Fille"
-      : "-",
-  region: famille.mere?.village?.nom ?? "-",
-  naissance: famille.nourrisson?.date_naissance,
-  code: famille.id,
-  badges: [
-    famille?.statut_nutritionnel_bebe === "mam" && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
-    famille?.statut_nutritionnel_bebe === "mas" && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
-    famille?.statut_nutritionnel_bebe === "normale" && {
-      type: "mere",
-      text: "Bébé normal",
-    },
-    famille?.statut_nutritionnel_mere === "normale" && {
-      type: "mere",
-      text: "Mère normale",
-    },
-    famille?.statut_nutritionnel_mere === "a_risque" && {
-      type: "risque",
-      text: "Mère à risque",
-    },
-    famille?.statut_nutritionnel_mere === "malnutrition" && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
-    famille.est_visite_en_retard && {
-      type: "retard",
-      text: "Visite en retard",
-    },
-  ].filter(Boolean),
-}));
+  // Mapping vers le format attendu par le popup / les cartes
+  // (même logique que dans la page "Liste des familles")
+  const listeDesFamilles = famillesBrutes.map((famille) => ({
+    id: famille.id,
+    enfant: famille.nourrisson?.prenom,
+    mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
+    sexe:
+      famille?.nourrisson?.sexe === "M"
+        ? "Fils"
+        : famille?.nourrisson?.sexe === "F"
+        ? "Fille"
+        : "-",
+    region: famille.mere?.village?.nom ?? "-",
+    naissance: famille.nourrisson?.date_naissance,
+    code: famille.id,
+    badges: [
+      famille?.statut_nutritionnel_bebe === "mam" && {
+        type: "mam",
+        text: "MAM nourrisson",
+      },
+      famille?.statut_nutritionnel_bebe === "mas" && {
+        type: "mas",
+        text: "MAS nourrisson",
+      },
+      famille?.statut_nutritionnel_bebe === "normale" && {
+        type: "mere",
+        text: "Bébé normal",
+      },
+      famille?.statut_nutritionnel_mere === "normale" && {
+        type: "mere",
+        text: "Mère normale",
+      },
+      famille?.statut_nutritionnel_mere === "a_risque" && {
+        type: "risque",
+        text: "Mère à risque",
+      },
+      famille?.statut_nutritionnel_mere === "malnutrition" && {
+        type: "mas",
+        text: "Mère malnutrie",
+      },
+      famille.est_visite_en_retard && {
+        type: "retard",
+        text: "Visite en retard",
+      },
+    ].filter(Boolean),
+  }));
 
 
   const familyOptions = [
@@ -441,6 +443,42 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
       });
     }
   };
+
+  // --- Pré-création : appelée dès qu'une famille est sélectionnée ---
+  // GET /api/visites/pre_creation/?famille=<code>
+  // -> { date_visite, date_derniere_visite, est_visite_retard, nb_jours, numero_visite, cycle }
+  const {
+    data: preCreationData,
+    isFetching: preCreationLoading,
+    isError: preCreationError,
+  } = useQuery({
+    queryKey: ["visite-pre-creation", selectedFamille?.code],
+    queryFn: () =>
+      getPreCreationVisite(selectedFamille.code).then((r) => {
+        console.log("📋 Réponse pre_creation :", r.data);
+        return r.data;
+      }),
+    enabled: !!selectedFamille?.code,
+  });
+
+  useEffect(() => {
+    if (preCreationError) {
+      console.error("❌ Erreur lors de l'appel pre_creation pour", selectedFamille?.code);
+    }
+  }, [preCreationError, selectedFamille?.code]);
+
+  // Dès que la pré-création répond, on pré-remplit le numéro de cycle
+  // (sauf si on revient sur un brouillon qui avait déjà une valeur saisie)
+  useEffect(() => {
+    if (preCreationData && !draft?.numeroCycle) {
+      setNumeroCycle(
+        preCreationData.cycle !== undefined && preCreationData.cycle !== null
+          ? String(preCreationData.cycle)
+          : ""
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preCreationData]);
 
   return (
   <div className="min-h-screen bg-white lg:flex">
@@ -507,15 +545,21 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
         </div>
 
         <div className="mb-4">
-          {selectedFamille?.badges?.some((b) => b.type === "retard") && (
-           <AlertBox variant="warning">
-  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-0 sm:gap-0">
-    <span className="font-bold text-[#78350F]">Visite en retard</span>
-    <span className="text-[13px] text-[#92400E]">
-      Dernière visite le 15/05/2026 (il y a 36 jours).
-    </span>
-  </div>
-</AlertBox>
+          {/* Basé sur la réponse réelle du backend (pre_creation), pas sur les badges de la liste */}
+          {preCreationData?.est_visite_retard && preCreationData?.date_derniere_visite && (
+            <AlertBox variant="warning">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full gap-0 sm:gap-0">
+                <span className="font-bold text-[#78350F]">Visite en retard</span>
+                <span className="text-[13px] text-[#92400E]">
+                  Dernière visite le {formatDateFr(preCreationData.date_derniere_visite)}
+                  {preCreationData.nb_jours != null &&
+                    ` (il y a ${preCreationData.nb_jours} jour${
+                      preCreationData.nb_jours > 1 ? "s" : ""
+                    })`}
+                  .
+                </span>
+              </div>
+            </AlertBox>
           )}
         </div>
 
@@ -658,65 +702,29 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
 
                {selectedFamille && (
               <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
-                {/* Numero de cycle - saisie numerique */}
-                <div className="flex flex-col gap-1 w-full">
+                {/* Numero de cycle - renvoyé par pre_creation, affichage seulement (non modifiable) */}
+                <div className="w-full">
                   <div
-                    className={`
+                    className="
                       h-[45px]
                       w-full
                       rounded-[15px]
                       border
-                      ${numeroCycle ? "border-[#4E9F8A]" : "border-[#E5E7EB]"}
+                      border-[#4E9F8A]
                       bg-white
                       px-4
                       flex
                       items-center
-                      gap-2
-                    `}
+                    "
                   >
-                    <span
-                      className="
-                        text-[14px]
-                        leading-[20px]
-                        font-medium
-                        text-[#4E9F8A]
-                        select-none
-                        shrink-0
-                      "
-                    >
-                      Cycle N°
-                    </span>
-
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="--"
-                      value={numeroCycle}
-                      onChange={(e) => handleNumeroCycleChange(e.target.value)}
-                      className="
-                        flex-1
-                        w-full
-                        min-w-0
-                        bg-transparent
-                        text-[14px]
-                        leading-[20px]
-                        text-[#374151]
-                        placeholder:text-[#9CA3AF]
-                        outline-none
-                        [appearance:textfield]
-                        [&::-webkit-outer-spin-button]:appearance-none
-                        [&::-webkit-inner-spin-button]:appearance-none
-                      "
-                    />
+                    <p className="text-[14px] leading-[20px] text-[#374151]">
+                      Cycle N°{" "}
+                      {preCreationLoading ? "..." : numeroCycle || "-"}
+                    </p>
                   </div>
-                  <ErrorMessage
-                    message={
-                      errors.numeroCycle ? "Veuillez saisir le numéro de cycle" : null
-                    }
-                  />
                 </div>
 
-                {/* Visite numero - affichage seulement */}
+                {/* Visite numero - renvoyé par pre_creation, affichage seulement */}
                 <div className="w-full">
                   <div
                     className="
@@ -732,7 +740,10 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
                     "
                   >
                     <p className="text-[14px] leading-[20px] text-[#374151]">
-                      Visite numero 
+                      Visite numero{" "}
+                      {preCreationLoading
+                        ? "..."
+                        : preCreationData?.numero_visite ?? "-"}
                     </p>
                   </div>
                 </div>
