@@ -4,24 +4,31 @@ import quitter from "../../assets/quitter.svg";
 import { useNavigate } from "react-router-dom";
 import CardPopupDistribution from "../Cards/cardDistribution";
 import PopupDetailDistribution from "./PopupdetailsDistributions";
+import VDZStatusFilter from "../Filter/VDZStatusFilter";
 
 import Spinner from "../Spinner";
 
 const PopupDistributionfamille = ({
   open,
   onClose,
-  Distribution = [],
+  Distribution, // { actives: [...], annulees: [...] }
   famille,
   isLoading = false,
 }) => {
   const navigate = useNavigate();
   const [selectedDistribution, setSelectedDistribution] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
- 
+  const [statusFilter, setStatusFilter] = useState("active");
+
+  const distributionsActives = Distribution?.actives ?? [];
+  const distributionsAnnulees = Distribution?.annulees ?? [];
+
+  const distributionsBrutes =
+    statusFilter === "active" ? distributionsActives : distributionsAnnulees;
 
   // Tri chronologique : la plus ancienne = Distribution 1
   const distributionsTriees = useMemo(() => {
-    return [...Distribution]
+    return [...distributionsBrutes]
       .sort((a, b) => {
         const dateA = new Date(a.date_distribution);
         const dateB = new Date(b.date_distribution);
@@ -35,49 +42,49 @@ const PopupDistributionfamille = ({
         ...item,
         numeroDistribution: index + 1,
       }));
-  }, [Distribution]);
+  }, [distributionsBrutes]);
 
   const mapDistributionToEditData = (distribution) => {
-  const products = (distribution.produits || [])
-    .filter(
+    const produits = distribution?.produits || [];
+
+    const products = produits
+      .filter(
+        (p) =>
+          p.produit?.type_produit !== "lait" &&
+          !p.produit?.nom?.toLowerCase().includes("lait")
+      )
+      .map((p, index) => ({
+        id: p.produit?.id ?? index + 1,
+        title: p.produit?.nom ?? "-",
+        quantity: Number(p.quantite ?? 0),
+        unit: p.produit?.unite ?? "",
+        maxQuantity: Number(p.quantite ?? 0),
+        icon: null,
+      }));
+
+    const produitLait = produits.find(
       (p) =>
-        p.produit?.type_produit !== "lait" &&
-        !p.produit?.nom?.toLowerCase().includes("lait")
-    )
-    .map((p, index) => ({
-      id: p.produit?.id ?? index + 1,
-      title: p.produit?.nom ?? "-",
-      quantity: Number(p.quantite ?? 0),
-      unit: p.produit?.unite ?? "",
-      maxQuantity: Number(p.quantite ?? 0),
-      icon: null,
-    }));
+        p.produit?.type_produit === "lait" ||
+        p.produit?.nom?.toLowerCase().includes("lait")
+    );
 
-  const produitLait = (distribution.produits || []).find(
-    (p) =>
-      p.produit?.type_produit === "lait" ||
-      p.produit?.nom?.toLowerCase().includes("lait")
-  );
+    const boxes = produitLait ? Number(produitLait.quantite ?? 0) : 0;
 
-  const boxes = produitLait
-  ? Number(produitLait.quantite ?? 0)
-  : 0;
+    const grammage = produitLait?.produit?.grammage_boite
+      ? String(produitLait.produit.grammage_boite)
+      : "";
 
-const grammage = produitLait?.produit?.grammage_boite
-  ? String(produitLait.produit.grammage_boite)
-  : "";
+    const laitType = produitLait?.produit?.nom
+      ? produitLait.produit.nom.replace(/\s*\d+\s*g\b/i, "").trim()
+      : null;
 
-const laitType = produitLait?.produit?.nom
-  ? produitLait.produit.nom.replace(/\s*\d+\s*g\b/i, "").trim()
-  : null;
-
-  return {
-    products,
-    laitType,
-    grammage,
-    boxes,
+    return {
+      products,
+      laitType,
+      grammage,
+      boxes,
+    };
   };
-};
 
   return (
     <AnimatePresence>
@@ -133,11 +140,7 @@ const laitType = produitLait?.produit?.nom
                   transition
                 "
               >
-                <img
-                  src={quitter}
-                  alt="Fermer"
-                  className="w-5 h-5"
-                />
+                <img src={quitter} alt="Fermer" className="w-5 h-5" />
                 Fermer
               </button>
 
@@ -152,6 +155,11 @@ const laitType = produitLait?.produit?.nom
               >
                 Distributions
               </h2>
+            </div>
+
+            {/* Filtre statut */}
+            <div className="px-5 sm:px-6 mt-4">
+              <VDZStatusFilter value={statusFilter} onChange={setStatusFilter} />
             </div>
 
             {/* Cartes */}
@@ -173,33 +181,35 @@ const laitType = produitLait?.produit?.nom
                 </div>
               ) : distributionsTriees.length ? (
                 distributionsTriees.map((item, index) => (
-  <CardPopupDistribution
-    key={item.id || `distribution-${index}`}
-    distribution={`Distribution ${item.numeroDistribution}`}
-    date={
-      item.date_distribution
-        ? new Date(
-            item.date_distribution
-          ).toLocaleDateString("fr-FR")
-        : "-"
-    }
-    produits={(item.produits || []).map((prod) => ({
-      nom: prod.produit?.nom ?? "-",
-      quantite: `${Number(prod.quantite ?? 0)} ${
-        prod.produit?.unite === "boite"
-          ? "boîtes"
-          : prod.produit?.unite ?? ""
-      }`.trim(),
-    }))}
-    onClick={() => {
-      setSelectedDistribution(item);
-      setOpenDetail(true);
-    }}
-  />
-))
+                  <CardPopupDistribution
+                    key={item.id || `distribution-${index}`}
+                    distribution={`Distribution ${item.numeroDistribution}`}
+                    date={
+                      item.date_distribution
+                        ? new Date(item.date_distribution).toLocaleDateString(
+                            "fr-FR"
+                          )
+                        : "-"
+                    }
+                    produits={(item.produits || []).map((prod) => ({
+                      nom: prod.produit?.nom ?? "-",
+                      quantite: `${Number(prod.quantite ?? 0)} ${
+                        prod.produit?.unite === "boite"
+                          ? "boîtes"
+                          : prod.produit?.unite ?? ""
+                      }`.trim(),
+                    }))}
+                    onClick={() => {
+                      setSelectedDistribution(item);
+                      setOpenDetail(true);
+                    }}
+                  />
+                ))
               ) : (
                 <div className="py-10 text-center text-gray-500">
-                  Aucune distribution.
+                  {statusFilter === "active"
+                    ? "Aucune distribution active."
+                    : "Aucune distribution annulée."}
                 </div>
               )}
             </div>
@@ -208,73 +218,63 @@ const laitType = produitLait?.produit?.nom
       )}
 
       <PopupDetailDistribution
-  key="distribution-detail"
-  open={openDetail}
-  onClose={() => {
-    setOpenDetail(false);
-    setSelectedDistribution(null);
-  }}
-  distribution={selectedDistribution}
-  famille={famille}
-  onEdit={(distribution) => {
-    setOpenDetail(false);
+        key="distribution-detail"
+        open={openDetail}
+        onClose={() => {
+          setOpenDetail(false);
+          setSelectedDistribution(null);
+        }}
+        distribution={selectedDistribution}
+        famille={famille}
+        onEdit={(distribution) => {
+          setOpenDetail(false);
 
-    const {
-      products,
-      laitType,
-      grammage,
-      boxes,
-    } = mapDistributionToEditData(distribution);
+          const { products, laitType, grammage, boxes } =
+            mapDistributionToEditData(distribution);
 
-    navigate("/ajout-distribution", {
-      state: {
-        distributionAModifier: {
-          ...distribution,
+          navigate("/ajout-distribution", {
+            state: {
+              distributionAModifier: {
+                ...distribution,
 
-           
+                selectedFamille: {
+                  id: famille?.id,
 
-          selectedFamille: {
-            id: famille?.id,
+                  mere: famille?.mere
+                    ? `${famille.mere.nom || ""} ${
+                        famille.mere.prenom || ""
+                      }`.trim()
+                    : "",
 
-          
+                  enfant: famille?.nourrisson?.prenom || "",
 
-  mere: famille?.mere
-    ? `${famille.mere.nom || ""} ${
-        famille.mere.prenom || ""
-      }`.trim()
-    : "",
+                  sexe:
+                    famille?.nourrisson?.sexe === "M"
+                      ? "Fils"
+                      : famille?.nourrisson?.sexe === "F"
+                      ? "Fille"
+                      : "-",
 
-      enfant: famille?.nourrisson?.prenom || "",
+                  region: famille?.mere?.village?.nom,
 
+                  naissance: famille?.nourrisson?.date_naissance,
 
-            sexe:
-  famille?.nourrisson?.sexe === "M"
-    ? "Fils"
-    : famille?.nourrisson?.sexe === "F"
-    ? "Fille"
-    : "-",
+                  code: famille?.id,
 
-            region: famille?.mere?.village?.nom,
+                  badges: [],
+                },
 
-            naissance: famille?.nourrisson?.date_naissance,
+                products,
+                laitType,
+                grammage,
+                boxes,
 
-            code: famille?.id,
-
-            badges: [],
-          },
-
-          products,
-          laitType,
-          grammage,
-          boxes,
-
-          confirmed: true,
-        },
-      },
-    });
-  }}
-/>
-     
+                confirmed: true,
+              },
+            },
+          });
+        }}
+      />
     </AnimatePresence>
   );
 };
