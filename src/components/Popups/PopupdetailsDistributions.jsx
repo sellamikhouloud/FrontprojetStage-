@@ -161,12 +161,7 @@ const PopupDetailDistribution = ({
                     value:
                       distribution.numeroDistribution ?? "-",
                   },
-                  {
-                    label: "Réception confirmée",
-                    value: distribution.reception_confirmee
-                      ? "Oui"
-                      : "Non",
-                  },
+                
                   {
                     label: "Enregistrée par",
                     value:
