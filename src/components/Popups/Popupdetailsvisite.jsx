@@ -22,8 +22,12 @@ const PopupDetailVisite = ({
   onDelete,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!open || !visite) return null;
+
+  // 🔑 Une visite annulée ne peut plus être modifiée ni supprimée
+  const isAnnulee = visite?.annule === true;
 
   // Contenu réutilisé dans les deux layouts
   const infosGenerales = [
@@ -136,24 +140,39 @@ const statutBadges = [
     </div>
   );
 
-  const ActionButtons = ({ className }) => (
-    <div className={className}>
-      <Button
-        title="Modifier"
-        variant="modifier"
-        icon={EditIcon}
-        noWrapperPadding
-        onClick={() => onEdit?.(visite)}
-      />
-      <Button
-        title="Supprimer"
-        variant="supprimer"
-        icon={DeleteIcon}
-        noWrapperPadding
-        onClick={() => setShowDeletePopup(true)}
-      />
-    </div>
-  );
+  const ActionButtons = ({ className }) => {
+    // 🔑 Pas de boutons Modifier / Supprimer pour une visite annulée
+    if (isAnnulee) return null;
+
+    return (
+      <div className={className}>
+        <Button
+          title="Modifier"
+          variant="modifier"
+          icon={EditIcon}
+          noWrapperPadding
+          onClick={() => onEdit?.(visite)}
+        />
+        <Button
+          title="Supprimer"
+          variant="supprimer"
+          icon={DeleteIcon}
+          noWrapperPadding
+          onClick={() => setShowDeletePopup(true)}
+        />
+      </div>
+    );
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await onDelete?.(visite);
+    } finally {
+      setIsDeleting(false);
+      setShowDeletePopup(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -179,13 +198,10 @@ const statutBadges = [
               title="Confirmer la suppression"
               image={SuccessImage}
               description="Êtes-vous sûr de vouloir supprimer cette visite ? Cette action est irréversible."
-              primaryButtonText="Supprimer"
+              primaryButtonText={isDeleting ? "Suppression..." : "Supprimer"}
               secondaryButtonText="Annuler"
               primaryButtonVariant="danger"
-              onPrimaryClick={() => {
-                setShowDeletePopup(false);
-                onDelete?.(visite);
-              }}
+              onPrimaryClick={handleConfirmDelete}
               onSecondaryClick={() => setShowDeletePopup(false)}
             />
           </div>
