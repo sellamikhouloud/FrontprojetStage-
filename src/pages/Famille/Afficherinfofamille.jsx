@@ -62,14 +62,7 @@ const {
   enabled: !!id && openVisites,
 });
 
-const visitesData =
-  Array.isArray(visitesResponse)
-    ? visitesResponse
-    : visitesResponse?.results
-    ? visitesResponse.results
-    : visitesResponse
-    ? [visitesResponse]
-    : [];
+
 const {
   data: distributionsResponse,
   isLoading: distributionsLoading,
@@ -80,14 +73,7 @@ const {
   enabled: !!id && openDistribution,
 });
 
-const distributionsData =
-  Array.isArray(distributionsResponse)
-    ? distributionsResponse
-    : distributionsResponse?.results
-    ? distributionsResponse.results
-    : distributionsResponse
-    ? [distributionsResponse]
-    : [];
+
 
 const {
   data: zakatResponse,
@@ -99,14 +85,7 @@ const {
   enabled: !!id && openZakat,
 });
 
-const zakatsData =
-  Array.isArray(zakatResponse)
-    ? zakatResponse
-    : zakatResponse?.results
-    ? zakatResponse.results
-    : zakatResponse
-    ? [zakatResponse]
-    : [];
+
   
 
 if (isLoading) {
@@ -427,28 +406,27 @@ return (
  
     <Sidebar />
   
-   
-    <PopupDistributionfamille
+  
+<PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
-  Distribution={distributionsData}
-  famille={famille}
+  Distribution={distributionsResponse}   
   isLoading={distributionsLoading}
 />
- <PopupZakatFamille
+
+<PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
-  zakats={zakatsData}
+  zakats={zakatResponse}  
   famille={famille}
   isLoading={zakatLoading}
-/> 
-
+/>
 
 
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
-  Visites={visitesData}
+  Visites={visitesResponse}  
   famille={famille}
   isLoading={visitesLoading}
 />
