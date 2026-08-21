@@ -71,12 +71,12 @@ export default function ListeUsers() {
         <NavigationHeader
           title="Liste des coordinateurs"
           type="share"
-          actionTitle="Exporter la liste des utilisateurs"
+          actionTitle="Exporter la liste des coordinateurs"
           onAction={() => {
             // Fonction d'export
           }}
           secondType="add"
-          secondActionTitle="Ajouter un utilisateur"
+          secondActionTitle="Ajouter un coordinateur"
           onSecondAction={() => navigate("/ajout-coordinateur")}
         />
 
@@ -104,7 +104,7 @@ export default function ListeUsers() {
           <div className="flex justify-center py-10 md:py-20">
             <p className="text-red-500">
               {error?.response?.data?.detail ||
-                "Impossible de charger la liste des utilisateurs."}
+                "Impossible de charger la liste des coordinateurs."}
             </p>
           </div>
         )}
