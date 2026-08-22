@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import CardPopupDistribution from "../Cards/cardDistribution";
 import PopupDetailDistribution from "./PopupdetailsDistributions";
 import VDZStatusFilter from "../Filter/VDZStatusFilter";
+import { annulerDistribution } from "@/lib/api/distributions";
 
 import Spinner from "../Spinner";
 
@@ -14,6 +15,8 @@ const PopupDistributionfamille = ({
   Distribution, // { actives: [...], annulees: [...] }
   famille,
   isLoading = false,
+ 
+  onDistributionAnnulee,
 }) => {
   const navigate = useNavigate();
   const [selectedDistribution, setSelectedDistribution] = useState(null);
@@ -26,23 +29,14 @@ const PopupDistributionfamille = ({
   const distributionsBrutes =
     statusFilter === "active" ? distributionsActives : distributionsAnnulees;
 
-  // Tri chronologique : la plus ancienne = Distribution 1
   const distributionsTriees = useMemo(() => {
-    return [...distributionsBrutes]
-      .sort((a, b) => {
-        const dateA = new Date(a.date_distribution);
-        const dateB = new Date(b.date_distribution);
-
-        const diff = dateA - dateB;
-
-        // Si même date, on utilise l'id comme deuxième critère
-        return diff !== 0 ? diff : (a.id ?? 0) - (b.id ?? 0);
-      })
-      .map((item, index) => ({
-        ...item,
-        numeroDistribution: index + 1,
-      }));
-  }, [distributionsBrutes]);
+    return distributionsBrutes.map((item, index) => ({
+      ...item,
+      numeroDistribution: index + 1,
+   
+      annulee: item.annulee ?? statusFilter !== "active",
+    }));
+  }, [distributionsBrutes, statusFilter]);
 
   const mapDistributionToEditData = (distribution) => {
     const produits = distribution?.produits || [];
@@ -84,6 +78,24 @@ const PopupDistributionfamille = ({
       grammage,
       boxes,
     };
+  };
+
+  const handleAnnulerDistribution = async (distribution) => {
+    try {
+      await annulerDistribution(distribution.id);
+
+    
+      setOpenDetail(false);
+      setSelectedDistribution(null);
+
+    
+      onDistributionAnnulee?.(distribution);
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'annulation de la distribution :",
+        error?.response?.data || error
+      );
+    }
   };
 
   return (
@@ -226,6 +238,7 @@ const PopupDistributionfamille = ({
         }}
         distribution={selectedDistribution}
         famille={famille}
+        onDelete={handleAnnulerDistribution}
         onEdit={(distribution) => {
           setOpenDetail(false);
 
