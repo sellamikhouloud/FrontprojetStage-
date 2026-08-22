@@ -251,7 +251,7 @@ const PopupDetailDistribution = ({
             />
 
             <Button
-              title="Supprimer"
+              title="Annuler"
               variant="supprimer"
               icon={DeleteIcon}
               noWrapperPadding
