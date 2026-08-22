@@ -94,9 +94,10 @@ export default function ListeVisites() {
           village: item.mere?.village ?? null,
         }
       : null,
+
+
   });
 
-  // 🔑 Suppression / annulation réelle de la visite
   const handleDeleteVisite = async (visite) => {
     try {
       await annulerVisite(visite.id);
@@ -177,7 +178,7 @@ export default function ListeVisites() {
                   key={item.id}
                   nom={nom}
                   code={item.code || null}
-                  visite={`Visite ${(item.numero_visite ?? 0) + 1}`}
+                  visite={`Visite ${item.numero_visite ?? "-"}`}
                   date={dateVisite}
                   poids={item.poids_bebe ?? "-"}
                   taille={item.taille_bebe ?? "-"}
@@ -243,4 +244,3 @@ export default function ListeVisites() {
     </div>
   );
 }
-
