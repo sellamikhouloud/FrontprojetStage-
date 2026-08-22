@@ -382,9 +382,7 @@ const coordinateurs = coordinateursData
   mutationFn: (patch) =>
     updateFamille(id, buildFamillePayload(patch)).then((r) => r.data),
  onSuccess: (updated) => {
-  // =========================
-  // VILLAGE
-  // =========================
+ 
   const villageId =
     typeof updated?.mere?.village === "object"
       ? updated.mere.village?.id
@@ -394,9 +392,7 @@ const coordinateurs = coordinateursData
     (opt) => String(opt.value) === String(villageId)
   );
 
-  // =========================
-  // COORDINATEUR
-  // =========================
+
   const coordinateurId =
     typeof updated?.coordinateur === "object"
       ? updated.coordinateur?.id
@@ -407,9 +403,7 @@ const coordinateurs = coordinateursData
       String(coordinateur.id) === String(coordinateurId)
   );
 
-  // =========================
-  // OBJET FINAL
-  // =========================
+  
   const fixedUpdated = {
     ...updated,
 
@@ -713,9 +707,6 @@ const makeHandler = (fields) => (index, value) => {
     <div className="flex h-screen overflow-hidden bg-white">
       <Sidebar  />
 
-     // Supprime distributionsData et zakatsData (les blocs qui aplatissent)
-
-// Dans le rendu :
 <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
