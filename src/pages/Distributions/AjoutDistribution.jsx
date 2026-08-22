@@ -4,7 +4,6 @@ import Card from "../../components/Cards/Card";
 import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
-import LaitInfantile from "../../components/Distribution/LaitInfantile";
 
 import ColisAlimentaire from "../../components/Distribution/ColisAlimentaire";
 import { useState } from "react";
@@ -14,6 +13,8 @@ import Legumineuses from "../../assets/Legumineuses.svg";
 import Huile from "../../assets/Huile.svg";
 import Sucre from "../../assets/Sucre.svg";
 import Sel from "../../assets/Sel.svg";
+// TODO: remplacer par une vraie icône "lait" si disponible dans /assets
+import Lait from "../../assets/Sucre.svg";
 
 import { useNavigate } from "react-router-dom";
 import DateContainer from "../../components/Containers/DateContainer";
@@ -31,11 +32,9 @@ import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 
 import { useQuery } from "@tanstack/react-query";
-import { listProduits } from "@/lib/api/stock";
 
 import { listFamilles } from "@/lib/api/familles";
-import { createDistribution } from "@/lib/api/distributions";
-
+import { createDistribution, getPreCreationDistribution } from "@/lib/api/distributions";
 
 // Utilitaire — parse une date au format "JJ/MM/AAAA" en objet Date valide
 const parseDateFR = (str) => {
@@ -53,41 +52,32 @@ const formatDateYYYYMMDD = (d) => {
   ).padStart(2, "0")}`;
 };
 
+// "YYYY-MM-DD" -> "DD/MM/YYYY"
+const formatDateFr = (isoDate) => {
+  if (!isoDate) return "";
+  const [y, m, d] = isoDate.split("-");
+  if (!y || !m || !d) return isoDate;
+  return `${d}/${m}/${y}`;
+};
 
+const LAIT_LABELS = {
+  "1er_age": "1er âge",
+  "2eme_age": "2ème âge",
+};
 
 export default function AjoutDistribution() {
+  const iconByNom = {
+    "Céréales": Cereales,
+    "Légumineuses": Legumineuses,
+    "Huile alimentaire": Huile,
+    "Huile": Huile,
+    "Sucre": Sucre,
+    "Sel": Sel,
+    "Sel iodé": Sel,
+  };
+  const DEFAULT_STOCK_ICON = Sucre; // fallback si le nom n'est pas mappé
+  const DEFAULT_ICON = Sucre;
 
- const iconByNom = {
-  "Céréales": Cereales,
-  "Légumineuses": Legumineuses,
-  "Huile alimentaire": Huile,
-  "Huile": Huile,
-  "Sucre": Sucre,
-  "Sel": Sel,
-  "Sel iodé": Sel,
-};
-const DEFAULT_STOCK_ICON = Sucre; // fallback si le nom n'est pas mappé
-
-const {
-  data: produitsResponse,
-  isLoading: produitsLoading,
-  isError: produitsError,
-} = useQuery({
-  queryKey: ["produits-list"],
-  queryFn: () => listProduits().then((r) => r.data),
-});
-
-const stockProducts = (produitsResponse?.results || [])
-  .filter((p) => p.validee && p.type_produit !== "lait" && !p.nom?.toLowerCase().includes("lait"))
-  .map((p) => ({
-    id: p.id,
-    icon: iconByNom[p.nom] || DEFAULT_STOCK_ICON,
-    title: p.nom,
-    quantity: Number(p.stock_courant),
-    unit: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "kg" : p.unite,
-  }));
-
-  const [showNewProduct, setShowNewProduct] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [saving, setSaving] = useState(false);
@@ -101,13 +91,8 @@ const stockProducts = (produitsResponse?.results || [])
   // Mode modification si une distribution existante a été transmise
   const isEditMode = !!distributionAModifier;
 
-
- // Source des données : distribution existante (édition) > brouillon (retour "voir la fiche") > vide (ajout)
+  // Source des données : distribution existante (édition) > brouillon (retour "voir la fiche") > vide (ajout)
   const source = distributionAModifier || draft;
-
-  // Icône utilisée par défaut quand un produit n'a pas d'icône
-  // (ex: produit reconstitué depuis la page détail, icon: null)
-  const DEFAULT_ICON = Sucre;
 
   const withDefaultIcon = (list) =>
     (list || []).map((p) => ({
@@ -116,30 +101,80 @@ const stockProducts = (produitsResponse?.results || [])
     }));
 
   const [selectedFamille, setSelectedFamille] = useState(source?.selectedFamille || null);
+
+  // --- Pré-création : produits + lait disponibles pour cette famille ---
+  const {
+    data: preCreationData,
+    isFetching: preCreationLoading,
+    isError: preCreationError,
+    error: preCreationErrorObj,
+  } = useQuery({
+    queryKey: ["distribution-pre-creation", selectedFamille?.code],
+    queryFn: () => {
+      console.log("📡 Appel pre-creation distribution pour famille:", selectedFamille?.code);
+      return getPreCreationDistribution(selectedFamille.code)
+        .then((r) => {
+          console.log("✅ Réponse pre-creation distribution:", r.data);
+          return r.data;
+        })
+        .catch((err) => {
+          console.error(
+            "❌ Erreur pre-creation distribution:",
+            err.response?.status,
+            err.response?.data || err.message
+          );
+          throw err;
+        });
+    },
+    enabled: !!selectedFamille?.code,
+  });
+
+  // Stock alimentaire disponible pour cette famille
+  const stockProducts = (preCreationData?.produits || []).map((p) => ({
+    id: p.id,
+    icon: iconByNom[p.nom] || DEFAULT_STOCK_ICON,
+    title: p.nom,
+    quantity: Number(p.stock),
+    unit: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "kg" : p.unite,
+  }));
+
   const [products, setProducts] = useState(withDefaultIcon(source?.products));
-const [date, setDate] = useState(
-  source?.date ? parseDateFR(source.date) || new Date() : new Date()
-);
+  const [date, setDate] = useState(
+    source?.date ? parseDateFR(source.date) || new Date() : new Date()
+  );
   const [confirmed, setConfirmed] = useState(source?.confirmed || false);
 
-  // Lait infantile - état remonté ici pour permettre la validation
-  const [laitType, setLaitType] = useState(source?.laitType || null);
-  const [grammage, setGrammage] = useState(source?.grammage || "");
-  const [boxes, setBoxes] = useState(source?.boxes ?? 0);
+  // --- Lait infantile : sélection du type d'âge, puis du grammage via popup ---
+  const [laitType, setLaitType] = useState(source?.laitType || null); // "1er_age" | "2eme_age"
+  const [showLaitPopup, setShowLaitPopup] = useState(false);
+
+  // Options de grammage disponibles pour le type sélectionné,
+  // formatées comme des "produits" pour réutiliser SelectProductsPopup
+  const laitOptions = (preCreationData?.lait?.[laitType] || []).map((entry) => ({
+    id: `lait-${entry.id}`,
+    rawId: entry.id,
+    icon: Lait,
+    title: `Lait ${LAIT_LABELS[laitType] || laitType} — ${entry.grammage}g`,
+    quantity: Number(entry.nb_boites), // stock dispo, affiché dans le popup
+    unit: "boîtes",
+    category: "lait",
+  }));
+
+  const handleLaitTypeSelect = (type) => {
+    if (!selectedFamille) {
+      setErrors((prev) => ({ ...prev, famille: true }));
+      return;
+    }
+    setLaitType(type);
+    setShowLaitPopup(true);
+  };
 
   const navigate = useNavigate();
-  const [newProduct, setNewProduct] = useState({
-    name: "",
-    unit: "",
-    quantity: "",
-  });
   const [showStockPopup, setShowStockPopup] = useState(false);
 
   // --- ERROR HANDLING (meme principe que AjoutZakat) ---
   const [errors, setErrors] = useState({
     famille: false,
-    laitType: false,
-    grammage: false,
     confirmed: false,
     distribution: false,
     produits: {},
@@ -160,18 +195,14 @@ const [date, setDate] = useState(
 
     const newErrors = {
       famille: !selectedFamille,
-      laitType: boxes > 0 && !laitType,
-      grammage: boxes > 0 && (!grammage || parseFloat(grammage) <= 0),
       confirmed: !confirmed,
-      distribution: products.length === 0 && boxes === 0,
+      distribution: products.length === 0,
       produits: produitsErrors,
     };
     setErrors(newErrors);
 
     const hasFieldError = [
       newErrors.famille,
-      newErrors.laitType,
-      newErrors.grammage,
       newErrors.confirmed,
       newErrors.distribution,
     ].some(Boolean);
@@ -180,55 +211,51 @@ const [date, setDate] = useState(
     return !hasFieldError && !hasProduitError;
   };
 
- const handleSave = async () => {
-  if (!validateForm()) return;
+  const handleSave = async () => {
+    if (!validateForm()) return;
 
-  setSaving(true);
-  setSaveError(null);
+    setSaving(true);
+    setSaveError(null);
 
-  const payload = {
-    famille: selectedFamille?.code, // ex: "GDK-2026-003"
-    reception_confirmee: confirmed,
-    date_distribution: formatDateYYYYMMDD(date),
-    produits: products.map((p) => ({
-      produit: p.id,
-      quantite: Number(p.quantity),
-    })),
-    // TODO: ajouter le produit lait ici plus tard
-  };
+    // TODO: confirmer les clés exactes attendues par le backend pour le lait
+    const payload = {
+      famille: selectedFamille?.code, // ex: "GDK-2026-003"
+      reception_confirmee: confirmed,
+      date_distribution: formatDateYYYYMMDD(date),
+      produits: products
+        .filter((p) => p.category !== "lait")
+        .map((p) => ({
+          produit: p.id,
+          quantite: Number(p.quantity),
+        })),
+      lait: products
+        .filter((p) => p.category === "lait")
+        .map((p) => ({
+          lait: p.rawId,
+          nb_boites: Number(p.quantity),
+        })),
+    };
 
-  try {
-    if (isEditMode) {
-      // TODO: appel API réel — PUT /distributions/:id (à faire plus tard)
-      console.log("Modification distribution", distributionAModifier.id, payload);
-    } else {
-      await createDistribution(payload);
-    }
+    try {
+      if (isEditMode) {
+        // TODO: appel API réel — PUT /distributions/:id (à faire plus tard)
+        console.log("Modification distribution", distributionAModifier.id, payload);
+      } else {
+        await createDistribution(payload);
+      }
 
-    setShowSuccessPopup(true);
-  } catch (error) {
-    console.error(
-      "❌ Erreur lors de la création de la distribution :",
-      error.response?.data || error.message
-    );
-    setSaveError(
-      error.response?.data?.detail ||
-        "Une erreur est survenue lors de l'enregistrement de la distribution."
-    );
-  } finally {
-    setSaving(false);
-  }
-};
-
-  const handleLaitTypeChange = (value) => {
-    setLaitType(value);
-    setErrors((prev) => ({ ...prev, laitType: false }));
-  };
-
-  const handleGrammageChange = (raw) => {
-    setGrammage(raw);
-    if (raw && parseFloat(raw) > 0) {
-      setErrors((prev) => ({ ...prev, grammage: false }));
+      setShowSuccessPopup(true);
+    } catch (error) {
+      console.error(
+        "❌ Erreur lors de la création de la distribution :",
+        error.response?.data || error.message
+      );
+      setSaveError(
+        error.response?.data?.detail ||
+          "Une erreur est survenue lors de l'enregistrement de la distribution."
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -240,81 +267,66 @@ const [date, setDate] = useState(
     }
   };
 
-  const handleDecrementBoxes = () => {
-    setBoxes((v) => {
-      const newValue = Math.max(0, v - 1);
-      if (newValue === 0) {
-        // Pas de boîte = pas besoin de type de lait ni de grammage
-        setErrors((prev) => ({ ...prev, laitType: false, grammage: false }));
-      }
-      return newValue;
-    });
-  };
-
-   const [openFamilles, setOpenFamilles] = useState(false);
+  const [openFamilles, setOpenFamilles] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
 
   const {
-  data: famillesData,
-  isLoading: famillesLoading,
-  isError: famillesError,
-  refetch: refetchFamilles,
-} = useQuery({
-  queryKey: ["familles-popup"],
-  queryFn: () => listFamilles().then((r) => r.data),
-  enabled: openFamilles,
-});
+    data: famillesData,
+    isLoading: famillesLoading,
+    isError: famillesError,
+    refetch: refetchFamilles,
+  } = useQuery({
+    queryKey: ["familles-popup"],
+    queryFn: () => listFamilles().then((r) => r.data),
+    enabled: openFamilles,
+  });
 
-const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+  const famillesBrutes = famillesData?.results ?? famillesData ?? [];
 
-
-
-const listeDesFamilles = famillesBrutes.map((famille) => ({
-  id: famille.id,
-  enfant: famille.nourrisson?.prenom,
-  mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
-  sexe:
-    famille?.nourrisson?.sexe === "M"
-      ? "Fils"
-      : famille?.nourrisson?.sexe === "F"
-      ? "Fille"
-      : "-",
-  region: famille.mere?.village?.nom ?? "-",
-  naissance: famille.nourrisson?.date_naissance,
-  code: famille.id,
-  badges: [
-    famille?.statut_nutritionnel_bebe === "mam" && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
-    famille?.statut_nutritionnel_bebe === "mas" && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
-    famille?.statut_nutritionnel_bebe === "normale" && {
-      type: "mere",
-      text: "Bébé normal",
-    },
-    famille?.statut_nutritionnel_mere === "normale" && {
-      type: "mere",
-      text: "Mère normale",
-    },
-    famille?.statut_nutritionnel_mere === "a_risque" && {
-      type: "risque",
-      text: "Mère à risque",
-    },
-    famille?.statut_nutritionnel_mere === "malnutrition" && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
-    famille.est_visite_en_retard && {
-      type: "retard",
-      text: "Visite en retard",
-    },
-  ].filter(Boolean),
-}));
-
- 
+  const listeDesFamilles = famillesBrutes.map((famille) => ({
+    id: famille.id,
+    enfant: famille.nourrisson?.prenom,
+    mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
+    sexe:
+      famille?.nourrisson?.sexe === "M"
+        ? "Fils"
+        : famille?.nourrisson?.sexe === "F"
+        ? "Fille"
+        : "-",
+    region: famille.mere?.village?.nom ?? "-",
+    naissance: famille.nourrisson?.date_naissance,
+    code: famille.id,
+    badges: [
+      famille?.statut_nutritionnel_bebe === "mam" && {
+        type: "mam",
+        text: "MAM nourrisson",
+      },
+      famille?.statut_nutritionnel_bebe === "mas" && {
+        type: "mas",
+        text: "MAS nourrisson",
+      },
+      famille?.statut_nutritionnel_bebe === "normale" && {
+        type: "mere",
+        text: "Bébé normal",
+      },
+      famille?.statut_nutritionnel_mere === "normale" && {
+        type: "mere",
+        text: "Mère normale",
+      },
+      famille?.statut_nutritionnel_mere === "a_risque" && {
+        type: "risque",
+        text: "Mère à risque",
+      },
+      famille?.statut_nutritionnel_mere === "malnutrition" && {
+        type: "mas",
+        text: "Mère malnutrie",
+      },
+      famille.est_visite_en_retard && {
+        type: "retard",
+        text: "Visite en retard",
+      },
+    ].filter(Boolean),
+  }));
 
   // En mode modification, on ne peut plus changer de famille — seulement la consulter
   const familyOptions = isEditMode
@@ -372,7 +384,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
       navigate(`/famille/${selectedFamille.id}`, {
         state: {
           from: "/ajout-distribution",
-          draft: { selectedFamille, products, date, confirmed, laitType, grammage, boxes },
+          draft: { selectedFamille, products, date, confirmed, laitType },
           // Si on était déjà en mode modification, on garde le contexte au retour
           distributionAModifier: isEditMode ? distributionAModifier : undefined,
         },
@@ -381,301 +393,345 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
   };
 
   return (
-    <div className="min-h-screen bg-white lg:flex">
-      <div
-        className="
-          hidden
-          lg:flex
-          lg:sticky
-          lg:top-0
-          lg:h-screen
-          lg:items-center
-          lg:py-0
-          lg:pl-0
-          lg:shrink-0
-        "
-      >
-        <Sidebar role="admin" />
-      </div>
-
-      {/* Mobile sidebar (hamburger) */}
-      <div className="lg:hidden">
-        <Sidebar role="admin" />
-      </div>
-
-      {/* Mobile fixed white header */}
-      <div
-        className="
-          fixed
-          top-0
-          left-0
-          right-0
-          h-20
-          bg-white
-          z-40
-          lg:hidden
-        "
-      />
+    <div className="flex h-screen bg-white overflow-hidden">
+      <Sidebar role="admin" />
 
       {/* Page content */}
-      <main
-        className="
-          flex-1
-          overflow-y-auto
-          bg-white
+      <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+        {/* Espace blanc FIXE en haut — desktop only, mobile déjà géré par Sidebar */}
+        <div
+          className="
+            hidden
+            lg:block
+            lg:absolute
+            lg:top-0
+            lg:left-0
+            lg:right-0
+            lg:h-4
+            bg-white
+            z-20
+          "
+        />
 
-          pt-20
-          lg:pt-4
+        {/* Zone scrollable UNIQUE */}
+        <div
+          className="
+            h-full
+            overflow-y-auto
 
-          px-4
-          lg:px-10
+            pt-20
+            lg:pt-4
 
-          pb-8
-          lg:pb-2
-        "
-      >
-        {/* Header */}
-        <div className="mb-3 lg:mb-6">
-          <PageHeader
-            leftTitle="Annuler"
-            showRight={false}
-            onBack={() => window.history.back()}
-          />
-        </div>
+            px-4
+            lg:px-10
 
-       
-
-        {!selectedFamille && (
-          <div className="flex flex-col gap-2">
-            <SelectorWithAction
-              label="Choisir la famille concerne"
-              description="Cliquer pour rechercher la famille concerne par la distribution"
-              onAction={handleSearch}
-            />
-            <ErrorMessage
-              message={errors.famille ? "Veuillez sélectionner une famille" : null}
+            pb-8
+            lg:pb-2
+          "
+        >
+          {/* Header */}
+          <div className="mb-3 lg:mb-6">
+            <PageHeader
+              leftTitle="Annuler"
+              showRight={false}
+              onBack={() => window.history.back()}
             />
           </div>
-        )}
 
-        {/* Family Card */}
-        {selectedFamille && (
-          <>
-            {/* Mobile */}
-            <div className="relative block lg:hidden mt-4">
-              <div
-                className="cursor-pointer"
-                onClick={() => setOpenOptions((prev) => !prev)}
-              >
-                <CardPopup
-                  enfant={selectedFamille.enfant}
-                  sexe={selectedFamille.sexe}
-                  region={selectedFamille.region}
-                  naissance={selectedFamille.naissance}
-                  code={selectedFamille.code}
-                  badges={selectedFamille.badges}
+          {!selectedFamille && (
+            <div className="flex flex-col gap-2">
+              <SelectorWithAction
+                label="Choisir la famille concerne"
+                description="Cliquer pour rechercher la famille concerne par la distribution"
+                onAction={handleSearch}
+              />
+              <ErrorMessage
+                message={errors.famille ? "Veuillez sélectionner une famille" : null}
+              />
+            </div>
+          )}
+
+          {/* Family Card */}
+          {selectedFamille && (
+            <>
+              {/* Mobile */}
+              <div className="relative block lg:hidden mt-4">
+                <div
+                  className="cursor-pointer"
+                  onClick={() => setOpenOptions((prev) => !prev)}
+                >
+                  <CardPopup
+                    enfant={selectedFamille.enfant}
+                    sexe={selectedFamille.sexe}
+                    region={selectedFamille.region}
+                    naissance={selectedFamille.naissance}
+                    code={selectedFamille.code}
+                    badges={selectedFamille.badges}
+                  />
+                </div>
+
+                <OptionsMenu
+                  open={openOptions}
+                  onClose={() => setOpenOptions(false)}
+                  options={familyOptions}
+                  onSelect={handleOptionSelect}
                 />
               </div>
 
-              <OptionsMenu
-                open={openOptions}
-                onClose={() => setOpenOptions(false)}
-                options={familyOptions}
-                onSelect={handleOptionSelect}
-              />
-            </div>
+              {/* Desktop */}
+              <div className="relative hidden lg:block">
+                <div
+                  className="cursor-pointer"
+                  onClick={() => setOpenOptions((prev) => !prev)}
+                >
+                  <Card
+                    enfant={selectedFamille.enfant}
+                    mere={selectedFamille.mere}
+                    sexe={selectedFamille.sexe}
+                    region={selectedFamille.region}
+                    naissance={selectedFamille.naissance}
+                    code={selectedFamille.code}
+                    badges={selectedFamille.badges}
+                  />
+                </div>
 
-            {/* Desktop */}
-            <div className="relative hidden lg:block">
-              <div
-                className="cursor-pointer"
-                onClick={() => setOpenOptions((prev) => !prev)}
-              >
-                <Card
-                  enfant={selectedFamille.enfant}
-                  mere={selectedFamille.mere}
-                  sexe={selectedFamille.sexe}
-                  region={selectedFamille.region}
-                  naissance={selectedFamille.naissance}
-                  code={selectedFamille.code}
-                  badges={selectedFamille.badges}
+                <OptionsMenu
+                  open={openOptions}
+                  onClose={() => setOpenOptions(false)}
+                  options={familyOptions}
+                  onSelect={handleOptionSelect}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Main content */}
+          <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
+            {/* LEFT COLUMN */}
+            <div className="flex flex-col gap-4">
+              {selectedFamille && (
+                <InfoHeader
+                  title="Dernière distribution"
+                  value={
+                    preCreationLoading
+                      ? "..."
+                      : preCreationData?.date_derniere_distribution
+                      ? formatDateFr(preCreationData.date_derniere_distribution)
+                      : "Aucune"
+                  }
+                />
+              )}
+
+              {/* Date  */}
+              <div className="flex flex-col gap-0">
+                <h3
+                  className="
+                    text-[16px]
+                    lg:text-[18px]
+                    font-semibold
+                    text-[#202124]
+                  "
+                >
+                  Date de la distribution
+                </h3>
+
+                <div className="grid grid-cols-1 gap-3 lg:gap-2 items-end">
+                  <DateContainer value={date} onChange={setDate} noPadding />
+                </div>
+              </div>
+
+              {/* Lait infantile — sélection du type, puis du grammage via popup */}
+              <div className="flex flex-col gap-2">
+                <h3 className="text-[16px] lg:text-[18px] font-semibold text-[#202124]">
+                  Lait infantile
+                </h3>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleLaitTypeSelect("1er_age")}
+                    className={`h-[45px] flex-1 rounded-[15px] border text-[14px] font-medium transition
+                      ${
+                        laitType === "1er_age"
+                          ? "border-[#4E9F8A] text-[#4E9F8A]"
+                          : "border-[#E5E7EB] text-[#374151]"
+                      }`}
+                  >
+                    1er âge
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLaitTypeSelect("2eme_age")}
+                    className={`h-[45px] flex-1 rounded-[15px] border text-[14px] font-medium transition
+                      ${
+                        laitType === "2eme_age"
+                          ? "border-[#4E9F8A] text-[#4E9F8A]"
+                          : "border-[#E5E7EB] text-[#374151]"
+                      }`}
+                  >
+                    2ème âge
+                  </button>
+                </div>
+                <ErrorMessage
+                  message={
+                    !selectedFamille && errors.famille
+                      ? "Veuillez d'abord choisir une famille"
+                      : null
+                  }
                 />
               </div>
 
-              <OptionsMenu
-                open={openOptions}
-                onClose={() => setOpenOptions(false)}
-                options={familyOptions}
-                onSelect={handleOptionSelect}
-              />
-            </div>
-          </>
-        )}
-
-        {/* Main content */}
-        <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
-          {/* LEFT COLUMN */}
-          <div className="flex flex-col gap-4">
-            {selectedFamille && (
-              <InfoHeader title="Dernière distribution" value="15/05/2026" />
-            )}
-
-            {/* Date  */}
-            <div className="flex flex-col gap-0">
-              <h3
-                className="
-                  text-[16px]
-                  lg:text-[18px]
-                  font-semibold
-                  text-[#202124]
-                "
-              >
-                Date de la distribution
-              </h3>
-
-              <div
-                className={`
-                  grid
-                  grid-cols-1
-                  "lg:grid-cols-1"}
-                  gap-3
-                  lg:gap-2
-                  items-end
-                `}
-              >
-                <DateContainer value={date} onChange={setDate} noPadding />
-
+              {/* Temporary confirmation */}
+              <div className="hidden lg:block">
+                <ConfirmationForm
+                  checked={confirmed}
+                  onChange={handleConfirmedChange}
+                  error={errors.confirmed}
+                  errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+                />
               </div>
             </div>
 
-            {/* Milk */}
-            <LaitInfantile
-              type={laitType}
-              onTypeChange={handleLaitTypeChange}
-              grammage={grammage}
-              onGrammageChange={handleGrammageChange}
-              boxes={boxes}
-              onIncrement={() => {
-                setBoxes((v) => v + 1);
-                setErrors((prev) => ({ ...prev, distribution: false }));
+            {/* RIGHT COLUMN */}
+            <div>
+              <ColisAlimentaire
+                products={products}
+                onAddProduct={() => {
+                  if (!selectedFamille) {
+                    setErrors((prev) => ({ ...prev, famille: true }));
+                    return;
+                  }
+                  if (!preCreationLoading) setShowStockPopup(true);
+                }}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveProduct={handleRemoveProduct}
+                errors={errors.produits}
+              />
+              {preCreationError && (
+                <p className="text-red-500 text-sm mt-1">
+                  Impossible de charger le stock disponible.
+                </p>
+              )}
+              <ErrorMessage
+                message={
+                  !selectedFamille && errors.famille
+                    ? "Veuillez d'abord choisir une famille"
+                    : errors.distribution
+                    ? "Veuillez ajouter au moins un colis alimentaire ou du lait infantile"
+                    : null
+                }
+              />
+              {/* Mobile only */}
+              <div className="mt-4 lg:hidden">
+                <ConfirmationForm
+                  checked={confirmed}
+                  onChange={handleConfirmedChange}
+                  error={errors.confirmed}
+                  errorMessage="Veuillez confirmer la remise avant d'enregistrer"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Save button */}
+          <div className="mt-2">
+            <Button
+              title={
+                saving
+                  ? "Enregistrement..."
+                  : isEditMode
+                  ? "Enregistrer les modifications"
+                  : "Enregistrer"
+              }
+              variant="save"
+              noPadding
+              onClick={handleSave}
+              disabled={saving}
+            />
+            {saveError && <ErrorMessage message={saveError} />}
+          </div>
+
+          {showSuccessPopup && (
+            <Popup
+              title={
+                isEditMode
+                  ? "Distribution modifiée avec succès"
+                  : "Distribution enregistrée avec succès"
+              }
+              image={SuccessImage}
+              primaryButtonText="Voir la fiche famille"
+              secondaryButtonText="Revenir à l'accueil"
+              onPrimaryClick={() => {
+                setShowSuccessPopup(false);
+                navigate(`/famille/${selectedFamille?.id}`);
               }}
-              onDecrement={handleDecrementBoxes}
-              errors={errors}
+              onSecondaryClick={() => {
+                setShowSuccessPopup(false);
+                navigate("/dashboard");
+              }}
             />
-
-            {/* Temporary confirmation */}
-            <div className="hidden lg:block">
-              <ConfirmationForm
-                checked={confirmed}
-                onChange={handleConfirmedChange}
-                error={errors.confirmed}
-                errorMessage="Veuillez confirmer la remise avant d'enregistrer"
-              />
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN */}
-          <div>
-            <ColisAlimentaire
-    products={products}
-    onAddProduct={() => {
-      if (!produitsLoading) setShowStockPopup(true);
-    }}
-    onUpdateQuantity={handleUpdateQuantity}
-    onRemoveProduct={handleRemoveProduct}
-    errors={errors.produits}
-  />
-  {produitsError && (
-    <p className="text-red-500 text-sm mt-1">Impossible de charger le stock disponible.</p>
-  )}
-             <ErrorMessage
-    message={
-      errors.distribution
-        ? "Veuillez ajouter au moins un colis alimentaire ou du lait infantile"
-        : null
-    }
-  />
-            {/* Mobile only */}
-            <div className="mt-4 lg:hidden">
-              <ConfirmationForm
-                checked={confirmed}
-                onChange={handleConfirmedChange}
-                error={errors.confirmed}
-                errorMessage="Veuillez confirmer la remise avant d'enregistrer"
-              />
-            </div>
-          </div>
+          )}
         </div>
+        {/* end scrollable div */}
 
-        {/* Save button */}
-       <div className="mt-2">
-  <Button
-    title={
-      saving
-        ? "Enregistrement..."
-        : isEditMode
-        ? "Enregistrer les modifications"
-        : "Enregistrer"
-    }
-    variant="save"
-    noPadding
-    onClick={handleSave}
-    disabled={saving}
-  />
-  {saveError && <ErrorMessage message={saveError} />}
-</div>
-
-        {showSuccessPopup && (
-          <Popup
-            title={
-              isEditMode
-                ? "Distribution modifiée avec succès"
-                : "Distribution enregistrée avec succès"
-            }
-            image={SuccessImage}
-            primaryButtonText="Voir la fiche famille"
-            secondaryButtonText="Revenir à l'accueil"
-            onPrimaryClick={() => {
-              setShowSuccessPopup(false);
-              navigate(`/famille/${selectedFamille?.id}`);
-            }}
-            onSecondaryClick={() => {
-              setShowSuccessPopup(false);
-              navigate("/dashboard");
-            }}
-          />
-        )}
+        {/* Espace blanc FIXE en bas, ne scroll pas */}
+        <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-4
+            bg-white
+            z-20
+          "
+        />
       </main>
 
-     <PopupListeFamilles
-  open={openFamilles}
-  onClose={() => setOpenFamilles(false)}
-  familles={listeDesFamilles}
-  loading={famillesLoading}
-  error={famillesError}
-  onRetry={refetchFamilles}
-  onSelectFamille={(famille) => {
-    setSelectedFamille(famille);
-    setOpenFamilles(false);
-    setErrors((prev) => ({ ...prev, famille: false }));
-  }}
-/>
+      <PopupListeFamilles
+        open={openFamilles}
+        onClose={() => setOpenFamilles(false)}
+        familles={listeDesFamilles}
+        loading={famillesLoading}
+        error={famillesError}
+        onRetry={refetchFamilles}
+        onSelectFamille={(famille) => {
+          setSelectedFamille(famille);
+          setOpenFamilles(false);
+          setErrors((prev) => ({ ...prev, famille: false }));
+        }}
+      />
 
-   {showStockPopup && (
-  <SelectProductsPopup
-    stockProducts={stockProducts.filter(
-      (stockProduct) => !products.some((p) => p.id === stockProduct.id)
-    )}
-    onClose={() => setShowStockPopup(false)}
-    onConfirm={(selected) => {
-      setProducts((prev) => [
-        ...prev,
-        ...selected.map((p) => ({ ...p, maxQuantity: p.quantity, quantity: 0 })),
-      ]);
-      setErrors((prev) => ({ ...prev, distribution: false }));
-    }}
-  />
-)}
+      {showStockPopup && (
+        <SelectProductsPopup
+          stockProducts={stockProducts.filter(
+            (stockProduct) => !products.some((p) => p.id === stockProduct.id)
+          )}
+          onClose={() => setShowStockPopup(false)}
+          onConfirm={(selected) => {
+            setProducts((prev) => [
+              ...prev,
+              ...selected.map((p) => ({ ...p, maxQuantity: p.quantity, quantity: 0 })),
+            ]);
+            setErrors((prev) => ({ ...prev, distribution: false }));
+          }}
+        />
+      )}
+
+      {showLaitPopup && (
+        <SelectProductsPopup
+          stockProducts={laitOptions.filter(
+            (opt) => !products.some((p) => p.id === opt.id)
+          )}
+          onClose={() => setShowLaitPopup(false)}
+          onConfirm={(selected) => {
+            setProducts((prev) => [
+              ...prev,
+              ...selected.map((p) => ({ ...p, maxQuantity: p.quantity, quantity: 0 })),
+            ]);
+            setErrors((prev) => ({ ...prev, distribution: false }));
+          }}
+        />
+      )}
     </div>
   );
 }
