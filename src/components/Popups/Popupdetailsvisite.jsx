@@ -26,7 +26,6 @@ const PopupDetailVisite = ({
 
   if (!open || !visite) return null;
 
-  
   const isAnnulee = visite?.annule === true;
 
   // Contenu réutilisé dans les deux layouts
@@ -37,7 +36,7 @@ const PopupDetailVisite = ({
     ? new Date(visite.date_visite).toLocaleDateString("fr-FR")
     : "-",
 },
-    { label: "Visite n°", value: (visite.numero_visite ?? -1) + 1 },
+    { label: "Visite n°", value: visite.numero_visite ?? "-"},
     {
       label: "Enregistrée par",
       value: visite.audit?.cree_par
@@ -141,7 +140,7 @@ const statutBadges = [
   );
 
   const ActionButtons = ({ className }) => {
-  
+    
     if (isAnnulee) return null;
 
     return (
@@ -242,7 +241,7 @@ const statutBadges = [
             </button>
 
             <h2 className="mt-2 text-center text-[20px] font-bold">
-              Détail de la visite n°{(visite.numero_visite ?? -1) + 1}
+              Détail de la visite n°{visite.numero_visite ?? "-"}
             </h2>
           </div>
 
