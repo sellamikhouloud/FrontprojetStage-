@@ -17,9 +17,29 @@ import PopupHistoriqueProduit from "../../components/Popups/Popuphistoriqueprodu
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
 import { useNavigate } from "react-router-dom";
-import { listProduits, validerProduit } from "@/lib/api/stock";
+import { listProduits, validerProduit, getHistoriqueProduit } from "@/lib/api/stock";
 import { listDistributions , exportDistributions } from "@/lib/api/distributions";
 import { useAuth } from "../../components/providers/AuthProvider";
+
+const MOTIF_LABELS = {
+  distribution: "Distribution",
+  approvisionnement: "Approvisionnement",
+  correction: "Correction",
+  annulation_distribution: "Annulation distribution",
+};
+
+const mapHistorique = (data = []) =>
+  data.map((mvt) => ({
+    id: mvt.id,
+    type: mvt.type === "entree" ? "ajout" : "retrait",
+    quantite: Number(mvt.quantite),
+    unite:
+      mvt.produit?.unite === "boite" ? "boîtes" : mvt.produit?.unite ?? "",
+    par: MOTIF_LABELS[mvt.motif] || mvt.motif,
+    date: mvt.date_mouvement
+      ? new Date(mvt.date_mouvement).toLocaleDateString("fr-FR")
+      : "-",
+  }));
 
 export default function DistributionPage() {
   const { user } = useAuth();
@@ -148,9 +168,21 @@ useEffect(() => {
     );
   }
 }, [produitsResponse]);
+
+const {
+  data: historiqueResponse,
+  isLoading: historiqueLoading,
+  isError: historiqueError,
+} = useQuery({
+  queryKey: ["produit-historique", produitHistorique?.id],
+  queryFn: () =>
+    getHistoriqueProduit(produitHistorique.id).then((r) => r.data),
+  enabled: showHistorique && !!produitHistorique?.id, // ne fetch que si le popup est ouvert
+});
+
+ const historiqueMouvements = mapHistorique(historiqueResponse);
  
 
- 
 
     const handleCardClick = (item, index) => {
   if (item.statut === "en_attente") {
@@ -545,15 +577,17 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
   }}
 
 />
-        <PopupHistoriqueProduit
-          open={showHistorique}
-          produit={produitHistorique}
-          historique={produitHistorique?.mouvements || []}
-          onClose={() => {
-            setShowHistorique(false);
-            setProduitHistorique(null);
-          }}
-        />
+       <PopupHistoriqueProduit
+  open={showHistorique}
+  produit={produitHistorique}
+  historique={historiqueMouvements}
+  isLoading={historiqueLoading}
+  isError={historiqueError}
+  onClose={() => {
+    setShowHistorique(false);
+    setProduitHistorique(null);
+  }}
+/>
       </main>
     </div>
   );
