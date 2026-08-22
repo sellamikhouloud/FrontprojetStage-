@@ -8,7 +8,7 @@ import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import LaitInfantile from "../../components/Distribution/LaitInfantile";
 
 import ColisAlimentaire from "../../components/Distribution/ColisAlimentaire";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import Cereales from "../../assets/Cereales.svg";
 import Legumineuses from "../../assets/Legumineuses.svg";
@@ -35,8 +35,8 @@ import { useQuery } from "@tanstack/react-query";
 import { listProduits } from "@/lib/api/stock";
 
 import { listFamilles } from "@/lib/api/familles";
-import { createDistribution, getPreCreationDistribution } from "@/lib/api/distributions";
-
+import { createDistribution, getPreCreationDistribution, updateDistribution } from "@/lib/api/distributions";
+import { diffPatch, isEmptyPatch } from "@/lib/diff";
 
 
 const parseDateFR = (str) => {
@@ -66,6 +66,12 @@ const isFutureDate = (date) => {
   return selected > today;
 };
 
+const detectLaitTypeValue = (nomProduitLait = "") => {
+  const nom = nomProduitLait.toLowerCase();
+  if (nom.includes("1er")) return "1er_age";
+  if (nom.includes("2eme") || nom.includes("2ème") || nom.includes("2 eme")) return "2eme_age";
+  return null;
+};
 
 export default function AjoutDistribution() {
   const { user, ready } = useAuth();
@@ -96,7 +102,16 @@ const DEFAULT_STOCK_ICON = Sucre; //  si le nom n'est pas mappé
 
   // Mode modification si une distribution existante a été transmise
   const isEditMode = !!distributionAModifier;
-
+// En mode édition, mapDistributionToEditData() ne renvoie pas selectedLaitOption
+// (il faut le grammage exact) — on retrouve donc le produit lait brut ici,
+// directement depuis distribution.produits (présent car on spread ...distribution).
+const produitLaitSource = isEditMode
+  ? (distributionAModifier?.produits || []).find(
+      (p) =>
+        p.produit?.type_produit === "lait" ||
+        p.produit?.nom?.toLowerCase().includes("lait")
+    )
+  : null;
 
  // Source des données : distribution existante (édition) > brouillon (retour "voir la fiche") > vide (ajout)
   const source = distributionAModifier || draft;
@@ -134,18 +149,58 @@ const DEFAULT_STOCK_ICON = Sucre; //  si le nom n'est pas mappé
     }));
 
   const [products, setProducts] = useState(withDefaultIcon(source?.products));
-const [date, setDate] = useState(
-  source?.date ? parseDateFR(source.date) || new Date() : new Date()
+const [date, setDate] = useState(() => {
+  // Depuis "voir la fiche" (draft) : déjà un objet Date
+  if (source?.date instanceof Date) return source.date;
+
+  // Draft sérialisé en string JJ/MM/AAAA
+  if (typeof source?.date === "string") {
+    return parseDateFR(source.date) || new Date();
+  }
+
+  // Mode édition : date_distribution vient du backend en ISO (YYYY-MM-DD)
+  if (source?.date_distribution) {
+    const parsed = new Date(source.date_distribution);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+
+  return new Date();
+});
+
+// État "avant modification", figé une seule fois au montage — sert de baseline
+// pour diffPatch() lors de la sauvegarde en mode édition.
+const baselineRef = useRef(
+  isEditMode
+    ? {
+        produits: (distributionAModifier?.produits || []).map((p) => ({
+          produit: p.produit?.id,
+          quantite: Number(p.quantite ?? 0),
+        })),
+        date_distribution: distributionAModifier?.date_distribution ?? null,
+        reception_confirmee: Boolean(distributionAModifier?.reception_confirmee),
+      }
+    : null
 );
+
   const [confirmed, setConfirmed] = useState(source?.confirmed || false);
 
   // --- Lait infantile ---
   // type : "1er_age" | "2eme_age"
   // selectedLaitOption : { id, grammage, nb_boites } correspondant au grammage choisi
-  const [laitType, setLaitType] = useState(source?.laitType || null);
-  const [selectedLaitOption, setSelectedLaitOption] = useState(source?.selectedLaitOption || null);
-  const [showLaitPopup, setShowLaitPopup] = useState(false);
-  const [boxes, setBoxes] = useState(source?.boxes ?? 0);
+  const [laitType, setLaitType] = useState(() => {
+  if (isEditMode && produitLaitSource) {
+    return detectLaitTypeValue(produitLaitSource.produit?.nom) || null;
+  }
+  return source?.laitType || null; // draft ("voir la fiche") : déjà la bonne valeur
+});
+const [selectedLaitOption, setSelectedLaitOption] = useState(source?.selectedLaitOption || null);
+const [showLaitPopup, setShowLaitPopup] = useState(false);
+const [boxes, setBoxes] = useState(() => {
+  if (isEditMode && produitLaitSource) {
+    return Number(produitLaitSource.quantite ?? 0);
+  }
+  return source?.boxes ?? 0;
+});
 
   // Pré-création : donne le détail des grammages dispo (avec nb_boites) par type de lait
   const {
@@ -159,6 +214,22 @@ const [date, setDate] = useState(
 
   // Grammages disponibles pour le type de lait actuellement sélectionné
   const laitOptions = preCreationData?.lait?.[laitType] || [];
+
+  // laitOptions arrive de façon asynchrone (query liée à selectedFamille) :
+// dès qu'il est dispo, on retrouve l'option qui correspond au produit lait
+// de la distribution éditée et on la sélectionne.
+useEffect(() => {
+  if (!isEditMode || !produitLaitSource || selectedLaitOption) return;
+  if (!laitOptions.length) return;
+
+  const match = laitOptions.find(
+    (option) => option.id === produitLaitSource.produit?.id
+  );
+
+  if (match) {
+    setSelectedLaitOption(match);
+  }
+}, [isEditMode, produitLaitSource, laitOptions, selectedLaitOption]);
 
   const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
@@ -302,17 +373,28 @@ const [date, setDate] = useState(
   };
 
   try {
-    if (isEditMode) {
-      // TODO: appel API réel — PUT /distributions/:id (à faire plus tard)
-      console.log("Modification distribution", distributionAModifier.id, payload);
+       if (isEditMode) {
+      const currentPayload = {
+        produits: produitsPayload,
+        date_distribution: payload.date_distribution,
+        reception_confirmee: payload.reception_confirmee,
+      };
+
+      const patch = diffPatch(baselineRef.current, currentPayload);
+
+      if (!isEmptyPatch(patch)) {
+        await updateDistribution(distributionAModifier.id, patch);
+      }
     } else {
       await createDistribution(payload);
     }
 
     setShowSuccessPopup(true);
-  } catch (error) {
+    } catch (error) {
     console.error(
-      "❌ Erreur lors de la création de la distribution :",
+      isEditMode
+        ? " Erreur lors de la modification de la distribution :"
+        : " Erreur lors de la création de la distribution :",
       error.response?.data || error.message
     );
     setSaveError(extractErrorMessage(error));
@@ -646,7 +728,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
         <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-4">
-            {selectedFamille && (
+            {selectedFamille && !isEditMode  && (
              <InfoHeader
   title="Dernière distribution"
   value={
