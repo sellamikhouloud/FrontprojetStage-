@@ -173,10 +173,28 @@ const PopupModifierZakat = ({
     },
   ];
 
+ 
+  const causePrincipaleLabel =
+    causePrincipaleOptions.find(
+      (opt) => opt.value === form.cause_principale
+    )?.label || form.cause_principale;
+
   const handleChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+ 
+  const handleCausePrincipaleChange = (value) => {
+    const match = causePrincipaleOptions.find(
+      (opt) => opt.label === value || opt.value === value
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      cause_principale: match ? match.value : value,
     }));
   };
 
@@ -505,12 +523,9 @@ const PopupModifierZakat = ({
 
               <TextareaModifier
                 label="Cause principale :"
-                value={form.cause_principale}
+                value={causePrincipaleLabel}
                 onChange={(e) =>
-                  handleChange(
-                    "cause_principale",
-                    e.target.value
-                  )
+                  handleCausePrincipaleChange(e.target.value)
                 }
                 placeholder="Saisir la cause principale"
                 height="h-[50px]"
