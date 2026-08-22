@@ -152,11 +152,11 @@ useEffect(() => {
 
  
 
-  const handleCardClick = (item, index) => {
+    const handleCardClick = (item, index) => {
   if (item.statut === "en_attente") {
-    if (role === "admin") {
+    if (isAdmin) {
       setProduitSelectionne({
-        id: item.id, // <-- was `index`
+        id: item.id,
         nom: item.nom,
         quantite: item.quantity,
         unite: item.unite,
@@ -167,9 +167,9 @@ useEffect(() => {
     }
   } else {
     setProduitHistorique({
+      id: item.id,
       nom: item.nom,
       unite: item.unite,
-      mouvements: historiqueParProduit[item.nom] || [],
     });
     setShowHistorique(true);
   }
@@ -312,6 +312,9 @@ useEffect(() => {
 
     return { products, laitType, grammage, boxes };
   };
+
+
+ 
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -540,13 +543,7 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     setShowValidation(false);
     setProduitSelectionne(null);
   }}
-  onRefuser={({ id }) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, statut: "refuse" } : p))
-    );
-    setShowValidation(false);
-    setProduitSelectionne(null);
-  }}
+
 />
         <PopupHistoriqueProduit
           open={showHistorique}
