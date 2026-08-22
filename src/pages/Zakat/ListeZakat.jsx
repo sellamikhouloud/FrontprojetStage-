@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listAidesZakat ,createVersementSolde,exportAidesZakat , annulerAideZakat, } from "@/lib/api/zakat";
+import { listAidesZakat ,createVersementSolde,exportAidesZakat , annulerAideZakat, getZakatDashboard , listVersementsSolde} from "@/lib/api/zakat";
 import { useQuery ,useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -64,6 +64,11 @@ const queryClient = useQueryClient();
     return `${d}/${m}/${y}`;
   }
 
+  function formatNombre(n) {
+  if (n === null || n === undefined || Number.isNaN(n)) return "-";
+  return Number(n).toLocaleString("fr-FR");
+}
+
  const { data, isLoading, isError, refetch } = useQuery({
   queryKey: ["zakats", search, appliedFilters],
 
@@ -107,15 +112,39 @@ const queryClient = useQueryClient();
 
   const zakats = data?.results ?? data ?? [];
 
-  const versements = [
-    { id: 1, date: "04/08/2026", commentaire: "Ce mantant était a cause de l'aid", montantMRU: 100, montantEUR: 47 },
-    { id: 2, date: "04/08/2026", commentaire: "", montantMRU: 100, montantEUR: 47 },
-    { id: 3, date: "04/08/2027", montantMRU: 23000, montantEUR: 4744, commentaire: "Ce mantant était a cause de l'aid" },
-    { id: 4, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
-    { id: 5, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
-    { id: 6, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
-    { id: 7, date: "04/04/2027", commentaire: "", montantMRU: 500, montantEUR: 25 },
-  ];
+  const {
+  data: dashboardData,
+  isLoading: dashboardLoading,
+  isError: dashboardError,
+  refetch: refetchDashboard,
+} = useQuery({
+  queryKey: ["zakat-dashboard"],
+  queryFn: () => getZakatDashboard().then((r) => r.data),
+  enabled: isAdmin,
+});
+
+
+
+ const {
+  data: versementsData,
+  isLoading: versementsLoading,
+  isError: versementsError,
+  refetch: refetchVersements,
+} = useQuery({
+  queryKey: ["versements-solde"],
+  queryFn: () => listVersementsSolde().then((r) => r.data),
+  enabled: isAdmin && showHistoriqueVersements, // ne fetch qu'à l'ouverture du popup
+});
+
+const versementsBruts = versementsData?.results ?? versementsData ?? [];
+
+const versements = versementsBruts.map((v) => ({
+  id: v.id,
+  date: v.date_versement ? new Date(v.date_versement).toLocaleDateString("fr-FR") : "-",
+  commentaire: v.note ?? "",
+  montantMRU: v.montant,
+  montantEUR: v.montant_eur,
+}));
 
   const causePrincipaleLabel = (value) =>
     causePrincipaleOptions.find((o) => o.value === value)?.label ?? value;
@@ -154,6 +183,10 @@ const handleAlimenterSolde = async (data) => {
       queryKey: ["versements-solde"],
     });
 
+     await queryClient.invalidateQueries({
+      queryKey: ["zakat-dashboard"],
+    });
+
     return response.data;
 
   } catch (error) {
@@ -184,6 +217,10 @@ const handleDeleteZakat = async (zakat) => {
     // Recharger la liste des zakats
     await queryClient.invalidateQueries({
       queryKey: ["zakats"],
+    });
+
+    await queryClient.invalidateQueries({
+      queryKey: ["zakat-dashboard"],
     });
 
   } catch (error) {
@@ -320,30 +357,46 @@ const handleExportZakat = async () => {
     onSecondAction={() => setOpenAlimenterSolde(true)}
   />
 )}
-{user?.role === "admin" && (
-          <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
-            <SoldeCard
-              soldeDisponible="34 000"
-              soldeEnEuros="850"
-              entreesMois="52 000"
-              entreesMoisEnEuros="1 300"
-              sortiesMois="18 000"
-              sortiesMoisEnEuros="450"
-              famillesAidees="12"
-              versementsRealises="35"
-              tauxActuel="0.022"
-            />
 
-            <RepartitionAides
-              data={[
-                { label: "Veuvage", percentage: 45 },
-                { label: "Urgence", percentage: 25 },
-                { label: "Vulnérabilité", percentage: 20 },
-                { label: "Autre", percentage: 10 },
-              ]}
-            />
-          </div>
-          )}
+
+{user?.role === "admin" && (
+  <div className="mb-4 grid grid-cols-1 lg:grid-cols-[1.8fr_1fr] gap-4">
+    {dashboardLoading ? (
+      <div className="col-span-full flex justify-center items-center py-10">
+        <Spinner />
+      </div>
+    ) : dashboardError ? (
+      <div className="col-span-full text-center text-red-500 py-6">
+        <p>Impossible de charger les statistiques.</p>
+        <button onClick={() => refetchDashboard()} className="mt-2 underline">
+          Réessayer
+        </button>
+      </div>
+    ) : (
+      <>
+        <SoldeCard
+          soldeDisponible={formatNombre(dashboardData?.solde_disponible?.montant)}
+          soldeEnEuros={formatNombre(dashboardData?.solde_disponible?.montant_eur)}
+          entreesMois={formatNombre(dashboardData?.entrees_ce_mois?.montant)}
+          entreesMoisEnEuros={formatNombre(dashboardData?.entrees_ce_mois?.montant_eur)}
+          sortiesMois={formatNombre(dashboardData?.sorties_ce_mois?.montant)}
+          sortiesMoisEnEuros={formatNombre(dashboardData?.sorties_ce_mois?.montant_eur)}
+          famillesAidees={dashboardData?.familles_aidees ?? "-"}
+          versementsRealises={dashboardData?.versements_realises ?? "-"}
+          tauxActuel={dashboardData?.taux_actuel ?? "-"}
+        />
+
+        <RepartitionAides
+          data={(dashboardData?.repartition_aides ?? []).map((r) => ({
+            label: causePrincipaleLabel(r.cause),
+            percentage: r.pourcentage,
+          }))}
+        />
+      </>
+    )}
+  </div>
+)}
+
 
       <NavigationHeader
   title="Liste des Zakat"
@@ -488,10 +541,13 @@ const handleExportZakat = async () => {
 />
 
       <PopupHistoriqueVersements
-        open={isAdmin && showHistoriqueVersements}
-        onClose={() => setShowHistoriqueVersements(false)}
-        versements={versements}
-      />
+  open={isAdmin && showHistoriqueVersements}
+  onClose={() => setShowHistoriqueVersements(false)}
+  versements={versements}
+  loading={versementsLoading}
+  error={versementsError}
+  onRetry={refetchVersements}
+/>
     </div>
   );
 }

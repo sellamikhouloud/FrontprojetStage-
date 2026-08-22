@@ -11,7 +11,6 @@ import TextArea from "../../components/Containers/Textarea";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
 
 
-
 import { useNavigate } from "react-router-dom";
 import DateContainer from "../../components/Containers/DateContainer";
 import InfoHeader from "../../components/Containers/InfoBanner";
@@ -24,6 +23,8 @@ import ConfirmationForm from "../../components/Forms/ConfirmationForm";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { listFamilles } from "@/lib/api/familles";
 
 export default function AjoutZakat() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -105,47 +106,69 @@ export default function AjoutZakat() {
 
   const navigate = useNavigate();
 
-  const listeDesFamilles = [
-    {
-      id: 1,
-      enfant: "Aïcha Mint Mohamed",
-      sexe: "Fille",
-      region: "Lexeiba",
-      naissance: "12 mars 2026",
-      code: "GDK-2026-003",
-      badges: [
-        { type: "mam", text: "MAM nourrisson" },
-        { type: "mere", text: "Mère normale" },
-      ],
-    },
-    {
-      id: 2,
-      enfant: "Aïcha Mint Mohamed",
-      sexe: "Garçon",
-      region: "Lexeiba",
-      naissance: "22 mars 2025",
-      code: "GDK-2026-003",
-      badges: [
-        { type: "mas", text: "MAS nourrisson" },
-        { type: "mere", text: "Mère normale" },
-      ],
-    },
-    {
-      id: 3,
-      enfant: "Aïcha Mint Mohamed",
-      sexe: "Fille",
-      region: "Lexeiba",
-      naissance: "12 mars 2026",
-      code: "GDK-2026-003",
-      badges: [
-        { type: "mam", text: "MAM nourrisson" },
-        { type: "mere", text: "Mère normale" },
-      ],
-    },
-  ];
-
   const [openFamilles, setOpenFamilles] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
+
+  // --- Récupération des vraies familles depuis l'API (même principe que Ajout Visite) ---
+  const {
+    data: famillesData,
+    isLoading: famillesLoading,
+    isError: famillesError,
+    refetch: refetchFamilles,
+  } = useQuery({
+    queryKey: ["familles-popup"],
+    queryFn: () => listFamilles().then((r) => r.data),
+    enabled: openFamilles, // ne fetch que quand le popup s'ouvre
+  });
+
+  const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+
+  // Mapping vers le format attendu par le popup / les cartes
+  // (même logique que dans "Liste des familles" et "Ajout Visite")
+  const listeDesFamilles = famillesBrutes.map((famille) => ({
+    id: famille.id,
+    enfant: famille.nourrisson?.prenom,
+    mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
+    sexe:
+      famille?.nourrisson?.sexe === "M"
+        ? "Fils"
+        : famille?.nourrisson?.sexe === "F"
+        ? "Fille"
+        : "-",
+    region: famille.mere?.village?.nom ?? "-",
+    naissance: famille.nourrisson?.date_naissance,
+    code: famille.id,
+    badges: [
+      famille?.statut_nutritionnel_bebe === "mam" && {
+        type: "mam",
+        text: "MAM nourrisson",
+      },
+      famille?.statut_nutritionnel_bebe === "mas" && {
+        type: "mas",
+        text: "MAS nourrisson",
+      },
+      famille?.statut_nutritionnel_bebe === "normale" && {
+        type: "mere",
+        text: "Bébé normal",
+      },
+      famille?.statut_nutritionnel_mere === "normale" && {
+        type: "mere",
+        text: "Mère normale",
+      },
+      famille?.statut_nutritionnel_mere === "a_risque" && {
+        type: "risque",
+        text: "Mère à risque",
+      },
+      famille?.statut_nutritionnel_mere === "malnutrition" && {
+        type: "mas",
+        text: "Mère malnutrie",
+      },
+      famille.est_visite_en_retard && {
+        type: "retard",
+        text: "Visite en retard",
+      },
+    ].filter(Boolean),
+  }));
 
   const familyOptions = [
     { label: "Changer la famille", value: "changer" },
@@ -620,6 +643,9 @@ export default function AjoutZakat() {
         open={openFamilles}
         onClose={() => setOpenFamilles(false)}
         familles={listeDesFamilles}
+        loading={famillesLoading}
+        error={famillesError}
+        onRetry={refetchFamilles}
         onSelectFamille={(famille) => {
           setSelectedFamille(famille);
           setOpenFamilles(false);
