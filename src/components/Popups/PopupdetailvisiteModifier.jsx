@@ -198,7 +198,7 @@ const PopupDetailVisiteModifier = ({
 
   const numeroVisite =
     visite.numero_visite !== undefined && visite.numero_visite !== null
-      ? visite.numero_visite + 1
+      ? visite.numero_visite
       : "-";
 
   const dateEnregistrement = formatDate(visite.date_creation);
