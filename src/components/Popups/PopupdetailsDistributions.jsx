@@ -48,10 +48,10 @@ const PopupDetailDistribution = ({
         {showDeletePopup && (
           <div onClick={(e) => e.stopPropagation()}>
             <Popup
-              title="Confirmer la suppression"
+              title="Confirmer l'annulation"
               image={SuccessImage}
-              description="Êtes-vous sûr de vouloir supprimer cette distribution ? Cette action est irréversible."
-              primaryButtonText="Supprimer"
+              description="Êtes-vous sûr de vouloir Annuler cette distribution ? Cette action est irréversible."
+              primaryButtonText="Annuler la distribution"
               secondaryButtonText="Annuler"
               primaryButtonVariant="danger"
               onPrimaryClick={() => {
@@ -161,7 +161,7 @@ const PopupDetailDistribution = ({
                     value:
                       distribution.numeroDistribution ?? "-",
                   },
-                
+                  
                   {
                     label: "Enregistrée par",
                     value:
@@ -270,7 +270,7 @@ const PopupDetailDistribution = ({
             />
 
             <Button
-              title="Supprimer"
+              title="Annuler"
               variant="supprimer"
               icon={DeleteIcon}
               noWrapperPadding
