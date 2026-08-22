@@ -35,7 +35,7 @@ const Popupvisites = ({
     if (fraiche && fraiche !== selectedVisite) {
       setSelectedVisite(fraiche);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  
   }, [Visites]);
 
   const visitesAffichees =
@@ -194,8 +194,8 @@ const Popupvisites = ({
                     visite={
                       item.numero_visite !== undefined &&
                       item.numero_visite !== null
-                        ? `Visite ${item.numero_visite + 1}`
-                        : `Visite ${index + 1}`
+                        ? `Visite ${item.numero_visite}`
+                        : `Visite ${index }`
                     }
                     date={
                       item.date_visite
