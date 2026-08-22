@@ -12,9 +12,9 @@ import Spinner from "../../components/Spinner";
 
 import { listUsers } from "../../lib/api/users";
 
-export default function ListeUsers() {
+export default function ListeCoordinateur() {
   const navigate = useNavigate();
-
+  const [role, setRole] = useState("all");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -24,7 +24,8 @@ export default function ListeUsers() {
     isError,
     error,
   } = useQuery({
-    queryKey: ["users", search, statusFilter],
+   
+    queryKey: ["users", search, statusFilter, role],
 
     queryFn: async () => {
       const params = {};
@@ -42,6 +43,10 @@ export default function ListeUsers() {
       // Inactif
       if (statusFilter === "inactive") {
         params.is_active = false;
+      }
+
+      if (role !== "all") {
+        params.role = role;
       }
 
       const response = await listUsers(params);
@@ -91,7 +96,13 @@ export default function ListeUsers() {
         </div>
 
         <div className="my-6">
-          <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+          <StatusFilter
+            value={statusFilter}
+            onChange={setStatusFilter}
+            showRoleFilter
+            roleValue={role}
+            onRoleChange={setRole}
+          />
         </div>
 
         {isLoading && (
@@ -128,15 +139,14 @@ export default function ListeUsers() {
                 className="cursor-pointer"
               >
                 <CardCoordinateur
-  name={`${user.nom ?? ""} ${user.prenom ?? ""}`.trim()}
-  village={user.village?.nom || ""}
-  familles={user.nb_familles ?? 0}
-  status={user.is_active ? "Actif" : "Inactif"}
-  username={user.username || "/"}
-  creePar={user.created_by ? String(user.created_by) : "/"}
- 
-  isChef={user.role === "chef_coordinator"}
-/>
+                  name={`${user.nom ?? ""} ${user.prenom ?? ""}`.trim()}
+                  village={user.village?.nom || ""}
+                  familles={user.nb_familles ?? 0}
+                  status={user.is_active ? "Actif" : "Inactif"}
+                  username={user.username || "/"}
+                  creePar={user.created_by ? String(user.created_by) : "/"}
+                  isChef={user.role === "chef_coordinator"}
+                />
               </div>
             ))}
           </div>
