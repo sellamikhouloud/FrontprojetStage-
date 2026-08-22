@@ -83,15 +83,20 @@ export default function ListeVisites() {
     retry: 1,
   });
 
-  // Construit un objet "famille" minimal à partir des données de la visite
-  // (l'endpoint /api/visites/ ne renvoie que le nourrisson, pas la mère/village)
+  
   const buildFamilleFromVisite = (item) => ({
     id: item.famille ?? "-",
-    nourrisson: item.nourrisson,
-    mere: item.famille_info?.mere ?? null,
+    nourrisson: item.nourrisson ?? null,
+    mere: item.mere
+      ? {
+          nom: item.mere?.nom ?? "",
+          prenom: item.mere?.prenom ?? "",
+          village: item.mere?.village ?? null,
+        }
+      : null,
   });
 
- 
+  // 🔑 Suppression / annulation réelle de la visite
   const handleDeleteVisite = async (visite) => {
     try {
       await annulerVisite(visite.id);
@@ -159,8 +164,7 @@ export default function ListeVisites() {
         {!isLoading && !isError && visites.length > 0 && (
           <div className="space-y-3">
             {visites.map((item) => {
-              const nom = item.nourrisson?.prenom || "-";
-
+             const nom = `${item.mere?.nom || ""} ${item.mere?.prenom || ""}`.trim() || "-";
               const dateVisite = item.date_visite
                 ? new Date(item.date_visite).toLocaleDateString("fr-FR")
                 : "-";
@@ -215,7 +219,7 @@ export default function ListeVisites() {
           setShowDetailPopup(true);
         }}
         onSave={async (updated) => {
-       
+        
           let finalVisite = { ...selectedVisite, ...updated };
 
           try {
@@ -239,3 +243,4 @@ export default function ListeVisites() {
     </div>
   );
 }
+
