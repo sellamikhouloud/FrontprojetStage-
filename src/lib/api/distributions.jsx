@@ -10,5 +10,7 @@ export const createDistribution = (payload) => api.post("api/distributions/", pa
 
 export const exportDistributions = (params) => api.get("/api/distributions/export/", {   params, responseType: "blob",});
 
+export const annulerDistribution = (id) => api.get(`/api/distributions/${id}/annuler/`);
+
 export const getPreCreationDistribution = (familleCode) => api.get("/api/distributions/pre-creation/", { params: { famille: familleCode } });
 
