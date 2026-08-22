@@ -153,7 +153,7 @@ const statutBadges = [
           onClick={() => onEdit?.(visite)}
         />
         <Button
-          title="Supprimer"
+          title="Annuler"
           variant="supprimer"
           icon={DeleteIcon}
           noWrapperPadding
@@ -194,11 +194,11 @@ const statutBadges = [
         {showDeletePopup && (
           <div onClick={(e) => e.stopPropagation()}>
             <Popup
-              title="Confirmer la suppression"
+              title="Confirmer l'annulation"
               image={SuccessImage}
-              description="Êtes-vous sûr de vouloir supprimer cette visite ? Cette action est irréversible."
-              primaryButtonText={isDeleting ? "Suppression..." : "Supprimer"}
-              secondaryButtonText="Annuler"
+              description="Êtes-vous sûr de vouloir Annuler cette visite ? Cette action est irréversible."
+               primaryButtonText={isDeleting ? "Annulation..." : "Annuler la visite"}
+               secondaryButtonText="Annuler"
               primaryButtonVariant="danger"
               onPrimaryClick={handleConfirmDelete}
               onSecondaryClick={() => setShowDeletePopup(false)}
