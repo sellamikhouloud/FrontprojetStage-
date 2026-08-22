@@ -410,7 +410,8 @@ return (
 <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
-  Distribution={distributionsResponse}   
+  Distribution={distributionsResponse}  
+  famille={famille}
   isLoading={distributionsLoading}
 />
 
