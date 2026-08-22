@@ -175,6 +175,7 @@ const RoleFilter = ({ value = "all", onChange }) => {
 
               truncate
               min-w-0
+                ml-1
             "
           >
             {currentLabel}
@@ -388,3 +389,4 @@ const StatusFilter = ({
 
 export default StatusFilter;
 export { RoleFilter };
+
