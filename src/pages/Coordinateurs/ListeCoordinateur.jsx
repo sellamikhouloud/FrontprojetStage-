@@ -9,11 +9,13 @@ import SearchBar from "../../components/Filter/Searchbar";
 import CardCoordinateur from "../../components/Cards/carteCoordinateur";
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
-
+import { useAuth } from "../../components/providers/AuthProvider";
 import { listUsers } from "../../lib/api/users";
 
 export default function ListeCoordinateur() {
   const navigate = useNavigate();
+    const { user } = useAuth();
+    const isAdmin = user?.role === "admin";
   const [role, setRole] = useState("all");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -96,13 +98,13 @@ export default function ListeCoordinateur() {
         </div>
 
         <div className="my-6">
-          <StatusFilter
-            value={statusFilter}
-            onChange={setStatusFilter}
-            showRoleFilter
-            roleValue={role}
-            onRoleChange={setRole}
-          />
+         <StatusFilter
+  value={statusFilter}
+  onChange={setStatusFilter}
+  showRoleFilter={isAdmin}
+  roleValue={role}
+  onRoleChange={setRole}
+/>
         </div>
 
         {isLoading && (
