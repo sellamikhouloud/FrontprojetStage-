@@ -23,7 +23,9 @@ const PopupDetailDistribution = ({
 
   if (!open || !distribution) return null;
 
-  // Séparation lait / produits alimentaires
+  const isAnnulee = Boolean(distribution.annulee);
+
+ 
   const produitsLait = (distribution.produits || []).filter(
     (item) => item.produit?.type_produit === "lait"
   );
@@ -118,6 +120,12 @@ const PopupDetailDistribution = ({
             <h2 className="mt-3 text-center text-[20px] font-bold text-[#202124]">
               Détail de la distribution n°{distribution.numeroDistribution}
             </h2>
+
+            {isAnnulee && (
+              <p className="mt-1 text-center text-[13px] font-semibold text-red-500">
+                Distribution annulée
+              </p>
+            )}
           </div>
 
           {/* Carte famille */}
@@ -240,43 +248,48 @@ const PopupDetailDistribution = ({
             </div>
           </div>
 
-          {/* Desktop */}
-          <div className="hidden sm:grid grid-cols-2 gap-4 mt-6">
-            <Button
-              title="Modifier"
-              variant="modifier"
-              icon={EditIcon}
-              noWrapperPadding
-              onClick={() => onEdit?.(distribution)}
-            />
+          {/* Boutons Modifier / Annuler : masqués si la distribution est déjà annulée */}
+          {!isAnnulee && (
+            <>
+              {/* Desktop */}
+              <div className="hidden sm:grid grid-cols-2 gap-4 mt-6">
+                <Button
+                  title="Modifier"
+                  variant="modifier"
+                  icon={EditIcon}
+                  noWrapperPadding
+                  onClick={() => onEdit?.(distribution)}
+                />
 
-            <Button
-              title="Annuler"
-              variant="supprimer"
-              icon={DeleteIcon}
-              noWrapperPadding
-              onClick={() => setShowDeletePopup(true)}
-            />
-          </div>
+                <Button
+                  title="Annuler"
+                  variant="supprimer"
+                  icon={DeleteIcon}
+                  noWrapperPadding
+                  onClick={() => setShowDeletePopup(true)}
+                />
+              </div>
 
-          {/* Mobile */}
-          <div className="sm:hidden grid grid-cols-1 gap-3 mt-6">
-            <Button
-              title="Modifier"
-              variant="modifier"
-              icon={EditIcon}
-              noWrapperPadding
-              onClick={() => onEdit?.(distribution)}
-            />
+              {/* Mobile */}
+              <div className="sm:hidden grid grid-cols-1 gap-3 mt-6">
+                <Button
+                  title="Modifier"
+                  variant="modifier"
+                  icon={EditIcon}
+                  noWrapperPadding
+                  onClick={() => onEdit?.(distribution)}
+                />
 
-            <Button
-              title="Annuler"
-              variant="supprimer"
-              icon={DeleteIcon}
-              noWrapperPadding
-              onClick={() => setShowDeletePopup(true)}
-            />
-          </div>
+                <Button
+                  title="Annuler"
+                  variant="supprimer"
+                  icon={DeleteIcon}
+                  noWrapperPadding
+                  onClick={() => setShowDeletePopup(true)}
+                />
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>
