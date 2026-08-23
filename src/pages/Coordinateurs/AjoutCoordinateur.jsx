@@ -10,9 +10,9 @@ import ChoiceContainer from "../../components/Containers/ChoiceContainer";
 import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import Button from "../../components/Button/Button";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
+import PopupPhoto from "../../components/Popups/PopupPhoto";
 
 import Coordinator from "../../assets/images/Coordinator.svg";
-import { AiOutlineInfoCircle } from "react-icons/ai";
 
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
@@ -20,12 +20,22 @@ import SuccessImage from "../../assets/Success.svg";
 import { createUser } from "../../lib/api/coordinateurs";
 import { listVillages } from "../../lib/api/Parametres";
 
-// probleme d email
+import { useAuth } from "../../components/providers/AuthProvider";
+
 
 export default function AjoutCoordinateur() {
   const navigate = useNavigate();
+
+  const [role, setRole] = useState(null); 
+  const { user: currentUser } = useAuth();
+  const isAdmin = currentUser?.role === "admin";
+ 
   const [createdCoordinatorId, setCreatedCoordinatorId] = useState(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  const [showPhotoPopup, setShowPhotoPopup] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   const [username, setUsername] = useState("");
   const [nom, setNom] = useState("");
@@ -38,13 +48,10 @@ export default function AjoutCoordinateur() {
 
   const [errors, setErrors] = useState({});
 
-  const [emailSent, setEmailSent] = useState(false);
-  const [showError, setShowError] = useState(false);
-
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
 
-  // Liste réelle des villages (même source que InformationMere.jsx / FamiliesPage.jsx)
+  // Liste réelle des villages 
   const {
     data: villagesData,
     isLoading: villagesLoading,
@@ -70,25 +77,15 @@ export default function AjoutCoordinateur() {
     });
   };
 
-  const handleSendEmail = () => {
-    // API ici plus tard
-    setEmailSent(true);
-    setShowError(false);
-  };
 
-  const handleSave = async () => {
-    if (!emailSent) {
-      setShowError(true);
-      return;
-    }
-
-    setShowError(false);
+ const handleSave = async () => {
 
     const newErrors = {};
 
     if (!username.trim()) newErrors.username = "Veuillez saisir un nom d'utilisateur";
     if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
     if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
+    if (isAdmin && !role) newErrors.role = "Veuillez choisir un rôle";
     if (!email.trim()) newErrors.email = "Veuillez saisir l'email";
     if (!password) newErrors.password = "Veuillez saisir un mot de passe";
     if (!village) newErrors.village = "Veuillez choisir un village";
@@ -100,15 +97,15 @@ export default function AjoutCoordinateur() {
     setSaveError(null);
 
     try {
-      const payload = {
-        username,
-        email,
-        nom,
-        prenom,
-        role: "coordinator", // cette page ne crée que des coordinateurs (maybe we will add chef coordinator for the ad;in after )
-        is_active: statut === "Active",
-        village,
-        password,
+     const payload = {
+       username,
+       email,
+       nom,
+       prenom,
+       role: isAdmin ? role : "coordinator",
+       is_active: statut === "Active",
+       village,
+       password,
       };
 
       console.log("📦 Payload création coordinateur :", payload);
@@ -158,24 +155,50 @@ export default function AjoutCoordinateur() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
+    <div className="flex h-screen bg-white overflow-hidden">
       {/* Sidebar */}
       
-        <Sidebar role="admin" />
+        <Sidebar role={role} />
+
+        <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+
+           {/* Espace blanc FIXE en haut — desktop only, mobile déjà géré par Sidebar */}
+        <div
+          className="
+            hidden
+            lg:block
+            lg:absolute
+            lg:top-0
+            lg:left-0
+            lg:right-0
+            lg:h-4
+            bg-white
+            z-20
+          "
+        />
+          
+          
+
+           {/* Zone scrollable UNIQUE */}
+        <div
+          className="
+            h-full
+            overflow-y-auto
+
+            pt-20
+            lg:pt-4
+
+            px-4
+            lg:px-10
+
+            pb-8
+            lg:pb-2
+          "
+        >
+       
       
 
-      {/* Contenu */}
-      <main
-        className="
-          flex-1
-          overflow-y-auto
-          px-5
-          pt-5
-          pb-8
-          lg:p-10
-          bg-white
-        "
-      >
+    
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
 
           <PageHeader
@@ -196,19 +219,63 @@ export default function AjoutCoordinateur() {
             Nouveau Coordinateur
           </h1>
 
-          {/* Photo */}
+                   {/* Photo */}
           <div className="flex justify-center">
-            <img
-              src={Coordinator}
-              alt="Coordinateur"
-              className="
-                w-[120px]
-                h-[120px]
-                lg:w-[160px]
-                lg:h-[160px]
-              "
-            />
+            <button
+              type="button"
+              onClick={() => setShowPhotoPopup(true)}
+              className="relative group"
+            >
+              <img
+                src={photoPreview || Coordinator}
+                alt="Coordinateur"
+                className="
+                  w-[120px]
+                  h-[120px]
+                  lg:w-[160px]
+                  lg:h-[160px]
+                  rounded-full
+                  object-cover
+                "
+              />
+              <span
+                className="
+                  absolute
+                  inset-0
+                  rounded-full
+                  bg-black/0
+                  group-hover:bg-black/20
+                  transition-colors
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+                <span
+                  className="
+                    opacity-0
+                    group-hover:opacity-100
+                    text-white
+                    text-[13px]
+                    font-medium
+                    transition-opacity
+                  "
+                >
+                  Modifier
+                </span>
+              </span>
+            </button>
           </div>
+
+          <PopupPhoto
+            open={showPhotoPopup}
+            title="Photo du coordinateur"
+            onClose={() => setShowPhotoPopup(false)}
+            onImageSelected={(file) => {
+              setPhotoFile(file);
+              setPhotoPreview(URL.createObjectURL(file));
+            }}
+          />
 
           <div className="flex flex-col gap-1">
             <Input
@@ -238,7 +305,7 @@ export default function AjoutCoordinateur() {
             <ErrorMessage message={errors.nom} />
           </div>
 
-          <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1">
             <Input
               label="Prénom"
               placeholder="Entrez le prénom ici"
@@ -250,6 +317,48 @@ export default function AjoutCoordinateur() {
               noPadding
             />
             <ErrorMessage message={errors.prenom} />
+          </div>
+
+          {isAdmin && (
+            <div className="flex flex-col gap-1">
+              <SelectInput2
+                label="Rôle"
+                placeholder="Tapez pour choisir le rôle"
+                options={[
+                  { label: "Coordinateur", value: "coordinator" },
+                  { label: "Chef coordinateur", value: "chef_coordinator" },
+                ]}
+                value={role}
+                onChange={(selected) => {
+                  setRole(selected.value);
+                  clearError("role");
+                }}
+                noPadding
+              />
+              <ErrorMessage message={errors.role} />
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <SelectInput2
+              label="Village"
+              placeholder={
+                villagesLoading
+                  ? "Chargement des villages..."
+                  : "Tapez pour choisir le village"
+              }
+              options={villageOptions}
+              value={village}
+              onChange={(selected) => {
+                setVillage(selected.value);
+                clearError("village");
+              }}
+              noPadding
+            />
+            <ErrorMessage message={errors.village} />
+            {villagesError && (
+              <ErrorMessage message="Impossible de charger la liste des villages." />
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -281,6 +390,8 @@ export default function AjoutCoordinateur() {
                   setPassword(e.target.value);
                   clearError("password");
                 }}
+                 autoComplete="new-password"
+                 name="new-coordinator-password"
                 className="
                   w-full
                   h-[45px]
@@ -315,50 +426,8 @@ export default function AjoutCoordinateur() {
             <ErrorMessage message={errors.password} />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <SelectInput2
-              label="Village"
-              placeholder={
-                villagesLoading
-                  ? "Chargement des villages..."
-                  : "Tapez pour choisir le village"
-              }
-              options={villageOptions}
-              value={village}
-              onChange={(selected) => {
-                setVillage(selected.value);
-                clearError("village");
-              }}
-              noPadding
-            />
-            <ErrorMessage message={errors.village} />
-            {villagesError && (
-              <ErrorMessage message="Impossible de charger la liste des villages." />
-            )}
-          </div>
-
-          <ChoiceContainer
-            label="Statut"
-            placeholder="Choisir le statut"
-            value={statut}
-            onChange={setStatut}
-            options={["Active", "Inactive"]}
-            noPadding
-          />
-
-         {/* Boutons */}
+                 {/* Bouton */}
 <div className="flex flex-col gap-[0px]">
-  <Button
-    title={
-      emailSent
-        ? "Email envoyé avec succès"
-        : "Partager un mail du mot de passe au coordinateur"
-    }
-   variant={emailSent ? "success" : "email"}
-    noPadding
-    onClick={handleSendEmail}
-  />
-
   <Button
     title={saving ? "Enregistrement..." : "Enregistrer"}
     variant="primary"
@@ -366,18 +435,11 @@ export default function AjoutCoordinateur() {
     onClick={handleSave}
     disabled={saving}
   />
-  
-{/* Message d'erreur */}
-{showError && (
-  <div className="mt-4 flex items-center justify-center gap-2 text-[#EF4444]">
-    <AiOutlineInfoCircle className="text-[20px] shrink-0" />
-    <p className="text-sm font-bold">
-      Veuillez envoyer le mail au coordinateur avant de confirmer.
-    </p>
-  </div>
-)}
+
 {saveError && <ErrorMessage message={saveError} />}
 </div>
+
+
 {showSuccessPopup && (
   <Popup
     title="Enregistrer avec succès"
@@ -396,8 +458,19 @@ export default function AjoutCoordinateur() {
   />
 )}
 
-
+ </div>
         </div>
+        <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-4
+            bg-white
+            z-20
+          "
+        />
       </main>
     </div>
   );
