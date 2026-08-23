@@ -6,6 +6,7 @@ import AfficherMesure from "../Containers/AfficherMesure";
 import TextareaModifier from "../Containers/TextAreaModifier";
 import Button from "../Button/Button";
 import ErrorMessage from "../Forms/ErrorMessage";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
 
 import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -201,7 +202,7 @@ const PopupDetailVisiteModifier = ({
       const response = await updateVisite(visite.id, patch);
       const updatedVisite = response?.data ?? response;
 
-      
+    
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["visites", famille?.id],
@@ -367,12 +368,7 @@ const PopupDetailVisiteModifier = ({
     <div className="w-full">
       {showBanner && <SuccessBanner text="Enregistré avec succès" />}
 
-      {errorMessage && (
-        <div className="mb-2 rounded-[10px] border border-red-300 bg-red-50 px-4 py-3 text-red-600 text-sm">
-          {errorMessage}
-        </div>
-      )}
-
+     <BackendErrorMessage message={errorMessage} className="mb-2" />
       <Button
         title={isSaving ? "Enregistrement..." : "Enregistrer"}
         variant="primary"
