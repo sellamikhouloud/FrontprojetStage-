@@ -2,7 +2,7 @@
 import { useMemo, useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
+import ErrorMessage from "../../components/Forms/ErrorMessage";
 import { diffPatch, isEmptyPatch } from "@/lib/diff";
 import { getFamille, updateFamille, marquerSortie, getVisites, getDistributions, getFamilleZakat } from "@/lib/api/familles";
 import { listVillages } from "@/lib/api/Parametres"; 
@@ -23,7 +23,7 @@ import Button from "../../components/Button/Button";
 import MotherPhoto from "../../assets/photo mere.svg";
 import successImage from "../../assets/Success.svg";
 import Spinner from "../../components/Spinner";
-
+import { useAuth } from "../../components/providers/AuthProvider";
 
 function extractEditableFields(famille) {
   return {
@@ -50,7 +50,6 @@ function extractEditableFields(famille) {
   };
 }
 
-// Convertit un objet Date (ou une string) en "YYYY-MM-DD" 
 function toApiDateString(value) {
   if (!value) return value; 
 
@@ -128,110 +127,78 @@ function buildFamillePayload(patch) {
 
   return payload;
 }
-// Libellés français pour les champs, utilisés dans les messages d'erreur de validation
-const FIELD_LABELS = {
-  taille_naissance: "Taille de naissance",
-  poids_naissance: "Poids de naissance",
-  date_naissance: "Date de naissance",
-  village: "Village",
-  telephone: "Téléphone",
-  statut_matrimonial: "Statut matrimonial",
-  nb_enfants: "Nombre d'enfants à charge",
-  motif_prise_en_charge: "Motif de prise en charge",
-  referent_medical: "Référent médical",
-  informations_complementaires: "Informations complémentaires",
-  sexe: "Sexe",
-  date_entree: "Date d'entrée",
-  date_sortie: "Date de sortie",
-  motif_sortie: "Motif de sortie",
-  mere: "Informations mère",
-  nourrisson: "Informations nourrisson",
-};
 
-// Messages pour les codes d'erreur métier renvoyés par le backend
-const ERROR_CODE_MESSAGES = {
-  INVALID_EXIT_DATE: "La date de sortie ne peut pas être antérieure à la date d'entrée.",
-  EXIT_DATE_REQUIRED: "Veuillez renseigner la date de sortie.",
-  EXIT_REASON_REQUIRED: "Veuillez préciser le motif de sortie.",
-  FAMILY_ACCESS_DENIED: "Vous n'êtes pas autorisé à modifier cette famille.",
-  COORDINATOR_CHANGE_FORBIDDEN: "Vous n'êtes pas autorisé à changer le coordinateur de cette famille.",
-  INTERNAL_ERROR: "Une erreur est survenue. Veuillez réessayer plus tard.",
-};
+// Extrait un message d'erreur lisible depuis une réponse API — même logique
+// que dans AjoutDistribution.jsx, pour rester cohérent sur toute l'app.
+function extractErrorMessage(error) {
+  const data = error.response?.data;
 
-// Traduit une erreur DRF générique
-function translateFieldError(message) {
-  if (typeof message !== "string") return message;
-
-  if (message.includes("no more than 2 decimal places")) {
-    return "Ne doit pas contenir plus de 2 chiffres après la virgule.";
+  if (!data) {
+    return error.message || "Une erreur est survenue.";
   }
-  if (message.includes("A valid number is required")) {
-    return "Veuillez entrer un nombre valide.";
-  }
-  if (message.includes("This field may not be blank")) {
-    return "Ce champ ne peut pas être vide.";
-  }
-  if (message.includes("This field is required")) {
-    return "Ce champ est requis.";
-  }
-  return message;
-}
 
-// Extrait récursivement les messages d'erreur d'un objet de validation DRF
-function collectFieldErrors(data, parentLabel = "") {
-  const messages = [];
+  if (typeof data === "string") {
+    return data;
+  }
 
-  for (const [key, value] of Object.entries(data)) {
-    const label = FIELD_LABELS[key] || key;
-    const fullLabel = parentLabel ? `${parentLabel} > ${label}` : label;
-
-    if (Array.isArray(value)) {
-      value.forEach((msg) => {
-        messages.push(`${fullLabel} : ${translateFieldError(msg)}`);
-      });
-    } else if (value && typeof value === "object") {
-      messages.push(...collectFieldErrors(value, fullLabel));
-    } else if (typeof value === "string") {
-      messages.push(`${fullLabel} : ${translateFieldError(value)}`);
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
     }
   }
 
-  return messages;
-}
-
-function getErrorMessage(err) {
-  if (!err?.response) {
-    return "Erreur réseau. Vérifiez votre connexion.";
-  }
-
-  const { status, data } = err.response;
-
-  if (status >= 500) {
-    return ERROR_CODE_MESSAGES.INTERNAL_ERROR;
-  }
-
-  if (!data) {
-    return "Une erreur est survenue.";
-  }
-
-  if (data.code && ERROR_CODE_MESSAGES[data.code]) {
-    return ERROR_CODE_MESSAGES[data.code];
-  }
-
-  if (typeof data.detail === "string") {
+  if (data?.detail) {
     return data.detail;
   }
 
-  if (typeof data === "object") {
-    const fieldErrors = collectFieldErrors(data);
-    if (fieldErrors.length > 0) {
-      return fieldErrors.slice(0, 3).join(" | ");
+  if (typeof data === "object" && !Array.isArray(data)) {
+    // Récursif : gère les erreurs imbriquées comme { mere: { telephone: [...] } },
+    // qui correspondent à la forme que buildFamillePayload() envoie au backend.
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") {
+              messages.push(`${label} : ${msg}`);
+            }
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
     }
-    return "Certains champs sont invalides.";
   }
 
   return "Une erreur est survenue.";
 }
+
+// Même helper que dans AjoutDistribution.jsx, pour la validation de date future.
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
 const STATUT_BEBE = {
   normale: { text: "Bébé normal", type: "mereNormal" },
   mam: { text: "MAM nourrisson", type: "mam" },
@@ -275,6 +242,8 @@ const Modifyfamilly = () => {
   const location = useLocation();
   const { id } = useParams();
   const queryClient = useQueryClient();
+    const { user } = useAuth();
+  const isCoordinator = user?.role === "coordinator"; 
 
   const [openZakat, setOpenZakat] = useState(false);
   const [openDistribution, setOpenDistribution] = useState(false);
@@ -392,7 +361,7 @@ const coordinateurs = coordinateursData
     (opt) => String(opt.value) === String(villageId)
   );
 
-
+ 
   const coordinateurId =
     typeof updated?.coordinateur === "object"
       ? updated.coordinateur?.id
@@ -403,7 +372,6 @@ const coordinateurs = coordinateursData
       String(coordinateur.id) === String(coordinateurId)
   );
 
-  
   const fixedUpdated = {
     ...updated,
 
@@ -446,19 +414,20 @@ const coordinateurs = coordinateursData
   setErrorMessage(null);
   setOpenSuccess(true);
 },
-  onError: (err) => {
-    const data = err?.response?.data;
-    if (data && typeof data === "object" && !data.detail) {
-      setErrors(data);
-    }
-    setErrorMessage(getErrorMessage(err));
+   onError: (err) => {
+    setErrorMessage(extractErrorMessage(err));
   },
 });
 
  
-  const handleSave = () => {
+    const handleSave = () => {
     setInfoMessage(null);
     setErrorMessage(null);
+
+    if (errors.date_entree) {
+      setErrorMessage("La date d'entrée ne peut pas être une date future.");
+      return;
+    }
 
     if (nothingChanged) {
       setInfoMessage("Aucune modification à enregistrer.");
@@ -695,6 +664,13 @@ const makeHandler = (fields) => (index, value) => {
     finalValue = match ? match.value : value;
   }
 
+  if (key === "date_entree") {
+    setErrors((prev) => ({
+      ...prev,
+      date_entree: isFutureDate(finalValue),
+    }));
+  }
+
   setForm((prev) => ({ ...prev, [key]: finalValue }));
 };
 
@@ -742,8 +718,8 @@ const makeHandler = (fields) => (index, value) => {
             });
             setOpenFinSuivi(false);
             queryClient.invalidateQueries({ queryKey: ["famille", id] });
-          } catch (err) {
-            setErrorMessage(getErrorMessage(err));
+                   } catch (err) {
+            setErrorMessage(extractErrorMessage(err));
           }
         }}
       />
@@ -833,13 +809,22 @@ const makeHandler = (fields) => (index, value) => {
               </div>
             </div>
 
-            <div className="-mt-3">
+           
+                         <div className="-mt-3">
               <EditableInfoCard
                 title="Informations administratives"
                 data={programme}
                 editable={true}
                 onChange={handleProgrammeChange}
               />
+              <ErrorMessage
+                message={
+                  errors.date_entree
+                    ? "La date d'entrée ne peut pas être une date future."
+                    : null
+                }
+              />
+            
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 -mt-3">
@@ -860,13 +845,20 @@ const makeHandler = (fields) => (index, value) => {
                   onActionClick={() => setOpenDistribution(true)}
                   data={distributions}
                 />
-                <EditableInfoCard
-                  title="Supervisé par"
-                  data={[{ label: "Nom du coordinateur", value: coordinateurNom, popup: true }]}
-                  editable={true}
-                  onChange={() => {}}
-                  onPopupClick={() => setOpenCoordinateur(true)}
-                />
+                               {isCoordinator ? (
+                  <InfoCard
+                    title="Supervisé par"
+                    data={[{ label: "Nom du coordinateur", value: coordinateurNom }]}
+                  />
+                ) : (
+                  <EditableInfoCard
+                    title="Supervisé par"
+                    data={[{ label: "Nom du coordinateur", value: coordinateurNom, popup: true }]}
+                    editable={true}
+                    onChange={() => {}}
+                    onPopupClick={() => setOpenCoordinateur(true)}
+                  />
+                )}
               </div>
             </div>
           </div>
