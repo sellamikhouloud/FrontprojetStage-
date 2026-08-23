@@ -146,7 +146,11 @@ export default function ListeCoordinateur() {
                   familles={user.nb_familles ?? 0}
                   status={user.is_active ? "Actif" : "Inactif"}
                   username={user.username || "/"}
-                  creePar={user.created_by ? String(user.created_by) : "/"}
+                  creePar={
+  user.created_by
+    ? `${user.created_by.nom} ${user.created_by.prenom}`
+    : "/"
+}
                   isChef={user.role === "chef_coordinator"}
                 />
               </div>
