@@ -6,7 +6,7 @@ import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import { useState } from "react";
 
-import SelectInput from "../../components/Containers/ChoiceContainer";
+import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import TextArea from "../../components/Containers/Textarea";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
 
@@ -24,10 +24,38 @@ import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../../components/providers/AuthProvider";
 import { listFamilles } from "@/lib/api/familles";
+import { getTauxDeChange } from "@/lib/api/parametres";
+import { getSoldeActuel , createAideZakat } from "@/lib/api/zakat";
+
+
+
+
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
+const formatDateYYYYMMDD = (d) => {
+  const dt = d instanceof Date ? d : new Date(d);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(
+    dt.getDate()
+  ).padStart(2, "0")}`;
+};
 
 export default function AjoutZakat() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
 
   const location = useLocation();
   const draft = location.state?.draft;
@@ -41,9 +69,31 @@ export default function AjoutZakat() {
   const [montant, setMontant] = useState(draft?.montant || "");
   const [modePaiement, setModePaiement] = useState(draft?.modePaiement || null);
 
-  const TAUX_MRU_EUR = 0.0249; // from database apres
-  const montantEnEur = montant
-    ? (parseFloat(montant) * TAUX_MRU_EUR).toFixed(2)
+  const { user } = useAuth();
+  const role = user?.role ?? null;
+  const isAdmin = role === "admin" || role === "chef_coordinator";
+
+  // Taux de change — récupéré une seule fois à l'ouverture du formulaire
+const { data: tauxData, isLoading: tauxLoading } = useQuery({
+  queryKey: ["taux-change"],
+  queryFn: () => getTauxDeChange().then((r) => r.data),
+  staleTime: Infinity,
+});
+
+// Solde disponible — récupéré une seule fois à l'ouverture du formulaire
+const { data: soldeData, isLoading: soldeLoading } = useQuery({
+  queryKey: ["solde-actuel"],
+  queryFn: () => getSoldeActuel().then((r) => r.data),
+  staleTime: Infinity,
+});
+
+const soldeDisponible = soldeData?.montant ? parseFloat(soldeData.montant) : null;
+
+const tauxMruEur = tauxData?.valeur ? parseFloat(tauxData.valeur) : null;
+
+const montantEnEur =
+  montant && tauxMruEur
+    ? (parseFloat(montant) * tauxMruEur).toFixed(2)
     : "0.00";
 
   const [causePrincipale, setCausePrincipale] = useState(draft?.causePrincipale || null);
@@ -53,6 +103,7 @@ export default function AjoutZakat() {
   // --- ERROR HANDLING ---
   const [errors, setErrors] = useState({
     famille: false,
+    date: false,
     montant: false,
     modePaiement: false,
     causePrincipale: false,
@@ -60,41 +111,82 @@ export default function AjoutZakat() {
   });
 
   const validateForm = () => {
+    const montantValue = parseFloat(montant);
+    const montantInvalide = !montant || montantValue <= 0;
+    const montantDepasseSolde =
+      !montantInvalide && soldeDisponible !== null && montantValue > soldeDisponible;
+
     const newErrors = {
       famille: !selectedFamille,
-      montant: !montant || parseFloat(montant) <= 0,
+      date: isFutureDate(date),
+      montant: montantInvalide || montantDepasseSolde,
       modePaiement: !modePaiement,
       causePrincipale: !causePrincipale,
-      confirmed: !confirmed,  
+      confirmed: !confirmed,
     };
     setErrors(newErrors);
     return !Object.values(newErrors).some(Boolean);
   };
 
-  const handleSave = () => {
+ const handleSave = async () => {
     if (!validateForm()) return;
-    setShowSuccessPopup(true);
+
+    setSaving(true);
+    setSaveError(null);
+
+    const payload = {
+      famille: selectedFamille?.code, // ex: "GDK-2026-002"
+      date_versement: formatDateYYYYMMDD(date),
+      montant: Number(montant),
+      cause_principale: causePrincipale,
+      precisions: precisions || "",
+      observation: observations || "",
+      mode_remise: modePaiement,
+      confirmation: confirmed,
+    };
+
+    try {
+      await createAideZakat(payload);
+      setShowSuccessPopup(true);
+    } catch (error) {
+      console.error(
+        "❌ Erreur lors de la création de la zakat :",
+        error.response?.data || error.message
+      );
+      setSaveError(
+        error.response?.data?.detail ||
+          "Une erreur est survenue lors de l'enregistrement de la zakat."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Chaque onChange nettoie son propre message d'erreur immediatement
-  const handleMontantChange = (raw) => {
+ const handleMontantChange = (raw) => {
     if (/^\d*$/.test(raw)) {
       setMontant(raw);
-      if (raw && parseFloat(raw) > 0) {
+      const value = parseFloat(raw);
+      const depasseSolde =
+        soldeDisponible !== null && value > soldeDisponible;
+
+      if (raw && value > 0 && !depasseSolde) {
         setErrors((prev) => ({ ...prev, montant: false }));
+      } else if (depasseSolde) {
+        setErrors((prev) => ({ ...prev, montant: true }));
       }
     }
   };
 
-  const handleModePaiementChange = (value) => {
-    setModePaiement(value);
-    setErrors((prev) => ({ ...prev, modePaiement: false }));
-  };
+  const handleModePaiementChange = (selected) => {
+  setModePaiement(selected.value);
+  setErrors((prev) => ({ ...prev, modePaiement: false }));
+};
 
-  const handleCausePrincipaleChange = (value) => {
-    setCausePrincipale(value);
-    setErrors((prev) => ({ ...prev, causePrincipale: false }));
-  };
+  const handleCausePrincipaleChange = (selected) => {
+  setCausePrincipale(selected.value);
+  setErrors((prev) => ({ ...prev, causePrincipale: false }));
+};
 
   const handleConfirmedChange = (e) => {
   const isChecked = e.target.checked;
@@ -193,62 +285,56 @@ export default function AjoutZakat() {
   };
 
   return (
-  <div className="min-h-screen bg-white lg:flex">
-  {/* Desktop sidebar — in flex flow, but pinned via sticky */}
-  <div
-    className="
-      hidden
-      lg:flex
-      lg:sticky
-      lg:top-0
-      lg:h-screen
-      lg:items-center
-      lg:py-0
-      lg:pl-0
-      lg:shrink-0
-    "
-  >
-    <Sidebar role="admin" />
-  </div>
+      
+      <div className="flex h-screen bg-white overflow-hidden">
+  
+          <Sidebar role="admin" />
+  
 
-  {/* Mobile sidebar (hamburger) — unchanged */}
-  <div className="lg:hidden">
-    <Sidebar role="admin" />
-  </div>
+  
+  
 
-  {/* Mobile fixed white header — unchanged */}
-  <div
-    className="
-      fixed
-      top-0
-      left-0
-      right-0
-      h-20
-      bg-white
-      z-40
-      lg:hidden
-    "
-  />
 
-  {/* Page content */}
-  <main
-    className="
-      flex-1
-      overflow-y-auto
-      bg-white
 
-      pt-20
-      lg:pt-4
+ <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
 
-      px-4
-      lg:px-10
+  {/* Espace blanc FIXE en haut — desktop only */}
+   <div
+     className="
+       hidden
+       lg:block
+       lg:absolute
+       lg:top-0
+       lg:left-0
+       lg:right-0
+       lg:h-4
+       bg-white
+       z-20
+     "
+   />
 
-      pb-8
-      lg:pb-2
-    "
-  >
+   {/* Zone scrollable UNIQUE */}
+        <div
+          className="
+            h-full
+            overflow-y-auto
+
+            pt-20
+            lg:pt-4
+
+            px-4
+            lg:px-10
+
+            pb-8
+            lg:pb-2
+          "
+        >
+
+          <div className="min-h-full flex flex-col justify-center">
+
+         
         {/* Header */}
-        <div className="mb-3 lg:mb-6">
+        <div className="mb-0 lg:mb-3">
           <PageHeader
             leftTitle="Annuler"
             showRight={false}
@@ -258,7 +344,7 @@ export default function AjoutZakat() {
 
         {!selectedFamille && (
           <>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-2 ">
             <SelectorWithAction
               label="Choisir la famille concerne"
               description="Cliquer pour rechercher la famille concerne par la distribution"
@@ -336,7 +422,8 @@ export default function AjoutZakat() {
           </>
           )}
             {/* Date + Zakat number */}
-            <div className="flex flex-col gap-0">
+
+            <div className="flex flex-col gap-0 ">
               <h3
                 className="
                   text-[16px]
@@ -358,7 +445,20 @@ export default function AjoutZakat() {
     items-end
   `}
 >
-                <DateContainer value={date} onChange={setDate} noPadding />
+                 <DateContainer
+                 value={date}
+                 onChange={(newDate) => {
+                 setDate(newDate);
+
+                 setErrors((prev) => ({
+                 ...prev,
+                 date: isFutureDate(newDate),
+                     } ));
+                  }}
+                 noPadding
+                />
+
+              
 {selectedFamille && (
           <>
                 <div className="w-full">
@@ -374,18 +474,36 @@ export default function AjoutZakat() {
                       flex
                       items-center
                     "
-                  >
+                    >
                     <p className="text-[14px] leading-[20px] text-[#374151]">
                       Zakat numero 03
                     </p>
 
                   </div>
                 </div>
+                 
                 </>
                 )}
+                 
               </div>
-            </div>
+             <div className="
+                mt-2
+              "
+            >
 
+               <ErrorMessage
+                   message={
+                   errors.date
+                   ? "La date de zakat ne peut pas être supérieure à la date d'aujourd'hui."
+                   : null
+                  }
+                />
+
+                </div>
+
+             
+            </div>
+            
             {/* Informations du versement */}
             <div
               className="
@@ -459,14 +577,24 @@ export default function AjoutZakat() {
                       </span>
                     </div>
 
-                    {!errors.montant && (
-                      <p className="mt-1 text-[12px] text-gray-400">
-                        ≈ {montantEnEur} EUR (Taux du jour)
-                      </p>
-                    )}
-                    <ErrorMessage
-                      message={errors.montant ? "Veuillez saisir un montant valide" : null}
-                    />
+                   {!errors.montant && (
+  <p className="mt-1 text-[12px] text-gray-400">
+    {tauxLoading
+      ? "Chargement du taux..."
+      : tauxMruEur
+      ? `≈ ${montantEnEur} EUR (Taux du jour)`
+      : "Taux de change indisponible"}
+  </p>
+)}
+                   <ErrorMessage
+  message={
+    errors.montant
+      ? !montant || parseFloat(montant) <= 0
+        ? "Veuillez saisir un montant valide"
+        : `Le montant dépasse le solde disponible (${soldeDisponible?.toLocaleString("fr-FR")} MRU)`
+      : null
+  }
+/>
                     </div>
                      
                   </div>
@@ -482,17 +610,16 @@ export default function AjoutZakat() {
                 <div className="w-full flex">
                   <div className="flex-1">
                     <div className="flex flex-col gap-2">
-                    <SelectInput
-                      noPadding
-                      value={modePaiement}
-                      onChange={handleModePaiementChange}
-                      placeholder="Tapez pour choisir le mode de paiment"
-                      error={errors.modePaiement}
-                      options={[
-                        { value: "especes", label: "Espèces" },
-                        { value: "bankily", label: "Transfert mobile (Bankily)" },
-                      ]}
-                    />
+                   <SelectInput2
+  noPadding
+  value={modePaiement}
+  onChange={handleModePaiementChange}
+  placeholder="Tapez pour choisir le mode de paiement"
+  options={[
+    { value: "espece", label: "Espèces" },
+    { value: "transfert_mobile", label: "Transfert mobile (Bankily)" },
+  ]}
+/>
                     <ErrorMessage
                       message={
                         errors.modePaiement ? "Veuillez choisir un mode de paiement" : null
@@ -542,19 +669,18 @@ export default function AjoutZakat() {
                 <div className="w-full flex">
                   <div className="flex-1">
                     <div className="flex flex-col gap-2">
-                    <SelectInput
-                      noPadding
-                      value={causePrincipale}
-                      onChange={handleCausePrincipaleChange}
-                      placeholder="Tapez pour choisir la cause principale"
-                      error={errors.causePrincipale}
-                      options={[
-                        { value: "veuvage", label: "Veuvage" },
-                        { value: "urgence", label: "Situation d'urgence" },
-                        { value: "vulnerabilite", label: "Vulnérabilité extrême" },
-                        { value: "autre", label: "Autre" },
-                      ]}
-                    />
+                   <SelectInput2
+  noPadding
+  value={causePrincipale}
+  onChange={handleCausePrincipaleChange}
+  placeholder="Tapez pour choisir la cause principale"
+  options={[
+    { value: "veuvage", label: "Veuvage" },
+    { value: "urgence", label: "Situation d'urgence" },
+    { value: "vulnerabilite", label: "Vulnérabilité extrême" },
+    { value: "autre", label: "Autre" },
+  ]}
+/>
                     <ErrorMessage
                       message={
                         errors.causePrincipale ? "Veuillez choisir une cause principale" : null
@@ -611,14 +737,17 @@ export default function AjoutZakat() {
           </div>
         </div>
 
-        {/* Save button */}
+       
+       {/* Save button */}
         <div className="mt-2">
           <Button
-            title="Enregistrer"
+            title={saving ? "Enregistrement..." : "Enregistrer"}
             variant="save"
             noPadding
             onClick={handleSave}
+            disabled={saving}
           />
+          {saveError && <ErrorMessage message={saveError} />}
         </div>
 
         {showSuccessPopup && (
@@ -628,15 +757,30 @@ export default function AjoutZakat() {
             primaryButtonText="Voir la fiche famille"
             secondaryButtonText="Revenir à l'accueil"
             onPrimaryClick={() => {
-              setShowSuccessPopup(false);
-              navigate(`/famille/${selectedFamille?.id}`);
+            setShowSuccessPopup(false);
+            navigate(`/famille/${selectedFamille?.id}`);
             }}
             onSecondaryClick={() => {
-              setShowSuccessPopup(false);
-              navigate("/dashboard");
+            setShowSuccessPopup(false);
+            navigate(isAdmin ? "/dashboard" : "/dashboard-coor");
             }}
           />
         )}
+         </div>
+          </div>
+
+          <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-4
+            bg-white
+            z-20
+          "
+        />
+
       </main>
 
       <PopupListeFamilles
