@@ -37,6 +37,7 @@ const mapHistorique = (data = []) =>
     unite:
       mvt.produit?.unite === "boite" ? "boîtes" : mvt.produit?.unite ?? "",
     par: MOTIF_LABELS[mvt.motif] || mvt.motif,
+    user: mvt.user || "-", 
     date: mvt.date_mouvement
       ? new Date(mvt.date_mouvement).toLocaleDateString("fr-FR")
       : "-",
@@ -45,6 +46,7 @@ const mapHistorique = (data = []) =>
 export default function DistributionPage() {
   const { user } = useAuth();
    const isAdmin = user?.role === "admin";
+   const canManageStock = user?.role === "admin" || user?.role === "chef_coordinator";
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
@@ -187,8 +189,9 @@ const {
  
 
   const handleCardClick = (item, index) => {
+    if (!canManageStock) return; 
   if (item.statut === "en_attente") {
-    if (isAdmin) {
+    
       setProduitSelectionne({
         id: item.id,
         nom: item.nom,
@@ -198,7 +201,7 @@ const {
         enregistrePar: item.enregistrePar,
       });
       setShowValidation(true);
-    }
+    
   } else {
     setProduitHistorique({
       id: item.id,      
@@ -374,7 +377,7 @@ const {
         <NavigationHeader
           title="Stock de produit"
           type="add"
-          actionTitle="ajuster le stock et voir tous "
+          actionTitle="ajuster le stock "
           onAction={() => setShowStockPopup(true)}
         />
 
@@ -390,8 +393,9 @@ const {
         quantity={item.quantity}
         unite={item.unite}
         statut={item.statut}
-        showStatusColor={isAdmin}   
-        onClick={() => handleCardClick(item, index)}
+        showStatusColor={canManageStock}  
+       
+        onClick={canManageStock ? () => handleCardClick(item, index) : undefined}
       />
     ))}
   </div>
