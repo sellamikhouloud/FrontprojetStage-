@@ -9,6 +9,72 @@ import SuccessBanner from "./SuccessBanner";
 import ErrorMessage from "../Forms/ErrorMessage";
 import quitter from "../../assets/quitter.svg";
 
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
+// Même logique que PopupFinSuivi.jsx — gère aussi le format backend { code, message }.
+function extractErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (!data) {
+    return error?.message || "Une erreur est survenue.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (typeof data?.code === "string" && typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") messages.push(`${label} : ${msg}`);
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue.";
+}
+
 export default function PopupAlimenterSolde({
   open,
   onClose,
@@ -24,14 +90,13 @@ export default function PopupAlimenterSolde({
 
   const [showBanner, setShowBanner] = useState(false);
 
-  const [errors, setErrors] = useState({
+   const [errors, setErrors] = useState({
     montant: false,
+    date: false,
   });
+  const [backendError, setBackendError] = useState(null);
 
-  /**
-   * Récupération du taux de change
-   * UNE SEULE FOIS à l'ouverture du popup
-   */
+  
   useEffect(() => {
     if (!open) return;
 
@@ -102,20 +167,22 @@ export default function PopupAlimenterSolde({
   };
 
   
-  const validateForm = () => {
+    const validateForm = () => {
     const newErrors = {
       montant: !montant || Number(montant) <= 0,
+      date: isFutureDate(date),
     };
 
     setErrors(newErrors);
 
     return !Object.values(newErrors).some(Boolean);
   };
-
   /**
    * Enregistrement du versement
    */
-  const handleSave = async () => {
+    const handleSave = async () => {
+    setBackendError(null);
+
     if (!validateForm()) {
       return;
     }
@@ -129,7 +196,6 @@ export default function PopupAlimenterSolde({
     console.log("Données envoyées au backend :", data);
 
     try {
-     
       await onSave?.(data);
       setShowBanner(true);
 
@@ -142,6 +208,7 @@ export default function PopupAlimenterSolde({
 
         setErrors({
           montant: false,
+          date: false,
         });
 
         onClose();
@@ -151,18 +218,21 @@ export default function PopupAlimenterSolde({
         "Erreur lors de l'enregistrement :",
         error.response?.data || error
       );
+      setBackendError(extractErrorMessage(error));
     }
   };
 
-  const handleClose = () => {
+      const handleClose = () => {
     setMontant("");
     setNote("");
     setDate(new Date());
 
     setErrors({
       montant: false,
+      date: false,
     });
 
+    setBackendError(null);
     setShowBanner(false);
 
     onClose();
@@ -287,14 +357,29 @@ export default function PopupAlimenterSolde({
               "
             >
              
-              <div className="w-full">
+             
+                              <div className="w-full">
                 <DateContainer
                   label="Date"
                   value={date}
-                  onChange={setDate}
+                  onChange={(newDate) => {
+                    setDate(newDate);
+                    setErrors((prev) => ({
+                      ...prev,
+                      date: isFutureDate(newDate),
+                    }));
+                  }}
                   noPadding
                 />
+                <ErrorMessage
+                  message={
+                    errors.date
+                      ? "La date ne peut pas être une date future."
+                      : null
+                  }
+                />
               </div>
+             
 
               <div className="w-full">
                 <label
@@ -426,6 +511,12 @@ export default function PopupAlimenterSolde({
             </div>
 
           
+                       {backendError && (
+              <div className="mt-5 rounded-[10px] border border-red-300 bg-red-50 px-4 py-3 text-red-600 text-sm">
+                {backendError}
+              </div>
+            )}
+
             {showBanner && (
               <div className="mt-5 w-full">
                 <SuccessBanner />
