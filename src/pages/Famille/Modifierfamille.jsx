@@ -24,6 +24,8 @@ import MotherPhoto from "../../assets/photo mere.svg";
 import successImage from "../../assets/Success.svg";
 import Spinner from "../../components/Spinner";
 import { useAuth } from "../../components/providers/AuthProvider";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
+
 
 function extractEditableFields(famille) {
   return {
@@ -749,11 +751,7 @@ const makeHandler = (fields) => (index, value) => {
           disabled={nothingChanged || saveMut.isPending}
         />
 
-        {errorMessage && (
-          <div className="mb-4 rounded-[10px] border border-red-300 bg-red-50 px-4 py-3 text-red-600 text-sm">
-            {errorMessage}
-          </div>
-        )}
+       <BackendErrorMessage message={errorMessage} className="mb-4" />
         {infoMessage && (
           <div className="mb-4 rounded-[10px] border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 text-sm">
             {infoMessage}
