@@ -5,6 +5,7 @@ import DateContainer from "../Containers/DateContainer";
 import TextArea from "../Containers/Textarea";
 import Button from "../Button/Button";
 import ErrorMessage from "../Forms/ErrorMessage";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
 
 function extractErrorMessage(error) {
   const data = error?.response?.data;
@@ -230,11 +231,7 @@ const PopupFinSuivi = ({
               {title}
             </h2>
 
-            {backendError && (
-              <div className="mb-4 rounded-[10px] border border-red-300 bg-red-50 px-4 py-3 text-red-600 text-sm">
-                {backendError}
-              </div>
-            )}
+            <BackendErrorMessage message={backendError} className="mb-4" />
 
             <div className="mt-4">
               <DateContainer
