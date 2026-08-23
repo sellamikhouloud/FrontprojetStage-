@@ -707,20 +707,16 @@ const makeHandler = (fields) => (index, value) => {
   isLoading={visitesLoading}
 />
 
-      <PopupFinSuivi
+            <PopupFinSuivi
         open={openFinSuivi}
         onClose={() => setOpenFinSuivi(false)}
         onConfirm={async (motif, dateSortie) => {
-          try {
-            await marquerSortie(famille.id, {
-              date_sortie: dateSortie,
-              motif_sortie: motif,
-            });
-            setOpenFinSuivi(false);
-            queryClient.invalidateQueries({ queryKey: ["famille", id] });
-                   } catch (err) {
-            setErrorMessage(extractErrorMessage(err));
-          }
+          await marquerSortie(famille.id, {
+            date_sortie: dateSortie,
+            motif_sortie: motif,
+          });
+          setOpenFinSuivi(false);
+          await queryClient.invalidateQueries({ queryKey: ["famille", id] });
         }}
       />
 
