@@ -8,6 +8,8 @@ import Button from "../Button/Button";
 import SuccessBanner from "./SuccessBanner";
 import ErrorMessage from "../Forms/ErrorMessage";
 import quitter from "../../assets/quitter.svg";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
+
 
 const isFutureDate = (date) => {
   if (!date) return false;
@@ -510,12 +512,7 @@ export default function PopupAlimenterSolde({
               />
             </div>
 
-          
-                       {backendError && (
-              <div className="mt-5 rounded-[10px] border border-red-300 bg-red-50 px-4 py-3 text-red-600 text-sm">
-                {backendError}
-              </div>
-            )}
+          <BackendErrorMessage message={backendError} className="mt-5" />
 
             {showBanner && (
               <div className="mt-5 w-full">
