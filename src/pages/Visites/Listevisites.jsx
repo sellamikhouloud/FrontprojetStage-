@@ -43,6 +43,8 @@ const getBadgeMere = (statut) => {
   }
 };
 
+// Le backend utilise le filtre django-filter par défaut sur date_visite,
+// qui attend le format ISO YYYY-MM-DD (contrairement à Zakat qui utilise JJ/MM/AAAA).
 function formatDateYYYYMMDD(date) {
   if (!date) return undefined;
   const y = date.getFullYear();
@@ -111,7 +113,7 @@ export default function ListeVisites() {
   });
 
   const buildFamilleFromVisite = (item) => ({
-    id: item.famille ?? "-",
+    id: item.code_famille ?? item.famille ?? "-",
     nourrisson: item.nourrisson ?? null,
     mere: item.mere
       ? {
@@ -231,7 +233,7 @@ export default function ListeVisites() {
             onChange={(e) => setSearch(e.target.value)}
             onFilterClick={() => setIsFilterOpen((prev) => !prev)}
             maxWidth="max-w-full"
-            placeholder="Entrer ici pour chercher "
+            placeholder="Entrer ici pour chercher (nom, prénom mère, code famille)"
           />
         </div>
 
@@ -280,7 +282,7 @@ export default function ListeVisites() {
                   <CardVisiteListe
                     key={item.id}
                     nom={nom}
-                    code={item.famille || "-"}
+                    code={item.code_famille || "-"}
                     visite={`Visite ${item.numero_visite ?? "-"}`}
                     date={dateVisite}
                     poids={item.poids_bebe ?? "-"}
