@@ -7,6 +7,7 @@ import EditableInfoCard from "../Containers/ModifierContainer";
 import Button from "../Button/Button";
 import SuccessBanner from "./SuccessBanner";
 import ErrorMessage from "../Forms/ErrorMessage";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
 
 import quitter from "../../assets/quitter.svg";
 
@@ -630,22 +631,7 @@ const PopupModifierZakat = ({
 
               </div>
 
-              {errorMessage && (
-                <div
-                  className="
-                    rounded-[10px]
-                    border
-                    border-red-300
-                    bg-red-50
-                    px-4
-                    py-3
-                    text-sm
-                    text-red-600
-                  "
-                >
-                  {errorMessage}
-                </div>
-              )}
+             <BackendErrorMessage message={errorMessage} />
 
               <div className="mt-4">
 
