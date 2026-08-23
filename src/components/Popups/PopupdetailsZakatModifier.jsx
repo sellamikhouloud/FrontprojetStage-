@@ -12,7 +12,6 @@ import quitter from "../../assets/quitter.svg";
 
 import { diffPatch, isEmptyPatch } from "@/lib/diff";
 import { updateAideZakat } from "@/lib/api/zakat";
-import { getTauxDeChange } from "@/lib/api/parametres";
 
 function extractEditableZakatFields(zakat) {
   return {
@@ -36,7 +35,6 @@ const isFutureDate = (date) => {
 
   return selected > today;
 };
-
 
 function extractErrorMessage(error) {
   const data = error?.response?.data;
@@ -108,10 +106,6 @@ const PopupModifierZakat = ({
   const [errorMessage, setErrorMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [tauxEuro, setTauxEuro] = useState(null);
-  const [loadingTaux, setLoadingTaux] = useState(false);
-  const [tauxError, setTauxError] = useState("");
-
   const baseline = useMemo(
     () => (zakat ? extractEditableZakatFields(zakat) : null),
     [zakat]
@@ -130,49 +124,18 @@ const PopupModifierZakat = ({
     }
   }, [baseline]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const fetchTaux = async () => {
-      try {
-        setLoadingTaux(true);
-        setTauxError("");
-
-        const response = await getTauxDeChange();
-
-        console.log("Réponse taux de change :", response);
-
-        const valeur = parseFloat(response?.data?.valeur);
-
-        if (Number.isNaN(valeur)) {
-          throw new Error("Taux de change invalide");
-        }
-
-        console.log("Taux EUR récupéré :", valeur);
-
-        setTauxEuro(valeur);
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération du taux de change :",
-          error?.response?.data || error
-        );
-
-        setTauxEuro(null);
-        setTauxError(
-          "Impossible de récupérer le taux de change."
-        );
-      } finally {
-        setLoadingTaux(false);
-      }
-    };
-
-    fetchTaux();
-  }, [open]);
+  
+  const tauxUtilise =
+    zakat?.taux_utilise != null && !Number.isNaN(parseFloat(zakat.taux_utilise))
+      ? parseFloat(zakat.taux_utilise)
+      : null;
 
   const montantEuro =
-    form?.montant === "" || tauxEuro === null
+    form?.montant === ""
       ? "0.00"
-      : (Number(form?.montant) * tauxEuro).toFixed(2);
+      : tauxUtilise !== null
+      ? (Number(form?.montant) * tauxUtilise).toFixed(2)
+      : zakat?.montant_eur ?? null;
 
   const patch = useMemo(
     () =>
@@ -563,25 +526,17 @@ const PopupModifierZakat = ({
               />
 
               <div>
-                {loadingTaux && (
+                {form.montant !== "" && montantEuro !== null && (
                   <p className="text-[#6B7280] text-[12px] mt-1 ml-3">
-                    Récupération du taux de change...
+                    ≈ {montantEuro} EUR (Taux utilisé lors du versement)
                   </p>
                 )}
 
-                {tauxError && (
-                  <p className="text-red-500 text-[12px] mt-1 ml-3">
-                    {tauxError}
+                {form.montant !== "" && montantEuro === null && (
+                  <p className="text-[#6B7280] text-[12px] mt-1 ml-3">
+                    Taux de change non disponible pour cette zakat.
                   </p>
                 )}
-
-                {!loadingTaux &&
-                  !tauxError &&
-                  form.montant !== "" && (
-                    <p className="text-[#6B7280] text-[12px] mt-1 ml-3">
-                      ≈ {montantEuro} EUR (Réf. taux du jour)
-                    </p>
-                  )}
               </div>
 
               <TextareaModifier
@@ -723,4 +678,3 @@ const PopupModifierZakat = ({
 };
 
 export default PopupModifierZakat;
-
