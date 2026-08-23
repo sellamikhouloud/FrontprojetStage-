@@ -118,14 +118,8 @@ const PopupDetailDistribution = ({
             </button>
 
             <h2 className="mt-3 text-center text-[20px] font-bold text-[#202124]">
-              Détail de la distribution n°{distribution.numeroDistribution}
+              Détail  distribution
             </h2>
-
-            {isAnnulee && (
-              <p className="mt-1 text-center text-[13px] font-semibold text-red-500">
-                Distribution annulée
-              </p>
-            )}
           </div>
 
           {/* Carte famille */}
@@ -236,15 +230,17 @@ const PopupDetailDistribution = ({
             <div className="space-y-3 sm:ml-2">
 
               {/* Colis alimentaire */}
-              <InfoCard
-                title="Colis alimentaire"
-                data={produitsAlimentaires.map((item) => ({
-  label: item.produit?.nom ?? "-",
-  value: `${Number(item.quantite ?? 0)} ${
-    item.produit?.unite ?? ""
-  }`,
-}))}
-              />
+              {produitsAlimentaires.length > 0 && (
+                <InfoCard
+                  title="Colis alimentaire"
+                  data={produitsAlimentaires.map((item) => ({
+                    label: item.produit?.nom ?? "-",
+                    value: `${Number(item.quantite ?? 0)} ${
+                      item.produit?.unite ?? ""
+                    }`,
+                  }))}
+                />
+              )}
             </div>
           </div>
 
