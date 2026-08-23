@@ -6,6 +6,7 @@ import Card from "../Cards/Card";
 import EditableInfoCard from "../Containers/ModifierContainer";
 import Button from "../Button/Button";
 import SuccessBanner from "./SuccessBanner";
+import ErrorMessage from "../Forms/ErrorMessage";
 
 import quitter from "../../assets/quitter.svg";
 
@@ -24,6 +25,72 @@ function extractEditableZakatFields(zakat) {
   };
 }
 
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
+
+function extractErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (!data) {
+    return error?.message || "Une erreur est survenue.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (typeof data?.code === "string" && typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") messages.push(`${label} : ${msg}`);
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue.";
+}
+
 const PopupModifierZakat = ({
   open,
   onClose,
@@ -35,6 +102,7 @@ const PopupModifierZakat = ({
 
   const [confirmed, setConfirmed] = useState(false);
   const [confirmationError, setConfirmationError] = useState(false);
+  const [dateError, setDateError] = useState(false);
 
   const [showBanner, setShowBanner] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
@@ -56,6 +124,7 @@ const PopupModifierZakat = ({
       setConfirmed(true);
 
       setConfirmationError(false);
+      setDateError(false);
       setErrorMessage(null);
       setShowBanner(false);
     }
@@ -214,6 +283,11 @@ const PopupModifierZakat = ({
       return;
     }
 
+    if (isFutureDate(form.date_versement)) {
+      setDateError(true);
+      return;
+    }
+
     if (nothingChanged) {
       setErrorMessage(
         "Aucune modification à enregistrer."
@@ -264,10 +338,7 @@ const PopupModifierZakat = ({
         error?.response?.data || error
       );
 
-      setErrorMessage(
-        error?.response?.data?.detail ||
-        "Une erreur est survenue lors de la modification."
-      );
+      setErrorMessage(extractErrorMessage(error));
 
     } finally {
       setIsSaving(false);
@@ -358,6 +429,10 @@ const PopupModifierZakat = ({
       (opt) => opt.label === value || opt.value === value
     );
     finalValue = match ? match.value : value;
+  }
+
+  if (field === "date_versement") {
+    setDateError(isFutureDate(finalValue));
   }
 
   setForm((prev) => ({
@@ -479,6 +554,14 @@ const PopupModifierZakat = ({
                 onChange={handleInfoChange}
               />
 
+              <ErrorMessage
+                message={
+                  dateError
+                    ? "La date ne peut pas être une date future."
+                    : null
+                }
+              />
+
               <div>
                 {loadingTaux && (
                   <p className="text-[#6B7280] text-[12px] mt-1 ml-3">
@@ -582,19 +665,13 @@ const PopupModifierZakat = ({
                   </span>
                 </label>
 
-                {confirmationError && (
-                  <p
-                    className="
-                      mt-2
-                      ml-8
-                      text-[13px]
-                      text-red-500
-                    "
-                  >
-                    Veuillez confirmer la remise
-                    avant d'enregistrer.
-                  </p>
-                )}
+                <ErrorMessage
+                  message={
+                    confirmationError
+                      ? "Veuillez confirmer la remise avant d'enregistrer."
+                      : null
+                  }
+                />
 
               </div>
 
@@ -646,3 +723,4 @@ const PopupModifierZakat = ({
 };
 
 export default PopupModifierZakat;
+
