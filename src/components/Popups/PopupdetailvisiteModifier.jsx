@@ -5,6 +5,7 @@ import ModifierMesure from "../Containers/ModifierMesure";
 import AfficherMesure from "../Containers/AfficherMesure";
 import TextareaModifier from "../Containers/TextAreaModifier";
 import Button from "../Button/Button";
+import ErrorMessage from "../Forms/ErrorMessage";
 
 import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -56,6 +57,72 @@ function toApiDateString(value) {
   return value;
 }
 
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
+// Même logique que PopupFinSuivi.jsx — gère aussi le format backend { code, message }.
+function extractErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (!data) {
+    return error?.message || "Une erreur est survenue.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (typeof data?.code === "string" && typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") messages.push(`${label} : ${msg}`);
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue.";
+}
+
 const PopupDetailVisiteModifier = ({
   open,
   onClose,
@@ -79,11 +146,13 @@ const PopupDetailVisiteModifier = ({
   const [showBanner, setShowBanner] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [dateError, setDateError] = useState(false);
 
   useEffect(() => {
     if (baseline) {
       setForm(baseline);
       setErrorMessage(null);
+      setDateError(false);
       setShowBanner(false);
     }
   }, [baseline]);
@@ -116,6 +185,11 @@ const PopupDetailVisiteModifier = ({
   const handleSave = async () => {
     setErrorMessage(null);
 
+    if (isFutureDate(form.date_visite)) {
+      setDateError(true);
+      return;
+    }
+
     if (nothingChanged) {
       setErrorMessage("Aucune modification à enregistrer.");
       return;
@@ -127,8 +201,7 @@ const PopupDetailVisiteModifier = ({
       const response = await updateVisite(visite.id, patch);
       const updatedVisite = response?.data ?? response;
 
-      // 🔑 On invalide le cache React Query pour forcer un refetch
-      // des données à jour (statuts, z-scores, etc. recalculés côté backend)
+      
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["visites", famille?.id],
@@ -151,24 +224,7 @@ const PopupDetailVisiteModifier = ({
         error?.response?.data || error
       );
 
-      const data = error?.response?.data;
-
-      let message = "Une erreur est survenue lors de l'enregistrement.";
-
-      if (Array.isArray(data) && data.length > 0) {
-        message = data.join(" ");
-      } else if (typeof data?.detail === "string") {
-        message = data.detail;
-      } else if (data && typeof data === "object") {
-        const fieldErrors = Object.entries(data).flatMap(([field, msgs]) =>
-          Array.isArray(msgs)
-            ? msgs.map((m) => `${field} : ${m}`)
-            : [`${field} : ${msgs}`]
-        );
-        if (fieldErrors.length) message = fieldErrors.slice(0, 3).join(" | ");
-      }
-
-      setErrorMessage(message);
+      setErrorMessage(extractErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -253,6 +309,7 @@ const PopupDetailVisiteModifier = ({
     if (!field || field.editable === false) return;
 
     if (field.key === "date_visite") {
+      setDateError(isFutureDate(value));
       setForm((prev) => ({ ...prev, date_visite: value }));
     }
   };
@@ -377,6 +434,14 @@ const PopupDetailVisiteModifier = ({
                 onChange={handleInfosGeneralesChange}
               />
 
+              <ErrorMessage
+                message={
+                  dateError
+                    ? "La date ne peut pas être une date future."
+                    : null
+                }
+              />
+
               <ModifierMesure
                 title="Mesure nourrisson"
                 poids={form.poids_bebe}
@@ -479,6 +544,14 @@ const PopupDetailVisiteModifier = ({
               data={infosGenerales}
               editable={true}
               onChange={handleInfosGeneralesChange}
+            />
+
+            <ErrorMessage
+              message={
+                dateError
+                  ? "La date ne peut pas être une date future."
+                  : null
+              }
             />
 
             <StatutCalculeBlock />
