@@ -195,7 +195,6 @@ const PopupDistributionfamille = ({
                 distributionsTriees.map((item, index) => (
                   <CardPopupDistribution
                     key={item.id || `distribution-${index}`}
-                    distribution={`Distribution ${item.numeroDistribution}`}
                     date={
                       item.date_distribution
                         ? new Date(item.date_distribution).toLocaleDateString(
@@ -293,3 +292,4 @@ const PopupDistributionfamille = ({
 };
 
 export default PopupDistributionfamille;
+
