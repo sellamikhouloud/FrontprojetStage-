@@ -410,7 +410,7 @@ return (
 <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
-  Distribution={distributionsResponse}  
+  Distribution={distributionsResponse}   
   famille={famille}
   isLoading={distributionsLoading}
 />
@@ -436,21 +436,17 @@ return (
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
   onConfirm={async (motif, dateSortie) => {
-    try {
-      await marquerSortie(famille.id, {
-        date_sortie: dateSortie,
-        motif_sortie: motif,
-      });
+   
+    await marquerSortie(famille.id, {
+      date_sortie: dateSortie,
+      motif_sortie: motif,
+    });
 
-      setOpenFinSuivi(false);
+    setOpenFinSuivi(false);
 
-      await queryClient.invalidateQueries({
-        queryKey: ["famille", famille.id],
-      });
-
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err));
-    }
+    await queryClient.invalidateQueries({
+      queryKey: ["famille", famille.id],
+    });
   }}
 />
  
