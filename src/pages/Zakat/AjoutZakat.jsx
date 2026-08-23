@@ -51,6 +51,8 @@ const formatDateYYYYMMDD = (d) => {
   ).padStart(2, "0")}`;
 };
 
+
+
 export default function AjoutZakat() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
@@ -127,6 +129,52 @@ const montantEnEur =
     setErrors(newErrors);
     return !Object.values(newErrors).some(Boolean);
   };
+  // Extrait un message d'erreur lisible depuis une réponse API
+const extractErrorMessage = (error) => {
+  const data = error.response?.data;
+
+  if (!data) {
+    return error.message || "Une erreur est survenue lors de l'enregistrement de la zakat.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const messages = [];
+
+    Object.entries(data).forEach(([field, value]) => {
+      const values = Array.isArray(value) ? value : [value];
+
+      values.forEach((msg) => {
+        if (typeof msg !== "string") return;
+        if (field === "non_field_errors" || field === "detail") {
+          messages.push(msg);
+        } else {
+          messages.push(`${field} : ${msg}`);
+        }
+      });
+    });
+
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue lors de l'enregistrement de la zakat.";
+};
 
  const handleSave = async () => {
     if (!validateForm()) return;
@@ -145,7 +193,7 @@ const montantEnEur =
       confirmation: confirmed,
     };
 
-    try {
+        try {
       await createAideZakat(payload);
       setShowSuccessPopup(true);
     } catch (error) {
@@ -153,10 +201,7 @@ const montantEnEur =
         "❌ Erreur lors de la création de la zakat :",
         error.response?.data || error.message
       );
-      setSaveError(
-        error.response?.data?.detail ||
-          "Une erreur est survenue lors de l'enregistrement de la zakat."
-      );
+      setSaveError(extractErrorMessage(error));
     } finally {
       setSaving(false);
     }
@@ -610,16 +655,17 @@ const montantEnEur =
                 <div className="w-full flex">
                   <div className="flex-1">
                     <div className="flex flex-col gap-2">
-                   <SelectInput2
-  noPadding
-  value={modePaiement}
-  onChange={handleModePaiementChange}
-  placeholder="Tapez pour choisir le mode de paiement"
-  options={[
-    { value: "espece", label: "Espèces" },
-    { value: "transfert_mobile", label: "Transfert mobile (Bankily)" },
-  ]}
-/>
+                  <SelectInput2
+                   noPadding
+                    value={modePaiement}
+                    onChange={handleModePaiementChange}
+                    placeholder="Tapez pour choisir le mode de paiement"
+                    options={[
+                     { value: "espece", label: "Espèces" },
+                     { value: "transfert_mobile", label: "Transfert mobile (Bankily)" },
+                     { value: "autre", label: "Autre" },
+                     ]}
+                     />
                     <ErrorMessage
                       message={
                         errors.modePaiement ? "Veuillez choisir un mode de paiement" : null
