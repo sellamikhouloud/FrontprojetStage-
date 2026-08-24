@@ -23,7 +23,7 @@ import Button from "../../components/Button/Button";
 import MotherPhoto from "../../assets/photo mere.svg";
 import successImage from "../../assets/Success.svg";
 import Spinner from "../../components/Spinner";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 
 
