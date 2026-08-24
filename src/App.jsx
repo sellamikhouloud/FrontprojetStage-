@@ -83,7 +83,7 @@ function App() {
           path="/ajout-donateur" element={<AjoutDonateur />}
         />
         <Route 
-          path="/fiche-donateur" element={<FicheDonateur />}
+          path="/fiche-donateur/:id" element={<FicheDonateur />}
         />
 
       {/* Distribution */}
