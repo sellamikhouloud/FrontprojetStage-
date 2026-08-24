@@ -24,7 +24,7 @@ import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles } from "@/lib/api/familles";
 import { getTauxDeChange } from "@/lib/api/parametres";
 import { getSoldeActuel , createAideZakat } from "@/lib/api/zakat";

@@ -30,7 +30,7 @@ import { listUsers, checkUsernameExists } from "../../lib/api/users";
 
 import { listVillages } from "../../lib/api/Parametres";
 
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 
 const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "village", "password", "photo"];
