@@ -1,28 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const YearPicker = ({ onChange }) => {
+const START_YEAR = 2026;
+
+const YearPicker = ({ onChange, value }) => {
   const currentYear = new Date().getFullYear();
 
-  const [selectedYear, setSelectedYear] = useState(currentYear);
+  // Si le parent fournit `value`, on l'utilise comme source de vérité.
+  // Sinon on garde un état interne (comportement autonome).
+  const [internalYear, setInternalYear] = useState(value ?? currentYear);
+
+  const selectedYear = value ?? internalYear;
+
+  // Si le parent change `value` de l'extérieur, on suit.
+  useEffect(() => {
+    if (value !== undefined && value !== internalYear) {
+      setInternalYear(value);
+    }
+  }, [value]);
 
   const years = Array.from(
-    { length: selectedYear - currentYear + 4 },
-    (_, i) => currentYear + i
+    { length: currentYear - START_YEAR + 1 },
+    (_, i) => START_YEAR + i
   );
 
   const handleClick = (year) => {
-    setSelectedYear(year);
-
-    onChange?.({
-      year,
-    });
+    setInternalYear(year);
+    onChange?.({ year });
   };
 
   return (
     <div className="flex flex-wrap gap-3">
       {years.map((year) => {
         const isSelected = year === selectedYear;
-        const isFuture = year > currentYear;
 
         return (
           <button
@@ -44,11 +53,7 @@ const YearPicker = ({ onChange }) => {
               }
             `}
             style={{
-              color: isSelected
-                ? "#FFFFFF"
-                : isFuture
-                ? "#C9C9C9"
-                : "#202124",
+              color: isSelected ? "#FFFFFF" : "#202124",
             }}
           >
             {year}
