@@ -19,7 +19,7 @@ import NoResultImage from "../../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import PopupHistoriqueVersements from "../../components/Popups/PopupHistoriqueVersements";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 export default function ZakatPage() {
 
