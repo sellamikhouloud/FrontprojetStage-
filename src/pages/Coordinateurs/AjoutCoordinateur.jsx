@@ -21,6 +21,54 @@ import { createUser } from "../../lib/api/coordinateurs";
 import { listVillages } from "../../lib/api/Parametres";
 
 import { useAuth } from "../../components/providers/AuthProvider";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
+
+const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "village", "password", "role"];
+
+function parseBackendErrors(data) {
+  if (!data) return { fieldErrors: {}, generalMessage: null };
+
+  if (typeof data === "string") {
+    return { fieldErrors: {}, generalMessage: data };
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    return { fieldErrors: {}, generalMessage: messages.join(" — ") || null };
+  }
+
+  if (data.detail) {
+    return { fieldErrors: {}, generalMessage: data.detail };
+  }
+
+  if (typeof data.code === "string" && typeof data.message === "string") {
+    return { fieldErrors: {}, generalMessage: data.message };
+  }
+
+  if (typeof data === "object") {
+    const fieldErrors = {};
+    const generalMessages = [];
+
+    Object.entries(data).forEach(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+
+      if (KNOWN_FIELDS.includes(field)) {
+        fieldErrors[field] = text;
+      } else if (field === "non_field_errors") {
+        generalMessages.push(text);
+      } else {
+        generalMessages.push(`${field} : ${text}`);
+      }
+    });
+
+    return {
+      fieldErrors,
+      generalMessage: generalMessages.length ? generalMessages.join(" — ") : null,
+    };
+  }
+
+  return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
+}
 
 
 export default function AjoutCoordinateur() {
@@ -50,6 +98,7 @@ export default function AjoutCoordinateur() {
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [backendError, setBackendError] = useState(null);
 
   // Liste réelle des villages 
   const {
@@ -90,68 +139,58 @@ export default function AjoutCoordinateur() {
     if (!password) newErrors.password = "Veuillez saisir un mot de passe";
     if (!village) newErrors.village = "Veuillez choisir un village";
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+   setErrors(newErrors);
+setBackendError(null);
 
-    setSaving(true);
-    setSaveError(null);
+if (Object.keys(newErrors).length > 0) return;
 
-    try {
-     const payload = {
-       username,
-       email,
-       nom,
-       prenom,
-       role: isAdmin ? role : "coordinator",
-       is_active: statut === "Active",
-       village,
-       password,
-      };
+setSaving(true);
+setSaveError(null);
 
-      console.log("📦 Payload création coordinateur :", payload);
+try {
+  const payload = {
+    username,
+    email,
+    nom,
+    prenom,
+    role: isAdmin ? role : "coordinator",
+    is_active: statut === "Active",
+    village,
+    password,
+  };
 
-      const response = await createUser(payload);
+  if (photoFile) {
+    payload.photo = photoFile;
+  }
 
-      console.log("✅ Coordinateur créé :", response.data);
+  console.log("📦 Payload création coordinateur :", payload);
 
-      setCreatedCoordinatorId(response.data.id); 
+  const response = await createUser(payload);
 
-      setShowSuccessPopup(true);
-    } catch (error) {
-      const backendErrors = error.response?.data;
+  console.log("✅ Coordinateur créé :", response.data);
 
-      console.error(
-        "❌ Erreur lors de la création du coordinateur :",
-        backendErrors || error.message
-      );
+  setCreatedCoordinatorId(response.data.id);
+  setShowSuccessPopup(true);
+} catch (error) {
+  console.error(
+    "❌ Erreur lors de la création du coordinateur :",
+    error.response?.data || error.message
+  );
 
-      if (backendErrors && typeof backendErrors === "object") {
-        // DRF renvoie généralement { champ: ["message1", "message2"] }
-        // On affiche chaque erreur sous le champ concerné plutôt qu'un
-        // message générique.
-        const fieldErrors = {};
+  const { fieldErrors, generalMessage } = parseBackendErrors(error.response?.data);
 
-        Object.entries(backendErrors).forEach(([field, messages]) => {
-          fieldErrors[field] = Array.isArray(messages)
-            ? messages.join(" ")
-            : String(messages);
-        });
+  if (Object.keys(fieldErrors).length > 0) {
+    setErrors((prev) => ({ ...prev, ...fieldErrors }));
+  }
 
-        setErrors((prev) => ({ ...prev, ...fieldErrors }));
-
-        // Si le backend a renvoyé un detail global (ex: erreur serveur),
-        // on le garde aussi comme message général
-        if (backendErrors.detail) {
-          setSaveError(backendErrors.detail);
-        }
-      } else {
-        setSaveError(
-          "Une erreur est survenue lors de la création du coordinateur."
-        );
-      }
-    } finally {
-      setSaving(false);
-    }
+  if (generalMessage) {
+    setBackendError(generalMessage);
+  } else if (Object.keys(fieldErrors).length === 0) {
+    setSaveError("Une erreur est survenue lors de la création du coordinateur.");
+  }
+} finally {
+  setSaving(false);
+}
   };
 
   return (
@@ -218,6 +257,8 @@ export default function AjoutCoordinateur() {
           >
             Nouveau Coordinateur
           </h1>
+
+         <BackendErrorMessage message={backendError || saveError} className="mt-2" />
 
                    {/* Photo */}
           <div className="flex justify-center">
@@ -436,7 +477,6 @@ export default function AjoutCoordinateur() {
     disabled={saving}
   />
 
-{saveError && <ErrorMessage message={saveError} />}
 </div>
 
 
