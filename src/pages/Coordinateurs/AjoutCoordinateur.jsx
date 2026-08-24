@@ -1,7 +1,8 @@
-import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
@@ -19,6 +20,7 @@ import SuccessImage from "../../assets/Success.svg";
 
 import { createUser } from "../../lib/api/coordinateurs";
 import { listVillages } from "../../lib/api/Parametres";
+import { checkUsernameExists } from "../../lib/api/users";
 
 import { useAuth } from "../../components/providers/AuthProvider";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
@@ -81,6 +83,8 @@ export default function AjoutCoordinateur() {
   const [createdCoordinatorId, setCreatedCoordinatorId] = useState(null);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
+  const [checkingUsername, setCheckingUsername] = useState(false);
+
   const [showPhotoPopup, setShowPhotoPopup] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
@@ -99,6 +103,43 @@ export default function AjoutCoordinateur() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [backendError, setBackendError] = useState(null);
+
+  useEffect(() => {
+  const trimmed = username.trim();
+
+  if (!trimmed) {
+    setCheckingUsername(false);
+    return;
+  }
+
+  setCheckingUsername(true);
+
+ const timeoutId = setTimeout(async () => {
+  try {
+    const { data } = await checkUsernameExists(trimmed);
+
+    const taken = Boolean(data?.message);
+
+    if (taken) {
+      setErrors((prev) => ({
+        ...prev,
+        username: data.message,
+      }));
+    } else {
+      clearError("username");
+    }
+  } catch (err) {
+    console.error(
+      "Erreur lors de la vérification du nom d'utilisateur :",
+      err.response?.data || err.message
+    );
+  } finally {
+    setCheckingUsername(false);
+  }
+}, 100); 
+
+  return () => clearTimeout(timeoutId);
+   }, [username]);
 
   // Liste réelle des villages 
   const {
@@ -131,7 +172,12 @@ export default function AjoutCoordinateur() {
 
     const newErrors = {};
 
-    if (!username.trim()) newErrors.username = "Veuillez saisir un nom d'utilisateur";
+   if (!username.trim()) {
+  newErrors.username = "Veuillez saisir un nom d'utilisateur";
+} else if (errors.username) {
+  // Conserve une erreur d'unicité déjà détectée en temps réel
+  newErrors.username = errors.username;
+}
     if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
     if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
     if (isAdmin && !role) newErrors.role = "Veuillez choisir un rôle";
@@ -319,19 +365,21 @@ try {
           />
 
           <div className="flex flex-col gap-1">
-            <Input
-              label="Nom d'utilisateur"
-              placeholder="Entrez le nom d'utilisateur ici"
-              value={username}
-              onChange={(e) => {
-                setUsername(e.target.value);
-                clearError("username");
-              }}
-              noPadding
-            />
-            <ErrorMessage message={errors.username} />
-          </div>
-
+  <Input
+    label="Nom d'utilisateur"
+    placeholder="Entrez le nom d'utilisateur ici"
+    value={username}
+    onChange={(e) => {
+      setUsername(e.target.value);
+      clearError("username");
+    }}
+    noPadding
+  />
+  {checkingUsername && (
+    <p className="text-[12px] text-gray-400 ml-3">Vérification...</p>
+  )}
+  <ErrorMessage message={errors.username} />
+</div>
           <div className="flex flex-col gap-1">
             <Input
               label="Nom"
