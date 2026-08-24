@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -16,6 +17,7 @@ import UpRight from "../../assets/Up Right.svg";
 import ListManagerDialog from "../../components/Popups/ListManagerDialog";
 import Spinner from "../../components/Spinner";
 import { getRapportAnnuel, validerRapport, genererPdfRapport } from "@/lib/api/Rapport";
+import { getEmailsRapport } from "@/lib/api/Parametres";
 
 const STATUS = {
   IDLE: "idle",
@@ -24,10 +26,17 @@ const STATUS = {
   ERROR: "error",
 };
 
+const formatDateSlash = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${d.getFullYear()}`;
+};
+
 const RapportAnnuel = () => {
   const currentYear = new Date().getFullYear();
 
-  
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [rapport, setRapport] = useState(null);
   const [status, setStatus] = useState(STATUS.IDLE);
@@ -36,22 +45,10 @@ const RapportAnnuel = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [showEmailsListReadOnly, setShowEmailsListReadOnly] = useState(false);
 
-  const [emails, setEmails] = useState([
-    { id: 1, label: "direction@nutrigest.mr", date: "04/08/2026" },
-    { id: 2, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 3, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 4, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 5, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 6, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-  ]);
-
-
   const requestIdRef = useRef(0);
 
   const handleYearChange = async (value) => {
     setSelectedYear(value.year);
-
-    
     setRapport(null);
     setStatus(STATUS.LOADING);
 
@@ -77,6 +74,31 @@ const RapportAnnuel = () => {
   useEffect(() => {
     handleYearChange({ year: currentYear });
   }, []);
+
+  
+  const {
+    data: emailsData,
+    isLoading: emailsLoading,
+    isError: emailsError,
+    refetch: refetchEmails,
+  } = useQuery({
+    queryKey: ["emails-rapport", "annuel"],
+    queryFn: () =>
+      getEmailsRapport({ type_rapport: "annuel" }).then((r) => r.data),
+    enabled: showEmailsListReadOnly, // ne fetch qu'à l'ouverture du popup
+  });
+
+  const emailsBruts = emailsData?.results ?? emailsData ?? [];
+
+  const emails = emailsBruts.map((item) => ({
+    id: item.id,
+    label: item.email,
+    date: formatDateSlash(item.date_creation),
+  }));
+
+  const handleOpenEmailsList = () => {
+    setShowEmailsListReadOnly(true);
+  };
 
   const isLoading = status === STATUS.LOADING;
 
@@ -141,9 +163,7 @@ const RapportAnnuel = () => {
           <ReportTabs />
         </div>
 
-        {/* Contenu */}
         <div className="mt-8 flex flex-col xl:flex-row items-start gap-8 h-[calc(100%-120px)]">
-          {/* Partie gauche */}
           <div
             className={`
               ${showPreview ? "flex" : "hidden"}
@@ -171,7 +191,6 @@ const RapportAnnuel = () => {
             </button>
 
             <div className="mt-4">
-              {/* selectedYear est un nombre initialisé dès le départ : jamais undefined */}
               <HeaderRapport selectedYear={selectedYear} title="Rapport Annuel" />
             </div>
 
@@ -273,7 +292,6 @@ const RapportAnnuel = () => {
             )}
           </div>
 
-          {/* Partie droite */}
           <div
             className={`
               ${showPreview ? "hidden" : "flex"}
@@ -320,14 +338,13 @@ const RapportAnnuel = () => {
               </div>
             )}
 
-            {/* Sélecteur d'année — contrôlé par selectedYear */}
             <div className="mt-4 w-full">
               <YearPicker value={selectedYear} onChange={handleYearChange} />
             </div>
 
             <button
               type="button"
-              onClick={() => setShowEmailsListReadOnly(true)}
+              onClick={handleOpenEmailsList}
               className="
                 mt-4
                 flex items-center gap-1.5
@@ -344,7 +361,6 @@ const RapportAnnuel = () => {
               <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-            {/* Boutons */}
             <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
               <div className="xl:hidden">
                 <Button
@@ -384,7 +400,14 @@ const RapportAnnuel = () => {
         title="Emails destinataires des rapports"
         items={emails}
         onClose={() => setShowEmailsListReadOnly(false)}
-        emptyMessage="Aucun destinataire pour l'instant."
+        searchPlaceholder="Entrer l'email à chercher"
+        emptyMessage={
+          emailsLoading
+            ? "Chargement..."
+            : emailsError
+            ? "Erreur lors du chargement des emails."
+            : "Aucun destinataire pour l'instant."
+        }
         showDelete={false}
       />
     </div>
