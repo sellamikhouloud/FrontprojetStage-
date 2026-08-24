@@ -19,7 +19,7 @@ import Spinner from "../../components/Spinner";
 import { useNavigate } from "react-router-dom";
 import { listProduits, validerProduit, getHistoriqueProduit } from "@/lib/api/stock";
 import { listDistributions , exportDistributions, annulerDistribution } from "@/lib/api/distributions";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 
 const MOTIF_LABELS = {
