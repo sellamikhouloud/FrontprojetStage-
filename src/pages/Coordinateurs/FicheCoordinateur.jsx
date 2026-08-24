@@ -15,13 +15,11 @@ import DateContainer from "../../components/Containers/DateContainer";
 import Button from "../../components/Button/Button";
 import { AiOutlineInfoCircle } from "react-icons/ai";
 import SuccessBanner from "../../components/Popups/SuccessBanner";
-import Popup from "../../components/Popups/SuccessPopup";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 import PopupPhoto from "../../components/Popups/PopupPhoto";
-
 import Coordinator from "../../assets/images/Coordinator.svg";
-import SuccessImage from "../../assets/Confirm.svg";
+
 
 import {
   updateCoordinateur,
@@ -110,7 +108,7 @@ export default function ModifierCoordinateur() {
   };
 
   const [showBanner, setShowBanner] = useState(false);
-  const [showDeletePopup, setShowDeletePopup] = useState(false);
+
 
   // Champs du formulaire
  
@@ -335,25 +333,6 @@ const handleSave = async () => {
   }
 };
 
-  const handleDelete = () => {
-    setShowDeletePopup(true);
-  };
-
-  const confirmDelete = async () => {
-    try {
-      // Pas d'endpoint DELETE fourni pour l'instant → on désactive le compte.
-      await deactivateCoordinateur(id);
-      setShowDeletePopup(false);
-      navigate("/liste-coordinateurs");
-    } catch (err) {
-      console.error(
-        "Erreur lors de la suppression :",
-        err.response?.data || err.message
-      );
-      setShowDeletePopup(false);
-      setSaveError("Impossible de supprimer ce coordinateur.");
-    }
-  };
 
   return (
      <div className="flex h-screen bg-white overflow-hidden">
@@ -675,26 +654,7 @@ const handleSave = async () => {
 
                 {showBanner && <SuccessBanner text="Enregistrer avec succès" />}
 
-                <Button
-                  title="Supprimer le coordinateur"
-                  variant="deleteCoordinator"
-                  noPadding
-                  onClick={handleDelete}
-                  disabled={saving}
-                />
-
-                {showDeletePopup && (
-                  <Popup
-                    title="Confirmer la suppression"
-                    image={SuccessImage}
-                    description="Êtes-vous sûr de vouloir supprimer ce coordinateur ? Cette action est irréversible."
-                    primaryButtonText="Supprimer"
-                    secondaryButtonText="Annuler"
-                    primaryButtonVariant="danger"
-                    onPrimaryClick={confirmDelete}
-                    onSecondaryClick={() => setShowDeletePopup(false)}
-                  />
-                )}
+            
               </div>
             </>
           )}
