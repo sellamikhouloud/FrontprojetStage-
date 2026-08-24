@@ -28,7 +28,8 @@ import {
   activateCoordinateur,
   deactivateCoordinateur,
 } from "../../lib/api/coordinateurs";
-import { listUsers } from "../../lib/api/users";
+import { listUsers, checkUsernameExists } from "../../lib/api/users";
+
 import { listVillages } from "../../lib/api/Parametres";
 
 import { useAuth } from "../../components/providers/AuthProvider";
@@ -92,6 +93,8 @@ export default function ModifierCoordinateur() {
   const [saveError, setSaveError] = useState(null);
   const [backendError, setBackendError] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const [checkingUsername, setCheckingUsername] = useState(false);
 
   const [showPhotoPopup, setShowPhotoPopup] = useState(false);
   const [photoFile, setPhotoFile] = useState(null);
@@ -207,10 +210,57 @@ setDateModification(
   setPassword("");
 }, [found]);
 
+useEffect(() => {
+  const trimmed = username.trim();
+
+  if (!trimmed || !found) {
+    setCheckingUsername(false);
+    return;
+  }
+
+  // Pas de vérification si l'utilisateur n'a pas changé son propre username
+  if (trimmed === found.username) {
+    setCheckingUsername(false);
+    clearError("username");
+    return;
+  }
+
+  setCheckingUsername(true);
+
+  const timeoutId = setTimeout(async () => {
+    try {
+      const { data } = await checkUsernameExists(trimmed);
+      const taken = Boolean(data?.message);
+
+      if (taken) {
+        setErrors((prev) => ({
+          ...prev,
+          username: data.message,
+        }));
+      } else {
+        clearError("username");
+      }
+    } catch (err) {
+      console.error(
+        "Erreur lors de la vérification du nom d'utilisateur :",
+        err.response?.data || err.message
+      );
+    } finally {
+      setCheckingUsername(false);
+    }
+  }, 100);
+
+  return () => clearTimeout(timeoutId);
+}, [username, found]);
+
 const handleSave = async () => {
   const newErrors = {};
 
-  if (!username.trim()) newErrors.username = "Veuillez saisir le nom d'utilisateur";
+  if (!username.trim()) {
+  newErrors.username = "Veuillez saisir le nom d'utilisateur";
+} else if (errors.username) {
+  newErrors.username = errors.username;
+}
   if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
   if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
 
@@ -442,6 +492,9 @@ const handleSave = async () => {
                   }}
                   noPadding
                 />
+                 {checkingUsername && (
+                   <p className="text-[12px] text-gray-400 ml-3">Vérification...</p>
+                  )}
                 <ErrorMessage message={errors.username} />
               </div>
 
