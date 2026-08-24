@@ -2,7 +2,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
 } from "recharts";
 
 const COLORS = ["#22C55E", "#F59E0B", "#BA1A1A"];
@@ -22,10 +21,11 @@ const ReportVisitsNutrition = ({
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full min-w-0">
       <div className="grid grid-cols-1 md:grid-cols-[1.2fr_0.9fr] gap-6 md:gap-8 lg:gap-10 items-start">
-        {/* ----------------- Partie gauche ---------------- */}
-        <div>
+
+     
+        <div className="min-w-0">
           <h2 className="text-base sm:text-lg lg:text-xl font-semibold text-black mb-3 lg:mb-5">
             Nombre de visites
           </h2>
@@ -66,22 +66,40 @@ const ReportVisitsNutrition = ({
             <div className="w-full h-2 sm:h-3 rounded-full bg-[#E7F2F1] overflow-hidden">
               <div
                 className="h-full rounded-full bg-[#7BC8C4]"
-                style={{ width: `${compliance}%` }}
+                style={{
+                  width: `${Math.min(100, Math.max(0, compliance))}%`,
+                }}
               />
             </div>
           </div>
         </div>
 
-        {/* ----------------- Partie droite ---------------- */}
-        <div>
+      
+        <div className="min-w-0">
           <h2 className="text-base sm:text-lg lg:text-xl font-semibold mb-3 lg:mb-5 text-black">
             État nutritionnel global
           </h2>
 
-          <div className="flex items-center justify-between sm:justify-start gap-4 sm:gap-6 lg:gap-8 flex-wrap">
+          <div
+            className="
+              flex
+              items-center
+              justify-between
+              sm:justify-start
+              gap-4
+              sm:gap-6
+              lg:gap-8
+              flex-wrap
+              min-w-0
+            "
+          >
+
+        
             <div className="space-y-2.5 sm:space-y-3">
+
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0" />
+
                 <span className="text-xs sm:text-sm text-[#000000] whitespace-nowrap">
                   Normal {normal}%
                 </span>
@@ -89,6 +107,7 @@ const ReportVisitsNutrition = ({
 
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0" />
+
                 <span className="text-xs sm:text-sm text-[#000000] whitespace-nowrap">
                   MAM {mam}%
                 </span>
@@ -96,46 +115,53 @@ const ReportVisitsNutrition = ({
 
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
+
                 <span className="text-xs sm:text-sm text-[#000000] whitespace-nowrap">
                   MAS {mas}%
                 </span>
               </div>
+
             </div>
 
-          <div className="aspect-square w-[100px] xs:w-[110px] sm:w-[120px] lg:w-[150px] shrink-0">
-  <ResponsiveContainer width="100%" aspect={1}>
-    <PieChart>
-      <Pie
-        data={data}
-        dataKey="value"
-        cx="50%"
-        cy="50%"
-        innerRadius="68%"
-        outerRadius="100%"
-        stroke="none"
-      >
-        {data.map((item, index) => (
-          <Cell
-            key={index}
-            fill={COLORS[index]}
-          />
-        ))}
-      </Pie>
+            
+            <div
+              className="
+                shrink-0
+                aspect-square
+                w-[100px]
+                xs:w-[110px]
+                sm:w-[120px]
+                lg:w-[150px]
+                [&>div]:!w-full
+                [&>div]:!h-full
+                [&_svg]:!w-full
+                [&_svg]:!h-full
+              "
+            >
+              <PieChart
+                width={150}
+                height={150}
+              >
+                <Pie
+                  data={data}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius="68%"
+                  outerRadius="100%"
+                  stroke="none"
+                >
+                  {data.map((item, index) => (
+                    <Cell
+                      key={item.name}
+                      fill={COLORS[index]}
+                    />
+                  ))}
+                </Pie>
+              </PieChart>
+            </div>
 
-      <text
-        x="50%"
-        y="50%"
-        dominantBaseline="middle"
-        textAnchor="middle"
-        fill="#6D7A73"
-        fontSize="13"
-        fontWeight="600"
-      >
-        Bien
-      </text>
-    </PieChart>
-  </ResponsiveContainer>
-</div>
           </div>
         </div>
       </div>
