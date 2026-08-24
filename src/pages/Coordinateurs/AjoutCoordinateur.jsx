@@ -22,7 +22,7 @@ import { createUser } from "../../lib/api/coordinateurs";
 import { listVillages } from "../../lib/api/Parametres";
 import { checkUsernameExists } from "../../lib/api/users";
 
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 
 const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "village", "password", "role"];
