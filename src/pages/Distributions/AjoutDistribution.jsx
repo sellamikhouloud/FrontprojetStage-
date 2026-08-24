@@ -1,6 +1,6 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 import Card from "../../components/Cards/Card";
 import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
