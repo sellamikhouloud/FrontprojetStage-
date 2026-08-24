@@ -9,7 +9,7 @@ import SearchBar from "../../components/Filter/Searchbar";
 import CardCoordinateur from "../../components/Cards/carteCoordinateur";
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 import { listUsers } from "../../lib/api/users";
 
 export default function ListeCoordinateur() {
