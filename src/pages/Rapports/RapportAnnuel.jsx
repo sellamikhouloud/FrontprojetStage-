@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
-
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import ReportTabs from "../../components/Report/ReportTabs";
@@ -15,251 +15,116 @@ import DistributionItem from "../../components/Report/DistributionItem";
 import UpRight from "../../assets/Up Right.svg";
 import ListManagerDialog from "../../components/Popups/ListManagerDialog";
 import Spinner from "../../components/Spinner";
+import { getRapportAnnuel, validerRapport, genererPdfRapport } from "@/lib/api/Rapport";
 
-import {
-  getRapportAnnuel,
-  validerRapport,
-  genererPdfRapport,
-} from "@/lib/api/Rapport";
+const STATUS = {
+  IDLE: "idle",
+  LOADING: "loading",
+  SUCCESS: "success",
+  ERROR: "error",
+};
 
 const RapportAnnuel = () => {
   const currentYear = new Date().getFullYear();
 
-  const [selectedYear, setSelectedYear] =
-    useState(currentYear);
-
+  
+  const [selectedYear, setSelectedYear] = useState(currentYear);
   const [rapport, setRapport] = useState(null);
+  const [status, setStatus] = useState(STATUS.IDLE);
+  const [isValidating, setIsValidating] = useState(false);
 
-  const [isValidating, setIsValidating] =
-    useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showEmailsListReadOnly, setShowEmailsListReadOnly] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-
-  const [showPreview, setShowPreview] =
-    useState(false);
-
-  const [showEmailsListReadOnly, setShowEmailsListReadOnly] =
-    useState(false);
-
-  const [emails] = useState([
-    {
-      id: 1,
-      label: "direction@nutrigest.mr",
-      date: "04/08/2026",
-    },
-    {
-      id: 2,
-      label: "comptabilite@nutrigest.mr",
-      date: "04/08/2026",
-    },
-    {
-      id: 3,
-      label: "comptabilite@nutrigest.mr",
-      date: "04/08/2026",
-    },
-    {
-      id: 4,
-      label: "comptabilite@nutrigest.mr",
-      date: "04/08/2026",
-    },
-    {
-      id: 5,
-      label: "comptabilite@nutrigest.mr",
-      date: "04/08/2026",
-    },
-    {
-      id: 6,
-      label: "comptabilite@nutrigest.mr",
-      date: "04/08/2026",
-    },
+  const [emails, setEmails] = useState([
+    { id: 1, label: "direction@nutrigest.mr", date: "04/08/2026" },
+    { id: 2, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
+    { id: 3, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
+    { id: 4, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
+    { id: 5, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
+    { id: 6, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
   ]);
 
- 
 
-  const getAnnualCacheKey = (year) => {
-    return `rapport-annuel-${year}`;
-  };
-
-  const getCachedReport = (year) => {
-    try {
-      const key = getAnnualCacheKey(year);
-
-      const cached = sessionStorage.getItem(key);
-
-      if (!cached) {
-        return null;
-      }
-
-      return JSON.parse(cached);
-    } catch (error) {
-      console.error(
-        "Erreur lecture cache rapport annuel :",
-        error
-      );
-
-      return null;
-    }
-  };
-
-  const saveReportToCache = (data) => {
-    if (!data) return;
-
-    try {
-      const key = getAnnualCacheKey(data.annee);
-
-      sessionStorage.setItem(
-        key,
-        JSON.stringify(data)
-      );
-    } catch (error) {
-      console.error(
-        "Erreur sauvegarde cache rapport annuel :",
-        error
-      );
-    }
-  };
-
-  
+  const requestIdRef = useRef(0);
 
   const handleYearChange = async (value) => {
-    if (!value?.year) {
-      return;
-    }
-
-    const year = Number(value.year);
-
-    setSelectedYear(year);
-
-  
-
-    const cachedReport = getCachedReport(year);
-
-    if (cachedReport) {
-      setRapport(cachedReport);
-      setLoading(false);
-      return;
-    }
+    setSelectedYear(value.year);
 
     
-    setLoading(true);
+    setRapport(null);
+    setStatus(STATUS.LOADING);
+
+    const currentRequestId = ++requestIdRef.current;
 
     try {
-      const response = await getRapportAnnuel(year);
+      const response = await getRapportAnnuel(value.year);
 
-      const data = response?.data?.[0] ?? null;
+      if (currentRequestId !== requestIdRef.current) return;
 
-      setRapport(data);
-
-      if (data) {
-        saveReportToCache(data);
-      }
+      setRapport(response.data[0] ?? null);
+      setStatus(STATUS.SUCCESS);
     } catch (error) {
-      console.error(
-        "Erreur lors du chargement du rapport annuel :",
-        error
-      );
+      console.error("Erreur lors du chargement du rapport annuel :", error);
+
+      if (currentRequestId !== requestIdRef.current) return;
 
       setRapport(null);
-    } finally {
-      setLoading(false);
+      setStatus(STATUS.ERROR);
     }
   };
-
- 
 
   useEffect(() => {
-    handleYearChange({
-      year: currentYear,
-    });
+    handleYearChange({ year: currentYear });
   }, []);
 
+  const isLoading = status === STATUS.LOADING;
 
-  const getPourcentage = (statut) => {
-    return (
-      rapport?.donnees?.statut_nutritionnel?.find(
-        (item) => item.statut === statut
-      )?.pourcentage ?? 0
-    );
-  };
+  const getPourcentage = (statut) =>
+    rapport?.donnees?.statut_nutritionnel?.find((s) => s.statut === statut)
+      ?.pourcentage ?? 0;
 
-  
-  const products = rapport?.donnees?.distributions
-    ? Object.entries(rapport.donnees.distributions).map(
-        ([product, details]) => ({
-          product,
-          quantity: details?.quantite ?? 0,
-          unit: details?.unite ?? "",
-        })
-      )
+  const products = rapport
+    ? Object.entries(rapport.donnees.distributions).map(([product, details]) => ({
+        product,
+        quantity: details.quantite,
+        unit: details.unite,
+      }))
     : [];
 
-  
-
   const handleValidation = async () => {
-    if (!rapport?.id) {
-      return;
-    }
-
+    if (!rapport) return;
     setIsValidating(true);
 
     try {
       await validerRapport(rapport.id);
-
-      const updatedReport = {
-        ...rapport,
-        est_valide: true,
-      };
-
-      // UI
-      setRapport(updatedReport);
-
-      // CACHE
-      saveReportToCache(updatedReport);
+      setRapport((prev) => (prev ? { ...prev, est_valide: true } : prev));
     } catch (error) {
-      console.error(
-        "Erreur lors de la validation du rapport :",
-        error
-      );
+      console.error("Erreur lors de la validation du rapport :", error);
     } finally {
       setIsValidating(false);
     }
   };
 
-
   const handleDownloadPdf = async () => {
-    if (!rapport?.id) {
-      return;
-    }
+    if (!rapport) return;
 
     try {
-      const response = await genererPdfRapport(
-        rapport.id
-      );
+      const response = await genererPdfRapport(rapport.id);
 
-      const blob = new Blob([response.data], {
-        type: "application/pdf",
-      });
-
+      const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
 
       const link = document.createElement("a");
-
       link.href = url;
-
       link.download = `rapport-${rapport.type}-${rapport.mois ?? "annuel"}-${rapport.annee}.pdf`;
-
       document.body.appendChild(link);
-
       link.click();
-
       link.remove();
 
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error(
-        "Erreur lors du téléchargement du PDF :",
-        error
-      );
+      console.error("Erreur lors du téléchargement du PDF :", error);
     }
   };
 
@@ -268,25 +133,17 @@ const RapportAnnuel = () => {
       <Sidebar role="admin" />
 
       <main className="flex-1 h-screen overflow-hidden px-5 pt-18 md:pt-0 pb-8 lg:p-10">
-
-       
-        <div
-          className={`${showPreview ? "hidden" : "block"} xl:block`}
-        >
+        <div className={`${showPreview ? "hidden" : "block"} xl:block`}>
           <NavigationHeader title="Rapports" />
         </div>
 
-        <div
-          className={`mt-6 ${showPreview ? "hidden" : "block"} xl:block`}
-        >
+        <div className={`mt-6 ${showPreview ? "hidden" : "block"} xl:block`}>
           <ReportTabs />
         </div>
 
-       
+        {/* Contenu */}
         <div className="mt-8 flex flex-col xl:flex-row items-start gap-8 h-[calc(100%-120px)]">
-
-        
-
+          {/* Partie gauche */}
           <div
             className={`
               ${showPreview ? "flex" : "hidden"}
@@ -304,8 +161,6 @@ const RapportAnnuel = () => {
               scrollbar-hide
             `}
           >
-
-           
             <button
               type="button"
               onClick={() => setShowPreview(false)}
@@ -315,95 +170,67 @@ const RapportAnnuel = () => {
               Revenir
             </button>
 
-           
             <div className="mt-4">
-              <HeaderRapport
-                selectedYear={selectedYear}
-                title="Rapport Annuel"
-              />
+              {/* selectedYear est un nombre initialisé dès le départ : jamais undefined */}
+              <HeaderRapport selectedYear={selectedYear} title="Rapport Annuel" />
             </div>
 
-           
-            {loading && (
+            {isLoading && (
               <div className="flex justify-center items-center py-10">
                 <Spinner />
               </div>
             )}
 
-          
-            {!loading && !rapport && (
-              <p className="text-center text-[#818181] mt-6">
-                Aucun rapport disponible pour l'année{" "}
-                {selectedYear}.
+            {status === STATUS.ERROR && (
+              <p className="text-center text-red-500 mt-6">
+                Une erreur est survenue lors du chargement du rapport.
               </p>
             )}
 
-        
-            {!loading && rapport && (
+            {status === STATUS.SUCCESS && !rapport && (
+              <p className="text-center text-[#818181] mt-6">
+                Aucun rapport disponible pour l'année {selectedYear}.
+              </p>
+            )}
+
+            {status === STATUS.SUCCESS && rapport && (
               <>
-              
                 <div className="mt-4 flex flex-col items-center">
                   <div className="w-full max-w-[720px]">
-
                     <h2 className="text-[18px] font-semibold text-[#202124] mb-3">
-                      États des familles en fin d'année{" "}
-                      {selectedYear}
+                      États des familles en fin d'année {selectedYear}
                     </h2>
 
                     <div className="flex w-full gap-3">
-
                       <StatusCard
-                        value={
-                          rapport?.donnees?.familles
-                            ?.nb_actives ?? 0
-                        }
+                        value={rapport.donnees.familles.nb_actives ?? 0}
                         label="Actives"
                         type="active"
                       />
-
                       <StatusCard
-                        value={
-                          rapport?.donnees?.familles
-                            ?.nb_alertees ?? 0
-                        }
+                        value={rapport.donnees.familles.nb_alertees ?? 0}
                         label="Alertées"
                         type="alert"
                       />
-
                       <StatusCard
-                        value={
-                          rapport?.donnees?.familles
-                            ?.nb_sortie ?? 0
-                        }
+                        value={rapport.donnees.familles.nb_sortie ?? 0}
                         label="Sorties"
                         type="sortie"
                       />
-
                     </div>
                   </div>
                 </div>
 
-              
                 <div className="mt-6 flex justify-center">
                   <div className="w-full max-w-[720px]">
-
                     <ReportVisitsNutrition
-                      realised={
-                        rapport?.donnees?.visites
-                          ?.nb_realisees ?? 0
-                      }
-                      planned={
-                        rapport?.donnees?.visites
-                          ?.nb_prevus ?? 0
-                      }
+                      realised={rapport.donnees.visites.nb_realisees ?? 0}
+                      planned={rapport.donnees.visites.nb_prevus ?? 0}
                       compliance={
-                        rapport?.donnees?.visites
-                          ?.nb_prevus
+                        rapport.donnees.visites.nb_prevus
                           ? Math.round(
-                              (rapport.donnees.visites
-                                .nb_realisees /
-                                rapport.donnees.visites
-                                  .nb_prevus) *
+                              (rapport.donnees.visites.nb_realisees /
+                                rapport.donnees.visites.nb_prevus) *
                                 100
                             )
                           : 0
@@ -412,54 +239,41 @@ const RapportAnnuel = () => {
                       mam={getPourcentage("mam")}
                       mas={getPourcentage("mas")}
                     />
-
                   </div>
                 </div>
 
-              
                 <div className="mt-6 flex justify-center">
                   <div className="w-full max-w-[720px]">
-
                     <h2 className="text-[18px] font-semibold text-[#202124] mb-4">
-                      Distributions année{" "}
-                      {selectedYear}
+                      Distributions année {selectedYear}
                     </h2>
 
                     <div className="space-y-3">
-
                       {products.map((item, index) => (
                         <DistributionItem
-                          key={`${item.product}-${index}`}
+                          key={index}
                           product={item.product}
                           quantity={item.quantity}
                           unit={item.unit}
                         />
                       ))}
-
                     </div>
                   </div>
                 </div>
 
-               
                 <div className="flex items-center justify-center">
-
                   <CardZakatSummary
                     montant={`${(
-                      rapport?.donnees?.zakat
-                        ?.montant_total_verse_ce_mois ?? 0
+                      rapport.donnees.zakat.montant_total_verse_ce_mois ?? 0
                     ).toLocaleString("fr-FR")} MRU`}
-                    familles={
-                      rapport?.donnees?.zakat
-                        ?.nb_familles_ce_mois ?? 0
-                    }
+                    familles={rapport.donnees.zakat.nb_familles_ce_mois ?? 0}
                   />
-
                 </div>
               </>
             )}
           </div>
 
-
+          {/* Partie droite */}
           <div
             className={`
               ${showPreview ? "hidden" : "flex"}
@@ -476,76 +290,48 @@ const RapportAnnuel = () => {
               scrollbar-hide
             `}
           >
+            {isLoading ? (
+              <div className="min-h-[44px] sm:min-h-[48px] rounded-[15px] border border-[#EDEDED] bg-[#F3F3F3] animate-pulse w-full" />
+            ) : (
+              <div
+                className="
+                  min-h-[44px] sm:min-h-[48px]
+                  rounded-[15px]
+                  border
+                  flex items-center justify-center
+                  text-center
+                  px-3
+                  py-2.5
+                  text-xs sm:text-sm md:text-base
+                  leading-snug
+                  font-semibold
+                  break-words
+                  w-full
+                "
+                style={{
+                  backgroundColor: rapport?.est_valide ? "#B5ECC926" : "#F8F8F8",
+                  borderColor: rapport?.est_valide ? "#22C55E" : "#818181",
+                  color: rapport?.est_valide ? "#22C55E" : "#818181",
+                }}
+              >
+                {rapport?.est_valide
+                  ? "La vérification a été effectuée avec succès. Le rapport sera envoyé ultérieurement."
+                  : "En attente de vérification"}
+              </div>
+            )}
 
-         
-            <div
-              className="
-                min-h-[44px]
-                sm:min-h-[48px]
-                rounded-[15px]
-                border
-                flex
-                items-center
-                justify-center
-                text-center
-                px-3
-                py-2.5
-                text-xs
-                sm:text-sm
-                md:text-base
-                leading-snug
-                font-semibold
-                break-words
-                w-full
-              "
-              style={{
-                backgroundColor:
-                  rapport?.est_valide
-                    ? "#B5ECC926"
-                    : "#F8F8F8",
-
-                borderColor:
-                  rapport?.est_valide
-                    ? "#22C55E"
-                    : "#818181",
-
-                color:
-                  rapport?.est_valide
-                    ? "#22C55E"
-                    : "#818181",
-              }}
-            >
-              {loading
-                ? "Chargement du rapport..."
-                : rapport?.est_valide
-                ? "La vérification a été effectuée avec succès. Le rapport sera envoyé ultérieurement."
-                : rapport
-                ? "En attente de vérification"
-                : "Aucun rapport disponible"}
-            </div>
-
-         
+            {/* Sélecteur d'année — contrôlé par selectedYear */}
             <div className="mt-4 w-full">
-              <YearPicker
-                value={selectedYear}
-                onChange={handleYearChange}
-              />
+              <YearPicker value={selectedYear} onChange={handleYearChange} />
             </div>
 
-          
             <button
               type="button"
-              onClick={() =>
-                setShowEmailsListReadOnly(true)
-              }
+              onClick={() => setShowEmailsListReadOnly(true)}
               className="
                 mt-4
-                flex
-                items-center
-                gap-1.5
-                text-[14px]
-                sm:text-[12px]
-                md:text-[16px]
+                flex items-center gap-1.5
+                text-[14px] sm:text-[12px] md:text-[16px]
                 font-semibold
                 text-[#202124]
                 w-fit
@@ -555,40 +341,20 @@ const RapportAnnuel = () => {
               "
             >
               Consulter la liste des emails destinataires du rapport
-
-              <img
-                src={UpRight}
-                alt=""
-                className="w-4 h-4"
-              />
+              <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-        
-            <div
-              className="
-                mt-6
-                flex
-                flex-col
-                sm:flex-row
-                xl:flex-col
-                gap-2
-                w-full
-              "
-            >
-
-             
+            {/* Boutons */}
+            <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
               <div className="xl:hidden">
                 <Button
                   title="Prévoir le rapport"
                   variant="telecharger"
-                  onClick={() =>
-                    setShowPreview(true)
-                  }
+                  onClick={() => setShowPreview(true)}
                   noPadding
                 />
               </div>
 
-           
               <Button
                 title="Télécharger PDF"
                 icon={Download}
@@ -596,41 +362,28 @@ const RapportAnnuel = () => {
                 variant="telecharger"
                 noPadding
                 onClick={handleDownloadPdf}
-                disabled={!rapport || loading}
+                disabled={isLoading || !rapport}
               />
 
-            
-              {!rapport?.est_valide && (
+              {!isLoading && rapport && !rapport.est_valide && (
                 <Button
-                  title={
-                    isValidating
-                      ? "Validation..."
-                      : "Confirmer et valider"
-                  }
+                  title="Confirmer et valider"
                   variant="primary"
                   noPadding
                   onClick={handleValidation}
-                  disabled={
-                    isValidating ||
-                    !rapport ||
-                    loading
-                  }
+                  disabled={isValidating}
                 />
               )}
-
             </div>
           </div>
         </div>
       </main>
 
-    
       <ListManagerDialog
         open={showEmailsListReadOnly}
         title="Emails destinataires des rapports"
         items={emails}
-        onClose={() =>
-          setShowEmailsListReadOnly(false)
-        }
+        onClose={() => setShowEmailsListReadOnly(false)}
         emptyMessage="Aucun destinataire pour l'instant."
         showDelete={false}
       />
@@ -639,4 +392,3 @@ const RapportAnnuel = () => {
 };
 
 export default RapportAnnuel;
-
