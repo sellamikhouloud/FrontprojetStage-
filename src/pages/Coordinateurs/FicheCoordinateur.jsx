@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+
 import { useQuery } from "@tanstack/react-query";
+
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
@@ -14,28 +17,85 @@ import { AiOutlineInfoCircle } from "react-icons/ai";
 import SuccessBanner from "../../components/Popups/SuccessBanner";
 import Popup from "../../components/Popups/SuccessPopup";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
+import PopupPhoto from "../../components/Popups/PopupPhoto";
 
 import Coordinator from "../../assets/images/Coordinator.svg";
 import SuccessImage from "../../assets/Confirm.svg";
 
 import {
-  listCoordinateurs,
   updateCoordinateur,
   activateCoordinateur,
   deactivateCoordinateur,
 } from "../../lib/api/coordinateurs";
+import { listUsers } from "../../lib/api/users";
 import { listVillages } from "../../lib/api/Parametres";
+
+import { useAuth } from "../../components/providers/AuthProvider";
+
+
+const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "village", "password", "photo"];
+
+function parseBackendErrors(data) {
+  if (!data) return { fieldErrors: {}, generalMessage: null };
+
+  if (typeof data === "string") {
+    return { fieldErrors: {}, generalMessage: data };
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    return { fieldErrors: {}, generalMessage: messages.join(" — ") || null };
+  }
+
+  if (data.detail) {
+    return { fieldErrors: {}, generalMessage: data.detail };
+  }
+
+  if (typeof data.code === "string" && typeof data.message === "string") {
+    return { fieldErrors: {}, generalMessage: data.message };
+  }
+
+  if (typeof data === "object") {
+    const fieldErrors = {};
+    const generalMessages = [];
+
+    Object.entries(data).forEach(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+
+      if (KNOWN_FIELDS.includes(field)) {
+        fieldErrors[field] = text;
+      } else if (field === "non_field_errors") {
+        generalMessages.push(text);
+      } else {
+        generalMessages.push(`${field} : ${text}`);
+      }
+    });
+
+    return {
+      fieldErrors,
+      generalMessage: generalMessages.length ? generalMessages.join(" — ") : null,
+    };
+  }
+
+  return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
+} 
 
 export default function ModifierCoordinateur() {
   const navigate = useNavigate();
-  const { id } = useParams(); // 👈 nécessite une route du type /modifier-coordinateur/:id
-
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(null);
+  const { id } = useParams();
+  const location = useLocation();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [backendError, setBackendError] = useState(null);
   const [errors, setErrors] = useState({});
+
+  const [showPhotoPopup, setShowPhotoPopup] = useState(false);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   const clearError = (field) => {
     setErrors((prev) => {
@@ -50,7 +110,7 @@ export default function ModifierCoordinateur() {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
 
   // Champs du formulaire
-  const [identifiant, setIdentifiant] = useState("");
+ 
   const [username, setUsername] = useState("");
   const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
@@ -64,10 +124,32 @@ export default function ModifierCoordinateur() {
   const [modifiePar, setModifiePar] = useState("");
   const [dateModification, setDateModification] = useState(null);
 
+
   // Statut original pour ne PAS appeler activate/deactivate si rien n'a changé
   const [statutOriginal, setStatutOriginal] = useState("Active");
 
-  // Liste réelle des villages (même source que AjoutCoordinateur.jsx)
+  const passedCoordinateur = location.state?.coordinateur;
+  const hasPassedMatch =
+    passedCoordinateur && String(passedCoordinateur.id) === String(id);
+
+
+  const {
+    data: users,
+    isLoading: usersLoading,
+    isError: usersError,
+  } = useQuery({
+    queryKey: ["users"],
+    queryFn: () => listUsers().then((r) => r.data),
+    select: (data) => (Array.isArray(data) ? data : data?.results ?? []),
+    initialData: hasPassedMatch ? [passedCoordinateur] : undefined,
+    enabled: !!id,
+  });
+
+  const found = users?.find((c) => String(c.id) === String(id));
+  const loading = usersLoading && !found;
+  const loadError = !usersLoading && !usersError && !found ? "Coordinateur introuvable." : null;
+
+  // Liste réelle des villages 
   const {
     data: villagesData,
     isLoading: villagesLoading,
@@ -78,183 +160,130 @@ export default function ModifierCoordinateur() {
   });
 
   const villages = villagesData?.results ?? villagesData ?? [];
+  const [roleCoordinateur, setRoleCoordinateur] = useState("coordinator");
 
   const villageOptions = villages.map((v) => ({
     label: v.nom,
     value: v.id,
   }));
 
-  useEffect(() => {
-    if (!id) return;
 
-    let cancelled = false;
+useEffect(() => {
+  if (!found) return;
 
-    const fetchCoordinateur = async () => {
-      setLoading(true);
-      setLoadError(null);
+ 
+  setUsername(found.username || "");
+  setNom(found.nom || "");
+  setPrenom(found.prenom || "");
+  setEmail(found.email || "");
+  setFamilles(found.nb_familles ?? 0);
 
-      try {
-        // Pas d'endpoint de détail (GET /api/users/{id}/) disponible pour l'instant :
-        // on charge la liste complète et on retrouve le coordinateur par son id.
-        const { data } = await listCoordinateurs();
+  // created_by / updated_by arrivent déjà résolus en {nom, prenom}
+  setCreePar(
+    found.created_by
+      ? `${found.created_by.nom} ${found.created_by.prenom}`
+      : "—"
+  );
+  setModifiePar(
+  found.updated_by
+    ? `${found.updated_by.nom} ${found.updated_by.prenom}`
+    : null
+);
+setDateModification(
+  found.updated_by && found.updated_at ? new Date(found.updated_at) : null
+);
+  setDateEntree(found.created_at ? new Date(found.created_at) : null);
 
-        if (cancelled) return;
+  const currentStatut = found.is_active ? "Active" : "Inactive";
+  setStatut(currentStatut);
+  setStatutOriginal(currentStatut);
 
-        const found = data.find((c) => String(c.id) === String(id));
+  setVillage(found.village?.id ?? "");
+  setRoleCoordinateur(found.role || "");
+  setPhotoPreview(found.photo || null);
+  setPhotoFile(null);
 
-        if (!found) {
-          setLoadError("Coordinateur introuvable.");
-          return;
-        }
+  //  On ne préremplit JAMAIS le vrai mot de passe.
+  setPassword("");
+}, [found]);
 
-        // created_by / updated_by sont des ids numériques dans la réponse API.
-        // On résout le username correspondant à partir de la liste déjà chargée.
-        const resolveUsername = (userId) => {
-          if (!userId) return "—";
-          const match = data.find((c) => c.id === userId);
-          return match ? match.username : `#${userId}`;
-        };
+const handleSave = async () => {
+  const newErrors = {};
 
-        setIdentifiant(String(found.id));
-        setUsername(found.username || "");
-        setNom(found.nom || "");
-        setPrenom(found.prenom || "");
-        setEmail(found.email || "");
-        setFamilles(found.nb_familles ?? 0);
+  if (!username.trim()) newErrors.username = "Veuillez saisir le nom d'utilisateur";
+  if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
+  if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
 
-        setCreePar(resolveUsername(found.created_by));
-        setModifiePar(resolveUsername(found.updated_by));
-        setDateModification(
-          found.updated_at ? new Date(found.updated_at) : null
-        );
+  if (!email.trim()) {
+    newErrors.email = "Veuillez saisir l'email";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    newErrors.email = "Format d'email invalide";
+  }
 
-        const currentStatut = found.is_active ? "Active" : "Inactive";
-        setStatut(currentStatut);
-        setStatutOriginal(currentStatut);
+  if (!village) newErrors.village = "Veuillez choisir un village";
 
-        setDateEntree(found.created_at ? new Date(found.created_at) : null);
-        setVillage(found.village?.id ?? "");
+  if (password && password.length < 8) {
+    newErrors.password = "Le mot de passe doit contenir au moins 8 caractères";
+  }
 
-        // ⚠️ On ne préremplit JAMAIS le vrai mot de passe.
-        // Le champ reste vide ; il n'est envoyé que si l'utilisateur tape une nouvelle valeur.
-        setPassword("");
-      } catch (err) {
-        console.error(
-          "Erreur lors du chargement du coordinateur :",
-          err.response?.data || err.message
-        );
-        if (!cancelled) {
-          setLoadError("Impossible de charger les informations du coordinateur.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+  setErrors(newErrors);
+  setBackendError(null);
+
+  if (Object.keys(newErrors).length > 0) return;
+
+  setSaving(true);
+  setSaveError(null);
+
+  try {
+    if (statut !== statutOriginal) {
+      if (statut === "Active") {
+        await activateCoordinateur(id);
+      } else {
+        await deactivateCoordinateur(id);
       }
-    };
-
-    fetchCoordinateur();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  const handleSave = async () => {
-    const newErrors = {};
-
-    if (!username.trim()) newErrors.username = "Veuillez saisir le nom d'utilisateur";
-    if (!nom.trim()) newErrors.nom = "Veuillez saisir le nom";
-    if (!prenom.trim()) newErrors.prenom = "Veuillez saisir le prénom";
-
-    if (!email.trim()) {
-      newErrors.email = "Veuillez saisir l'email";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      newErrors.email = "Format d'email invalide";
+      setStatutOriginal(statut);
     }
 
-    if (!village) newErrors.village = "Veuillez choisir un village";
+    const payload = { username, nom, prenom, email, village };
 
-    // Le mot de passe est optionnel ici (on ne le modifie que si l'utilisateur
-    // tape une nouvelle valeur), mais s'il tape quelque chose, ça doit être valide.
-    if (password && password.length < 8) {
-      newErrors.password = "Le mot de passe doit contenir au moins 8 caractères";
+    if (isAdmin) {
+    payload.role = roleCoordinateur;
+    }
+    if (password.trim()) {
+      payload.password = password;
+    }
+    if (photoFile) {
+    payload.photo = photoFile;
     }
 
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) return;
+    await updateCoordinateur(id, payload);
 
-    setSaving(true);
-    setSaveError(null);
+    // Succès réel uniquement
+    setShowBanner(true);
+    setTimeout(() => {
+      navigate("/liste-coordinateurs");
+    }, 1500);
+  } catch (err) {
+    console.error(
+      "Erreur lors de l'enregistrement :",
+      err.response?.data || err.message
+    );
 
-    try {
-      // 1) Statut d'abord : passe par des endpoints dédiés, indépendants du
-      //    PATCH générique qui peut planter à cause du bug email backend.
-      //    On ne l'appelle que si le statut a réellement changé.
-      if (statut !== statutOriginal) {
-        if (statut === "Active") {
-          await activateCoordinateur(id);
-        } else {
-          await deactivateCoordinateur(id);
-        }
-        setStatutOriginal(statut);
-      }
+    const { fieldErrors, generalMessage } = parseBackendErrors(err.response?.data);
 
-      // 2) Mise à jour des infos de base (username, nom, prénom, email, village...)
-      const payload = { username, nom, prenom, email, village };
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...fieldErrors }));
+    }
 
-      if (password.trim()) {
-        payload.password = password;
-      }
-
-      try {
-        await updateCoordinateur(id, payload);
-      } catch (updateErr) {
-        const backendErrors = updateErr.response?.data;
-
-        // Si ce n'est pas le bug email connu (pas de traceback HTML), on essaie
-        // d'afficher les vraies erreurs de validation du serializer sous les champs.
-        if (
-          backendErrors &&
-          typeof backendErrors === "object" &&
-          !Array.isArray(backendErrors)
-        ) {
-          const fieldErrors = {};
-          Object.entries(backendErrors).forEach(([field, messages]) => {
-            fieldErrors[field] = Array.isArray(messages)
-              ? messages.join(" ")
-              : String(messages);
-          });
-
-          if (Object.keys(fieldErrors).length > 0) {
-            setErrors((prev) => ({ ...prev, ...fieldErrors }));
-          }
-        }
-
-        // ⚠️ Le backend a un bug connu : il plante en essayant d'envoyer un
-        // email après la sauvegarde (voir EMAIL_BACKEND), mais les données
-        // sont malgré tout enregistrées en base. On logue l'erreur pour
-        // debug, mais on ne bloque pas l'utilisateur avec un faux message
-        // d'échec puisque le statut a déjà été traité avec succès plus haut.
-        console.warn(
-          "⚠️ Le PATCH a renvoyé une erreur (probablement le bug email backend), mais les données sont probablement enregistrées :",
-          backendErrors || updateErr.message
-        );
-      }
-
-      setShowBanner(true);
-
-      setTimeout(() => {
-        navigate("/liste-coordinateurs");
-      }, 1500);
-    } catch (err) {
-      console.error(
-        "Erreur lors de l'enregistrement :",
-        err.response?.data || err.message
-      );
+    if (generalMessage) {
+      setBackendError(generalMessage);
+    } else if (Object.keys(fieldErrors).length === 0) {
       setSaveError("Une erreur est survenue lors de l'enregistrement.");
-    } finally {
-      setSaving(false);
     }
-  };
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleDelete = () => {
     setShowDeletePopup(true);
@@ -277,22 +306,45 @@ export default function ModifierCoordinateur() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-white">
-      {/* Sidebar */}
-      <Sidebar role="admin" />
+     <div className="flex h-screen bg-white overflow-hidden">
+         {/* Sidebar */}
+         
+           <Sidebar  />
 
       {/* Contenu */}
-      <main
-        className="
-          flex-1
-          overflow-y-auto
-          px-5
-          pt-5
-          pb-8
-          lg:p-10
-          bg-white
-        "
-      >
+
+     <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+       {/* Espace blanc FIXE en haut — desktop only, mobile déjà géré par Sidebar */}
+        <div
+          className="
+            hidden
+            lg:block
+            lg:absolute
+            lg:top-0
+            lg:left-0
+            lg:right-0
+            lg:h-4
+            bg-white
+            z-20
+          "
+        />
+            {/* Zone scrollable UNIQUE */}
+        <div
+          className="
+            h-full
+            overflow-y-auto
+
+            pt-20
+            lg:pt-4
+
+            px-4
+            lg:px-10
+
+            pb-8
+            lg:pb-2
+          "
+        >
+
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
           <PageHeader
             leftTitle="Annuler"
@@ -304,35 +356,80 @@ export default function ModifierCoordinateur() {
             Fiche Coordinateur
           </h1>
 
-          {/* Illustration */}
-          <div className="flex justify-center">
-            <img
-              src={Coordinator}
-              alt="Coordinateur"
-              className="w-[120px] h-[120px] lg:w-[160px] lg:h-[160px]"
-            />
-          </div>
+         
+
+         {/* Photo */}
+<div className="flex justify-center">
+  <button
+    type="button"
+    onClick={() => setShowPhotoPopup(true)}
+    className="relative group"
+  >
+    <img
+      src={photoPreview || Coordinator}
+      alt="Coordinateur"
+      className="
+        w-[120px]
+        h-[120px]
+        lg:w-[160px]
+        lg:h-[160px]
+        rounded-full
+        object-cover
+      "
+    />
+    <span
+      className="
+        absolute
+        inset-0
+        rounded-full
+        bg-black/0
+        group-hover:bg-black/20
+        transition-colors
+        flex
+        items-center
+        justify-center
+      "
+    >
+      <span
+        className="
+          opacity-0
+          group-hover:opacity-100
+          text-white
+          text-[13px]
+          font-medium
+          transition-opacity
+        "
+      >
+        Modifier
+      </span>
+    </span>
+  </button>
+</div>
+
+<PopupPhoto
+  open={showPhotoPopup}
+  title="Photo du coordinateur"
+  onClose={() => setShowPhotoPopup(false)}
+  onImageSelected={(file) => {
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+  }}
+/>
 
           {loading && (
             <p className="text-center text-gray-500">Chargement...</p>
           )}
 
-          {!loading && loadError && (
-            <ErrorMessage message={loadError} />
+           {!loading && loadError && (
+            <BackendErrorMessage message={loadError} />
           )}
+
+          
+
+          <BackendErrorMessage message={backendError || saveError} className="mt-2" />
 
           {!loading && !loadError && (
             <>
-              {/* Identifiant (non modifiable) */}
-              <Input label="Identifiant" value={identifiant} disabled noPadding />
-
-              {/* Nombre de familles suivies (non modifiable) */}
-              <Input
-                label="Nombre de familles"
-                value={String(familles)}
-                disabled
-                noPadding
-              />
 
               {/* Nom d'utilisateur */}
               <div className="flex flex-col gap-1">
@@ -376,23 +473,9 @@ export default function ModifierCoordinateur() {
                 <ErrorMessage message={errors.prenom} />
               </div>
 
-              {/* Email */}
+               {/* Village */}
               <div className="flex flex-col gap-1">
-                <ContainerEcritureModifier
-                  label="Email"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    clearError("email");
-                  }}
-                  noPadding
-                />
-                <ErrorMessage message={errors.email} />
-              </div>
-
-              {/* Village */}
-              <div className="flex flex-col gap-1">
-                <SelectInput2
+                <ChoiceContainerModifier
                   label="Village"
                   placeholder={
                     villagesLoading
@@ -413,6 +496,53 @@ export default function ModifierCoordinateur() {
                 )}
               </div>
 
+              {/* Rôle */}
+<div className="flex flex-col gap-1">
+  {isAdmin ? (
+    <ChoiceContainerModifier
+      label="Rôle"
+      value={roleCoordinateur}
+      onChange={(selected) => {
+        setRoleCoordinateur(selected.value);
+        clearError("role");
+      }}
+      options={[
+        { label: "Chef coordinateur", value: "chef_coordinator" },
+        { label: "Coordinateur", value: "coordinator" },
+      ]}
+      noPadding
+    />
+  ) : (
+    <Input
+      label="Rôle"
+      value={
+        roleCoordinateur === "chef_coordinator"
+          ? "Chef coordinateur"
+          : "Coordinateur"
+      }
+      disabled
+      noPadding
+    />
+  )}
+  <ErrorMessage message={errors.role} />
+</div>
+
+              {/* Email */}
+              <div className="flex flex-col gap-1">
+                <ContainerEcritureModifier
+                  label="Email"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    clearError("email");
+                  }}
+                  noPadding
+                />
+                <ErrorMessage message={errors.email} />
+              </div>
+
+             
+
               {/* Date d'entrée (non modifiable) */}
               <DateContainer
                 label="Date d'entrée"
@@ -421,8 +551,14 @@ export default function ModifierCoordinateur() {
                 noPadding
               />
 
-              {/* Créé par (non modifiable) */}
+             
+
+              {/* Créé par  */}
               <Input label="Créé par" value={creePar} disabled noPadding />
+
+
+               {modifiePar && (
+                 <>
 
               {/* Modifié par (non modifiable) */}
               <Input label="Modifié par" value={modifiePar} disabled noPadding />
@@ -434,6 +570,8 @@ export default function ModifierCoordinateur() {
                 disabled
                 noPadding
               />
+               </>
+               )}
 
               <div className="flex flex-col gap-1">
                 <ContainerEcritureModifier
@@ -458,15 +596,19 @@ export default function ModifierCoordinateur() {
               </div>
 
               {/* Statut */}
-              <ChoiceContainerModifier
-                label="Statut"
-                value={statut}
-                onChange={setStatut}
-                options={["Active", "Inactive"]}
-                noPadding
-              />
+          
+<ChoiceContainerModifier
+  label="Statut"
+  value={statut}
+  onChange={(selected) => setStatut(selected.value)}
+  options={[
+    { label: "Active", value: "Active" },
+    { label: "Inactive", value: "Inactive" },
+  ]}
+  noPadding
+/>
 
-              {saveError && <ErrorMessage message={saveError} />}
+              
 
               {/* Boutons */}
               <div className="flex flex-col gap-[0px]">
@@ -504,6 +646,19 @@ export default function ModifierCoordinateur() {
             </>
           )}
         </div>
+
+         </div>
+        <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-4
+            bg-white
+            z-20
+          "
+        /> 
       </main>
     </div>
   );
