@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -16,7 +17,12 @@ import UpRight from "../../assets/Up Right.svg";
 import ListManagerDialog from "../../components/Popups/ListManagerDialog";
 import Spinner from "../../components/Spinner";
 import { getRapportMensuel, validerRapport, genererPdfRapport } from "@/lib/api/Rapport";
+import { getEmailsRapport } from "@/lib/api/Parametres";
 
+const MONTH_NAMES = [
+  "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
+  "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
+];
 
 const STATUS = {
   IDLE: "idle",
@@ -25,13 +31,15 @@ const STATUS = {
   ERROR: "error",
 };
 
-const RapportMensuel = () => {
-  const MONTH_NAMES = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre",
-  ];
+const formatDateSlash = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${d.getFullYear()}`;
+};
 
- 
+const RapportMensuel = () => {
   const buildMonthValue = (year, month) => ({
     year,
     month,
@@ -52,21 +60,10 @@ const RapportMensuel = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [showEmailsListReadOnly, setShowEmailsListReadOnly] = useState(false);
 
-  const [emails, setEmails] = useState([
-    { id: 1, label: "direction@nutrigest.mr", date: "04/08/2026" },
-    { id: 2, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 3, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 4, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 5, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-    { id: 6, label: "comptabilite@nutrigest.mr", date: "04/08/2026" },
-  ]);
-
-  
   const requestIdRef = useRef(0);
 
   const handleMonthChange = async (value) => {
     setSelectedMonth(buildMonthValue(value.year, value.month));
-
     setRapport(null);
     setStatus(STATUS.LOADING);
 
@@ -75,7 +72,6 @@ const RapportMensuel = () => {
     try {
       const response = await getRapportMensuel(value.year, value.month);
 
-      // Une requête plus récente est partie entre-temps : on ignore ce résultat.
       if (currentRequestId !== requestIdRef.current) return;
 
       setRapport(response.data[0] ?? null);
@@ -93,6 +89,31 @@ const RapportMensuel = () => {
   useEffect(() => {
     handleMonthChange(getCurrentMonthValue());
   }, []);
+
+  
+  const {
+    data: emailsData,
+    isLoading: emailsLoading,
+    isError: emailsError,
+    refetch: refetchEmails,
+  } = useQuery({
+    queryKey: ["emails-rapport", "mensuel"],
+    queryFn: () =>
+      getEmailsRapport({ type_rapport: "mensuel" }).then((r) => r.data),
+    enabled: showEmailsListReadOnly, // ne fetch qu'à l'ouverture du popup
+  });
+
+  const emailsBruts = emailsData?.results ?? emailsData ?? [];
+
+  const emails = emailsBruts.map((item) => ({
+    id: item.id,
+    label: item.email,
+    date: formatDateSlash(item.date_creation),
+  }));
+
+  const handleOpenEmailsList = () => {
+    setShowEmailsListReadOnly(true);
+  };
 
   const isLoading = status === STATUS.LOADING;
 
@@ -157,9 +178,7 @@ const RapportMensuel = () => {
           <ReportTabs />
         </div>
 
-        {/* Contenu */}
         <div className="mt-8 flex flex-col xl:flex-row items-start gap-8 h-[calc(100%-120px)]">
-          {/* Partie gauche  */}
           <div
             className={`
               ${showPreview ? "flex" : "hidden"}
@@ -187,19 +206,7 @@ const RapportMensuel = () => {
             </button>
 
             <div className="mt-4">
-              <HeaderRapport
-                selectedMonth={
-                  rapport
-                    ? {
-                        month: rapport.mois,
-                        year: rapport.annee,
-                        monthName: MONTH_NAMES[(rapport.mois ?? 1) - 1],
-                        label: `${MONTH_NAMES[(rapport.mois ?? 1) - 1]} ${rapport.annee}`,
-                      }
-                    : selectedMonth
-                }
-                title="Rapport Mensuel"
-              />
+              <HeaderRapport selectedMonth={selectedMonth} title="Rapport Mensuel" />
             </div>
 
             {isLoading && (
@@ -300,7 +307,6 @@ const RapportMensuel = () => {
             )}
           </div>
 
-          {/* Partie droite  */}
           <div
             className={`
               ${showPreview ? "hidden" : "flex"}
@@ -317,7 +323,6 @@ const RapportMensuel = () => {
               scrollbar-hide
             `}
           >
-            
             {isLoading ? (
               <div className="min-h-[44px] sm:min-h-[48px] rounded-[15px] border border-[#EDEDED] bg-[#F3F3F3] animate-pulse w-full" />
             ) : (
@@ -348,14 +353,13 @@ const RapportMensuel = () => {
               </div>
             )}
 
-            {/* MonthPicker */}
             <div className="mt-4 w-full">
               <MonthPicker onChange={handleMonthChange} />
             </div>
 
             <button
               type="button"
-              onClick={() => setShowEmailsListReadOnly(true)}
+              onClick={handleOpenEmailsList}
               className="
                 mt-4
                 flex items-center gap-1.5
@@ -372,7 +376,6 @@ const RapportMensuel = () => {
               <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-            {/* Boutons */}
             <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
               <div className="xl:hidden">
                 <Button
@@ -412,7 +415,14 @@ const RapportMensuel = () => {
         title="Emails destinataires des rapports"
         items={emails}
         onClose={() => setShowEmailsListReadOnly(false)}
-        emptyMessage="Aucun destinataire pour l'instant."
+        searchPlaceholder="Entrer l'email à chercher"
+        emptyMessage={
+          emailsLoading
+            ? "Chargement..."
+            : emailsError
+            ? "Erreur lors du chargement des emails."
+            : "Aucun destinataire pour l'instant."
+        }
         showDelete={false}
       />
     </div>
@@ -420,4 +430,3 @@ const RapportMensuel = () => {
 };
 
 export default RapportMensuel;
-
