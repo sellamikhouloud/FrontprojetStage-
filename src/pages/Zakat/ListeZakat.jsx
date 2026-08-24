@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listAidesZakat ,createVersementSolde,exportAidesZakat , annulerAideZakat, getZakatDashboard , listVersementsSolde} from "@/lib/api/zakat";
+import { listAidesZakat ,createVersementSolde,exportAidesZakat , annulerAideZakat, getZakatDashboard , listVersementsSolde , getVersementSolde , updateVersementSolde} from "@/lib/api/zakat";
 import { useQuery ,useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -19,6 +19,8 @@ import NoResultImage from "../../assets/no result picture.svg";
 import { useNavigate } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import PopupHistoriqueVersements from "../../components/Popups/PopupHistoriqueVersements";
+import PopupDetailVersement from "../../components/Popups/PopupDetailVersement";
+import PopupModifierVersement from "../../components/Popups/PopupModifierVersement";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
 export default function ZakatPage() {
@@ -31,6 +33,9 @@ export default function ZakatPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
   const [showHistoriqueVersements, setShowHistoriqueVersements] = useState(false);
+  const [showDetailVersementPopup, setShowDetailVersementPopup] = useState(false);
+  const [selectedVersementId, setSelectedVersementId] = useState(null);
+  const [openModifierVersement, setOpenModifierVersement] = useState(false);
 
   const navigate = useNavigate();
   
@@ -110,6 +115,7 @@ const queryClient = useQueryClient();
   retry: 1,
 });
 
+
   const zakats = data?.results ?? data ?? [];
 
   const {
@@ -134,6 +140,16 @@ const queryClient = useQueryClient();
   queryKey: ["versements-solde"],
   queryFn: () => listVersementsSolde().then((r) => r.data),
   enabled: isAdmin && showHistoriqueVersements, // ne fetch qu'à l'ouverture du popup
+});
+
+const {
+  data: versementDetail,
+  isLoading: versementDetailLoading,
+  isError: versementDetailError,
+} = useQuery({
+  queryKey: ["versement-solde", selectedVersementId],
+  queryFn: () => getVersementSolde(selectedVersementId).then((r) => r.data),
+  enabled: isAdmin && showDetailVersementPopup && !!selectedVersementId,
 });
 
 const versementsBruts = versementsData?.results ?? versementsData ?? [];
@@ -547,7 +563,51 @@ const handleExportZakat = async () => {
   loading={versementsLoading}
   error={versementsError}
   onRetry={refetchVersements}
+  onVersementClick={(v) => {
+    setShowHistoriqueVersements(false);
+    setSelectedVersementId(v.id);
+    setShowDetailVersementPopup(true);
+  }}
 />
+<PopupDetailVersement
+  open={isAdmin && showDetailVersementPopup}
+  onClose={() => {
+    setShowDetailVersementPopup(false);
+    setSelectedVersementId(null);
+    setShowHistoriqueVersements(true);
+  }}
+  versement={versementDetail}
+  loading={versementDetailLoading}
+  error={versementDetailError}
+  onEdit={() => {
+    setShowDetailVersementPopup(false);
+    setOpenModifierVersement(true); // 👈 open the edit popup
+  }}
+/>
+<PopupModifierVersement
+  open={isAdmin && openModifierVersement}
+  versement={versementDetail}
+  onClose={() => {
+    setOpenModifierVersement(false);
+    setShowDetailVersementPopup(true); // back to detail view
+  }}
+  onSave={async () => {
+    // refresh the detail (id-based query) and the list behind it
+    await queryClient.invalidateQueries({
+      queryKey: ["versement-solde", selectedVersementId],
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ["versements-solde"],
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ["zakat-dashboard"], // solde may have changed if montant changed
+    });
+
+    setOpenModifierVersement(false);
+    setShowDetailVersementPopup(true);
+  }}
+/>
+
     </div>
   );
 }
