@@ -16,8 +16,9 @@ export const getRapportAnnuel = (annee) =>
     params: { annee, type: "annuel" },
   });
 
-  export const validerRapport = (id) =>
-  api.patch(`/api/rapports/${id}/valider/`);
+ 
+  export const validerRapport = (id, message) =>
+  api.patch(`/api/rapports/${id}/valider/`, { message });
 
 export const genererPdfRapport = (id) =>
   api.get(`/api/rapports/${id}/generer_pdf/`, {
