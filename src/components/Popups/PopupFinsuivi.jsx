@@ -61,6 +61,67 @@ function extractErrorMessage(error) {
   return "Une erreur est survenue.";
 }
 
+
+function parseBackendErrors(data) {
+  if (!data) return { fieldErrors: {}, generalMessage: null };
+
+  if (typeof data === "string") {
+    return { fieldErrors: {}, generalMessage: data };
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    return { fieldErrors: {}, generalMessage: messages.join(" — ") || null };
+  }
+
+  if (typeof data === "object") {
+    // Erreur métier avec "code" (ex: INVALID_EXIT_DATE) — priorité sur "detail"
+    if (typeof data.code === "string") {
+      const codeLower = data.code.toLowerCase();
+      const text = data.message || data.detail || "Une erreur est survenue.";
+
+      if (codeLower.includes("date")) {
+        return { fieldErrors: { date: text }, generalMessage: null };
+      }
+      if (codeLower.includes("motif")) {
+        return { fieldErrors: { motif: text }, generalMessage: null };
+      }
+
+      return { fieldErrors: {}, generalMessage: text };
+    }
+
+    if (data.detail) {
+      return { fieldErrors: {}, generalMessage: data.detail };
+    }
+
+    // Format DRF classique : { champ: [messages] }
+    const fieldErrors = {};
+    const generalMessages = [];
+
+    Object.entries(data).forEach(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+      const fieldLower = field.toLowerCase();
+
+      if (fieldLower.includes("date")) {
+        fieldErrors.date = text;
+      } else if (fieldLower.includes("motif")) {
+        fieldErrors.motif = text;
+      } else if (field === "non_field_errors") {
+        generalMessages.push(text);
+      } else {
+        generalMessages.push(`${field} : ${text}`);
+      }
+    });
+
+    return {
+      fieldErrors,
+      generalMessage: generalMessages.length ? generalMessages.join(" — ") : null,
+    };
+  }
+
+  return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
+}
+
 const isFutureDate = (date) => {
   if (!date) return false;
 
@@ -81,7 +142,7 @@ const PopupFinSuivi = ({
 }) => {
   const [motif, setMotif] = useState("");
   const [dateSortie, setDateSortie] = useState(new Date());
-  const [errors, setErrors] = useState({ date: false, motif: false });
+  const [errors, setErrors] = useState({ date: null, motif: null });
   const [backendError, setBackendError] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -90,7 +151,7 @@ const PopupFinSuivi = ({
     if (open) {
       setMotif("");
       setDateSortie(new Date());
-      setErrors({ date: false, motif: false });
+      setErrors({ date: null, motif: null });
       setBackendError(null);
       setSaving(false);
     }
@@ -98,14 +159,19 @@ const PopupFinSuivi = ({
 
   const handleDateChange = (newDate) => {
     setDateSortie(newDate);
-    setErrors((prev) => ({ ...prev, date: isFutureDate(newDate) }));
+    setErrors((prev) => ({
+      ...prev,
+      date: isFutureDate(newDate)
+        ? "La date de sortie ne peut pas être une date future."
+        : null,
+    }));
   };
 
   const handleMotifChange = (e) => {
     const value = e.target.value;
     setMotif(value);
     if (value.trim()) {
-      setErrors((prev) => ({ ...prev, motif: false }));
+      setErrors((prev) => ({ ...prev, motif: null }));
     }
   };
 
@@ -115,7 +181,12 @@ const PopupFinSuivi = ({
     const dateInFuture = isFutureDate(dateSortie);
     const motifMissing = !motif.trim();
 
-    setErrors({ date: dateInFuture, motif: motifMissing });
+    setErrors({
+      date: dateInFuture
+        ? "La date de sortie ne peut pas être une date future."
+        : null,
+      motif: motifMissing ? "Veuillez indiquer le motif de sortie." : null,
+    });
 
     if (dateInFuture || motifMissing) return;
 
@@ -124,7 +195,23 @@ const PopupFinSuivi = ({
       await onConfirm?.(motif, dateSortie);
       setMotif("");
     } catch (err) {
-      setBackendError(extractErrorMessage(err));
+      const { fieldErrors, generalMessage } = parseBackendErrors(err?.response?.data);
+
+      // Erreurs liées au champ date (ex: date de sortie avant date d'entrée)
+      // → affichées sous le champ, via ErrorMessage, pas via BackendErrorMessage.
+      if (fieldErrors.date || fieldErrors.motif) {
+        setErrors((prev) => ({
+          ...prev,
+          ...(fieldErrors.date ? { date: fieldErrors.date } : {}),
+          ...(fieldErrors.motif ? { motif: fieldErrors.motif } : {}),
+        }));
+      }
+
+      if (generalMessage) {
+        setBackendError(generalMessage);
+      } else if (!fieldErrors.date && !fieldErrors.motif) {
+        setBackendError(extractErrorMessage(err));
+      }
     } finally {
       setSaving(false);
     }
@@ -240,13 +327,7 @@ const PopupFinSuivi = ({
                 onChange={handleDateChange}
                 noPadding
               />
-              <ErrorMessage
-                message={
-                  errors.date
-                    ? "La date de sortie ne peut pas être une date future."
-                    : null
-                }
-              />
+              <ErrorMessage message={errors.date} />
             </div>
 
             {/* TextArea */}
@@ -258,11 +339,7 @@ const PopupFinSuivi = ({
                 onChange={handleMotifChange}
                 height="h-[130px]"
               />
-              <ErrorMessage
-                message={
-                  errors.motif ? "Veuillez indiquer le motif de sortie." : null
-                }
-              />
+              <ErrorMessage message={errors.motif} />
             </div>
 
             {/* Bouton */}
