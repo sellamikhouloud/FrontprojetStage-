@@ -683,7 +683,7 @@ const makeHandler = (fields) => (index, value) => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-      <Sidebar  />
+     <Sidebar hideOnMobile />
 
 <PopupDistributionfamille
   open={openDistribution}
