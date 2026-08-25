@@ -225,28 +225,31 @@ useEffect(() => {
 
   setCheckingUsername(true);
 
-  const timeoutId = setTimeout(async () => {
-    try {
-      const { data } = await checkUsernameExists(trimmed);
-      const taken = Boolean(data?.message);
+const timeoutId = setTimeout(async () => {
+  try {
+    await checkUsernameExists(trimmed);
+    // Si la requête réussit (200), le username est disponible
+    clearError("username");
+  } catch (err) {
+    const message = err.response?.data?.erreur;
 
-      if (taken) {
-        setErrors((prev) => ({
-          ...prev,
-          username: data.message,
-        }));
-      } else {
-        clearError("username");
-      }
-    } catch (err) {
+    if (err.response?.status === 400 && message) {
+      // Username déjà pris — le backend renvoie 400 + { erreur: "..." }
+      setErrors((prev) => ({
+        ...prev,
+        username: message,
+      }));
+    } else {
       console.error(
         "Erreur lors de la vérification du nom d'utilisateur :",
         err.response?.data || err.message
       );
-    } finally {
-      setCheckingUsername(false);
+      // Erreur réseau/autre — on ne bloque pas l'utilisateur
     }
-  }, 100);
+  } finally {
+    setCheckingUsername(false);
+  }
+}, 100);
 
   return () => clearTimeout(timeoutId);
 }, [username, found]);
