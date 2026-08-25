@@ -5,23 +5,17 @@ import SearchBar from "../Filter/Searchbar";
 
 /**
  * ListManagerDialog — modal générique listant des éléments avec option de suppression.
- * Réutilisable pour n'importe quelle liste (villages, emails destinataires, etc.).
  *
- * Desktop (sm+)  : affiché comme un popup centré avec fond assombri.
- * Mobile (<sm)   : affiché comme un écran plein, sans overlay ni coins arrondis.
- *
- * props:
- *   open          : boolean
- *   title         : string                 -> ex: "Les villages"
- *   items         : { id, label, date }[]   -> éléments à afficher
- *   onDelete      : (id) => void            -> appelé au clic sur la corbeille
- *   onClose       : () => void
- *   searchPlaceholder? : string
- *   emptyMessage? : string                  -> texte affiché si aucun résultat
- *   showDelete?   : boolean                 -> affiche ou non le bouton corbeille (true par défaut)
+ * props (nouveau) :
+ *   filters?      : { value, label, selected, unselected }[]  -> pastilles de filtre (optionnel)
+ *   filterValue?  : string                                    -> valeur sélectionnée
+ *   onFilterChange?: (value) => void
+ *   filterField?  : string  -> champ de l'item à comparer (défaut: "type")
  */
+
+
 export default function ListManagerDialog({
-  open,
+   open,
   title,
   items = [],
   onDelete,
@@ -29,14 +23,20 @@ export default function ListManagerDialog({
   searchPlaceholder = "Entrer le nom ici",
   emptyMessage = "Aucun élément trouvé.",
   showDelete = true,
+  filters = null,
+  filterValue = "all",
+  onFilterChange,
+  filterField = "type",
 }) {
   const [search, setSearch] = useState("");
 
   if (!open) return null;
 
-  const filtered = items.filter((item) =>
-    item.label?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = items
+    .filter((item) => item.label?.toLowerCase().includes(search.toLowerCase()))
+    .filter((item) =>
+      !filters || filterValue === "all" ? true : item[filterField] === filterValue
+    );
 
   return (
     <div
@@ -102,6 +102,37 @@ export default function ListManagerDialog({
               maxWidth="max-w-none"
             />
           </div>
+
+          {/* Pastilles de filtre — affichées seulement si `filters` est fourni */}
+          {filters && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {filters.map((option) => {
+                const isSelected = filterValue === option.value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => onFilterChange?.(option.value)}
+                    className={`
+                      h-9
+                      px-4
+                      rounded-[10px]
+                      border
+                      text-[13px]
+                      font-semibold
+                      transition-all
+                      duration-200
+                      hover:opacity-90
+                      active:scale-[0.98]
+                      ${isSelected ? option.selected : option.unselected}
+                    `}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* LISTE SCROLLABLE */}
@@ -136,24 +167,19 @@ export default function ListManagerDialog({
                     sm:py-2
                   "
                 >
-                  {/* Label */}
                   <span className="text-[16px] font-semibold text-black min-w-0 truncate">
                     {item.label}
                   </span>
 
-                  {/* Date + Delete */}
                   <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0">
-                    {item.date && (
-                      <div className="flex items-center gap-1.5 whitespace-nowrap">
-                        <Clock
-                          size={16}
-                          className="text-[#4E9F8A]"
-                        />
-                        <span className="text-[14px] font-medium text-[#393939]">
-                          {item.date}
-                        </span>
-                      </div>
-                    )}
+                   {item.date && (
+                   <div className="flex items-center gap-1.5 whitespace-nowrap">
+                   <Clock size={16} className="text-[#4E9F8A]" />
+                   <span className="text-[14px] font-medium text-[#393939]">
+                   {item.date}
+                   </span>
+                   </div>
+                   )}
 
                     {showDelete && (
                       <button
