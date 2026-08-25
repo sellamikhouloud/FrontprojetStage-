@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { getTauxDeChange, updateTauxDeChange , listVillages, createVillage, updateVillage, deleteVillage , getEmailsRapport, createEmailRapport, deleteEmailRapport  } from "../../lib/api/Parametres";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import omsInfo from "../../assets/oms-info.svg";
 import arrowUpRight from "../../assets/Arrow up-right.svg";
@@ -16,15 +17,75 @@ import OptionsMenu from "../../components/Containers/OptionsMenu";
 import Button from "../../components/Button/Button";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
 import ListManagerDialog from "../../components/Popups/ListManagerDialog";
+import VillageListDialog from "../../components/Popups/PopupVillagesListe";
 import { useNavigate } from "react-router-dom";
 import ToggleSwitch from "../../components/Button/ToggleSwitch";
 import Sidebar from "../../components/Sidebar/Sidebar";
 
+const formaterDateCourte = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (isNaN(d)) return "";
+  const jour = String(d.getDate()).padStart(2, "0");
+  const mois = String(d.getMonth() + 1).padStart(2, "0");
+  const annee = d.getFullYear();
+  return `${jour}/${mois}/${annee}`;
+};
+
+
 export default function Parametres({ onClose }) {
  const navigate = useNavigate();
 
-const [taux, setTaux] = useState("0.022");
-const [tauxInitial, setTauxInitial] = useState("0.022");
+ const [taux, setTaux] = useState("");
+ const [tauxInitial, setTauxInitial] = useState("");
+ const [dateModification, setDateModification] = useState(null);
+ const [loadingTaux, setLoadingTaux] = useState(true);
+ const [erreurTaux, setErreurTaux] = useState("");
+ const [savingTaux, setSavingTaux] = useState(false);
+
+ useEffect(() => {
+  const fetchTaux = async () => {
+    setLoadingTaux(true);
+    setErreurTaux("");
+    try {
+      const { data } = await getTauxDeChange();
+      setTaux(data.valeur);
+      setTauxInitial(data.valeur);
+      setDateModification(data.date_modification);
+    } catch (err) {
+      if (err.response?.status === 403) {
+        setErreurTaux("Vous n'avez pas les droits pour consulter le taux de change.");
+      } else {
+        setErreurTaux("Impossible de charger le taux de change.");
+      }
+      console.error(err);
+    } finally {
+      setLoadingTaux(false);
+    }
+  };
+
+  fetchTaux();
+}, []);
+
+useEffect(() => {
+  const fetchVillages = async () => {
+    setLoadingRegions(true);
+    setErreurRegions("");
+    try {
+      const { data } = await listVillages();
+      setRegions(data); 
+    } catch (err) {
+      setErreurRegions("Impossible de charger la liste des villages.");
+      console.error(err);
+    } finally {
+      setLoadingRegions(false);
+    }
+  };
+
+  fetchVillages();
+}, []);
+
+
 
   const [rappelOuvert, setRappelOuvert] = useState(false);
 
@@ -37,47 +98,90 @@ const [tauxInitial, setTauxInitial] = useState("0.022");
     "Tous les 3 mois",
     "Désactivé",
   ];
-  const [scoreMAMMin, setScoreMAMMin] = useState("-3");
-  const [scoreMAMMax, setScoreMAMMax] = useState("-2");
 
-  const [scoreMAS, setScoreMAS] = useState("-3");
 
-  const [muacMAM, setMuacMAM] = useState("115");
-  const [muacMAS, setMuacMAS] = useState("110");
+  
 
   const [notifVisitesRetard, setNotifVisitesRetard] = useState(false);
-const [notifAlertesMAS, setNotifAlertesMAS] = useState(true);
-const [notifAlertesStocks, setNotifAlertesStocks] = useState(true);
-const [notifRapportMensuel, setNotifRapportMensuel] = useState(true);
-const [notifBilanDonateurs, setNotifBilanDonateurs] = useState(true);
-const [notifRapportAnnuel, setNotifRapportAnnuel] = useState(true);
+  const [notifAlertesMAS, setNotifAlertesMAS] = useState(true);
+  const [notifAlertesStocks, setNotifAlertesStocks] = useState(true);
+  const [notifRapportMensuel, setNotifRapportMensuel] = useState(true);
+  const [notifBilanDonateurs, setNotifBilanDonateurs] = useState(true);
+  const [notifRapportAnnuel, setNotifRapportAnnuel] = useState(true);
 
-  // Ajout de région
+    // Villages
   const [nouvelleRegion, setNouvelleRegion] = useState("");
-  // Liste des régions — à remplacer par les données réelles de l'API
-  const [regions, setRegions] = useState([
-    { id: 1, label: "Nouakchott" ,date: "04/08/2026"},
-    { id: 2, label: "Nouadhibou" ,date: "04/08/2026"},
-    { id: 3, label: "Rosso" , date: "04/08/2026"},
-    { id: 4, label: "Rosso" , date: "04/08/2026"},
-     { id: 5, label: "Rosso" , date: "04/08/2026"},
-  ]);
+  const [regions, setRegions] = useState([]);
   const [showRegionsList, setShowRegionsList] = useState(false);
+  const [loadingRegions, setLoadingRegions] = useState(true);
+  const [erreurRegions, setErreurRegions] = useState("");
+  const [erreurSuppressionRegion, setErreurSuppressionRegion] = useState("");
+  const [ajoutRegionEnCours, setAjoutRegionEnCours] = useState(false);
 
   // Ajout d'email destinataire des rapports
   const [nouvelEmail, setNouvelEmail] = useState("");
   const [erreurEmail, setErreurEmail] = useState("");
-  // Liste des destinataires — à remplacer par les données réelles de l'API
-  const [emails, setEmails] = useState([
-    { id: 1, label: "direction@nutrigest.mr" , date: "04/08/2026" },
-    { id: 2, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
-    { id: 3, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
-    { id: 4, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
-    { id: 5, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
-    { id: 6, label: "comptabilite@nutrigest.mr" , date: "04/08/2026" },
-        
-  ]);
+
+  
+ 
   const [showEmailsList, setShowEmailsList] = useState(false);
+
+  const [emails, setEmails] = useState([]);
+const [loadingEmails, setLoadingEmails] = useState(true);
+const [erreurChargementEmails, setErreurChargementEmails] = useState("");
+const [erreurSuppressionEmail, setErreurSuppressionEmail] = useState("");
+const [ajoutEmailEnCours, setAjoutEmailEnCours] = useState(false);
+
+// Nouveau : sélecteur type de rapport
+const [typeRapportSelectionne, setTypeRapportSelectionne] = useState("annuel");
+const [dropdownTypeOuvert, setDropdownTypeOuvert] = useState(false);
+
+const optionsTypeRapport = [
+  { label: "Rapport annuel", value: "annuel" },
+  { label: "Rapport mensuel", value: "mensuel" },
+  { label: "Les deux", value: "les_deux" },
+];
+
+const EMAIL_TYPE_FILTERS = [
+  {
+    value: "les_deux",
+    label: "Les deux",
+    selected: "bg-[#55A694] text-white border-[#55A694]",
+    unselected: "bg-white text-[#55A694] border-[#55A694]",
+  },
+  {
+    value: "annuel",
+    label: "Annuel",
+    selected: "bg-[#7CACF9] text-white border-[#7CACF9]",
+    unselected: "bg-white text-[#7CACF9] border-[#7CACF9]",
+  },
+  {
+    value: "mensuel",
+    label: "Mensuel",
+    selected: "bg-[#6CD894] text-white border-[#6CD894]",
+    unselected: "bg-white text-[#6CD894] border-[#6CD894]",
+  },
+];
+
+const [filtreTypeEmail, setFiltreTypeEmail] = useState("les_deux");
+
+useEffect(() => {
+  const fetchEmails = async () => {
+    setLoadingEmails(true);
+    setErreurChargementEmails("");
+    try {
+      const { data } = await getEmailsRapport();
+      setEmails(data);
+    } catch (err) {
+      setErreurChargementEmails("Impossible de charger la liste des emails.");
+      console.error(err);
+    } finally {
+      setLoadingEmails(false);
+    }
+  };
+
+  fetchEmails();
+}, []);
 
   const handleTauxChange = (e) => {
     const value = e.target.value;
@@ -91,64 +195,154 @@ const [notifRapportAnnuel, setNotifRapportAnnuel] = useState(true);
 
   const tauxModifie = taux.trim() !== "" && taux !== tauxInitial;
 
-  const handleUpdate = () => {
-    if (!tauxModifie) return;
+  const handleUpdate = async () => {
+  if (!tauxModifie) return;
 
-    console.log("Nouveau taux :", taux);
+  setSavingTaux(true);
+  setErreurTaux("");
 
-    // Ici tu mets ta logique de sauvegarde
-    // updateTauxChange(taux);
-    setTauxInitial(taux);
+  try {
+    const { data } = await updateTauxDeChange(taux);
+    setTaux(data.valeur);
+    setTauxInitial(data.valeur);
+    setDateModification(data.date_modification);
+  } catch (err) {
+    if (err.response?.status === 403) {
+      setErreurTaux("Vous n'avez pas les droits pour modifier le taux de change.");
+    } else {
+      setErreurTaux("Impossible de mettre à jour le taux de change.");
+    }
+    console.error(err);
+  } finally {
+    setSavingTaux(false);
+  }
+};
+
+const formaterDate = (isoString) => {
+    if (!isoString) return "—";
+    return new Date(isoString).toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   };
 
-  const handleAjouterRegion = () => {
-    const nom = nouvelleRegion.trim();
-    if (!nom) return;
 
-    console.log("Nouvelle région à ajouter :", nom);
+ const handleAjouterRegion = async () => {
+  const nom = nouvelleRegion.trim();
+  if (!nom) return;
 
-    // TODO: appel API pour créer la région, puis remplacer par la réponse réelle
-    setRegions((prev) => [...prev, { id: Date.now(), label: nom }]);
+  setAjoutRegionEnCours(true);
+  setErreurRegions("");
 
+  try {
+    const { data } = await createVillage(nom);
+    setRegions((prev) => [...prev, data]); // objet brut, pas mapVillage
     setNouvelleRegion("");
-  };
+  } catch (err) {
+    if (err.response?.status === 403) {
+      setErreurRegions("Vous n'avez pas les droits pour ajouter un village.");
+    } else if (err.response?.data?.nom) {
+      setErreurRegions(
+        Array.isArray(err.response.data.nom) ? err.response.data.nom[0] : err.response.data.nom
+      );
+    } else {
+      setErreurRegions("Impossible d'ajouter ce village.");
+    }
+    console.error(err);
+  } finally {
+    setAjoutRegionEnCours(false);
+  }
+};
 
-  const handleSupprimerRegion = (id) => {
-    console.log("Région à supprimer :", id);
+const handleModifierRegion = async (id, nouveauNom) => {
+  const { data } = await updateVillage(id, nouveauNom);
+  setRegions((prev) => prev.map((r) => (r.id === id ? data : r)));
+};
 
-    // TODO: appel API pour supprimer la région côté serveur
-    setRegions((prev) => prev.filter((r) => r.id !== id));
+    const handleSupprimerRegion = async (id) => {
+    setErreurSuppressionRegion("");
+
+    try {
+      await deleteVillage(id);
+      setRegions((prev) => prev.filter((r) => r.id !== id));
+    } catch (err) {
+      if (err.response?.status === 403) {
+        setErreurSuppressionRegion("Vous n'avez pas les droits pour supprimer un village.");
+      } else if (err.response?.status === 400 || err.response?.status === 409) {
+        setErreurSuppressionRegion(
+          "Ce village est utilisé par une famille, une photo ou un utilisateur et ne peut pas être supprimé."
+        );
+      } else {
+        setErreurSuppressionRegion("Impossible de supprimer ce village.");
+      }
+      console.error(err);
+    }
   };
 
   const handleVoirToutesRegions = () => {
     setShowRegionsList(true);
   };
 
-  const handleAjouterEmail = () => {
-    const email = nouvelEmail.trim();
-    if (!email) return;
+ const handleAjouterEmail = async () => {
+  const email = nouvelEmail.trim();
+  if (!email) return;
 
-    const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    if (!emailValide) {
-      setErreurEmail("Cette adresse email n'est pas valide.");
-      return;
-    }
+  const emailValide = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!emailValide) {
+    setErreurEmail("Cette adresse email n'est pas valide.");
+    return;
+  }
 
-    setErreurEmail("");
-    console.log("Nouvel email destinataire des rapports :", email);
+  setErreurEmail("");
+  setAjoutEmailEnCours(true);
 
-    // TODO: appel API pour enregistrer l'email, puis remplacer par la réponse réelle
-    setEmails((prev) => [...prev, { id: Date.now(), label: email }]);
-
+  try {
+    if (typeRapportSelectionne === "les_deux") {
+  const [resMensuel, resAnnuel] = await Promise.all([
+    createEmailRapport({ email, type_rapport: "mensuel" }),
+    createEmailRapport({ email, type_rapport: "annuel" }),
+  ]);
+  setEmails((prev) => [...prev, resMensuel.data, resAnnuel.data]);
+} else {
+  const { data } = await createEmailRapport({ email, type_rapport: typeRapportSelectionne });
+  setEmails((prev) => [...prev, data]);
+}
     setNouvelEmail("");
-  };
+  } catch (err) {
+    if (err.response?.status === 403) {
+      setErreurEmail("Vous n'avez pas les droits pour ajouter un destinataire.");
+    } else if (err.response?.data?.email) {
+      setErreurEmail(
+        Array.isArray(err.response.data.email)
+          ? err.response.data.email[0]
+          : err.response.data.email
+      );
+    } else {
+      setErreurEmail("Impossible d'ajouter ce destinataire.");
+    }
+    console.error(err);
+  } finally {
+    setAjoutEmailEnCours(false);
+  }
+};
 
-  const handleSupprimerEmail = (id) => {
-    console.log("Destinataire à supprimer :", id);
+const handleSupprimerEmail = async (id) => {
+  setErreurSuppressionEmail("");
+  const ids = Array.isArray(id) ? id : [id];
 
-    // TODO: appel API pour supprimer le destinataire côté serveur
-    setEmails((prev) => prev.filter((e) => e.id !== id));
-  };
+  try {
+    await Promise.all(ids.map((i) => deleteEmailRapport(i)));
+    setEmails((prev) => prev.filter((e) => !ids.includes(e.id)));
+  } catch (err) {
+    if (err.response?.status === 403) {
+      setErreurSuppressionEmail("Vous n'avez pas les droits pour supprimer ce destinataire.");
+    } else {
+      setErreurSuppressionEmail("Impossible de supprimer ce destinataire.");
+    }
+    console.error(err);
+  }
+};
 
   const handleVoirTousLesEmails = () => {
     setShowEmailsList(true);
@@ -177,6 +371,49 @@ const handleSelectionnerSonnerie = () => {
   console.log("Ouvrir le sélecteur de sonnerie");
   // TODO: ouvrir le dialog/popup de sélection de sonnerie
 };
+
+const emailsAffiches = useMemo(() => {
+  if (filtreTypeEmail === "mensuel") {
+    return emails
+      .filter((e) => e.type_rapport === "mensuel")
+      .map((e) => ({
+        id: e.id,
+        label: e.email,
+        date: formaterDateCourte(e.date_creation),
+        type: e.type_rapport,
+      }));
+  }
+
+  if (filtreTypeEmail === "annuel") {
+    return emails
+      .filter((e) => e.type_rapport === "annuel")
+      .map((e) => ({
+        id: e.id,
+        label: e.email,
+        date: formaterDateCourte(e.date_creation),
+        type: e.type_rapport,
+      }));
+  }
+
+  const parEmail = {};
+  emails.forEach((e) => {
+    if (!parEmail[e.email]) parEmail[e.email] = {};
+    parEmail[e.email][e.type_rapport] = e;
+  });
+
+  return Object.entries(parEmail)
+    .filter(([, entries]) => entries.mensuel && entries.annuel)
+    .map(([email, entries]) => ({
+      id: [entries.mensuel.id, entries.annuel.id],
+      label: email,
+      date: formaterDateCourte(
+        entries.mensuel.date_creation > entries.annuel.date_creation
+          ? entries.mensuel.date_creation
+          : entries.annuel.date_creation
+      ),
+      type: "les_deux",
+    }));
+}, [emails, filtreTypeEmail]);
 
 return (
   <div className="flex h-screen bg-white overflow-hidden">
@@ -349,9 +586,9 @@ return (
         Dernière mise à jour
       </p>
 
-      <p className="text-[13px] sm:text-[16px] font-bold text-[#3E4946]">
-        12 juin 2026
-      </p>
+     <p className="text-[13px] sm:text-[16px] font-bold text-[#3E4946]">
+      {loadingTaux ? "..." : formaterDate(dateModification)}
+     </p>
     </div>
   </div>
 
@@ -439,7 +676,7 @@ return (
     <button
       type="button"
       onClick={handleUpdate}
-      disabled={!tauxModifie}
+     disabled={!tauxModifie || savingTaux || loadingTaux}
       className="
         w-full
         sm:w-auto
@@ -469,14 +706,21 @@ return (
         disabled:active:scale-100
       "
     >
-      Mettre à jour
-      <AiOutlineReload className="text-[15px]" />
+      {savingTaux ? "Mise à jour..." : "Mettre à jour"}
+      <AiOutlineReload className={`text-[15px] ${savingTaux ? "animate-spin" : ""}`} />
+      
     </button>
   </div>
   </div>
 
   {/* 12px entre les parties */}
   <div className="mt-3" />
+
+  {erreurTaux && (
+  <div className="mt-2 mb-2">
+    <ErrorMessage message={erreurTaux} />
+  </div>
+   )}
 
   {/* --------------------------------
       PARTIE 3
@@ -794,10 +1038,10 @@ return (
       />
     </div>
 
-    <button
+       <button
       type="button"
       onClick={handleAjouterRegion}
-      disabled={!nouvelleRegion.trim()}
+      disabled={!nouvelleRegion.trim() || ajoutRegionEnCours}
       className="
         w-full
         sm:w-auto
@@ -826,9 +1070,15 @@ return (
         disabled:active:scale-100
       "
     >
-      Ajouter
+      {ajoutRegionEnCours ? "Ajout..." : "Ajouter"}
     </button>
   </div>
+
+  {erreurRegions && (
+    <div className="mt-2">
+      <ErrorMessage message={erreurRegions} />
+    </div>
+  )}
 </div>
 
 <h3 className="text-[20px] font-bold text-black mt-3">
@@ -949,95 +1199,153 @@ return (
   {/* --------------------------------
       CHAMP D'AJOUT — sur une seule ligne
   --------------------------------- */}
+<div
+  className="
+    flex
+    flex-col
+    items-start
+    gap-3
+
+    sm:flex-row
+    sm:items-center
+    sm:gap-3
+  "
+>
   <div
     className="
       flex
-      flex-col
-      items-start
-      gap-3
-
-      sm:flex-row
-      sm:items-center
-      sm:gap-3
+      items-center
+      w-full
+      h-[45px]
+      rounded-[15px]
+      border
+      bg-white
+      px-3
     "
+    style={{ borderColor: erreurEmail ? "#EF4444" : "#4E9F8A" }}
   >
-    <div
+    <input
+      type="email"
+      value={nouvelEmail}
+      onChange={(e) => {
+        setNouvelEmail(e.target.value);
+        if (erreurEmail) setErreurEmail("");
+      }}
+      placeholder="Ajouter un nouveau destinataire, ex: responsable@organisation.com"
       className="
-        flex
-        items-center
-
+        flex-1
+        min-w-0
         w-full
-        h-[45px]
-
-        rounded-[15px]
-        border
-        bg-white
-        px-3
+        bg-transparent
+        text-[15px]
+        text-[#3E4946]
+        outline-none
+        placeholder:text-[#9CA6A3]
       "
-      style={{ borderColor: erreurEmail ? "#EF4444" : "#4E9F8A" }}
-    >
-      <input
-        type="email"
-        value={nouvelEmail}
-        onChange={(e) => {
-          setNouvelEmail(e.target.value);
-          if (erreurEmail) setErreurEmail("");
-        }}
-        placeholder="Ajouter un nouveau destinataire, ex: responsable@organisation.com"
-        className="
-          flex-1
-          min-w-0
-          w-full
-          bg-transparent
-          text-[15px]
-          text-[#3E4946]
-          outline-none
-          placeholder:text-[#9CA6A3]
-        "
-      />
-    </div>
-
-    <button
-      type="button"
-      onClick={handleAjouterEmail}
-      disabled={!nouvelEmail.trim()}
-      className="
-        w-full
-        sm:w-auto
-        sm:min-w-[110px]
-        shrink-0
-
-        h-[45px]
-        px-10
-
-        rounded-[15px]
-        bg-[#7BC8C4]
-
-        text-white
-        text-[18px]
-        font-semibold
-
-        flex
-        items-center
-        justify-center
-
-        hover:bg-[#6AB8B3]
-        active:scale-[0.98]
-        transition
-
-        disabled:cursor-not-allowed
-        disabled:active:scale-100
-      "
-    >
-      Ajouter
-    </button>
+    />
   </div>
 
-  {erreurEmail && (
-    <div className="mt-2">
-      <ErrorMessage message={erreurEmail} />
-    </div>
-  )}
+  {/* Sélecteur type de rapport */}
+  <div className="relative shrink-0 w-full sm:w-auto">
+    <button
+      type="button"
+      onClick={() => setDropdownTypeOuvert((prev) => !prev)}
+      className="
+        h-[45px]
+        w-full
+        sm:min-w-[160px]
+        sm:w-auto
+        px-3
+        rounded-[15px]
+        border
+        border-[#7BC8C4]
+        bg-white
+
+        flex
+        items-center
+        justify-between
+        gap-3
+
+        text-[14px]
+        text-[#3E4946]
+
+        hover:bg-[#F7F9F8]
+        transition
+      "
+    >
+      <span>
+        {optionsTypeRapport.find((o) => o.value === typeRapportSelectionne)?.label}
+      </span>
+
+      <AiOutlineDown
+        className={`
+          text-[16px]
+          transition-transform
+          ${dropdownTypeOuvert ? "rotate-180" : ""}
+        `}
+      />
+    </button>
+
+    <OptionsMenu
+      open={dropdownTypeOuvert}
+      onClose={() => setDropdownTypeOuvert(false)}
+      options={optionsTypeRapport.map((o) => o.label)}
+      onSelect={(label) => {
+        const found = optionsTypeRapport.find((o) => o.label === label);
+        if (found) setTypeRapportSelectionne(found.value);
+      }}
+      position="top-[50px] left-0 sm:left-auto sm:right-0"
+      width="w-full sm:w-[190px]"
+    />
+  </div>
+
+  <button
+    type="button"
+    onClick={handleAjouterEmail}
+    disabled={!nouvelEmail.trim() || ajoutEmailEnCours}
+    className="
+      w-full
+      sm:w-auto
+      sm:min-w-[110px]
+      shrink-0
+
+      h-[45px]
+      px-10
+
+      rounded-[15px]
+      bg-[#7BC8C4]
+
+      text-white
+      text-[18px]
+      font-semibold
+
+      flex
+      items-center
+      justify-center
+
+      hover:bg-[#6AB8B3]
+      active:scale-[0.98]
+      transition
+
+      disabled:cursor-not-allowed
+      disabled:active:scale-100
+    "
+  >
+    {ajoutEmailEnCours ? "Ajout..." : "Ajouter"}
+  </button>
+</div>
+
+{erreurChargementEmails && (
+  <div className="mt-2">
+    <ErrorMessage message={erreurChargementEmails} />
+  </div>
+)}
+
+{erreurEmail && (
+  <div className="mt-2">
+    <ErrorMessage message={erreurEmail} />
+  </div>
+)}
 </div>
 
 
@@ -1262,23 +1570,37 @@ return (
       />
     </main>
 
-    <ListManagerDialog
-      open={showRegionsList}
-      title="Toutes les régions"
-      items={regions}
-      onDelete={handleSupprimerRegion}
-      onClose={() => setShowRegionsList(false)}
-      emptyMessage="Aucune région pour l'instant."
-    />
-
-    <ListManagerDialog
-      open={showEmailsList}
-      title="Emails destinataires des rapports annuels et mensuels"
-      items={emails}
-      onDelete={handleSupprimerEmail}
-      onClose={() => setShowEmailsList(false)}
-      emptyMessage="Aucun destinataire pour l'instant."
-    />
+ <VillageListDialog
+  open={showRegionsList}
+  title="Les villages"
+  items={regions}
+  onUpdate={handleModifierRegion}
+  onDelete={handleSupprimerRegion}
+  onClose={() => {
+    setShowRegionsList(false);
+    setErreurSuppressionRegion("");
+  }}
+  loading={loadingRegions}
+  errorMessage={erreurSuppressionRegion}
+  emptyMessage="Aucun village pour l'instant."
+/>
+<ListManagerDialog
+  open={showEmailsList}
+  title="Emails destinataires des rapports annuels et mensuels"
+  items={emailsAffiches}
+  onDelete={handleSupprimerEmail}
+  onClose={() => setShowEmailsList(false)}
+  loading={loadingEmails}
+  errorMessage={erreurSuppressionEmail}
+  emptyMessage={
+    filtreTypeEmail === "les_deux"
+      ? "Aucun email n'est abonné aux deux types de rapport."
+      : "Aucun destinataire pour l'instant."
+  }
+  filters={EMAIL_TYPE_FILTERS}
+  filterValue={filtreTypeEmail}
+  onFilterChange={setFiltreTypeEmail}
+/>
   </div>
 );
 }
