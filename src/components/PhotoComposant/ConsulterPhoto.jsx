@@ -4,7 +4,7 @@ import Button from "../Button/Button";
 
 import quitter from "../../assets/quitter.svg";
 import Verified from "../../assets/Verified.svg";
-import testImage from "../../assets/icon.svg";
+import testImage from "../../assets/Icon.svg";
 import Edit from "../../assets/Modify.svg"; 
 
 const ConsulterPhoto = ({
@@ -74,7 +74,7 @@ const ConsulterPhoto = ({
           <AlertBox
             variant="info"
             title={photo?.title || ""}
-            location={photo?.village || ""}
+            location={photo?.villageName || ""}
             date={photo?.date || ""}
             message={photo?.description || ""}
             padding="p-5"
@@ -186,7 +186,7 @@ const ConsulterPhoto = ({
           <AlertBox
             variant="info"
             title={photo?.title || ""}
-            location={photo?.village || ""}
+            location={photo?.villageName || ""}
             date={photo?.date || ""}
             message={photo?.description || ""}
             padding="p-4"

@@ -125,7 +125,7 @@ function App() {
 
         {/* Galerie */}
         <Route
-          path="/galerie" element={<Galerie role="admin"/>}
+          path="/galerie" element={<Galerie role="coordinator"/>}
         />
   {/* Rapport : le premier onglet (mensuel) est l'entrée par défaut de /rapports,
       les 2 autres onglets naviguent vers leurs propres sous-routes */}

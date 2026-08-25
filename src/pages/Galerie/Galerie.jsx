@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import GalleryHeader from "../../components/Galerie/GalleryHeader";
@@ -11,77 +11,67 @@ import ConsulterPhoto from "../../components/PhotoComposant/ConsulterPhoto";
 import ModifierPhoto from "../../components/PhotoComposant/ModifierPhoto";
 import PhotoRefusee from "../../components/PhotoComposant/PhotoRefusee";
 import PhotoEnAttente from "../../components/PhotoComposant/PhotoEnAttente";
-
+import PendingPhotosPage from "../../pages/Galerie/PendingPhotosPage";
 
 import Button from "../../components/Button/Button";
 
-import img1 from "../../assets/Valide.svg";
-import img2 from "../../assets/Valide.svg";
-import img3 from "../../assets/Valide.svg";
-import img4 from "../../assets/Valide.svg";
-import img5 from "../../assets/Valide.svg";
+import {
+  listPhotos,
+  listVillages,
+  approvePhoto,
+  refusePhoto,
+  reexaminePhoto,
+  getPendingCount,
+  getBilanCandidates,
+  saveBilanSelection,
+} from "@/lib/api/galerie";
 
-const initialPhotos = [
-  {
-    id: 1,
-    title: "Inventaire logistique – Guidikhama",
-    village: "Guidikhama",
-    date: "12 mars 2026",
-    description:
-      "Contrôle de l'inventaire des fournitures médicales au centre de santé de Guidikhama. Vérification de la disponibilité des médicaments essentiels, des kits de dépistage nutritionnel et du matériel de soins avant les activités communautaires.",
-    image: img1,
-    status: "refused",
-    motifRefus:
-      "Visage d'un personnel identifiable en arrière-plan. Veuillez recadrer ou utiliser une autre prise de vue.",
-  },
-  {
-    id: 2,
-    title: "Distribution kits",
-    village: "Tenali",
-    date: "12 mars 2026",
-    description:
-      "Session de distribution mensuelle réalisée au centre de santé de Tenali. 45 familles ont reçu des suppléments nutritionnels et des conseils d'hygiène.",
-    image: img2,
-    status: "validated",
-  },
-  {
-    id: 3,
-    title: "Matériel de mesure",
-    village: "Awoycheu",
-    date: "17 mars 2026",
-    description:
-      "Présentation et vérification du matériel anthropométrique utilisé lors du suivi nutritionnel des enfants bénéficiaires.",
-    image: img3,
-    status: "validated",
-  },
-  {
-    id: 4,
-    title: "Formation ambassadeurs",
-    village: "Sélibaby",
-    date: "21 mars 2026",
-    description:
-      "Formation des ambassadeurs communautaires sur les bonnes pratiques nutritionnelles, les techniques de sensibilisation et le suivi des familles.",
-    image: img4,
-    status: "pending",
-  },
-  {
-    id: 5,
-    title: "Réunion communautaire",
-    village: "Danguérémou",
-    date: "27 mars 2026",
-    description:
-      "Réunion avec les représentants de la communauté afin de présenter les résultats du programme nutritionnel et préparer les prochaines distributions.",
-    image: img5,
-    status: "refused",
-    motifRefus:
-      "Un bénéficiaire mineur est clairement identifiable sur la photo. Une nouvelle photo respectant les règles de confidentialité est requise.",
-  },
-];
+const mapPhotoFromApi = (photo, villagesList = []) => ({
+  id: photo.id,
+
+  title: photo.titre || "",
+
+  description: photo.legende || "",
+
+  village: photo.village,
+
+  villageName:
+    villagesList.find(
+      (v) => String(v.id) === String(photo.village)
+    )?.nom || "",
+
+  date: photo.date_prise || "",
+
+  image: photo.image || "",
+
+  status:
+    photo.statut === "en_attente"
+      ? "pending"
+      : photo.statut === "validee"
+      ? "validated"
+      : photo.statut === "rejetee"
+      ? "refused"
+      : photo.statut,
+
+  motifRefus: photo.motif_refus || "",
+
+  coordinator: photo.cree_par?.nom || "",
+
+  includedInReport: photo.inclus_bilan || false,
+});
 
 const Galerie = ({ role = "coordinator" }) => {
   const isAdmin = role === "admin";
 
-  const [photos, setPhotos] = useState(initialPhotos);
+  // PHOTOS
+
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const [villages, setVillages] = useState([]);
+
+  const [pendingCount, setPendingCount] = useState(0);
 
   const [selectedFilter, setSelectedFilter] = useState("all");
 
@@ -89,30 +79,102 @@ const Galerie = ({ role = "coordinator" }) => {
 
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Popups / Pages
+  const [selectedImageFile, setSelectedImageFile] = useState(null);
+
+  // POPUPS / PAGES
+
   const [showPopupPhoto, setShowPopupPhoto] = useState(false);
-
   const [showAjouterPhoto, setShowAjouterPhoto] = useState(false);
-
   const [showConsulter, setShowConsulter] = useState(false);
-
   const [showModifier, setShowModifier] = useState(false);
-
   const [showRefusee, setShowRefusee] = useState(false);
+  const [showEnAttente, setShowEnAttente] = useState(false);
+  const [showPendingPhotosPage, setShowPendingPhotosPage] = useState(false);
 
   const [searchValue, setSearchValue] = useState("");
 
-  const [showEnAttente, setShowEnAttente] = useState(false);
+  // SELECTION
 
-  const [showPendingPhotosPage, setShowPendingPhotosPage] = useState(false);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [bilanCandidates, setBilanCandidates] = useState([]);
+  const [loadingBilan, setLoadingBilan] = useState(false);
+
+  // LOAD PHOTOS
+
+  const fetchVillages = async () => {
+    try {
+      const response = await listVillages();
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+
+      setVillages(data);
+
+      return data;
+    } catch (err) {
+      console.error("Erreur lors du chargement des villages :", err);
+      return [];
+    }
+  };
+
+  const fetchPhotos = async (villagesList = villages) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await listPhotos();
+      const results = response.data?.results || [];
+      const mappedPhotos = results.map((photo) =>
+        mapPhotoFromApi(photo, villagesList)
+      );
+
+      setPhotos(mappedPhotos);
+    } catch (err) {
+      console.error("Erreur lors du chargement des photos :", err);
+      setError("Impossible de charger les photos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // LOAD PENDING COUNT
+
+  const fetchPendingCount = async () => {
+    if (!isAdmin) {
+      return;
+    }
+
+    try {
+      const response = await getPendingCount();
+      setPendingCount(response.data?.count || 0);
+    } catch (err) {
+      console.error("Erreur lors du chargement du compteur :", err);
+    }
+  };
+
+  // INITIAL LOAD
+
+  useEffect(() => {
+    const init = async () => {
+      const villagesList = await fetchVillages();
+      await fetchPhotos(villagesList);
+    };
+
+    init();
+    fetchPendingCount();
+  }, []);
+
+  // PHOTO CLICK
 
   const handlePhotoClick = (photo) => {
-  setSelectedPhoto(photo);
+    setSelectedPhoto(photo);
 
-  if (photo.status === "validated") {
+    if (photo.status === "validated") {
       setShowConsulter(true);
     } else if (photo.status === "pending") {
-      if (role === "admin") {
+      if (isAdmin) {
         setShowEnAttente(true);
       } else {
         setShowModifier(true);
@@ -122,103 +184,284 @@ const Galerie = ({ role = "coordinator" }) => {
     }
   };
 
-  const photosEnAttente = photos.filter(
-  (photo) => photo.status === "pending"
-  ).length;
+  // PENDING PHOTOS
 
-  const pendingPhotos = photos.filter(
-  (photo) => photo.status === "pending"
-  );
+  const pendingPhotos = photos.filter((photo) => photo.status === "pending");
 
-  // Selection
-  const [selectionMode,setSelectionMode] = useState(false);
-  const [selectedPhotos,setSelectedPhotos] = useState([]);
+  // SAVE MODIFIED PHOTO
 
-  // handles
   const handleSavePhoto = (updatedPhoto) => {
     setPhotos((prev) =>
-      prev.map((photo) =>
-        photo.id === updatedPhoto.id
-          ? updatedPhoto
-          : photo
-      )
+      prev.map((photo) => (photo.id === updatedPhoto.id ? updatedPhoto : photo))
     );
 
     setSelectedPhoto(updatedPhoto);
     setShowModifier(false);
+
+    fetchPhotos();
   };
 
+  // ADD PHOTO
+
   const handleAddPhoto = (newPhoto) => {
-    setPhotos((prevPhotos) => [
-      newPhoto,
-      ...prevPhotos,
-    ]);
 
     setShowAjouterPhoto(false);
+
     setSelectedImage(null);
+    setSelectedImageFile(null);
+
+    fetchPhotos();
+    fetchPendingCount();
   };
 
   const handleImageSelected = (file) => {
-    setSelectedImage(
-      URL.createObjectURL(file)
-    );
+    if (!file) {
+      return;
+    }
+
+    setSelectedImageFile(file);
+
+    setSelectedImage(URL.createObjectURL(file));
   };
+
+  // START ADD PHOTO
 
   const handleStartAddPhoto = () => {
     setShowPopupPhoto(false);
     setShowAjouterPhoto(true);
   };
 
-  const filteredPhotos = photos
-  .filter((photo) =>
-    photo.title
-      .toLowerCase()
-      .includes(searchValue.toLowerCase())
-  )
-  .filter((photo) =>
-    selectionMode
-      ? photo.status === "validated"
-      : true
-  );
+  // BILAN CANDIDATES
 
-  const handleSaveSelection = () => {
-  console.log(selectedPhotos);
+  const fetchBilanCandidates = async () => {
+    if (!isAdmin) {
+      return;
+    }
 
-  // Later:
-  // send selectedPhotos to the backend
-  // navigate to the report page
+    try {
+      setLoadingBilan(true);
+      setError("");
+
+      const response = await getBilanCandidates();
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+
+      const mapped = data.map((photo) =>
+        mapPhotoFromApi(photo, villages)
+      );
+
+      setBilanCandidates(mapped);
+
+      // Pre-check photos already included in
+      // the current month's bilan.
+      const alreadyIncluded = mapped
+        .filter((photo) => photo.includedInReport)
+        .map((photo) => photo.id);
+
+      setSelectedPhotos(alreadyIncluded);
+    } catch (err) {
+      console.error(
+        "Erreur lors du chargement des candidats au bilan :",
+        err
+      );
+      setError("Impossible de charger les candidats au bilan.");
+    } finally {
+      setLoadingBilan(false);
+    }
   };
 
-  const handleApprovePhoto = (photoId) => {
-  setPhotos((prev) =>
-    prev.map((photo) =>
-      photo.id === photoId
-        ? {
-            ...photo,
-            status: "validated",
-          }
-        : photo
-    )
-  );
-};
+  // START SELECTION MODE
 
-const handleRefusePhoto = (photoId, reason) => {
-  setPhotos((prev) =>
-    prev.map((photo) =>
-      photo.id === photoId
-        ? {
-            ...photo,
-            status: "refused",
-            motifRefus: reason,
-          }
-        : photo
-    )
-  );
-};
+  const handleStartSelection = async () => {
+    await fetchBilanCandidates();
+    setSelectionMode(true);
+  };
 
+  // CANCEL SELECTION MODE
+
+  const handleCancelSelection = () => {
+    setSelectionMode(false);
+    setSelectedPhotos([]);
+    setBilanCandidates([]);
+  };
+
+  // FILTERED PHOTOS
+
+  const filteredPhotos = (selectionMode ? bilanCandidates : photos)
+    .filter((photo) => {
+      const search = searchValue.toLowerCase().trim();
+
+      if (!search) {
+        return true;
+      }
+
+      return (
+        photo.title?.toLowerCase().includes(search) ||
+        photo.villageName?.toLowerCase().includes(search)
+      );
+    })
+    .filter((photo) => {
+
+      if (selectionMode) {
+        return true;
+      }
+
+      if (selectedFilter === "all") return true;
+      if (selectedFilter === "validated") return photo.status === "validated";
+      if (selectedFilter === "pending") return photo.status === "pending";
+      if (selectedFilter === "refused") return photo.status === "refused";
+      return true;
+    });
+
+  // SAVE BILAN SELECTION
+
+  const handleSaveSelection = async () => {
+    try {
+      await saveBilanSelection(selectedPhotos);
+
+      /*
+       * Backend expects the COMPLETE list
+       * of checked IDs.
+       */
+
+      setSelectionMode(false);
+      setBilanCandidates([]);
+      await fetchPhotos();
+    } catch (err) {
+      console.error("Erreur lors de la sauvegarde du bilan :", err);
+      setError("Impossible de sauvegarder la sélection.");
+    }
+  };
+
+  // TOGGLE BILAN INCLUSION (single photo,immediate save)
+
+  const handleToggleReport = async (photo) => {
+    if (!photo?.id) return;
+
+    try {
+      setError("");
+
+      const response = await getBilanCandidates();
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+
+      const currentlyIncludedIds = data
+        .filter((p) => p.inclus_bilan)
+        .map((p) => p.id);
+
+      const isCurrentlyIncluded =
+        currentlyIncludedIds.includes(photo.id);
+
+      const newSelection = isCurrentlyIncluded
+        ? currentlyIncludedIds.filter((id) => id !== photo.id)
+        : [...currentlyIncludedIds, photo.id];
+
+      await saveBilanSelection(newSelection);
+
+      // Refresh local state so inclus_bilan is correct everywhere in the UI.
+      await fetchPhotos();
+
+      setSelectedPhoto((prev) =>
+        prev && prev.id === photo.id
+          ? { ...prev, includedInReport: !isCurrentlyIncluded }
+          : prev
+      );
+    } catch (err) {
+      console.error(
+        "Erreur lors de la mise à jour du bilan :",
+        err
+      );
+      setError("Impossible de mettre à jour le bilan.");
+    }
+  };
+
+  // APPROVE PHOTO
+
+  const handleApprovePhoto = async (photoId) => {
+    try {
+      await approvePhoto(photoId);
+
+      /*
+       * Don't only modify React state.
+       * Reload the backend data.
+       */
+
+      await fetchPhotos();
+
+      if (isAdmin) {
+        await fetchPendingCount();
+      }
+
+      setShowEnAttente(false);
+    } catch (err) {
+      console.error("Erreur lors de l'approbation :", err);
+      setError("Impossible d'approuver la photo.");
+    }
+  };
+
+  // REFUSE PHOTO
+
+  const handleRefusePhoto = async (photoId, reason) => {
+    try {
+      await refusePhoto(photoId, { motif_refus: reason });
+
+      await fetchPhotos();
+
+      if (isAdmin) {
+        await fetchPendingCount();
+      }
+
+      setShowEnAttente(false);
+    } catch (err) {
+      console.error("Erreur lors du refus :", err);
+      setError("Impossible de refuser la photo.");
+    }
+  };
+
+  // REEXAMINE PHOTO
+
+  const handleReexaminePhoto = async (photoId) => {
+    try {
+      await reexaminePhoto(photoId);
+
+      await fetchPhotos();
+
+      if (isAdmin) {
+        await fetchPendingCount();
+      }
+
+      // Close the popup and go back to the gallery page after a successful reexamine.
+      setShowRefusee(false);
+    } catch (err) {
+      console.error("Erreur lors du réexamen :", err);
+      setError("Impossible de réexaminer la photo.");
+    }
+  };
+
+  // LOADING
+
+  if (loading) {
     return (
+      <div className="h-screen bg-white flex">
+        <Sidebar role={role} />
+
+        <main className="flex-1 flex items-center justify-center">
+          <p>Chargement des photos...</p>
+        </main>
+      </div>
+    );
+  }
+
+  return (
     <>
-      {/* Gallery */}
+      {/* ========================================
+          GALLERY
+      ======================================== */}
+
       <div
         className={`${
           showAjouterPhoto ||
@@ -234,31 +477,40 @@ const handleRefusePhoto = (photoId, reason) => {
         <Sidebar role={role} />
 
         <main className="flex-1 flex flex-col h-screen overflow-hidden">
+          {/* FIXED HEADER */}
 
-          {/* Fixed Header */}
           <GalleryHeader
             role={role}
             selectionMode={selectionMode}
             onAdd={() => setShowPopupPhoto(true)}
-            onSelection={() => setSelectionMode(true)}
-            onCancelSelection={() => {
-              setSelectionMode(false);
-              setSelectedPhotos([]);
-            }}
+            onSelection={handleStartSelection}
+            onCancelSelection={handleCancelSelection}
             searchValue={searchValue}
             setSearchValue={setSearchValue}
-            photosEnAttente={photosEnAttente}
+            photosEnAttente={pendingCount}
             photosSelectionnees={selectedPhotos.length}
             onAlertClick={() => setShowPendingPhotosPage(true)}
           />
 
-          {/* Fixed Filters */}
-          <GalleryFilters
-            selectedFilter={selectedFilter}
-            setSelectedFilter={setSelectedFilter}
-          />
+          {/* ERROR */}
 
-          {/* Scrollable Gallery */}
+          {error && (
+            <div className="px-8 pt-3 text-red-600 text-sm">{error}</div>
+          )}
+
+          {/* FIXED FILTERS */}
+
+          {/* Hidden during selection mode */}
+
+          {!selectionMode && (
+            <GalleryFilters
+              selectedFilter={selectedFilter}
+              setSelectedFilter={setSelectedFilter}
+            />
+          )}
+
+          {/* SCROLLABLE GALLERY */}
+
           <div className="flex-1 overflow-y-auto">
             <GalleryGrid
               photos={filteredPhotos}
@@ -268,18 +520,11 @@ const handleRefusePhoto = (photoId, reason) => {
               selectedPhotos={selectedPhotos}
               setSelectedPhotos={setSelectedPhotos}
             />
-             {selectionMode && (
-              <div
-                className="
-                  sticky
-                  bottom-0
-                  flex
-                  justify-end
-                  px-8
-                  py-4
-                  bg-white
-                "
-              >
+
+            {/* SELECTION BUTTON */}
+
+            {selectionMode && (
+              <div className="sticky bottom-0 flex justify-end px-8 py-4 bg-white">
                 <Button
                   title="Sauvegarder les photos"
                   variant="changer"
@@ -289,11 +534,12 @@ const handleRefusePhoto = (photoId, reason) => {
               </div>
             )}
           </div>
-
         </main>
       </div>
 
-      {/* ================= POPUP PHOTO ================= */}
+      {/* ========================================
+          POPUP PHOTO
+      ======================================== */}
 
       {showPopupPhoto && (
         <PopupPhoto
@@ -304,83 +550,74 @@ const handleRefusePhoto = (photoId, reason) => {
         />
       )}
 
-      {/* ================= AJOUTER PHOTO ================= */}
+      {/* ========================================
+          AJOUTER PHOTO
+      ======================================== */}
 
       {showAjouterPhoto && (
         <>
           {/* Desktop */}
+
           <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
             <AjouterPhoto
               initialImage={selectedImage}
+              initialImageFile={selectedImageFile}
               onSave={handleAddPhoto}
               onClose={() => {
                 setShowAjouterPhoto(false);
                 setSelectedImage(null);
+                setSelectedImageFile(null);
               }}
             />
           </div>
 
           {/* Mobile */}
+
           <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
             <AjouterPhoto
               initialImage={selectedImage}
+              initialImageFile={selectedImageFile}
               onSave={handleAddPhoto}
               onClose={() => {
                 setShowAjouterPhoto(false);
                 setSelectedImage(null);
+                setSelectedImageFile(null);
               }}
             />
           </div>
         </>
       )}
-            {/* ================= CONSULTER ================= */}
+
+      {/* ========================================
+          CONSULTER
+      ======================================== */}
 
       {showConsulter && (
         <>
           {/* Desktop */}
+
           <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
             <ConsulterPhoto
               role={role}
               photo={selectedPhoto}
-              includedInReport={selectedPhotos.includes(selectedPhoto?.id)}
-              onToggleReport={() => {
-                if (selectedPhotos.includes(selectedPhoto.id)) {
-                  setSelectedPhotos(prev =>
-                    prev.filter(id => id !== selectedPhoto.id)
-                  );
-                } else {
-                  setSelectedPhotos(prev => [
-                    ...prev,
-                    selectedPhoto.id,
-                  ]);
-                }
-              }}
+              includedInReport={selectedPhoto?.includedInReport || false}
+              onToggleReport={() => handleToggleReport(selectedPhoto)}
               onEdit={() => {
                 setShowConsulter(false);
                 setShowModifier(true);
               }}
               onClose={() => setShowConsulter(false)}
             />
-                      </div>
+          </div>
 
-                      {/* Mobile */}
-                      <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
+          {/* Mobile */}
+
+          <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
             <ConsulterPhoto
               role={role}
               photo={selectedPhoto}
-              includedInReport={selectedPhotos.includes(selectedPhoto?.id)}
-              onToggleReport={() => {
-                if (selectedPhotos.includes(selectedPhoto.id)) {
-                  setSelectedPhotos(prev =>
-                    prev.filter(id => id !== selectedPhoto.id)
-                  );
-                } else {
-                  setSelectedPhotos(prev => [
-                    ...prev,
-                    selectedPhoto.id,
-                  ]);
-                }
-              }}
+              includedInReport={selectedPhoto?.includedInReport || false}
+              onToggleReport={() => handleToggleReport(selectedPhoto)}
               onEdit={() => {
                 setShowConsulter(false);
                 setShowModifier(true);
@@ -391,99 +628,56 @@ const handleRefusePhoto = (photoId, reason) => {
         </>
       )}
 
-      {/* ================= PHOTO EN ATTENTE ================= */}
+      {/* ========================================
+          PHOTO EN ATTENTE
+      ======================================== */}
 
-        {showEnAttente && (
-          <>
-            {/* Desktop */}
-            <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
-              <PhotoEnAttente
-                photo={selectedPhoto}
-                onClose={() => setShowEnAttente(false)}
+      {showEnAttente && (
+        <>
+          {/* Desktop */}
 
-                onEdit={() => {
-                  setShowEnAttente(false);
-                  setShowModifier(true);
-                }}
+          <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
+            <PhotoEnAttente
+              photo={selectedPhoto}
+              onClose={() => setShowEnAttente(false)}
+              onEdit={() => {
+                setShowEnAttente(false);
+                setShowModifier(true);
+              }}
+              onApprove={() => handleApprovePhoto(selectedPhoto.id)}
+              onConfirmRefusal={(reason) =>
+                handleRefusePhoto(selectedPhoto.id, reason)
+              }
+            />
+          </div>
 
-                onApprove={() => {
-                  setPhotos((prev) =>
-                    prev.map((p) =>
-                      p.id === selectedPhoto.id
-                        ? { ...p, status: "validated" }
-                        : p
-                    )
-                  );
+          {/* Mobile */}
 
-                  setShowEnAttente(false);
-                }}
+          <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
+            <PhotoEnAttente
+              photo={selectedPhoto}
+              onClose={() => setShowEnAttente(false)}
+              onEdit={() => {
+                setShowEnAttente(false);
+                setShowModifier(true);
+              }}
+              onApprove={() => handleApprovePhoto(selectedPhoto.id)}
+              onConfirmRefusal={(reason) =>
+                handleRefusePhoto(selectedPhoto.id, reason)
+              }
+            />
+          </div>
+        </>
+      )}
 
-                onConfirmRefusal={(reason) => {
-                  setPhotos((prev) =>
-                    prev.map((p) =>
-                      p.id === selectedPhoto.id
-                        ? {
-                            ...p,
-                            status: "refused",
-                            motifRefus: reason,
-                          }
-                        : p
-                    )
-                  );
-
-                  setShowEnAttente(false);
-                }}
-              />
-            </div>
-
-            {/* Mobile */}
-            <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
-              <PhotoEnAttente
-                photo={selectedPhoto}
-                onClose={() => setShowEnAttente(false)}
-
-                onEdit={() => {
-                  setShowEnAttente(false);
-                  setShowModifier(true);
-                }}
-
-                onApprove={() => {
-                  setPhotos((prev) =>
-                    prev.map((p) =>
-                      p.id === selectedPhoto.id
-                        ? { ...p, status: "validated" }
-                        : p
-                    )
-                  );
-
-                  setShowEnAttente(false);
-                }}
-
-                onConfirmRefusal={(reason) => {
-                  setPhotos((prev) =>
-                    prev.map((p) =>
-                      p.id === selectedPhoto.id
-                        ? {
-                            ...p,
-                            status: "refused",
-                            motifRefus: reason,
-                          }
-                        : p
-                    )
-                  );
-
-                  setShowEnAttente(false);
-                }}
-              />
-            </div>
-          </>
-        )}
-
-      {/* ================= MODIFIER ================= */}
+      {/* ========================================
+          MODIFIER
+      ======================================== */}
 
       {showModifier && (
         <>
           {/* Desktop */}
+
           <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
             <ModifierPhoto
               photo={selectedPhoto}
@@ -493,6 +687,7 @@ const handleRefusePhoto = (photoId, reason) => {
           </div>
 
           {/* Mobile */}
+
           <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-hidden">
             <ModifierPhoto
               photo={selectedPhoto}
@@ -503,55 +698,67 @@ const handleRefusePhoto = (photoId, reason) => {
         </>
       )}
 
-      {/* ================= REFUSÉE ================= */}
+      {/* ========================================
+          PHOTO REFUSÉE
+      ======================================== */}
 
       {showRefusee && (
         <>
           {/* Desktop */}
+
           <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
             <PhotoRefusee
+              role={role}
               photo={selectedPhoto}
               onClose={() => setShowRefusee(false)}
+              onReexamine={() => handleReexaminePhoto(selectedPhoto.id)}
             />
           </div>
 
           {/* Mobile */}
+
           <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
             <PhotoRefusee
+              role={role}
               photo={selectedPhoto}
               onClose={() => setShowRefusee(false)}
+              onReexamine={() => handleReexaminePhoto(selectedPhoto.id)}
             />
           </div>
         </>
       )}
 
+      {/* ========================================
+          PHOTOS EN ATTENTE PAGE
+      ======================================== */}
+
       {showPendingPhotosPage && (
-  <>
-    {/* ================= Photos En Attente ================= */}
+        <>
+          {/* Desktop */}
 
-    {/* Desktop */}
-    <div className="hidden lg:flex fixed inset-0 z-50 bg-white">
-      <PendingPhotosPage
-        photos={pendingPhotos}
-        onBack={() => setShowPendingPhotosPage(false)}
-        onApprove={handleApprovePhoto}
-        onRefuse={handleRefusePhoto}
-        onAddPhoto={handleAddPhoto}
-      />
-    </div>
+          <div className="hidden lg:flex fixed inset-0 z-50 bg-white">
+            <PendingPhotosPage
+              photos={pendingPhotos}
+              onBack={() => setShowPendingPhotosPage(false)}
+              onApprove={handleApprovePhoto}
+              onRefuse={handleRefusePhoto}
+              onAddPhoto={handleAddPhoto}
+            />
+          </div>
 
-    {/* Mobile */}
-    <div className="lg:hidden fixed inset-0 z-50 bg-white">
-      <PendingPhotosPage
-        photos={pendingPhotos}
-        onBack={() => setShowPendingPhotosPage(false)}
-        onApprove={handleApprovePhoto}
-        onRefuse={handleRefusePhoto}
-        onAddPhoto={handleAddPhoto}
-      />
-    </div>
-  </>
-)}
+          {/* Mobile */}
+
+          <div className="lg:hidden fixed inset-0 z-50 bg-white">
+            <PendingPhotosPage
+              photos={pendingPhotos}
+              onBack={() => setShowPendingPhotosPage(false)}
+              onApprove={handleApprovePhoto}
+              onRefuse={handleRefusePhoto}
+              onAddPhoto={handleAddPhoto}
+            />
+          </div>
+        </>
+      )}
     </>
   );
 };

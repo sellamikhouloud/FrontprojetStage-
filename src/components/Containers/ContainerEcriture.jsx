@@ -8,6 +8,7 @@ const Input = ({
   variant = "default",
   multiline = false,
   rows = 4,
+  readOnly = false,
 }) => {
   const variants = {
     default: `
@@ -47,6 +48,7 @@ const Input = ({
 
     ${multiline ? "min-h-[120px] resize-none" : "h-[45px]"}
     ${variants[variant]}
+    ${readOnly ? "opacity-60 cursor-not-allowed" : ""}
   `;
 
   return (
@@ -80,6 +82,7 @@ const Input = ({
             placeholder={placeholder}
             value={value}
             onChange={onChange}
+            readOnly={readOnly}
             rows={rows}
             className={inputClass}
           />
@@ -89,6 +92,7 @@ const Input = ({
             placeholder={placeholder}
             value={value}
             onChange={onChange}
+            readOnly={readOnly}
             className={inputClass}
           />
         )}

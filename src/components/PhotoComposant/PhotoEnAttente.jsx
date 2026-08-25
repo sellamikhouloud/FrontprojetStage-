@@ -6,7 +6,7 @@ import ImagePreview from "../PhotoComposant/ImagePreview";
 
 import quitter from "../../assets/quitter.svg";
 import Pending from "../../assets/EnAttente.svg";
-import testImage from "../../assets/icon.svg";
+import testImage from "../../assets/Icon.svg";
 import Coordinator from "../../assets/Coordinatoor.svg";
 import Confirmer from "../../assets/Confirmer.svg";
 import Warning from "../../assets/Warning.svg";
@@ -24,8 +24,7 @@ const PhotoEnAttente = ({
 
   const image = photo?.image || testImage;
 
-return (
-  <>
+  return (
     <div
       className="
         lg:w-[900px]
@@ -125,14 +124,16 @@ return (
           Fermer
         </button>
 
-        <AlertBox
-          variant="info"
-          title={photo?.title || ""}
-          location={photo?.village || ""}
-          date={photo?.date || ""}
-          message={photo?.description || ""}
-          padding="p-4"
-        />
+        <div className="mt-8 lg:mt-0">
+          <AlertBox
+            variant="info"
+            title={photo?.title || ""}
+            location={photo?.villageName || ""}
+            date={photo?.date || ""}
+            message={photo?.description || ""}
+            padding="p-4"
+          />
+        </div>
 
         {mode === "review" ? (
           <>
@@ -261,8 +262,7 @@ return (
         )}
       </div>
     </div>
-  </>
-);
-}
+  );
+};
 
 export default PhotoEnAttente;
