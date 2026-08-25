@@ -41,14 +41,11 @@ const PopupZakatFamille = ({
       const response = await annulerAideZakat(zakat.id);
       const updatedZakat = response?.data ?? response;
 
-      // Retirer la zakat annulée des actives (elle sera dans annulees après refetch)
       setLocalActives((prev) => prev.filter((item) => item.id !== zakat.id));
 
-      // Fermer le popup détail et nettoyer la sélection
       setOpenDetail(false);
       setSelectedZakat(null);
 
-      // Rafraîchir les données côté serveur (famille + liste globale zakats)
       await queryClient.invalidateQueries({ queryKey: ["zakat"] });
       await queryClient.invalidateQueries({ queryKey: ["famille"] });
 
@@ -76,7 +73,7 @@ const PopupZakatFamille = ({
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full min-h-screen sm:min-h-0 sm:max-w-[620px] bg-white rounded-none sm:rounded-[18px] border-0 sm:border sm:border-[#DCE5EC] shadow-none sm:shadow-2xl"
+            className="w-full min-h-screen sm:min-h-0 sm:max-w-[620px] sm:max-h-[90vh] overflow-y-auto scrollbar-hide bg-white rounded-none sm:rounded-[18px] border-0 sm:border sm:border-[#DCE5EC] shadow-none sm:shadow-2xl"
           >
             <div className="px-5 sm:px-6 pt-5">
               <button
@@ -92,7 +89,6 @@ const PopupZakatFamille = ({
               </h2>
             </div>
 
-            {/* Filtre statut */}
             <div className="px-5 sm:px-6 mt-4">
               <VDZStatusFilter value={statusFilter} onChange={setStatusFilter} />
             </div>
