@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Eye, EyeOff } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
@@ -75,6 +75,7 @@ function parseBackendErrors(data) {
 
 export default function AjoutCoordinateur() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [role, setRole] = useState(null); 
   const { user: currentUser } = useAuth();
@@ -114,29 +115,31 @@ export default function AjoutCoordinateur() {
 
   setCheckingUsername(true);
 
- const timeoutId = setTimeout(async () => {
+const timeoutId = setTimeout(async () => {
   try {
-    const { data } = await checkUsernameExists(trimmed);
+    await checkUsernameExists(trimmed);
+    // Si la requête réussit (200), le username est disponible
+    clearError("username");
+  } catch (err) {
+    const message = err.response?.data?.erreur;
 
-    const taken = Boolean(data?.message);
-
-    if (taken) {
+    if (err.response?.status === 400 && message) {
+      // Username déjà pris — le backend renvoie 400 + { erreur: "..." }
       setErrors((prev) => ({
         ...prev,
-        username: data.message,
+        username: message,
       }));
     } else {
-      clearError("username");
+      console.error(
+        "Erreur lors de la vérification du nom d'utilisateur :",
+        err.response?.data || err.message
+      );
+      // Erreur réseau/autre — on ne bloque pas l'utilisateur
     }
-  } catch (err) {
-    console.error(
-      "Erreur lors de la vérification du nom d'utilisateur :",
-      err.response?.data || err.message
-    );
   } finally {
     setCheckingUsername(false);
   }
-}, 100); 
+}, 100);
 
   return () => clearTimeout(timeoutId);
    }, [username]);
@@ -212,6 +215,8 @@ try {
   console.log("📦 Payload création coordinateur :", payload);
 
   const response = await createUser(payload);
+  
+  await queryClient.invalidateQueries({ queryKey: ["users"] });
 
   console.log("✅ Coordinateur créé :", response.data);
 
