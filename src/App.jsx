@@ -67,24 +67,62 @@ function App() {
 
 
         {/* Coordinateur */}
-         <Route
-          path="/liste-coordinateurs" element={<ListeCoordinateurs />}
-        />
-         <Route
-          path="/ajout-coordinateur" element={<AjoutCoordinateur />}
-        />
-        <Route path="/fiche-coordinateur/:id" element={<ModifierCoordinateur />} />
+        <Route
+  path="/liste-coordinateurs"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+      <ListeCoordinateurs />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/ajout-coordinateur"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+      <AjoutCoordinateur />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/fiche-coordinateur/:id"
+  element={
+    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+      <ModifierCoordinateur />
+    </ProtectedRoute>
+  }
+/>
 
          {/* Donateur */}
-         <Route
-          path="/liste-Donateurs" element={<ListeDonateur />}
-        />
-         <Route
-          path="/ajout-donateur" element={<AjoutDonateur />}
-        />
-        <Route 
-          path="/fiche-donateur/:id" element={<FicheDonateur />}
-        />
+    
+
+<Route
+  path="/liste-Donateurs"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <ListeDonateur />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/ajout-donateur"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AjoutDonateur />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/fiche-donateur/:id"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <FicheDonateur />
+    </ProtectedRoute>
+  }
+/>
 
       {/* Distribution */}
         <Route
