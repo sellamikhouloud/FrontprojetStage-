@@ -395,16 +395,14 @@ const graphs = [
 ];
 
 const handleBack = () => {
-  navigate(location.state?.from || "/dashboard", {
-    state: { draft: location.state?.draft },
-  });
+  navigate("/liste-famille");
 };
 
 return (
   <div className="flex h-screen overflow-hidden bg-white">
   {/* Sidebar */}
  
-    <Sidebar />
+   <Sidebar hideOnMobile />
   
   
 <PopupDistributionfamille
