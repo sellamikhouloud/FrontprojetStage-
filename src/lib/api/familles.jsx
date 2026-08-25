@@ -20,4 +20,3 @@ export const getDistributions = (id) =>  api.get(`/api/familles/${id}/distributi
 
 export const getFamilleZakat = (id) => api.get(`/api/familles/${id}/zakat/`);
 
-export const getCourbes = (id) => api.get(`/api/familles/${id}/courbes/`);
