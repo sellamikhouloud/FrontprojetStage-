@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -17,17 +17,41 @@ import PopupHistoriqueProduit from "../../components/Popups/Popuphistoriqueprodu
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
 import { useNavigate } from "react-router-dom";
-import { listProduits, validerProduit } from "@/lib/api/stock";
-import { listDistributions , exportDistributions } from "@/lib/api/distributions";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { listProduits, validerProduit, getHistoriqueProduit } from "@/lib/api/stock";
+import { listDistributions , exportDistributions, annulerDistribution } from "@/lib/api/distributions";
+import { useAuth } from "../../components/Providers/AuthProvider";
+
+
+const MOTIF_LABELS = {
+  distribution: "Distribution",
+  approvisionnement: "Approvisionnement",
+  correction: "Correction",
+  annulation_distribution: "Annulation distribution",
+};
+
+const mapHistorique = (data = []) =>
+  data.map((mvt) => ({
+    id: mvt.id,
+    type: mvt.type === "entree" ? "ajout" : "retrait",
+    quantite: Number(mvt.quantite),
+    unite:
+      mvt.produit?.unite === "boite" ? "boîtes" : mvt.produit?.unite ?? "",
+    par: MOTIF_LABELS[mvt.motif] || mvt.motif,
+    user: mvt.user || "-", 
+    date: mvt.date_mouvement
+      ? new Date(mvt.date_mouvement).toLocaleDateString("fr-FR")
+      : "-",
+  }));
 
 export default function DistributionPage() {
   const { user } = useAuth();
    const isAdmin = user?.role === "admin";
+   const canManageStock = user?.role === "admin" || user?.role === "chef_coordinator";
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showValidation, setShowValidation] = useState(false);
   const [produitSelectionne, setProduitSelectionne] = useState(null);
   const [showHistorique, setShowHistorique] = useState(false);
@@ -150,13 +174,26 @@ useEffect(() => {
 }, [produitsResponse]);
  
 
+const {
+  data: historiqueResponse,
+  isLoading: historiqueLoading,
+  isError: historiqueError,
+} = useQuery({
+  queryKey: ["produit-historique", produitHistorique?.id],
+  queryFn: () =>
+    getHistoriqueProduit(produitHistorique.id).then((r) => r.data),
+  enabled: showHistorique && !!produitHistorique?.id, // ne fetch que si le popup est ouvert
+});
+
+ const historiqueMouvements = mapHistorique(historiqueResponse);
  
 
   const handleCardClick = (item, index) => {
+    if (!canManageStock) return; 
   if (item.statut === "en_attente") {
-    if (role === "admin") {
+    
       setProduitSelectionne({
-        id: item.id, // <-- was `index`
+        id: item.id,
         nom: item.nom,
         quantite: item.quantity,
         unite: item.unite,
@@ -164,21 +201,40 @@ useEffect(() => {
         enregistrePar: item.enregistrePar,
       });
       setShowValidation(true);
-    }
+    
   } else {
     setProduitHistorique({
+      id: item.id,      
       nom: item.nom,
       unite: item.unite,
-      mouvements: historiqueParProduit[item.nom] || [],
     });
     setShowHistorique(true);
   }
 };
-
  
 
   const [selectedDistribution, setSelectedDistribution] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+
+    const handleAnnulerDistribution = async (distribution) => {
+    try {
+      await annulerDistribution(distribution.id);
+
+      await queryClient.invalidateQueries({
+        queryKey: ["distributions-list"],
+      });
+
+      setIsPopupOpen(false);
+      setSelectedDistribution(null);
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'annulation de la distribution :",
+        error?.response?.data || error
+      );
+    }
+  };
+
 
   const filterTagsContent = (
     <div className="flex flex-wrap gap-2 my-4">
@@ -321,7 +377,7 @@ useEffect(() => {
         <NavigationHeader
           title="Stock de produit"
           type="add"
-          actionTitle="ajuster le stock et voir tous "
+          actionTitle="ajuster le stock "
           onAction={() => setShowStockPopup(true)}
         />
 
@@ -337,8 +393,9 @@ useEffect(() => {
         quantity={item.quantity}
         unite={item.unite}
         statut={item.statut}
-        showStatusColor={isAdmin}   
-        onClick={() => handleCardClick(item, index)}
+        showStatusColor={canManageStock}  
+       
+        onClick={canManageStock ? () => handleCardClick(item, index) : undefined}
       />
     ))}
   </div>
@@ -477,7 +534,7 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
               state: {
                 distributionAModifier: {
                   ...distribution,
-                  numeroDistribution: distribution.numeroDistribution,
+                 
 
                   selectedFamille: {
                     id: famille?.id,
@@ -513,10 +570,7 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
               },
             });
           }}
-          onDelete={(distribution) => {
-            console.log("Supprimer", distribution);
-            setIsPopupOpen(false);
-          }}
+            onDelete={handleAnnulerDistribution}
         />
 
         {showStockPopup && (
@@ -548,15 +602,17 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     setProduitSelectionne(null);
   }}
 />
-        <PopupHistoriqueProduit
-          open={showHistorique}
-          produit={produitHistorique}
-          historique={produitHistorique?.mouvements || []}
-          onClose={() => {
-            setShowHistorique(false);
-            setProduitHistorique(null);
-          }}
-        />
+         <PopupHistoriqueProduit
+  open={showHistorique}
+  produit={produitHistorique}
+  historique={historiqueMouvements}
+  isLoading={historiqueLoading}
+  isError={historiqueError}
+  onClose={() => {
+    setShowHistorique(false);
+    setProduitHistorique(null);
+  }}
+/>
       </main>
     </div>
   );

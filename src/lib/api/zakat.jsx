@@ -21,3 +21,5 @@ export const getSoldeActuel = () => api.get("/api/zakat/versements-solde/solde_a
 export const getZakatDashboard = () => api.get("/api/zakat/dashboard/");
 
 export const exportAidesZakat = () => api.get("/api/zakat/aides/export", { responseType: "blob", });
+
+export const updateVersementSolde = (id, data) => api.patch(`/api/zakat/versements-solde/${id}/`, data);

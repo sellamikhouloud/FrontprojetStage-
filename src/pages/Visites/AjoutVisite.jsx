@@ -503,21 +503,8 @@ export default function AjoutVisite() {
   
 
   <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
-      {/* Espace blanc FIXE en haut — desktop only, mobile déjà géré par Sidebar */}
-      <div
-        className="
-          hidden
-          lg:block
-          lg:absolute
-          lg:top-0
-          lg:left-0
-          lg:right-0
-          lg:h-4
-          bg-white
-          z-20
-        "
-      />
-
+     
+    
       {/* Zone scrollable UNIQUE */}
       <div
         className="
@@ -534,11 +521,19 @@ export default function AjoutVisite() {
           lg:pb-2
         "
       >
+<div className="min-h-full flex flex-col justify-center">
 
+  <div className="mb-2 lg:mb-2">
+            <PageHeader
+              leftTitle="Annuler"
+              showRight={false}
+              onBack={() => window.history.back()}
+            />
+          </div>
       
       
 
-      <div className="mb-4">
+      <div className=" mb-0 lg:mb-4">
   {/* Basé sur la réponse réelle du backend (pre_creation), pas sur les badges de la liste */}
   {preCreationData?.date_derniere_visite && (
     preCreationData?.est_visite_retard ? (
@@ -977,6 +972,8 @@ export default function AjoutVisite() {
             }}
           />
         )}
+        </div>
+
         </div>
 
         {/* Espace blanc FIXE en bas */}

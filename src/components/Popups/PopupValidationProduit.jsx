@@ -12,7 +12,7 @@ export default function PopupValidationProduit({
   produit, 
   onClose,
   onValider, 
-  onRefuser, // (data) => void  — data = { id }
+  
 }) {
   const [quantite, setQuantite] = useState("");
   const [showBanner, setShowBanner] = useState(false);
@@ -62,18 +62,7 @@ export default function PopupValidationProduit({
     }
   };
 
-  const handleRefuser = () => {
-    const data = { id: produit.id };
-
-    setBannerMessage("Le produit a été refusé.");
-    setShowBanner(true);
-
-    setTimeout(() => {
-      setShowBanner(false);
-      onRefuser?.(data);
-      handleClose();
-    }, 1500);
-  };
+ 
 
   return (
     <AnimatePresence>
@@ -254,17 +243,8 @@ export default function PopupValidationProduit({
 
           {/* Boutons — via Button component */}
           <div className="mt-4 flex flex-col sm:flex-row gap-2">
-            <div className="flex-1">
-              <Button
-                title="Supprimer"
-                variant="supprimer"
-                icon={trash}
-                iconPosition="left"
-                fullWidth
-                noPadding
-                onClick={handleRefuser}
-              />
-            </div>
+           
+            
 
             <div className="flex-1">
               <Button

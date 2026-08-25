@@ -10,14 +10,6 @@ const CardPopupvisite = ({
   badges = [],
   onClick,
 }) => {
-  const mamBadge = badges.find(
-    (badge) => badge.type === "mam" || badge.type === "mas"
-  );
-
-  const mereBadge = badges.find(
-    (badge) => badge.type === "mere"
-  );
-
   return (
     <div
       onClick={onClick}
@@ -83,23 +75,18 @@ const CardPopupvisite = ({
       </div>
 
       {/* Badges */}
-      <div className="grid grid-cols-2 gap-2 mt-5">
-        {mamBadge && (
-          <StatusBadge
-            type={mamBadge.type}
-            text={mamBadge.text}
-            className="justify-center w-full"
-          />
-        )}
-
-        {mereBadge && (
-          <StatusBadge
-            type={mereBadge.type}
-            text={mereBadge.text}
-            className="justify-center w-full"
-          />
-        )}
-      </div>
+      {badges.length > 0 && (
+        <div className="grid grid-cols-2 gap-2 mt-5">
+          {badges.map((badge, index) => (
+            <StatusBadge
+              key={`${badge.type}-${index}`}
+              type={badge.type}
+              text={badge.text}
+              className="justify-center w-full"
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

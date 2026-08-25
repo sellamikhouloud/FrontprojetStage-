@@ -14,6 +14,7 @@ export default function Sidebar({
   user = {},
   showTopBarIcons = true,       // notif + paramètres (admin uniquement)
   showTopBarAvatar = true,      // cercle avatar (coordinateur uniquement)
+  hideOnMobile = false,         // masque la sidebar mobile (top bar + drawer) sur certaines pages
 }) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
@@ -62,112 +63,112 @@ export default function Sidebar({
   return (
     <>
       {/* ================= MOBILE TOP BAR ================= */}
-
-      <div
-        className="
-          lg:hidden
-          fixed
-          top-0
-          left-0
-          right-0
-          h-16
-          bg-white
-          z-50
-
-          flex
-          items-center
-          justify-between
-
-          px-4
-        "
-      >
-        {/* Hamburger */}
-        <button
-          onClick={() => setMobileOpen(true)}
+      {!hideOnMobile && (
+        <div
           className="
-            w-11
-            h-11
-            rounded-[12px]
+            lg:hidden
+            fixed
+            top-0
+            left-0
+            right-0
+            h-16
+            bg-white
+            z-50
 
             flex
             items-center
-            justify-center
+            justify-between
+
+            px-4
           "
         >
-          <img src={menuIcon} alt="Menu" className="w-10 h-10" />
-        </button>
+          {/* Hamburger */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="
+              w-11
+              h-11
+              rounded-[12px]
 
-        {/* Notification + Paramètres — admin uniquement */}
-        {isAdmin && showTopBarIcons && (
-          <div className="flex items-center gap-4">
+              flex
+              items-center
+              justify-center
+            "
+          >
+            <img src={menuIcon} alt="Menu" className="w-10 h-10" />
+          </button>
+
+          {/* Notification + Paramètres — admin uniquement */}
+          {isAdmin && showTopBarIcons && (
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                aria-label="Notifications"
+                className="
+                  w-9
+                  h-9
+                  flex
+                  items-center
+                  justify-center
+                  hover:opacity-70
+                  transition
+                "
+              >
+                <img src={bellIcon} alt="Notifications" className="w-7 h-7" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => navigate("/parametres")}
+                aria-label="Paramètres"
+                className="
+                  w-9
+                  h-9
+                  flex
+                  items-center
+                  justify-center
+                  hover:opacity-70
+                  transition
+                "
+              >
+                <img src={settingsIcon} alt="Paramètres" className="w-7 h-7" />
+              </button>
+            </div>
+          )}
+
+          {/* Avatar cercle — coordinateur uniquement */}
+          {isCoordinator && showTopBarAvatar && (
             <button
               type="button"
-              aria-label="Notifications"
+              onClick={handleAvatarClick}
+              aria-label="Profil"
               className="
-                w-9
-                h-9
+                w-[45px]
+                h-[45px]
+                rounded-full
+                bg-[#8FC9C3]
+
                 flex
                 items-center
                 justify-center
-                hover:opacity-70
+                overflow-hidden
+
+                hover:opacity-80
                 transition
               "
             >
-              <img src={bellIcon} alt="Notifications" className="w-7 h-7" />
+              <User
+                className="w-9 h-9 text-[#EAF7F3]"
+                strokeWidth={0}
+                fill="#EAF7F3"
+              />
             </button>
-
-            <button
-              type="button"
-              onClick={() => navigate("/parametres")}
-              aria-label="Paramètres"
-              className="
-                w-9
-                h-9
-                flex
-                items-center
-                justify-center
-                hover:opacity-70
-                transition
-              "
-            >
-              <img src={settingsIcon} alt="Paramètres" className="w-7 h-7" />
-            </button>
-          </div>
-        )}
-
-       {/* Avatar cercle — coordinateur uniquement */}
-{isCoordinator && showTopBarAvatar && (
-  <button
-    type="button"
-    onClick={handleAvatarClick}
-    aria-label="Profil"
-    className="
-      w-[45px]
-      h-[45px]
-      rounded-full
-      bg-[#8FC9C3]
-
-      flex
-      items-center
-      justify-center
-      overflow-hidden
-
-      hover:opacity-80
-      transition
-    "
-  >
-    <User
-      className="w-9 h-9 text-[#EAF7F3]"
-      strokeWidth={0}
-      fill="#EAF7F3"
-    />
-  </button>
-)}
-      </div>
+          )}
+        </div>
+      )}
 
       {/* ================= OVERLAY ================= */}
-
-      {mobileOpen && (
+      {!hideOnMobile && mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
           className="
@@ -285,124 +286,125 @@ export default function Sidebar({
       </aside>
 
       {/* ================= MOBILE ================= */}
-
-      <aside
-        className={`
-          fixed
-          top-0
-          left-0
-          h-screen
-          w-[78%]
-          max-w-[320px]
-          bg-[#4E9F8A]
-          rounded-r-[24px]
-          px-5
-          py-5
-          z-50
-          flex
-          flex-col
-          transition-transform
-          duration-300
-          lg:hidden
-          ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
-        `}
-      >
-        {/* Top */}
-
-        <div className="flex-shrink-0">
-          <button onClick={() => setMobileOpen(false)}>
-            <img
-              src={closeIcon}
-              alt="Close"
-              className="w-8 h-8"
-            />
-          </button>
-
-          <div className="flex justify-center mt-3">
-            <img
-              src={logo}
-              alt="NutriGest"
-              className="w-12 h-auto"
-            />
-          </div>
-        </div>
-
-        {/* Navigation */}
-
-        <div
-          className="
-            flex-1
+      {!hideOnMobile && (
+        <aside
+          className={`
+            fixed
+            top-0
+            left-0
+            h-screen
+            w-[78%]
+            max-w-[320px]
+            bg-[#4E9F8A]
+            rounded-r-[24px]
+            px-5
+            py-5
+            z-50
             flex
-            items-center
-            justify-center
-            min-h-0
-          "
+            flex-col
+            transition-transform
+            duration-300
+            lg:hidden
+            ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+          `}
         >
-          <div className="w-full">
-            <p className="text-white font-bold text-[18px] mb-3">
-              Navigation
-            </p>
+          {/* Top */}
 
-            <nav className="flex flex-col gap-3">
-              {navigation.map((item, index) => (
-                <div
-                  key={index}
-                  onClick={handleItemClick}
-                >
-                  <SidebarItem
-                    item={item}
-                    expanded={true}
-                  />
-                </div>
-              ))}
+          <div className="flex-shrink-0">
+            <button onClick={() => setMobileOpen(false)}>
+              <img
+                src={closeIcon}
+                alt="Close"
+                className="w-8 h-8"
+              />
+            </button>
 
-              {actions.length > 0 && (
-                <>
-                  <p className="text-white font-bold text-[18px] mt-4 mb-2">
-                    Action rapide
-                  </p>
-
-                  <div className="flex flex-col gap-3">
-                    {actions.map((item, index) => (
-                      <div
-                        key={index}
-                        onClick={handleItemClick}
-                      >
-                        <SidebarItem
-                          item={item}
-                          expanded={true}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </nav>
+            <div className="flex justify-center mt-3">
+              <img
+                src={logo}
+                alt="NutriGest"
+                className="w-12 h-auto"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Avatar */}
+          {/* Navigation */}
 
-        <div className="flex justify-center flex-shrink-0 pt-2">
-          <button
-            onClick={() => {
-              setMobileOpen(false);
-              handleAvatarClick();
-            }}
+          <div
+            className="
+              flex-1
+              flex
+              items-center
+              justify-center
+              min-h-0
+            "
           >
-            <img
-              src={displayedAvatar}
-              alt="Avatar"
-              className="
-                w-10
-                h-10
-                rounded-full
-                object-cover
-              "
-            />
-          </button>
-        </div>
-      </aside>
+            <div className="w-full">
+              <p className="text-white font-bold text-[18px] mb-3">
+                Navigation
+              </p>
+
+              <nav className="flex flex-col gap-3">
+                {navigation.map((item, index) => (
+                  <div
+                    key={index}
+                    onClick={handleItemClick}
+                  >
+                    <SidebarItem
+                      item={item}
+                      expanded={true}
+                    />
+                  </div>
+                ))}
+
+                {actions.length > 0 && (
+                  <>
+                    <p className="text-white font-bold text-[18px] mt-4 mb-2">
+                      Action rapide
+                    </p>
+
+                    <div className="flex flex-col gap-3">
+                      {actions.map((item, index) => (
+                        <div
+                          key={index}
+                          onClick={handleItemClick}
+                        >
+                          <SidebarItem
+                            item={item}
+                            expanded={true}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </nav>
+            </div>
+          </div>
+
+          {/* Avatar */}
+
+          <div className="flex justify-center flex-shrink-0 pt-2">
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                handleAvatarClick();
+              }}
+            >
+              <img
+                src={displayedAvatar}
+                alt="Avatar"
+                className="
+                  w-10
+                  h-10
+                  rounded-full
+                  object-cover
+                "
+              />
+            </button>
+          </div>
+        </aside>
+      )}
 
       {/* ================= POPUP PROFIL ADMIN (uniquement pour les admins) ================= */}
 

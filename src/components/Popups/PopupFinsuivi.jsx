@@ -1,18 +1,222 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 import DateContainer from "../Containers/DateContainer";
 import TextArea from "../Containers/Textarea";
 import Button from "../Button/Button";
+import ErrorMessage from "../Forms/ErrorMessage";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
+
+function extractErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (!data) {
+    return error?.message || "Une erreur est survenue.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+    if (data?.detail) {
+    return data.detail;
+  }
+
+  
+  if (typeof data?.code === "string" && typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") messages.push(`${label} : ${msg}`);
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue.";
+}
+
+
+function parseBackendErrors(data) {
+  if (!data) return { fieldErrors: {}, generalMessage: null };
+
+  if (typeof data === "string") {
+    return { fieldErrors: {}, generalMessage: data };
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    return { fieldErrors: {}, generalMessage: messages.join(" — ") || null };
+  }
+
+  if (typeof data === "object") {
+    // Erreur métier avec "code" (ex: INVALID_EXIT_DATE) — priorité sur "detail"
+    if (typeof data.code === "string") {
+      const codeLower = data.code.toLowerCase();
+      const text = data.message || data.detail || "Une erreur est survenue.";
+
+      if (codeLower.includes("date")) {
+        return { fieldErrors: { date: text }, generalMessage: null };
+      }
+      if (codeLower.includes("motif")) {
+        return { fieldErrors: { motif: text }, generalMessage: null };
+      }
+
+      return { fieldErrors: {}, generalMessage: text };
+    }
+
+    if (data.detail) {
+      return { fieldErrors: {}, generalMessage: data.detail };
+    }
+
+    // Format DRF classique : { champ: [messages] }
+    const fieldErrors = {};
+    const generalMessages = [];
+
+    Object.entries(data).forEach(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+      const fieldLower = field.toLowerCase();
+
+      if (fieldLower.includes("date")) {
+        fieldErrors.date = text;
+      } else if (fieldLower.includes("motif")) {
+        fieldErrors.motif = text;
+      } else if (field === "non_field_errors") {
+        generalMessages.push(text);
+      } else {
+        generalMessages.push(`${field} : ${text}`);
+      }
+    });
+
+    return {
+      fieldErrors,
+      generalMessage: generalMessages.length ? generalMessages.join(" — ") : null,
+    };
+  }
+
+  return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
+}
+
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
 
 const PopupFinSuivi = ({
   open,
   title = "Fin de suivi",
   onClose,
-  onConfirm,
+  onConfirm, 
 }) => {
   const [motif, setMotif] = useState("");
   const [dateSortie, setDateSortie] = useState(new Date());
+  const [errors, setErrors] = useState({ date: null, motif: null });
+  const [backendError, setBackendError] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+ 
+  useEffect(() => {
+    if (open) {
+      setMotif("");
+      setDateSortie(new Date());
+      setErrors({ date: null, motif: null });
+      setBackendError(null);
+      setSaving(false);
+    }
+  }, [open]);
+
+  const handleDateChange = (newDate) => {
+    setDateSortie(newDate);
+    setErrors((prev) => ({
+      ...prev,
+      date: isFutureDate(newDate)
+        ? "La date de sortie ne peut pas être une date future."
+        : null,
+    }));
+  };
+
+  const handleMotifChange = (e) => {
+    const value = e.target.value;
+    setMotif(value);
+    if (value.trim()) {
+      setErrors((prev) => ({ ...prev, motif: null }));
+    }
+  };
+
+  const handleConfirm = async () => {
+    setBackendError(null);
+
+    const dateInFuture = isFutureDate(dateSortie);
+    const motifMissing = !motif.trim();
+
+    setErrors({
+      date: dateInFuture
+        ? "La date de sortie ne peut pas être une date future."
+        : null,
+      motif: motifMissing ? "Veuillez indiquer le motif de sortie." : null,
+    });
+
+    if (dateInFuture || motifMissing) return;
+
+    setSaving(true);
+    try {
+      await onConfirm?.(motif, dateSortie);
+      setMotif("");
+    } catch (err) {
+      const { fieldErrors, generalMessage } = parseBackendErrors(err?.response?.data);
+
+      // Erreurs liées au champ date (ex: date de sortie avant date d'entrée)
+      // → affichées sous le champ, via ErrorMessage, pas via BackendErrorMessage.
+      if (fieldErrors.date || fieldErrors.motif) {
+        setErrors((prev) => ({
+          ...prev,
+          ...(fieldErrors.date ? { date: fieldErrors.date } : {}),
+          ...(fieldErrors.motif ? { motif: fieldErrors.motif } : {}),
+        }));
+      }
+
+      if (generalMessage) {
+        setBackendError(generalMessage);
+      } else if (!fieldErrors.date && !fieldErrors.motif) {
+        setBackendError(extractErrorMessage(err));
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {open && (
@@ -114,36 +318,37 @@ const PopupFinSuivi = ({
               {title}
             </h2>
 
+            <BackendErrorMessage message={backendError} className="mb-4" />
 
-<div className="mt-4">
-  <DateContainer
-    label="Date de sortie"
-    value={dateSortie}
-    onChange={setDateSortie}
-    noPadding
-  />
-</div>
-
+            <div className="mt-4">
+              <DateContainer
+                label="Date de sortie"
+                value={dateSortie}
+                onChange={handleDateChange}
+                noPadding
+              />
+              <ErrorMessage message={errors.date} />
+            </div>
 
             {/* TextArea */}
             <div className="mt-4">
-            <TextArea
-              label="Motif de sortie"
-              placeholder="Entrez le motif"
-              value={motif}
-              onChange={(e) => setMotif(e.target.value)}
-              height="h-[130px]"
-            />
-</div>
+              <TextArea
+                label="Motif de sortie"
+                placeholder="Entrez le motif"
+                value={motif}
+                onChange={handleMotifChange}
+                height="h-[130px]"
+              />
+              <ErrorMessage message={errors.motif} />
+            </div>
+
             {/* Bouton */}
             <div className="mt-8">
               <Button
-                title="Confirmer la sortie"
+                title={saving ? "Confirmation..." : "Confirmer la sortie"}
                 variant="confirm"
-                 onClick={() => {
-    onConfirm?.(motif, dateSortie);
-    setMotif("");
-  }}
+                disabled={saving}
+                onClick={handleConfirm}
               />
             </div>
           </motion.div>

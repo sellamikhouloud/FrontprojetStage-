@@ -1,12 +1,14 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import PopupDetailVisite from "./Popupdetailsvisite";
 import CardPopupvisite from "../Cards/cardvisite";
 import PopupDetailVisiteModifier from "./PopupdetailvisiteModifier";
 import Spinner from "../Spinner";
 import VDZStatusFilter from "../Filter/VDZStatusFilter";
+import { annulerVisite } from "@/lib/api/visites";
 
 const Popupvisites = ({
   open,
@@ -15,6 +17,8 @@ const Popupvisites = ({
   famille,
   isLoading = false,
 }) => {
+  const queryClient = useQueryClient();
+
   const [openDetail, setOpenDetail] = useState(false);
   const [selectedVisite, setSelectedVisite] = useState(null);
   const [openModifier, setOpenModifier] = useState(false);
@@ -23,8 +27,38 @@ const Popupvisites = ({
   const visitesActives = Visites?.actives ?? [];
   const visitesAnnulees = Visites?.annulees ?? [];
 
+  
+  useEffect(() => {
+    if (!selectedVisite) return;
+    const toutes = [...visitesActives, ...visitesAnnulees];
+    const fraiche = toutes.find((v) => v.id === selectedVisite.id);
+    if (fraiche && fraiche !== selectedVisite) {
+      setSelectedVisite(fraiche);
+    }
+  
+  }, [Visites]);
+
   const visitesAffichees =
     statusFilter === "active" ? visitesActives : visitesAnnulees;
+
+  const handleDeleteVisite = async (visite) => {
+    try {
+      await annulerVisite(visite.id);
+
+      setOpenDetail(false);
+      setSelectedVisite(null);
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["visites", famille?.id] }),
+        queryClient.invalidateQueries({ queryKey: ["famille", famille?.id] }),
+      ]);
+    } catch (err) {
+      console.error(
+        "Erreur lors de la suppression de la visite :",
+        err?.response?.data || err
+      );
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -80,6 +114,7 @@ const Popupvisites = ({
                 setOpenDetail(false);
                 setOpenModifier(true);
               }}
+              onDelete={handleDeleteVisite}
             />
 
             <PopupDetailVisiteModifier
@@ -92,6 +127,8 @@ const Popupvisites = ({
               famille={famille}
               onSave={(updatedVisite) => {
                 setSelectedVisite((prev) => ({ ...prev, ...updatedVisite }));
+                setOpenModifier(false);
+                setOpenDetail(true);
               }}
             />
 
@@ -157,8 +194,8 @@ const Popupvisites = ({
                     visite={
                       item.numero_visite !== undefined &&
                       item.numero_visite !== null
-                        ? `Visite ${item.numero_visite + 1}`
-                        : `Visite ${index + 1}`
+                        ? `Visite ${item.numero_visite}`
+                        : `Visite ${index }`
                     }
                     date={
                       item.date_visite

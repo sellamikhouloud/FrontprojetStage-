@@ -97,7 +97,7 @@ const modeRemise =
     />
 
     <Button
-      title="Supprimer"
+      title=" Annuler"
       variant="supprimer"
       icon={DeleteIcon}
       noWrapperPadding
@@ -135,10 +135,10 @@ const modeRemise =
     className="fixed inset-0 z-[100] flex items-center justify-center"
   >
     <Popup
-      title="Confirmer la suppression"
+      title="Confirmer l'annulation"
       image={SuccessImage}
-      description="Êtes-vous sûr de vouloir supprimer ce Zakat ? Cette action est irréversible."
-      primaryButtonText="Supprimer"
+      description="Êtes-vous sûr de vouloir Annuler ce Zakat ? Cette action est irréversible."
+      primaryButtonText="Annuler Zakat "
       secondaryButtonText="Annuler"
       primaryButtonVariant="danger"
 

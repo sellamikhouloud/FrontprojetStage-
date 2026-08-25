@@ -22,8 +22,11 @@ const PopupDetailVisite = ({
   onDelete,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!open || !visite) return null;
+
+  const isAnnulee = visite?.annule === true;
 
   // Contenu réutilisé dans les deux layouts
   const infosGenerales = [
@@ -33,7 +36,7 @@ const PopupDetailVisite = ({
     ? new Date(visite.date_visite).toLocaleDateString("fr-FR")
     : "-",
 },
-    { label: "Visite n°", value: (visite.numero_visite ?? -1) + 1 },
+    { label: "Visite n°", value: visite.numero_visite ?? "-"},
     {
       label: "Enregistrée par",
       value: visite.audit?.cree_par
@@ -136,24 +139,39 @@ const statutBadges = [
     </div>
   );
 
-  const ActionButtons = ({ className }) => (
-    <div className={className}>
-      <Button
-        title="Modifier"
-        variant="modifier"
-        icon={EditIcon}
-        noWrapperPadding
-        onClick={() => onEdit?.(visite)}
-      />
-      <Button
-        title="Supprimer"
-        variant="supprimer"
-        icon={DeleteIcon}
-        noWrapperPadding
-        onClick={() => setShowDeletePopup(true)}
-      />
-    </div>
-  );
+  const ActionButtons = ({ className }) => {
+    
+    if (isAnnulee) return null;
+
+    return (
+      <div className={className}>
+        <Button
+          title="Modifier"
+          variant="modifier"
+          icon={EditIcon}
+          noWrapperPadding
+          onClick={() => onEdit?.(visite)}
+        />
+        <Button
+          title="Annuler"
+          variant="supprimer"
+          icon={DeleteIcon}
+          noWrapperPadding
+          onClick={() => setShowDeletePopup(true)}
+        />
+      </div>
+    );
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(true);
+      await onDelete?.(visite);
+    } finally {
+      setIsDeleting(false);
+      setShowDeletePopup(false);
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -176,16 +194,13 @@ const statutBadges = [
         {showDeletePopup && (
           <div onClick={(e) => e.stopPropagation()}>
             <Popup
-              title="Confirmer la suppression"
+              title="Confirmer l'annulation"
               image={SuccessImage}
-              description="Êtes-vous sûr de vouloir supprimer cette visite ? Cette action est irréversible."
-              primaryButtonText="Supprimer"
-              secondaryButtonText="Annuler"
+              description="Êtes-vous sûr de vouloir Annuler cette visite ? Cette action est irréversible."
+               primaryButtonText={isDeleting ? "Annulation..." : "Annuler la visite"}
+               secondaryButtonText="Annuler"
               primaryButtonVariant="danger"
-              onPrimaryClick={() => {
-                setShowDeletePopup(false);
-                onDelete?.(visite);
-              }}
+              onPrimaryClick={handleConfirmDelete}
               onSecondaryClick={() => setShowDeletePopup(false)}
             />
           </div>
@@ -226,7 +241,7 @@ const statutBadges = [
             </button>
 
             <h2 className="mt-2 text-center text-[20px] font-bold">
-              Détail de la visite n°{(visite.numero_visite ?? -1) + 1}
+              Détail de la visite n°{visite.numero_visite ?? "-"}
             </h2>
           </div>
 

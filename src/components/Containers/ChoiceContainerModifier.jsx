@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ArrowDown from "../../assets/arrow-drop-down (1).png";
-import Options from "./Options";
+import Options2 from "./Options2";
 
 const ChoiceContainerModifier = ({
   label,
@@ -17,6 +17,15 @@ const ChoiceContainerModifier = ({
     setIsOpen(false);
   };
 
+  // value is a primitive (id or value string) here, since Options sends option.value
+  const selectedOption = options.find(
+    (option) => String(option.value ?? option) === String(value)
+  );
+
+  const displayValue = selectedOption
+    ? (selectedOption.label ?? selectedOption)
+    : "";
+
   return (
     <div
       className={`
@@ -26,56 +35,41 @@ const ChoiceContainerModifier = ({
       `}
     >
       <div className="flex flex-col gap-2 w-full">
-
-        {/* Label */}
-        <label
-          className="
-            text-[14px]
-            sm:text-[15px]
-            lg:text-[16px]
-            font-semibold
-            text-black
-          "
-        >
+        <label className="text-[14px] sm:text-[15px] lg:text-[16px] font-semibold text-black">
           {label}
         </label>
 
-        {/* Select */}
         <div
-  className="
-    w-full
-    bg-white
-    border-[1.5px]
-    border-dashed
-    border-[#4E9F8A]
-    rounded-[15px]
-    overflow-hidden
-  "
->
+          className="
+            w-full
+            bg-white
+            border-[1.5px]
+            border-dashed
+            border-[#4E9F8A]
+            rounded-[15px]
+            overflow-hidden
+          "
+        >
           <button
             type="button"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => setIsOpen((prev) => !prev)}
             className="
               w-full
               h-[45px]
               px-3
-
               flex
               items-center
               justify-between
-
               bg-white
-
               text-[14px]
               sm:text-[15px]
               lg:text-[16px]
-
               text-left
               focus:outline-none
             "
           >
-            <span className={value ? "text-black" : "text-gray-400"}>
-              {value || placeholder}
+            <span className={displayValue ? "text-black" : "text-gray-400"}>
+              {displayValue || placeholder}
             </span>
 
             <img
@@ -92,13 +86,9 @@ const ChoiceContainerModifier = ({
           </button>
 
           {isOpen && (
-            <Options
-              options={options}
-              handleSelect={handleSelect}
-            />
+            <Options2 options={options} handleSelect={handleSelect} />
           )}
         </div>
-
       </div>
     </div>
   );

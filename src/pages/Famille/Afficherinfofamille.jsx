@@ -6,6 +6,7 @@ import { marquerSortie} from "@/lib/api/familles";
 import {getVisites} from "@/lib/api/familles";
 import { getDistributions } from "@/lib/api/familles";
 import { getFamilleZakat } from "@/lib/api/familles";
+import { getCourbes } from "@/lib/api/familles";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../../components/Containers/AfficherContainer";
@@ -85,7 +86,15 @@ const {
   enabled: !!id && openZakat,
 });
 
-
+const {
+  data: courbesResponse,
+  isLoading: courbesLoading,
+  isError: courbesError,
+} = useQuery({
+  queryKey: ["courbes", id],
+  queryFn: () => getCourbes(id).then((res) => res.data),
+  enabled: !!id,
+});
   
 
 if (isLoading) {
@@ -309,108 +318,71 @@ const statutMere =
   STATUT_MERE[famille?.statut_nutritionnel_mere] || null;
 
 
-const DONNEES_POIDS = [
-  { age: 0, poids: 3.1 },
-  { age: 1, poids: 3.6 },
-  { age: 2, poids: 4.2 },
-  { age: 3, poids: 4.8 },
-  { age: 4, poids: 5.4 },
-  { age: 5, poids: 6.0 },
-  { age: 6, poids: 6.6 },
-  { age: 7, poids: 7.3 },
-  { age: 8, poids: 8.0 },
-  { age: 9, poids: 8.7 },
-  { age: 10, poids: 9.4 },
-  { age: 11, poids: 10.1 },
-];
 
-// Données de test — Taille pour l'âge
-const DONNEES_TAILLE = [
-  { age: 0, taille: 57.5 },
-  { age: 1, taille: 60.5 },
-  { age: 2, taille: 63 },
-  { age: 3, taille: 65.5 },
-  { age: 4, taille: 68 },
-  { age: 5, taille: 71 },
-  { age: 6, taille: 73.5 },
-  { age: 7, taille: 75.5 },
-  { age: 8, taille: 77.5 },
-  { age: 9, taille: 79.5 },
-  { age: 10, taille: 81 },
-  { age: 11, taille: 82 },
-  { age: 12, taille: 83 },
-];
+const donneesPoidsAge = (courbesResponse?.poids_age || []).map((p) => ({
+  age: p.age,
+  poids: p.poids / 1000,
+}));
 
-// Données de test — Poids pour la taille
-const DONNEES_POIDS_TAILLE = [
-  { taille: 45, poids: 2.5 },
-  { taille: 50, poids: 3.0 },
-  { taille: 55, poids: 3.5 },
-  { taille: 60, poids: 4.0 },
-  { taille: 65, poids: 4.5 },
-  { taille: 70, poids: 5.1 },
-  { taille: 75, poids: 5.7 },
-  { taille: 80, poids: 6.4 },
-  { taille: 85, poids: 7.2 },
-  { taille: 90, poids: 8.0 },
-  { taille: 95, poids: 8.7 },
-  { taille: 100, poids: 9.4 },
-  { taille: 105, poids: 10.0 },
-];
+const donneesTailleAge = (courbesResponse?.taille_age || []).map((t) => ({
+  age: t.age,
+  taille: t.taille,
+}));
 
-const DONNEES_MUAC = [
-  { age: 0, muac: 110 },
-  { age: 1, muac: 111 },
-  { age: 2, muac: 112 },
-  { age: 3, muac: 113.5 },
-  { age: 4, muac: 115 },
-  { age: 5, muac: 116 },
-  { age: 6, muac: 117 },
-  { age: 7, muac: 118.5 },
-  { age: 8, muac: 119.5 },
-  { age: 9, muac: 120.5 },
-  { age: 10, muac: 121.5 },
-  { age: 11, muac: 123 },
-  { age: 12, muac: 124.5 },
-];
+const donneesPoidsTaille = (courbesResponse?.poids_taille || []).map((pt) => ({
+  taille: pt.taille,
+  poids: pt.poids / 1000,
+}));
 
+const donneesMuacAge = (courbesResponse?.muac_age || []).map((m) => ({
+  age: m.age,
+  muac: m.muac,
+}));
+
+
+
+const hasCourbes =
+  donneesPoidsAge.length > 0 ||
+  donneesTailleAge.length > 0 ||
+  donneesPoidsTaille.length > 0 ||
+  donneesMuacAge.length > 0;
 
 const graphs = [
   {
     id: 1,
-    component: <PoidsAgeChart data={DONNEES_POIDS} />,
+    component: <PoidsAgeChart data={donneesPoidsAge} />,
   },
   {
     id: 2,
-    component: <TailleAgeChart data={DONNEES_TAILLE} />,
+    component: <TailleAgeChart data={donneesTailleAge} />,
   },
   {
     id: 3,
-    component: <PoidsTailleChart data={DONNEES_POIDS_TAILLE} />,
+    component: <PoidsTailleChart data={donneesPoidsTaille} />,
   },
   {
     id: 4,
-    component: <MuacAgeChart data={DONNEES_MUAC} />,
+    component: <MuacAgeChart data={donneesMuacAge} />,
   },
 ];
 
+
 const handleBack = () => {
-  navigate(location.state?.from || "/dashboard", {
-    state: { draft: location.state?.draft },
-  });
+  navigate("/liste-famille");
 };
 
 return (
   <div className="flex h-screen overflow-hidden bg-white">
-  {/* Sidebar */}
+
  
-    <Sidebar />
+  <Sidebar hideOnMobile />
   
   
 <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
   Distribution={distributionsResponse}   
+  famille={famille}
   isLoading={distributionsLoading}
 />
 
@@ -435,21 +407,17 @@ return (
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
   onConfirm={async (motif, dateSortie) => {
-    try {
-      await marquerSortie(famille.id, {
-        date_sortie: dateSortie,
-        motif_sortie: motif,
-      });
+   
+    await marquerSortie(famille.id, {
+      date_sortie: dateSortie,
+      motif_sortie: motif,
+    });
 
-      setOpenFinSuivi(false);
+    setOpenFinSuivi(false);
 
-      await queryClient.invalidateQueries({
-        queryKey: ["famille", famille.id],
-      });
-
-    } catch (err) {
-      setErrorMessage(getErrorMessage(err));
-    }
+    await queryClient.invalidateQueries({
+      queryKey: ["famille", famille.id],
+    });
   }}
 />
  
@@ -633,10 +601,19 @@ return (
 </div>
 
 
+
 {/* ==================== Courbes OMS ==================== */}
-<div className="mt-4">
- <OMSGraphs graphs={graphs} />
-</div> 
+{(courbesLoading || hasCourbes) && (
+  <div className="mt-4">
+    {courbesLoading ? (
+      <div className="flex justify-center py-6">
+        <Spinner />
+      </div>
+    ) : (
+      <OMSGraphs graphs={graphs} />
+    )}
+  </div>
+)}
 {famille?.statut === "active" && (
   <div className="mt-8 w-full">
     <Button

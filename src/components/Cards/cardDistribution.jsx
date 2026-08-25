@@ -1,64 +1,49 @@
 const CardPopupDistribution = ({
-  enfant,
-  code,
-  distribution,
   date,
   produits = [],
   onClick,
 }) => {
+  const totalProduits = produits.length;
+
   return (
     <div
       onClick={onClick}
       className="w-full rounded-[18px] p-5 transition hover:shadow-md border border-[#DCE5EC]"
       style={{
-        background: "#F8FBFC",
+        background: "#FFFFFF",
       }}
     >
-      {/* Ligne 1 */}
-      <div className="flex justify-between items-start">
-        <h2 className="text-[16px] sm:text-[18px] md:text-[20px] font-bold text-[#1E1E1E]">
-          {enfant}
+      {/* Ligne 1 : Total + Date */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-[16px] sm:text-[18px] md:text-[20px] font-medium text-[#1E1E1E]">
+          Totale :{" "}
+          <span style={{ color: "#4E9F8A" }}>{totalProduits}</span>{" "}
+          produit{totalProduits > 1 ? "s" : ""}
         </h2>
 
-        <span
-          className="text-[15px] sm:text-[16px] md:text-[18px] font-bold"
-          style={{ color: "#528583" }}
-        >
-          {code}
-        </span>
-      </div>
-
-      {/* Ligne 2 */}
-      <div className="flex justify-between items-center mt-4">
-        <span className="text-[15px] sm:text-[16px] md:text-[18px] font-bold text-[#1E1E1E]">
-          {distribution}
-        </span>
-
-        <span className="text-[15px] sm:text-[16px] md:text-[18px] text-[#1E1E1E]">
+        <span className="text-[14px] sm:text-[15px] md:text-[16px] text-[#6B7280]">
           {date}
         </span>
       </div>
 
-      {/* Produits dynamiques */}
-      <div className="mt-4 space-y-0.5">
-        {produits.map((produit, index) => (
-          <div
-            key={index}
-            className="flex items-center"
-          >
+      {/* Produits (badges) */}
+      {produits.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-4">
+          {produits.map((produit, index) => (
             <span
-              className="text-[14px] sm:text-[15px] md:text-[16px]"
-              style={{ color: "#4E9F8A" }}
+              key={index}
+              className="px-3 py-1.5 rounded-[10px] border text-[13px] sm:text-[14px] font-medium"
+              style={{
+                backgroundColor: "#D9F0EF",
+                borderColor: "#C4DFD8",
+                color: "#4E9F8A",
+              }}
             >
               {produit.nom}
             </span>
-
-            <span className="ml-4 text-[15px] sm:text-[16px] md:text-[18px] text-[#1E1E1E]">
-              {produit.quantite}
-            </span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

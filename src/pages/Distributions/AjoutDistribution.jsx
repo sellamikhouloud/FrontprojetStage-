@@ -1,5 +1,6 @@
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
+import { useAuth } from "../../components/Providers/AuthProvider";
 import Card from "../../components/Cards/Card";
 import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
@@ -7,7 +8,7 @@ import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import LaitInfantile from "../../components/Distribution/LaitInfantile";
 
 import ColisAlimentaire from "../../components/Distribution/ColisAlimentaire";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import Cereales from "../../assets/Cereales.svg";
 import Legumineuses from "../../assets/Legumineuses.svg";
@@ -34,10 +35,10 @@ import { useQuery } from "@tanstack/react-query";
 import { listProduits } from "@/lib/api/stock";
 
 import { listFamilles } from "@/lib/api/familles";
-import { createDistribution } from "@/lib/api/distributions";
+import { createDistribution, getPreCreationDistribution, updateDistribution } from "@/lib/api/distributions";
+import { diffPatch, isEmptyPatch } from "@/lib/diff";
 
 
-// Utilitaire — parse une date au format "JJ/MM/AAAA" en objet Date valide
 const parseDateFR = (str) => {
   if (!str) return null;
   const [day, month, year] = str.split("/").map(Number);
@@ -53,9 +54,29 @@ const formatDateYYYYMMDD = (d) => {
   ).padStart(2, "0")}`;
 };
 
+const isFutureDate = (date) => {
+  if (!date) return false;
 
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
+const detectLaitTypeValue = (nomProduitLait = "") => {
+  const nom = nomProduitLait.toLowerCase();
+  if (nom.includes("1er")) return "1er_age";
+  if (nom.includes("2eme") || nom.includes("2ème") || nom.includes("2 eme")) return "2eme_age";
+  return null;
+};
 
 export default function AjoutDistribution() {
+  const { user, ready } = useAuth();
+  const role = user?.role ?? null;
+  const isAdmin = role === "admin" || role === "chef_coordinator";
 
  const iconByNom = {
   "Céréales": Cereales,
@@ -66,26 +87,7 @@ export default function AjoutDistribution() {
   "Sel": Sel,
   "Sel iodé": Sel,
 };
-const DEFAULT_STOCK_ICON = Sucre; // fallback si le nom n'est pas mappé
-
-const {
-  data: produitsResponse,
-  isLoading: produitsLoading,
-  isError: produitsError,
-} = useQuery({
-  queryKey: ["produits-list"],
-  queryFn: () => listProduits().then((r) => r.data),
-});
-
-const stockProducts = (produitsResponse?.results || [])
-  .filter((p) => p.validee && p.type_produit !== "lait" && !p.nom?.toLowerCase().includes("lait"))
-  .map((p) => ({
-    id: p.id,
-    icon: iconByNom[p.nom] || DEFAULT_STOCK_ICON,
-    title: p.nom,
-    quantity: Number(p.stock_courant),
-    unit: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "kg" : p.unite,
-  }));
+const DEFAULT_STOCK_ICON = Sucre; //  si le nom n'est pas mappé
 
   const [showNewProduct, setShowNewProduct] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
@@ -100,13 +102,21 @@ const stockProducts = (produitsResponse?.results || [])
 
   // Mode modification si une distribution existante a été transmise
   const isEditMode = !!distributionAModifier;
-
+// En mode édition, mapDistributionToEditData() ne renvoie pas selectedLaitOption
+// (il faut le grammage exact) — on retrouve donc le produit lait brut ici,
+// directement depuis distribution.produits (présent car on spread ...distribution).
+const produitLaitSource = isEditMode
+  ? (distributionAModifier?.produits || []).find(
+      (p) =>
+        p.produit?.type_produit === "lait" ||
+        p.produit?.nom?.toLowerCase().includes("lait")
+    )
+  : null;
 
  // Source des données : distribution existante (édition) > brouillon (retour "voir la fiche") > vide (ajout)
   const source = distributionAModifier || draft;
 
   // Icône utilisée par défaut quand un produit n'a pas d'icône
-  // (ex: produit reconstitué depuis la page détail, icon: null)
   const DEFAULT_ICON = Sucre;
 
   const withDefaultIcon = (list) =>
@@ -116,16 +126,110 @@ const stockProducts = (produitsResponse?.results || [])
     }));
 
   const [selectedFamille, setSelectedFamille] = useState(source?.selectedFamille || null);
+
+  // Produits classiques disponibles — chargés seulement une fois la famille choisie
+  const {
+    data: produitsResponse,
+    isLoading: produitsLoading,
+    isError: produitsError,
+  } = useQuery({
+    queryKey: ["produits-list", selectedFamille?.code],
+    queryFn: () => listProduits().then((r) => r.data),
+    enabled: !!selectedFamille?.code,
+  });
+
+  const stockProducts = (produitsResponse?.results || [])
+    .filter((p) => p.validee && p.type_produit !== "lait" && !p.nom?.toLowerCase().includes("lait"))
+    .map((p) => ({
+      id: p.id,
+      icon: iconByNom[p.nom] || DEFAULT_STOCK_ICON,
+      title: p.nom,
+      quantity: Number(p.stock_courant),
+      unit: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "kg" : p.unite,
+    }));
+
   const [products, setProducts] = useState(withDefaultIcon(source?.products));
-const [date, setDate] = useState(
-  source?.date ? parseDateFR(source.date) || new Date() : new Date()
+const [date, setDate] = useState(() => {
+  // Depuis "voir la fiche" (draft) : déjà un objet Date
+  if (source?.date instanceof Date) return source.date;
+
+  // Draft sérialisé en string JJ/MM/AAAA
+  if (typeof source?.date === "string") {
+    return parseDateFR(source.date) || new Date();
+  }
+
+  // Mode édition : date_distribution vient du backend en ISO (YYYY-MM-DD)
+  if (source?.date_distribution) {
+    const parsed = new Date(source.date_distribution);
+    return isNaN(parsed.getTime()) ? new Date() : parsed;
+  }
+
+  return new Date();
+});
+
+// État "avant modification", figé une seule fois au montage — sert de baseline
+// pour diffPatch() lors de la sauvegarde en mode édition.
+const baselineRef = useRef(
+  isEditMode
+    ? {
+        produits: (distributionAModifier?.produits || []).map((p) => ({
+          produit: p.produit?.id,
+          quantite: Number(p.quantite ?? 0),
+        })),
+        date_distribution: distributionAModifier?.date_distribution ?? null,
+        reception_confirmee: Boolean(distributionAModifier?.reception_confirmee),
+      }
+    : null
 );
+
   const [confirmed, setConfirmed] = useState(source?.confirmed || false);
 
-  // Lait infantile - état remonté ici pour permettre la validation
-  const [laitType, setLaitType] = useState(source?.laitType || null);
-  const [grammage, setGrammage] = useState(source?.grammage || "");
-  const [boxes, setBoxes] = useState(source?.boxes ?? 0);
+  // --- Lait infantile ---
+  // type : "1er_age" | "2eme_age"
+  // selectedLaitOption : { id, grammage, nb_boites } correspondant au grammage choisi
+  const [laitType, setLaitType] = useState(() => {
+  if (isEditMode && produitLaitSource) {
+    return detectLaitTypeValue(produitLaitSource.produit?.nom) || null;
+  }
+  return source?.laitType || null; // draft ("voir la fiche") : déjà la bonne valeur
+});
+const [selectedLaitOption, setSelectedLaitOption] = useState(source?.selectedLaitOption || null);
+const [showLaitPopup, setShowLaitPopup] = useState(false);
+const [boxes, setBoxes] = useState(() => {
+  if (isEditMode && produitLaitSource) {
+    return Number(produitLaitSource.quantite ?? 0);
+  }
+  return source?.boxes ?? 0;
+});
+
+  // Pré-création : donne le détail des grammages dispo (avec nb_boites) par type de lait
+  const {
+    data: preCreationData,
+    isFetching: preCreationLoading,
+  } = useQuery({
+    queryKey: ["distribution-pre-creation", selectedFamille?.code],
+    queryFn: () => getPreCreationDistribution(selectedFamille.code).then((r) => r.data),
+    enabled: !!selectedFamille?.code,
+  });
+
+  // Grammages disponibles pour le type de lait actuellement sélectionné
+  const laitOptions = preCreationData?.lait?.[laitType] || [];
+
+  // laitOptions arrive de façon asynchrone (query liée à selectedFamille) :
+// dès qu'il est dispo, on retrouve l'option qui correspond au produit lait
+// de la distribution éditée et on la sélectionne.
+useEffect(() => {
+  if (!isEditMode || !produitLaitSource || selectedLaitOption) return;
+  if (!laitOptions.length) return;
+
+  const match = laitOptions.find(
+    (option) => option.id === produitLaitSource.produit?.id
+  );
+
+  if (match) {
+    setSelectedLaitOption(match);
+  }
+}, [isEditMode, produitLaitSource, laitOptions, selectedLaitOption]);
 
   const navigate = useNavigate();
   const [newProduct, setNewProduct] = useState({
@@ -135,11 +239,14 @@ const [date, setDate] = useState(
   });
   const [showStockPopup, setShowStockPopup] = useState(false);
 
-  // --- ERROR HANDLING (meme principe que AjoutZakat) ---
+  
   const [errors, setErrors] = useState({
     famille: false,
+    date: false,
     laitType: false,
     grammage: false,
+    boxes: false,
+    laitStock: null,
     confirmed: false,
     distribution: false,
     produits: {},
@@ -158,20 +265,32 @@ const [date, setDate] = useState(
       }
     });
 
+    // Le lait n'est pas obligatoire, mais dès qu'un type est choisi,
+    // il faut aller jusqu'au bout (grammage + au moins 1 boîte).
+    const milkStarted = !!laitType;
+    const milkGrammageMissing = milkStarted && !selectedLaitOption;
+    const milkBoxesMissing = milkStarted && selectedLaitOption && boxes <= 0;
+    const milkComplete = milkStarted && selectedLaitOption && boxes > 0;
+
     const newErrors = {
       famille: !selectedFamille,
-      laitType: boxes > 0 && !laitType,
-      grammage: boxes > 0 && (!grammage || parseFloat(grammage) <= 0),
+      date: isFutureDate(date),
+      laitType: false,
+      grammage: milkGrammageMissing,
+      boxes: milkBoxesMissing,
+      laitStock: null,
       confirmed: !confirmed,
-      distribution: products.length === 0 && boxes === 0,
+      
+      distribution: products.length === 0 && !milkStarted && !milkComplete,
       produits: produitsErrors,
     };
     setErrors(newErrors);
 
     const hasFieldError = [
       newErrors.famille,
-      newErrors.laitType,
+      newErrors.date,
       newErrors.grammage,
+      newErrors.boxes,
       newErrors.confirmed,
       newErrors.distribution,
     ].some(Boolean);
@@ -186,50 +305,136 @@ const [date, setDate] = useState(
   setSaving(true);
   setSaveError(null);
 
+  const produitsPayload = products.map((p) => ({
+    produit: p.id,
+    quantite: Number(p.quantity),
+  }));
+
+  // produit: id_du_lait, quantite: nb_boites 
+  if (boxes > 0 && selectedLaitOption) {
+    produitsPayload.push({
+      produit: selectedLaitOption.id,
+      quantite: Number(boxes),
+    });
+  }
+
   const payload = {
-    famille: selectedFamille?.code, // ex: "GDK-2026-003"
+    famille: selectedFamille?.code, 
     reception_confirmee: confirmed,
     date_distribution: formatDateYYYYMMDD(date),
-    produits: products.map((p) => ({
-      produit: p.id,
-      quantite: Number(p.quantity),
-    })),
-    // TODO: ajouter le produit lait ici plus tard
+    produits: produitsPayload,
+  };
+
+  // Extrait un message d'erreur lisible depuis une réponse API (from the backend)
+  const extractErrorMessage = (error) => {
+    const data = error.response?.data;
+
+    if (!data) {
+      return error.message || "Une erreur est survenue lors de l'enregistrement de la distribution.";
+    }
+
+    if (typeof data === "string") {
+      return data;
+    }
+
+    if (Array.isArray(data)) {
+      const messages = data.filter((m) => typeof m === "string");
+      if (messages.length > 0) {
+        return messages.join(" — ");
+      }
+    }
+
+    if (data?.detail) {
+      return data.detail;
+    }
+
+    if (typeof data === "object" && !Array.isArray(data)) {
+      const messages = [];
+
+      Object.entries(data).forEach(([field, value]) => {
+        const values = Array.isArray(value) ? value : [value];
+
+        values.forEach((msg) => {
+          if (typeof msg !== "string") return;
+          if (field === "non_field_errors" || field === "detail") {
+            messages.push(msg);
+          } else {
+            messages.push(`${field} : ${msg}`);
+          }
+        });
+      });
+
+      if (messages.length > 0) {
+        return messages.join(" — ");
+      }
+    }
+
+    return "Une erreur est survenue lors de l'enregistrement de la distribution.";
   };
 
   try {
-    if (isEditMode) {
-      // TODO: appel API réel — PUT /distributions/:id (à faire plus tard)
-      console.log("Modification distribution", distributionAModifier.id, payload);
+       if (isEditMode) {
+      const currentPayload = {
+        produits: produitsPayload,
+        date_distribution: payload.date_distribution,
+        reception_confirmee: payload.reception_confirmee,
+      };
+
+      const patch = diffPatch(baselineRef.current, currentPayload);
+
+      if (!isEmptyPatch(patch)) {
+        await updateDistribution(distributionAModifier.id, patch);
+      }
     } else {
       await createDistribution(payload);
     }
 
     setShowSuccessPopup(true);
-  } catch (error) {
+    } catch (error) {
     console.error(
-      "❌ Erreur lors de la création de la distribution :",
+      isEditMode
+        ? " Erreur lors de la modification de la distribution :"
+        : " Erreur lors de la création de la distribution :",
       error.response?.data || error.message
     );
-    setSaveError(
-      error.response?.data?.detail ||
-        "Une erreur est survenue lors de l'enregistrement de la distribution."
-    );
+    setSaveError(extractErrorMessage(error));
   } finally {
     setSaving(false);
   }
 };
 
-  const handleLaitTypeChange = (value) => {
-    setLaitType(value);
-    setErrors((prev) => ({ ...prev, laitType: false }));
+  const handleLaitTypeChange = (option) => {
+    
+    setLaitType(option?.value ?? null);
+    // Si  On change de type le grammage précédemment choisi n'est plus valide
+    setSelectedLaitOption(null);
+    setBoxes(0);
+    setErrors((prev) => ({
+      ...prev,
+      laitType: false,
+      grammage: false,
+      boxes: false,
+      laitStock: null,
+    }));
   };
 
-  const handleGrammageChange = (raw) => {
-    setGrammage(raw);
-    if (raw && parseFloat(raw) > 0) {
-      setErrors((prev) => ({ ...prev, grammage: false }));
+  const handleOpenLaitPopup = () => {
+    if (!selectedFamille) {
+      setErrors((prev) => ({ ...prev, famille: true }));
+      return;
     }
+    if (!laitType) {
+      setErrors((prev) => ({ ...prev, laitType: true }));
+      return;
+    }
+    setShowLaitPopup(true);
+  };
+
+  const handleSelectLaitOption = (option) => {
+    setSelectedLaitOption(option);
+    setBoxes(0);
+    setShowLaitPopup(false);
+    setErrors((prev) => ({ ...prev, grammage: false, boxes: false, laitStock: null }));
   };
 
   const handleConfirmedChange = (e) => {
@@ -240,13 +445,39 @@ const [date, setDate] = useState(
     }
   };
 
+  const handleIncrementBoxes = () => {
+    if (!laitType) {
+      setErrors((prev) => ({ ...prev, laitType: true }));
+      return;
+    }
+    if (!selectedLaitOption) {
+      setErrors((prev) => ({ ...prev, grammage: true }));
+      return;
+    }
+    setBoxes((v) => {
+      const newValue = v + 1;
+      if (newValue > selectedLaitOption.nb_boites) {
+        setErrors((prev) => ({
+          ...prev,
+          laitStock: `Stock disponible dépassé (max ${selectedLaitOption.nb_boites} boîtes)`,
+        }));
+        return v;
+      }
+      setErrors((prev) => ({ ...prev, laitStock: null, boxes: false }));
+      return newValue;
+    });
+  };
+
   const handleDecrementBoxes = () => {
     setBoxes((v) => {
       const newValue = Math.max(0, v - 1);
-      if (newValue === 0) {
-        // Pas de boîte = pas besoin de type de lait ni de grammage
-        setErrors((prev) => ({ ...prev, laitType: false, grammage: false }));
-      }
+      setErrors((prev) => ({
+        ...prev,
+        laitStock:
+          selectedLaitOption && newValue > selectedLaitOption.nb_boites
+            ? prev.laitStock
+            : null,
+      }));
       return newValue;
     });
   };
@@ -372,7 +603,15 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
       navigate(`/famille/${selectedFamille.id}`, {
         state: {
           from: "/ajout-distribution",
-          draft: { selectedFamille, products, date, confirmed, laitType, grammage, boxes },
+          draft: {
+            selectedFamille,
+            products,
+            date,
+            confirmed,
+            laitType,
+            selectedLaitOption,
+            boxes,
+          },
           // Si on était déjà en mode modification, on garde le contexte au retour
           distributionAModifier: isEditMode ? distributionAModifier : undefined,
         },
@@ -381,72 +620,45 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
   };
 
   return (
-    <div className="min-h-screen bg-white lg:flex">
-      <div
-        className="
-          hidden
-          lg:flex
-          lg:sticky
-          lg:top-0
-          lg:h-screen
-          lg:items-center
-          lg:py-0
-          lg:pl-0
-          lg:shrink-0
-        "
-      >
-        <Sidebar role="admin" />
-      </div>
+    <div className="flex h-screen bg-white overflow-hidden">
+      <Sidebar role={role} />
 
-      {/* Mobile sidebar (hamburger) */}
-      <div className="lg:hidden">
-        <Sidebar role="admin" />
-      </div>
+      <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+       
 
-      {/* Mobile fixed white header */}
-      <div
-        className="
-          fixed
-          top-0
-          left-0
-          right-0
-          h-20
-          bg-white
-          z-40
-          lg:hidden
-        "
-      />
+        {/* Zone scrollable UNIQUE */}
+        <div
+          className="
+            h-full
+            overflow-y-auto
 
-      {/* Page content */}
-      <main
-        className="
-          flex-1
-          overflow-y-auto
-          bg-white
+            pt-20
+            lg:pt-4
 
-          pt-20
-          lg:pt-4
+            px-4
+            lg:px-10
 
-          px-4
-          lg:px-10
-
-          pb-8
-          lg:pb-2
-        "
-      >
-        {/* Header */}
-        <div className="mb-3 lg:mb-6">
-          <PageHeader
-            leftTitle="Annuler"
-            showRight={false}
-            onBack={() => window.history.back()}
-          />
-        </div>
+            pb-8
+            lg:pb-2
+          "
+        >
+       
+        <div className="min-h-full flex flex-col justify-center">
+        
+        
+          <div className="mb-0 lg:mb-3">
+            <PageHeader
+              leftTitle="Annuler"
+              showRight={false}
+              onBack={() => window.history.back()}
+            />
+          </div>
+       
 
        
 
         {!selectedFamille && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-2">
             <SelectorWithAction
               label="Choisir la famille concerne"
               description="Cliquer pour rechercher la famille concerne par la distribution"
@@ -516,11 +728,23 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
         <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-4">
-            {selectedFamille && (
-              <InfoHeader title="Dernière distribution" value="15/05/2026" />
+            {selectedFamille && !isEditMode  && (
+             <InfoHeader
+  title="Dernière distribution"
+  value={
+    preCreationLoading
+      ? "Chargement..."
+      : preCreationData?.date_derniere_distribution
+        ? preCreationData.date_derniere_distribution
+            .split("-")
+            .reverse()
+            .join("/")
+        : "Aucune"
+  }
+/>
             )}
 
-            {/* Date  */}
+            {/* Date */}
             <div className="flex flex-col gap-0">
               <h3
                 className="
@@ -537,14 +761,34 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
                 className={`
                   grid
                   grid-cols-1
-                  "lg:grid-cols-1"}
+                  lg:grid-cols-1
                   gap-3
                   lg:gap-2
                   items-end
                 `}
               >
-                <DateContainer value={date} onChange={setDate} noPadding />
+                <DateContainer
+                 value={date}
+                 onChange={(newDate) => {
+                 setDate(newDate);
 
+                 setErrors((prev) => ({
+                 ...prev,
+                 date: isFutureDate(newDate),
+                     } ));
+                  }}
+                 noPadding
+                />
+
+                <ErrorMessage
+                   message={
+                   errors.date
+                   ? "La date de distribution ne peut pas être supérieure à la date d'aujourd'hui."
+                   : null
+                  }
+                />
+
+              
               </div>
             </div>
 
@@ -552,15 +796,19 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
             <LaitInfantile
               type={laitType}
               onTypeChange={handleLaitTypeChange}
-              grammage={grammage}
-              onGrammageChange={handleGrammageChange}
+              options={laitOptions}
+              optionsLoading={preCreationLoading}
+              selectedOption={selectedLaitOption}
+              onSelectOption={handleSelectLaitOption}
+              showPopup={showLaitPopup}
+              onOpenPopup={handleOpenLaitPopup}
+              onClosePopup={() => setShowLaitPopup(false)}
               boxes={boxes}
-              onIncrement={() => {
-                setBoxes((v) => v + 1);
-                setErrors((prev) => ({ ...prev, distribution: false }));
-              }}
+              onIncrement={handleIncrementBoxes}
               onDecrement={handleDecrementBoxes}
               errors={errors}
+              hasFamille={!!selectedFamille}
+              onRequireFamille={() => setErrors((prev) => ({ ...prev, famille: true }))}
             />
 
             {/* Temporary confirmation */}
@@ -579,6 +827,10 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
             <ColisAlimentaire
     products={products}
     onAddProduct={() => {
+      if (!selectedFamille) {
+        setErrors((prev) => ({ ...prev, famille: true }));
+        return;
+      }
       if (!produitsLoading) setShowStockPopup(true);
     }}
     onUpdateQuantity={handleUpdateQuantity}
@@ -590,7 +842,9 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
   )}
              <ErrorMessage
     message={
-      errors.distribution
+      errors.famille
+        ? "Veuillez d'abord choisir une famille"
+        : errors.distribution
         ? "Veuillez ajouter au moins un colis alimentaire ou du lait infantile"
         : null
     }
@@ -645,6 +899,23 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
             }}
           />
         )}
+        </div>
+       
+        </div>
+        
+
+        
+        <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-4
+            bg-white
+            z-20
+          "
+        />
       </main>
 
      <PopupListeFamilles

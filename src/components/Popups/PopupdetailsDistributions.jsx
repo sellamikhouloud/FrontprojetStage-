@@ -23,7 +23,9 @@ const PopupDetailDistribution = ({
 
   if (!open || !distribution) return null;
 
-  // Séparation lait / produits alimentaires
+  const isAnnulee = Boolean(distribution.annulee);
+
+ 
   const produitsLait = (distribution.produits || []).filter(
     (item) => item.produit?.type_produit === "lait"
   );
@@ -48,10 +50,10 @@ const PopupDetailDistribution = ({
         {showDeletePopup && (
           <div onClick={(e) => e.stopPropagation()}>
             <Popup
-              title="Confirmer la suppression"
+              title="Confirmer l'annulation"
               image={SuccessImage}
-              description="Êtes-vous sûr de vouloir supprimer cette distribution ? Cette action est irréversible."
-              primaryButtonText="Supprimer"
+              description="Êtes-vous sûr de vouloir Annuler cette distribution ? Cette action est irréversible."
+              primaryButtonText="Annuler la distribution"
               secondaryButtonText="Annuler"
               primaryButtonVariant="danger"
               onPrimaryClick={() => {
@@ -116,7 +118,7 @@ const PopupDetailDistribution = ({
             </button>
 
             <h2 className="mt-3 text-center text-[20px] font-bold text-[#202124]">
-              Détail de la distribution n°{distribution.numeroDistribution}
+              Détail  distribution
             </h2>
           </div>
 
@@ -161,7 +163,7 @@ const PopupDetailDistribution = ({
                     value:
                       distribution.numeroDistribution ?? "-",
                   },
-                
+                  
                   {
                     label: "Enregistrée par",
                     value:
@@ -228,55 +230,62 @@ const PopupDetailDistribution = ({
             <div className="space-y-3 sm:ml-2">
 
               {/* Colis alimentaire */}
-              <InfoCard
-                title="Colis alimentaire"
-                data={produitsAlimentaires.map((item) => ({
-  label: item.produit?.nom ?? "-",
-  value: `${Number(item.quantite ?? 0)} ${
-    item.produit?.unite ?? ""
-  }`,
-}))}
-              />
+              {produitsAlimentaires.length > 0 && (
+                <InfoCard
+                  title="Colis alimentaire"
+                  data={produitsAlimentaires.map((item) => ({
+                    label: item.produit?.nom ?? "-",
+                    value: `${Number(item.quantite ?? 0)} ${
+                      item.produit?.unite ?? ""
+                    }`,
+                  }))}
+                />
+              )}
             </div>
           </div>
 
-          {/* Desktop */}
-          <div className="hidden sm:grid grid-cols-2 gap-4 mt-6">
-            <Button
-              title="Modifier"
-              variant="modifier"
-              icon={EditIcon}
-              noWrapperPadding
-              onClick={() => onEdit?.(distribution)}
-            />
+          {/* Boutons Modifier / Annuler : masqués si la distribution est déjà annulée */}
+          {!isAnnulee && (
+            <>
+              {/* Desktop */}
+              <div className="hidden sm:grid grid-cols-2 gap-4 mt-6">
+                <Button
+                  title="Modifier"
+                  variant="modifier"
+                  icon={EditIcon}
+                  noWrapperPadding
+                  onClick={() => onEdit?.(distribution)}
+                />
 
-            <Button
-              title="Supprimer"
-              variant="supprimer"
-              icon={DeleteIcon}
-              noWrapperPadding
-              onClick={() => setShowDeletePopup(true)}
-            />
-          </div>
+                <Button
+                  title="Annuler"
+                  variant="supprimer"
+                  icon={DeleteIcon}
+                  noWrapperPadding
+                  onClick={() => setShowDeletePopup(true)}
+                />
+              </div>
 
-          {/* Mobile */}
-          <div className="sm:hidden grid grid-cols-1 gap-3 mt-6">
-            <Button
-              title="Modifier"
-              variant="modifier"
-              icon={EditIcon}
-              noWrapperPadding
-              onClick={() => onEdit?.(distribution)}
-            />
+              {/* Mobile */}
+              <div className="sm:hidden grid grid-cols-1 gap-3 mt-6">
+                <Button
+                  title="Modifier"
+                  variant="modifier"
+                  icon={EditIcon}
+                  noWrapperPadding
+                  onClick={() => onEdit?.(distribution)}
+                />
 
-            <Button
-              title="Supprimer"
-              variant="supprimer"
-              icon={DeleteIcon}
-              noWrapperPadding
-              onClick={() => setShowDeletePopup(true)}
-            />
-          </div>
+                <Button
+                  title="Annuler"
+                  variant="supprimer"
+                  icon={DeleteIcon}
+                  noWrapperPadding
+                  onClick={() => setShowDeletePopup(true)}
+                />
+              </div>
+            </>
+          )}
         </motion.div>
       </div>
     </AnimatePresence>

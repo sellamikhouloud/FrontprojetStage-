@@ -6,12 +6,13 @@ import Card from "../Cards/Card";
 import EditableInfoCard from "../Containers/ModifierContainer";
 import Button from "../Button/Button";
 import SuccessBanner from "./SuccessBanner";
+import ErrorMessage from "../Forms/ErrorMessage";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
 
 import quitter from "../../assets/quitter.svg";
 
 import { diffPatch, isEmptyPatch } from "@/lib/diff";
 import { updateAideZakat } from "@/lib/api/zakat";
-import { getTauxDeChange } from "@/lib/api/parametres";
 
 function extractEditableZakatFields(zakat) {
   return {
@@ -22,6 +23,71 @@ function extractEditableZakatFields(zakat) {
     precisions: zakat?.precisions ?? "",
     observation: zakat?.observation ?? "",
   };
+}
+
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
+function extractErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (!data) {
+    return error?.message || "Une erreur est survenue.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (typeof data?.code === "string" && typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") messages.push(`${label} : ${msg}`);
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue.";
 }
 
 const PopupModifierZakat = ({
@@ -35,14 +101,11 @@ const PopupModifierZakat = ({
 
   const [confirmed, setConfirmed] = useState(false);
   const [confirmationError, setConfirmationError] = useState(false);
+  const [dateError, setDateError] = useState(false);
 
   const [showBanner, setShowBanner] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-
-  const [tauxEuro, setTauxEuro] = useState(null);
-  const [loadingTaux, setLoadingTaux] = useState(false);
-  const [tauxError, setTauxError] = useState("");
 
   const baseline = useMemo(
     () => (zakat ? extractEditableZakatFields(zakat) : null),
@@ -56,54 +119,24 @@ const PopupModifierZakat = ({
       setConfirmed(true);
 
       setConfirmationError(false);
+      setDateError(false);
       setErrorMessage(null);
       setShowBanner(false);
     }
   }, [baseline]);
 
-  useEffect(() => {
-    if (!open) return;
-
-    const fetchTaux = async () => {
-      try {
-        setLoadingTaux(true);
-        setTauxError("");
-
-        const response = await getTauxDeChange();
-
-        console.log("Réponse taux de change :", response);
-
-        const valeur = parseFloat(response?.data?.valeur);
-
-        if (Number.isNaN(valeur)) {
-          throw new Error("Taux de change invalide");
-        }
-
-        console.log("Taux EUR récupéré :", valeur);
-
-        setTauxEuro(valeur);
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération du taux de change :",
-          error?.response?.data || error
-        );
-
-        setTauxEuro(null);
-        setTauxError(
-          "Impossible de récupérer le taux de change."
-        );
-      } finally {
-        setLoadingTaux(false);
-      }
-    };
-
-    fetchTaux();
-  }, [open]);
+  
+  const tauxUtilise =
+    zakat?.taux_utilise != null && !Number.isNaN(parseFloat(zakat.taux_utilise))
+      ? parseFloat(zakat.taux_utilise)
+      : null;
 
   const montantEuro =
-    form?.montant === "" || tauxEuro === null
+    form?.montant === ""
       ? "0.00"
-      : (Number(form?.montant) * tauxEuro).toFixed(2);
+      : tauxUtilise !== null
+      ? (Number(form?.montant) * tauxUtilise).toFixed(2)
+      : zakat?.montant_eur ?? null;
 
   const patch = useMemo(
     () =>
@@ -173,10 +206,28 @@ const PopupModifierZakat = ({
     },
   ];
 
+ 
+  const causePrincipaleLabel =
+    causePrincipaleOptions.find(
+      (opt) => opt.value === form.cause_principale
+    )?.label || form.cause_principale;
+
   const handleChange = (field, value) => {
     setForm((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+ 
+  const handleCausePrincipaleChange = (value) => {
+    const match = causePrincipaleOptions.find(
+      (opt) => opt.label === value || opt.value === value
+    );
+
+    setForm((prev) => ({
+      ...prev,
+      cause_principale: match ? match.value : value,
     }));
   };
 
@@ -193,6 +244,11 @@ const PopupModifierZakat = ({
   const handleSave = async () => {
     if (!confirmed) {
       setConfirmationError(true);
+      return;
+    }
+
+    if (isFutureDate(form.date_versement)) {
+      setDateError(true);
       return;
     }
 
@@ -246,10 +302,7 @@ const PopupModifierZakat = ({
         error?.response?.data || error
       );
 
-      setErrorMessage(
-        error?.response?.data?.detail ||
-        "Une erreur est survenue lors de la modification."
-      );
+      setErrorMessage(extractErrorMessage(error));
 
     } finally {
       setIsSaving(false);
@@ -340,6 +393,10 @@ const PopupModifierZakat = ({
       (opt) => opt.label === value || opt.value === value
     );
     finalValue = match ? match.value : value;
+  }
+
+  if (field === "date_versement") {
+    setDateError(isFutureDate(finalValue));
   }
 
   setForm((prev) => ({
@@ -461,26 +518,26 @@ const PopupModifierZakat = ({
                 onChange={handleInfoChange}
               />
 
+              <ErrorMessage
+                message={
+                  dateError
+                    ? "La date ne peut pas être une date future."
+                    : null
+                }
+              />
+
               <div>
-                {loadingTaux && (
+                {form.montant !== "" && montantEuro !== null && (
                   <p className="text-[#6B7280] text-[12px] mt-1 ml-3">
-                    Récupération du taux de change...
+                    ≈ {montantEuro} EUR (Taux utilisé lors du versement)
                   </p>
                 )}
 
-                {tauxError && (
-                  <p className="text-red-500 text-[12px] mt-1 ml-3">
-                    {tauxError}
+                {form.montant !== "" && montantEuro === null && (
+                  <p className="text-[#6B7280] text-[12px] mt-1 ml-3">
+                    Taux de change non disponible pour cette zakat.
                   </p>
                 )}
-
-                {!loadingTaux &&
-                  !tauxError &&
-                  form.montant !== "" && (
-                    <p className="text-[#6B7280] text-[12px] mt-1 ml-3">
-                      ≈ {montantEuro} EUR (Réf. taux du jour)
-                    </p>
-                  )}
               </div>
 
               <TextareaModifier
@@ -505,12 +562,9 @@ const PopupModifierZakat = ({
 
               <TextareaModifier
                 label="Cause principale :"
-                value={form.cause_principale}
+                value={causePrincipaleLabel}
                 onChange={(e) =>
-                  handleChange(
-                    "cause_principale",
-                    e.target.value
-                  )
+                  handleCausePrincipaleChange(e.target.value)
                 }
                 placeholder="Saisir la cause principale"
                 height="h-[50px]"
@@ -567,38 +621,17 @@ const PopupModifierZakat = ({
                   </span>
                 </label>
 
-                {confirmationError && (
-                  <p
-                    className="
-                      mt-2
-                      ml-8
-                      text-[13px]
-                      text-red-500
-                    "
-                  >
-                    Veuillez confirmer la remise
-                    avant d'enregistrer.
-                  </p>
-                )}
+                <ErrorMessage
+                  message={
+                    confirmationError
+                      ? "Veuillez confirmer la remise avant d'enregistrer."
+                      : null
+                  }
+                />
 
               </div>
 
-              {errorMessage && (
-                <div
-                  className="
-                    rounded-[10px]
-                    border
-                    border-red-300
-                    bg-red-50
-                    px-4
-                    py-3
-                    text-sm
-                    text-red-600
-                  "
-                >
-                  {errorMessage}
-                </div>
-              )}
+             <BackendErrorMessage message={errorMessage} />
 
               <div className="mt-4">
 

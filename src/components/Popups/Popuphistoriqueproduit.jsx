@@ -6,7 +6,7 @@ import quitter from "../../assets/quitter.svg";
  * Popup Historique d'un produit — liste des mouvements +/- de quantité.
  *
  * historique: [
- *   { id, type: "ajout" | "retrait", quantite, unite, par, date }
+ *   { id, type: "ajout" | "retrait", quantite, unite, par, user, date }
  * ]
  */
 export default function PopupHistoriqueProduit({
@@ -178,11 +178,11 @@ export default function PopupHistoriqueProduit({
 
                       {/* Détails */}
                       <div className="flex-1 min-w-0">
-                        <p className="text-[14px] font-semibold text-[#202124]">
+                        <p className="text-[14px] font-semibold text-[#202124] truncate">
                           {mvt.par}
                         </p>
-                        <p className="text-[12px] text-[#6B7280]">
-                          {mvt.date}
+                        <p className="text-[12px] text-[#6B7280] truncate">
+                          Par {mvt.user} · {mvt.date}
                         </p>
                       </div>
 

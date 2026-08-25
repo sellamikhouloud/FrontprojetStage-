@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles } from "@/lib/api/familles";
 import { listVillages } from "@/lib/api/Parametres";
 import Spinner from "../../components/Spinner";
