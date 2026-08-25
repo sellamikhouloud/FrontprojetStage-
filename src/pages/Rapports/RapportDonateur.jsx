@@ -104,8 +104,11 @@ const RapportBilan = () => {
     setIsValidating(true);
 
     try {
-      await validerRapport(rapport.id);
-      setRapport((prev) => (prev ? { ...prev, est_valide: true } : prev));
+     
+      await validerRapport(rapport.id, narrativeMessage);
+      setRapport((prev) =>
+        prev ? { ...prev, est_valide: true, message: narrativeMessage } : prev
+      );
     } catch (error) {
       console.error("Erreur lors de la validation du rapport :", error);
     } finally {
@@ -171,44 +174,45 @@ const RapportBilan = () => {
               Revenir
             </button>
 
-            {isLoading && (
-              <div className="flex justify-center items-center py-10">
-                <Spinner />
+         
+            <div
+              className="
+                rounded-[15px]
+                bg-[#F8FBFC]
+                p-4
+                md:p-6
+                flex
+                flex-col
+                gap-8
+              "
+            >
+              <div className="mt-4">
+                <HeaderRapport
+                  selectedMonth={selectedMonth}
+                  title="Bilan donateurs"
+                />
               </div>
-            )}
 
-            {status === STATUS.ERROR && (
-              <p className="text-center text-red-500 mt-6">
-                Une erreur est survenue lors du chargement du bilan donateur.
-              </p>
-            )}
+              {isLoading && (
+                <div className="flex justify-center items-center py-10">
+                  <Spinner />
+                </div>
+              )}
 
-            {status === STATUS.SUCCESS && !rapport && (
-              <p className="text-center text-[#818181] mt-6">
-                Aucun bilan disponible pour ce mois.
-              </p>
-            )}
+              {status === STATUS.ERROR && (
+                <p className="text-center text-red-500 mt-6">
+                  Une erreur est survenue lors du chargement du bilan donateur.
+                </p>
+              )}
 
-            {status === STATUS.SUCCESS && rapport && (
-              <>
-                <div
-                  className="
-                    rounded-[15px]
-                    bg-[#F8FBFC]
-                    p-4
-                    md:p-6
-                    flex
-                    flex-col
-                    gap-8
-                  "
-                >
-                  <div className="mt-4">
-                    <HeaderRapport
-                      selectedMonth={selectedMonth}
-                      title="Bilan donateurs"
-                    />
-                  </div>
+              {status === STATUS.SUCCESS && !rapport && (
+                <p className="text-center text-[#818181] mt-6">
+                  Aucun bilan disponible pour ce mois.
+                </p>
+              )}
 
+              {status === STATUS.SUCCESS && rapport && (
+                <>
                   <div className="flex justify-center">
                     <div className="w-full max-w-[720px] min-w-0">
                       <h2 className="text-[18px] font-semibold text-[#202124] mb-2">
@@ -294,42 +298,45 @@ const RapportBilan = () => {
                       familles={rapport.donnees.zakat.nb_familles_ce_mois ?? 0}
                     />
                   </div>
-                </div>
+                </>
+              )}
+            </div>
 
-                <div
-                  className="
-                    rounded-[15px]
-                    bg-[#F8FBFC]
-                    p-4
-                    md:p-6
-                    flex
-                    flex-col
-                    gap-8
-                  "
-                >
-                  <HeaderRapport
-                    selectedMonth={selectedMonth}
-                    title="Bilan donateurs"
-                  />
+        
+            {status === STATUS.SUCCESS && rapport && (
+              <div
+                className="
+                  rounded-[15px]
+                  bg-[#F8FBFC]
+                  p-4
+                  md:p-6
+                  flex
+                  flex-col
+                  gap-8
+                "
+              >
+                <HeaderRapport
+                  selectedMonth={selectedMonth}
+                  title="Bilan donateurs"
+                />
 
-                  {terrainPhotos.length > 0 ? (
-                    <div className="space-y-6">
-                      {terrainPhotos.map((photo, index) => (
-                        <img
-                          key={index}
-                          src={photo}
-                          alt={`Photo terrain ${index + 1}`}
-                          className="w-[85%] mx-auto rounded-[10px] object-cover"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-center text-[#818181] py-6">
-                      Aucune photo de terrain disponible.
-                    </p>
-                  )}
-                </div>
-              </>
+                {terrainPhotos.length > 0 ? (
+                  <div className="space-y-6">
+                    {terrainPhotos.map((photo, index) => (
+                      <img
+                        key={index}
+                        src={photo}
+                        alt={`Photo terrain ${index + 1}`}
+                        className="w-[85%] mx-auto rounded-[10px] object-cover"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center text-[#818181] py-6">
+                    Aucune photo de terrain disponible.
+                  </p>
+                )}
+              </div>
             )}
           </div>
 
@@ -359,10 +366,12 @@ const RapportBilan = () => {
                   flex items-center justify-center
                   text-center
                   px-3
-                  py-2
-                  text-sm sm:text-base
-                  leading-tight
+                  py-2.5
+                  text-xs sm:text-sm md:text-base
+                  leading-snug
                   font-semibold
+                  break-words
+                  w-full
                 "
                 style={{
                   backgroundColor: rapport?.est_valide ? "#B5ECC926" : "#F8F8F8",
@@ -370,19 +379,23 @@ const RapportBilan = () => {
                   color: rapport?.est_valide ? "#22C55E" : "#818181",
                 }}
               >
-                {rapport?.est_valide ? "Envoyé" : "En attente de vérification"}
+                {rapport?.est_valide
+                  ? "La vérification a été effectuée avec succès. Le rapport sera envoyé ultérieurement."
+                  : "En attente de vérification"}
               </div>
             )}
 
-            <div className="mt-8">
-              <TextArea
-                label="Message narratif"
-                value={narrativeMessage}
-                onChange={(e) => setNarrativeMessage(e.target.value)}
-                height="h-[140px]"
-                disabled={isLoading || !rapport}
-              />
-            </div>
+            {rapport && !rapport.est_valide && (
+              <div className="mt-8">
+                <TextArea
+                  label="Message narratif"
+                  value={narrativeMessage}
+                  onChange={(e) => setNarrativeMessage(e.target.value)}
+                  height="h-[140px]"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             <div className="mt-6 w-full">
               <MonthPicker onChange={handleMonthChange} />
@@ -426,5 +439,4 @@ const RapportBilan = () => {
 };
 
 export default RapportBilan;
-
 
