@@ -26,7 +26,8 @@ import {
   activateCoordinateur,
   deactivateCoordinateur,
 } from "../../lib/api/coordinateurs";
-import { listUsers, checkUsernameExists } from "../../lib/api/users";
+import {checkUsernameExists , getUserById} from "../../lib/api/users";
+
 
 import { listVillages } from "../../lib/api/Parametres";
 
@@ -129,26 +130,26 @@ export default function ModifierCoordinateur() {
   // Statut original pour ne PAS appeler activate/deactivate si rien n'a changé
   const [statutOriginal, setStatutOriginal] = useState("Active");
 
-  const passedCoordinateur = location.state?.coordinateur;
-  const hasPassedMatch =
-    passedCoordinateur && String(passedCoordinateur.id) === String(id);
+ const passedCoordinateur = location.state?.coordinateur;
+const hasPassedMatch =
+  passedCoordinateur && String(passedCoordinateur.id) === String(id);
 
+const {
+  data: found,
+  isLoading: userLoading,
+  isError: userError,
+  error: userErrorObj,
+} = useQuery({
+  queryKey: ["user", id],
+  queryFn: () => getUserById(id).then((r) => r.data),
+  initialData: hasPassedMatch ? passedCoordinateur : undefined,
+  enabled: !!id,
+});
 
-  const {
-    data: users,
-    isLoading: usersLoading,
-    isError: usersError,
-  } = useQuery({
-    queryKey: ["users"],
-    queryFn: () => listUsers().then((r) => r.data),
-    select: (data) => (Array.isArray(data) ? data : data?.results ?? []),
-    initialData: hasPassedMatch ? [passedCoordinateur] : undefined,
-    enabled: !!id,
-  });
-
-  const found = users?.find((c) => String(c.id) === String(id));
-  const loading = usersLoading && !found;
-  const loadError = !usersLoading && !usersError && !found ? "Coordinateur introuvable." : null;
+const loading = userLoading && !found;
+const loadError = userError
+  ? userErrorObj?.response?.data?.detail || "Coordinateur introuvable."
+  : null;
 
   // Liste réelle des villages 
   const {
