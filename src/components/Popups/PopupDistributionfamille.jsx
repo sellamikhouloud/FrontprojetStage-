@@ -12,10 +12,10 @@ import Spinner from "../Spinner";
 const PopupDistributionfamille = ({
   open,
   onClose,
-  Distribution, // { actives: [...], annulees: [...] }
+  Distribution,
   famille,
   isLoading = false,
- 
+
   onDistributionAnnulee,
 }) => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const PopupDistributionfamille = ({
     return distributionsBrutes.map((item, index) => ({
       ...item,
       numeroDistribution: index + 1,
-   
+
       annulee: item.annulee ?? statusFilter !== "active",
     }));
   }, [distributionsBrutes, statusFilter]);
@@ -84,11 +84,11 @@ const PopupDistributionfamille = ({
     try {
       await annulerDistribution(distribution.id);
 
-    
+
       setOpenDetail(false);
       setSelectedDistribution(null);
 
-    
+
       onDistributionAnnulee?.(distribution);
     } catch (error) {
       console.error(
@@ -124,6 +124,7 @@ const PopupDistributionfamille = ({
               min-h-screen
               sm:min-h-0
               sm:max-w-[620px]
+              sm:max-h-[90vh]
 
               bg-white
 
@@ -141,7 +142,6 @@ const PopupDistributionfamille = ({
               scrollbar-hide
             "
           >
-            {/* Header */}
             <div className="px-5 sm:px-6 pt-5">
               <button
                 onClick={onClose}
@@ -169,12 +169,10 @@ const PopupDistributionfamille = ({
               </h2>
             </div>
 
-            {/* Filtre statut */}
             <div className="px-5 sm:px-6 mt-4">
               <VDZStatusFilter value={statusFilter} onChange={setStatusFilter} />
             </div>
 
-            {/* Cartes */}
             <div
               className="
                 px-5 sm:px-6
@@ -292,4 +290,3 @@ const PopupDistributionfamille = ({
 };
 
 export default PopupDistributionfamille;
-
