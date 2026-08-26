@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { User, Mail, Phone, Building2, MapPin } from "lucide-react";
+import { User, Mail, Phone, Building2, MapPin, AtSign } from "lucide-react";
 import UserCard from "../Cards/UserCard";
 import Button from "../Button/Button";
 
@@ -14,9 +14,10 @@ export const logoutIcon =
     </svg>
   `);
 
-// Champs par défaut (profil admin). "id" volontairement absent : il ne peut jamais être modifié.
 export const CHAMPS_DEFAUT = [
+  { key: "prenom", icon: User, label: "Prénom" },
   { key: "nom", icon: User, label: "Nom" },
+  { key: "username", icon: AtSign, label: "Nom d'utilisateur" },
   { key: "email", icon: Mail, label: "Email" },
   { key: "telephone", icon: Phone, label: "Téléphone" },
   { key: "structure", icon: Building2, label: "Structure" },
@@ -24,7 +25,9 @@ export const CHAMPS_DEFAUT = [
 
 // Champs pour un profil coordinateur (ajoute "Région")
 export const CHAMPS_COORDINATEUR = [
+  { key: "prenom", icon: User, label: "Prénom" },
   { key: "nom", icon: User, label: "Nom" },
+  { key: "username", icon: AtSign, label: "Nom d'utilisateur" },
   { key: "email", icon: Mail, label: "Email" },
   { key: "telephone", icon: Phone, label: "Téléphone" },
   { key: "region", icon: MapPin, label: "Région" },
@@ -54,7 +57,6 @@ export default function ProfilInfoBlock({
   const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  // Réinitialise le formulaire à chaque changement d'admin
   useEffect(() => {
     if (admin) {
       const initial = {};
@@ -75,16 +77,12 @@ export default function ProfilInfoBlock({
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
+  const handleAvatarClick = () => fileInputRef.current?.click();
 
   const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
   };
@@ -94,22 +92,49 @@ export default function ProfilInfoBlock({
     setIsEditing(false);
   };
 
-  // Lignes affichées : en édition on montre tous les champs (même vides).
-  // Hors édition, seuls ceux qui ont une valeur.
-  const rows = champs
-    .map((champ) => ({
-      ...champ,
-      value: isEditing
-        ? formData[champ.key]
-        : admin[champ.key] || (champ.key === "structure" ? "Nutrigest Mauritanie" : ""),
-    }))
-    .filter((row) => isEditing || row.value);
+  // Nom complet affiché dans la carte, recalculé à partir de prénom + nom
+  // (reste indépendant du champ "nom" qui est maintenant le nom de famille seul)
+  const source = isEditing ? formData : admin;
+  const nomComplet =
+    `${source.prenom ?? ""} ${source.nom ?? ""}`.trim() ||
+    admin.username ||
+    "Utilisateur";
+
+  // Mode édition : chaque champ (y compris prénom / nom) reste séparé.
+  // Mode lecture : prénom + nom sont fusionnés sur une seule ligne "Nom".
+  const rows = isEditing
+    ? champs.map((champ) => ({
+        ...champ,
+        value: formData[champ.key],
+      }))
+    : (() => {
+        const result = [];
+
+        champs.forEach((champ) => {
+          if (champ.key === "prenom") return; // fusionné avec "nom" ci-dessous
+
+          if (champ.key === "nom") {
+            const valeur = `${admin.prenom ?? ""} ${admin.nom ?? ""}`.trim();
+            if (valeur) {
+              result.push({ ...champ, label: "Nom", value: valeur });
+            }
+            return;
+          }
+
+          const valeur =
+            admin[champ.key] || (champ.key === "structure" ? "Nutrigest Mauritanie" : "");
+          if (valeur) {
+            result.push({ ...champ, value: valeur });
+          }
+        });
+
+        return result;
+      })();
 
   return (
     <div>
-      {/* Carte profil — reflète en direct le nom tapé et la photo choisie en mode édition */}
       <UserCard
-        nom={isEditing ? formData.nom : admin.nom}
+        nom={nomComplet}
         id={admin.id}
         role={admin.role}
         avatarUrl={isEditing ? avatarPreview || admin.avatarUrl : admin.avatarUrl}
@@ -117,7 +142,6 @@ export default function ProfilInfoBlock({
         onAvatarClick={handleAvatarClick}
       />
 
-      {/* Input fichier caché, déclenché au clic sur l'avatar */}
       <input
         ref={fileInputRef}
         type="file"
@@ -126,12 +150,10 @@ export default function ProfilInfoBlock({
         className="hidden"
       />
 
-      {/* Titre section */}
       <p className="mt-5 text-[15px] font-bold text-[#202124]">
         Informations du compte
       </p>
 
-      {/* Infos de contact / formulaire */}
       {rows.length > 0 && (
         <div
           className={`
@@ -151,12 +173,7 @@ export default function ProfilInfoBlock({
                 `}
               >
                 <div
-                  className="
-                    w-9 h-9
-                    shrink-0
-                    rounded-full
-                    flex items-center justify-center
-                  "
+                  className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center"
                   style={{ backgroundColor: "#E6F5F4", color: "#4FA18F" }}
                 >
                   <Icon size={16} strokeWidth={2.5} />
@@ -171,14 +188,7 @@ export default function ProfilInfoBlock({
                       value={formData[row.key]}
                       onChange={(e) => handleChange(row.key, e.target.value)}
                       placeholder={row.label}
-                      className="
-                        w-full
-                        bg-transparent
-                        text-[14px]
-                        font-semibold
-                        text-[#202124]
-                        outline-none
-                      "
+                      className="w-full bg-transparent text-[14px] font-semibold text-[#202124] outline-none"
                     />
                   ) : (
                     <p className="text-[14px] font-semibold text-[#202124] truncate">
@@ -192,32 +202,14 @@ export default function ProfilInfoBlock({
         </div>
       )}
 
-      {/* Actions */}
       <div className="mt-4 flex flex-col gap-0">
         {isEditing ? (
-          <Button
-            title="Sauvegarder"
-            variant="sauvegarder"
-            noPadding
-            onClick={handleSauvegarder}
-          />
+          <Button title="Sauvegarder" variant="sauvegarder" noPadding onClick={handleSauvegarder} />
         ) : (
           <>
-            <Button
-              title="Modifier"
-              variant="modifier"
-              noPadding
-              onClick={() => setIsEditing(true)}
-            />
-
+            <Button title="Modifier" variant="modifier" noPadding onClick={() => setIsEditing(true)} />
             {showDeconnexion && (
-              <Button
-                title="Déconnexion"
-                variant="deconnexion"
-                icon={logoutIcon}
-                noPadding
-                onClick={onDeconnexion}
-              />
+              <Button title="Déconnexion" variant="deconnexion" icon={logoutIcon} noPadding onClick={onDeconnexion} />
             )}
           </>
         )}

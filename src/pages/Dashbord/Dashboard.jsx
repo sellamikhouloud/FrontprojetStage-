@@ -505,7 +505,7 @@ const Dashboard = () => {
             userName={userName}
             subtitle={subtitle}
             NotificationCount={notificationCount}
-            onNotificationClick={handleNotifications}
+            onNotificationClick={() => navigate("/notifications")}
             onSettingsClick={() => navigate("/parametres")}
           />
         </div>

@@ -26,6 +26,8 @@ import Parametres from "./pages/Account/Parametres";
 import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
 import ListeVisites from "./pages/Visites/Listevisites";
+import NotificationsPage from "./pages/Notifications/Notifications";
+import HistoriqueNotificationsPage from "./pages/Notifications/Notificationshistorique";
 import { AuthProvider, useAuth } from "./components/Providers/AuthProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { FamilyFormProvider } from "./context/FamilyFormContext";
@@ -179,13 +181,56 @@ function AppRoutes() {
 
       {/* Rapport : le premier onglet (mensuel) est l'entrée par défaut de /rapports,
           les 2 autres onglets naviguent vers leurs propres sous-routes */}
-      <Route path="/rapports" element={<RapportMensuel />} />
-      <Route path="/rapports/bilan-donateurs" element={<RapportBilan />} />
-      <Route path="/rapports/annuel" element={<RapportAnnuel />} />
+      <Route
+  path="/rapports"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <RapportMensuel />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/rapports/bilan-donateurs"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <RapportBilan />
+    </ProtectedRoute>
+  }
+/>
+       <Route
+  path="/rapports/annuel"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <RapportAnnuel />
+    </ProtectedRoute>
+  }
+/>
 
       {/* Parametres */}
       <Route path="/parametres" element={<Parametres />} />
       <Route path="/profile-coor" element={<PageProfilCoordinateur />} />
+
+      {/* Notifications */}
+ <Route
+  path="/notifications"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <NotificationsPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/notifications/historique"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <HistoriqueNotificationsPage />
+    </ProtectedRoute>
+  }
+/>
+
+      
     </Routes>
   );
 }

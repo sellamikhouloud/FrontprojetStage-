@@ -13,7 +13,6 @@ import { User, Camera } from "lucide-react";
  */
 export default function UserCard({
   nom,
-  id,
   role,
   avatarUrl,
   editing = false,
@@ -117,17 +116,12 @@ export default function UserCard({
         "
       >
         {/* Nom + id */}
-        <div className="flex flex-col justify-center min-w-0">
-          <p className="text-[20px] font-extrabold text-black leading-tight truncate">
-            {nom}
-          </p>
-          <p
-            className=" mt-1 text-[14px] font-normal leading-tight truncate"
-            style={{ color: "#6E7976" }}
-          >
-            {id}
-          </p>
-        </div>
+        {/* Nom */}
+<div className="flex flex-col justify-center min-w-0">
+  <p className="text-[20px] font-extrabold text-black leading-tight truncate">
+    {nom}
+  </p>
+</div>
 
         {/* Badge rôle */}
         <div

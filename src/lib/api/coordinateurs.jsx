@@ -9,3 +9,8 @@ export const updateCoordinateur = (id, data) => api.patch(`/api/users/${id}/`, d
 export const activateCoordinateur = (id) => api.post(`/api/users/${id}/activate/`);
 
 export const deactivateCoordinateur = (id) => api.post(`/api/users/${id}/deactivate/`);
+
+export const exportUsers = () =>
+  api.get("/api/users/export/", {
+    responseType: "blob",
+  });

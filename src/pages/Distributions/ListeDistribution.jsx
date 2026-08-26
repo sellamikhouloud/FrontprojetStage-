@@ -96,7 +96,7 @@ const handleExport = async () => {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = "distributions.xlsx";
+    link.download = "Liste_distributions.xlsx";
 
     document.body.appendChild(link);
     link.click();

@@ -576,14 +576,6 @@ const handleChangerJourBilanDonateur = async (jourAfficheStr) => {
 return (
   <div className="flex h-screen bg-white overflow-hidden">
     <Sidebar
-     role="admin"
-     user={{
-       nom: "Ahmed Mohamed",
-       id: "admin",
-       email: "ahmed.mohamed@gmail.com",
-       telephone: "+222 00 00 00 00",
-       profilePicture: "",
-     }}
      hideOnMobile
    />
 
@@ -1608,16 +1600,10 @@ return (
         disabled:opacity-50
       "
     >
-      <div className="flex flex-col items-start text-left">
-        <span className="text-[14px] text-[#3E4946] font-medium">
-          {loadingJoursGeneration ? "..." : jourRapportMensuel}
-        </span>
-        {!loadingJoursGeneration && (
-          <span className="text-[11px] text-[#7A8582]">
-            {labelJourGeneration(jourRapportMensuel)}
-          </span>
-        )}
-      </div>
+     
+     <span className="text-[14px] text-[#3E4946] font-medium truncate">
+  {loadingJoursGeneration ? "..." : labelJourGeneration(jourRapportMensuel)}
+</span>
       <AiOutlineDown
         className={`text-[16px] shrink-0 transition-transform ${dropdownJourMensuelOuvert ? "rotate-180" : ""}`}
       />
@@ -1678,16 +1664,9 @@ return (
         disabled:opacity-50
       "
     >
-      <div className="flex flex-col items-start text-left">
-        <span className="text-[14px] text-[#3E4946] font-medium">
-          {loadingJoursGeneration ? "..." : jourBilanDonateur}
-        </span>
-        {!loadingJoursGeneration && (
-          <span className="text-[11px] text-[#7A8582]">
-                {labelJourGeneration(jourBilanDonateur)}
-          </span>
-        )}
-      </div>
+      <span className="text-[14px] text-[#3E4946] font-medium truncate">
+  {loadingJoursGeneration ? "..." : labelJourGeneration(jourBilanDonateur)}
+</span>
       <AiOutlineDown
         className={`text-[16px] shrink-0 transition-transform ${dropdownJourBilanOuvert ? "rotate-180" : ""}`}
       />

@@ -1,23 +1,31 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import PageHeader from "../Navigation,Pageheader/PageHeader";
 import ProfilInfoBlock, { CHAMPS_DEFAUT } from "../Forms/Profilinfoblock";
 import ConfirmDialog from "../Popups/ConfirmdialogPopup";
-
+import { useAuth } from "../Providers/AuthProvider";
 
 export default function PopupProfilAdmin({
   open,
   admin,
   onClose,
   onSave,
-  onDeconnexion,
 }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const { logout } = useAuth();
+  const navigate = useNavigate();
 
   if (!open || !admin) return null;
 
-  const handleConfirmDeconnexion = () => {
+  const handleConfirmDeconnexion = async () => {
     setShowLogoutConfirm(false);
-    onDeconnexion?.();
+    try {
+      await logout();
+      onClose?.();
+      navigate("/");
+    } catch (error) {
+      console.error("Échec de la déconnexion :", error);
+    }
   };
 
   return (

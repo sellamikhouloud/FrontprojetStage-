@@ -316,7 +316,6 @@ const {
 const coordinateursData = Array.isArray(coordinateursResponse)
   ? coordinateursResponse
   : coordinateursResponse?.results ?? [];
-
 const coordinateurs = coordinateursData
   .filter((coordinateur) => coordinateur.is_active)
   .map((coordinateur) => ({
@@ -328,6 +327,10 @@ const coordinateurs = coordinateursData
     village: coordinateur.village?.nom ?? "",
     familles: coordinateur.nb_familles ?? 0,
     status: coordinateur.is_active ? "Actif" : "Inactif",
+    username: coordinateur.username ?? "/",
+    creePar: coordinateur.created_by
+      ? `${coordinateur.created_by.nom ?? ""} ${coordinateur.created_by.prenom ?? ""}`.trim()
+      : "/",
   }));
   
   const baseline = useMemo(

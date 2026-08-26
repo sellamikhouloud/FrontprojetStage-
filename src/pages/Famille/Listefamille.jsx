@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../components/Providers/AuthProvider";
-import { listFamilles } from "@/lib/api/familles";
+import { listFamilles , exportFamilles } from "@/lib/api/familles";
 import { listVillages } from "@/lib/api/Parametres";
 import Spinner from "../../components/Spinner";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -39,6 +39,37 @@ const [selectedSexe, setSelectedSexe] = useState("");
  const [isFilterOpen, setIsFilterOpen] = useState(false);
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
+
+const handleExport = async () => {
+  try {
+    const response = await exportFamilles();
+
+    const blob = new Blob(
+      [response.data],
+      {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }
+    );
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Liste_familles.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'export de la liste des familles :",
+      error
+    );
+  }
+};
+
 const moisOptions = [
   { label: "Janvier", value: 1 },
   { label: "Février", value: 2 },
@@ -357,17 +388,17 @@ if  (isFilterOpen && isMobile)  {
 
   <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
      {user?.role === "admin" ? (
-  <NavigationHeader
-    title="Liste des familles"
-    type="share"
-    actionTitle="Exporter la liste des familles"
-    onAction={() => {}}
-    secondType="add"
-    secondActionTitle="Ajouter une famille"
-    onSecondAction={() => {
-      navigate("/information-mere");
-    }}
-  />
+ <NavigationHeader
+  title="Liste des familles"
+  type="share"
+  actionTitle="Exporter la liste des familles"
+  onAction={handleExport}
+  secondType="add"
+  secondActionTitle="Ajouter une famille"
+  onSecondAction={() => {
+    navigate("/information-mere");
+  }}
+/>
 ) : (
   <NavigationHeader
     title="Liste des familles"

@@ -21,13 +21,9 @@ const CardCoordinateur = ({
         transition hover:shadow-sm
       "
     >
-      <div className="flex items-center justify-between gap-3">
-
-        {/* GAUCHE */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="min-w-0">
-
-            {/* Première ligne : Nom + statut + Chef */}
+      <div className="flex items-center justify-between gap-3 max-[640px]:flex-wrap">
+        <div className="flex items-center gap-2 flex-1 min-w-0 max-[640px]:w-full">
+          <div className="min-w-0 w-full">
             <div className="flex items-center gap-2 min-w-0 flex-wrap">
               <h2 className="text-[20px] font-bold text-[#111827] truncate">
                 {name}
@@ -39,47 +35,69 @@ const CardCoordinateur = ({
                 {status}
               </span>
 
-              {/* Badge Chef : affiché uniquement si isChef = true, avec un point avant */}
               {isChef && (
                 <>
                   <span className="text-[#94A3B8] text-[18px] shrink-0">•</span>
-                  <StatusBadge type="chef" text="Chef" pill className="shrink-0" />
+                  <StatusBadge
+                    type="chef"
+                    text="Chef"
+                    pill
+                    className="shrink-0"
+                  />
                 </>
               )}
             </div>
 
-            {/* Deuxième ligne : Village + Familles */}
             <div className="mt-3 flex items-center flex-wrap gap-3 text-[15px] text-[#374151]">
               <div className="flex items-center gap-1">
-                <img src={Location3} alt="Village" className="w-4 h-4" />
+                <img
+                  src={Location3}
+                  alt="Village"
+                  className="w-4 h-4 shrink-0"
+                />
                 <span>{village}</span>
               </div>
 
               <span className="text-[#84D6D0] font-medium">|</span>
 
               <div className="flex items-center gap-1">
-                <img src={Users} alt="Familles" className="w-4 h-4" />
+                <img
+                  src={Users}
+                  alt="Familles"
+                  className="w-4 h-4 shrink-0"
+                />
                 <span>{familles} familles</span>
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* DROITE */}
-        <div className="flex flex-col items-end shrink-0 gap-2">
-          <div className="text-[15px] sm:text-[16px] md:text-[18px] text-[#1E1E1E] whitespace-nowrap">
+        <div
+          className="
+            flex flex-col items-end shrink-0 gap-2
+            max-[640px]:w-full
+            max-[640px]:items-start
+            max-[640px]:mt-2
+            max-[640px]:pt-2
+            max-[640px]:border-t
+            max-[640px]:border-[#E2E8F0]
+          "
+        >
+          <div className="text-[15px] sm:text-[16px] md:text-[18px] text-[#1E1E1E] whitespace-nowrap max-[640px]:whitespace-normal max-[640px]:break-all">
             <span className="font-medium">Username:</span>{" "}
             <span>{username || "/"}</span>
           </div>
 
-          <div className="flex items-center gap-1 text-[15px] text-[#393939] whitespace-nowrap">
-            <img src={Icon11} alt="Créé par" className="w-[16px] h-[16px] object-contain" />
+          <div className="flex items-center gap-1 text-[15px] text-[#393939] whitespace-nowrap max-[640px]:whitespace-normal max-[640px]:break-all">
+            <img
+              src={Icon11}
+              alt="Créé par"
+              className="w-[16px] h-[16px] object-contain shrink-0"
+            />
             <span>Créé par</span>
             <span>{creePar || "/"}</span>
           </div>
         </div>
-
       </div>
     </div>
   );
