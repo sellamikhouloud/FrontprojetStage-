@@ -22,30 +22,32 @@ const STATUS_OPTIONS = [
 ];
 
 const ROLE_OPTIONS = [
-  {
-    value: "all",
-    label: "Tout",
-  },
-  {
-   
-    value: "chef_coordinator",
-    label: "Chef coordinateur",
-  },
-  {
-   
-    value: "coordinator",
-    label: "Coordinateur",
-  },
+  { value: "all", label: "Tout" },
+  { value: "chef_coordinator", label: "Chef coordinateur" },
+  { value: "coordinator", label: "Coordinateur" },
 ];
 
+const TYPE_OPTIONS = [
+  { value: "all", label: "Tout" },
+  { value: "malnutrition", label: "Malnutrition" },
+  { value: "visite_retard", label: "Visite en retard" },
+  { value: "stock_faible", label: "Stock faible" },
+  { value: "validation_rapport", label: "Validation Rapport" },
+  { value: "verification_taux_change", label: "Verification Taux de Change" },
+];
 
-
-const RoleFilter = ({ value = "all", onChange }) => {
+const GenericDropdownFilter = ({
+  value = "all",
+  onChange,
+  options,
+  label,
+  dropdownAlign = "right",
+}) => {
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
 
   const currentLabel =
-    ROLE_OPTIONS.find((option) => option.value === value)?.label ?? "Tout";
+    options.find((option) => option.value === value)?.label ?? "Tout";
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -95,9 +97,11 @@ const RoleFilter = ({ value = "all", onChange }) => {
       ref={containerRef}
       className="
         relative
-        w-full
+        w-[78px]
         min-w-0
-        sm:w-[149px]
+        shrink-0
+
+        sm:w-[210px]
       "
     >
       <button
@@ -124,9 +128,10 @@ const RoleFilter = ({ value = "all", onChange }) => {
 
           flex
           items-center
-          justify-between
+          justify-center
 
-          gap-1
+          gap-0.5
+          sm:gap-1
 
           min-w-0
 
@@ -141,11 +146,10 @@ const RoleFilter = ({ value = "all", onChange }) => {
           className="
             flex
             items-center
+            justify-center
             gap-0.5
 
             min-w-0
-            flex-1
-
             overflow-hidden
           "
         >
@@ -153,7 +157,7 @@ const RoleFilter = ({ value = "all", onChange }) => {
             className="
               text-black
 
-              text-[10px]
+              text-[9px]
               sm:text-[16px]
 
               font-semibold
@@ -161,21 +165,22 @@ const RoleFilter = ({ value = "all", onChange }) => {
               shrink-0
             "
           >
-            Rôle :
+            {label} :
           </span>
 
           <span
             className="
               text-black
 
-              text-[10px]
+              text-[9px]
               sm:text-[16px]
 
               font-semibold
 
               truncate
               min-w-0
-                ml-1
+              ml-0.5
+              sm:ml-1
             "
           >
             {currentLabel}
@@ -184,8 +189,8 @@ const RoleFilter = ({ value = "all", onChange }) => {
 
         <svg
           className={`
-            w-3
-            h-3
+            w-2.5
+            h-2.5
 
             sm:w-4
             sm:h-4
@@ -212,26 +217,28 @@ const RoleFilter = ({ value = "all", onChange }) => {
         </svg>
       </button>
 
-     
-
       {open && (
         <div
-          className="
+          className={`
             absolute
             z-[100]
 
             top-full
 
-            right-0
-            left-auto
+            ${
+              dropdownAlign === "left"
+                ? "left-0 right-auto"
+                : "right-0 left-auto"
+            }
 
+            sm:left-1/2
             sm:right-auto
-            sm:left-0
+            sm:-translate-x-1/2
 
             mt-1
 
-            w-[min(220px,calc(100vw-24px))]
-            sm:w-[210px]
+            w-[min(260px,calc(100vw-24px))]
+            sm:w-[260px]
 
             bg-white
 
@@ -244,13 +251,13 @@ const RoleFilter = ({ value = "all", onChange }) => {
 
             overflow-hidden
 
-            max-h-[220px]
+            max-h-[260px]
 
             overflow-y-auto
-          "
+          `}
           role="listbox"
         >
-          {ROLE_OPTIONS.map((option) => {
+          {options.map((option) => {
             const isSelected = value === option.value;
 
             return (
@@ -275,7 +282,7 @@ const RoleFilter = ({ value = "all", onChange }) => {
 
                   py-2.5
 
-                  text-left
+                  text-center
 
                   text-[13px]
                   sm:text-[15px]
@@ -305,9 +312,25 @@ const RoleFilter = ({ value = "all", onChange }) => {
   );
 };
 
-/* =========================================================
-   STATUS FILTER
-========================================================= */
+const RoleFilter = ({ value = "all", onChange }) => (
+  <GenericDropdownFilter
+    value={value}
+    onChange={onChange}
+    options={ROLE_OPTIONS}
+    label="Rôle"
+    dropdownAlign="right"
+  />
+);
+
+const TypeFilter = ({ value = "all", onChange }) => (
+  <GenericDropdownFilter
+    value={value}
+    onChange={onChange}
+    options={TYPE_OPTIONS}
+    label="Type"
+    dropdownAlign="left"
+  />
+);
 
 const StatusFilter = ({
   value = "all",
@@ -323,14 +346,11 @@ const StatusFilter = ({
       className="
         w-full
 
-        grid
-        grid-cols-4
+        flex
+        flex-nowrap
+        items-center
 
         gap-1
-
-        sm:flex
-        sm:flex-wrap
-
         sm:gap-[8px]
       "
     >
@@ -343,9 +363,10 @@ const StatusFilter = ({
             type="button"
             onClick={() => onChange(option.value)}
             className={`
-              w-full
+              flex-1
               min-w-0
 
+              sm:flex-none
               sm:w-[149px]
 
               h-10
@@ -356,7 +377,7 @@ const StatusFilter = ({
 
               border
 
-              text-[11px]
+              text-[10px]
               sm:text-[16px]
 
               font-semibold
@@ -388,5 +409,4 @@ const StatusFilter = ({
 };
 
 export default StatusFilter;
-export { RoleFilter };
-
+export { RoleFilter, TypeFilter };
