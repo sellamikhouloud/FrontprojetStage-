@@ -10,12 +10,14 @@ import CardCoordinateur from "../../components/Cards/carteCoordinateur";
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
 import { useAuth } from "../../components/Providers/AuthProvider";
-import { listUsers } from "../../lib/api/users";
+import { listUsers   } from "../../lib/api/users";
+import {  exportUsers } from "../../lib/api/coordinateurs";
 
 export default function ListeCoordinateur() {
   const navigate = useNavigate();
     const { user } = useAuth();
     const isAdmin = user?.role === "admin";
+
   const [role, setRole] = useState("all");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -69,23 +71,54 @@ export default function ListeCoordinateur() {
     retry: 1,
   });
 
+  const handleExport = async () => {
+  try {
+    const response = await exportUsers();
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Liste-coordinateurs.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'export de la liste des coordinateurs :",
+      error
+    );
+  }
+};
+
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
 
-        <NavigationHeader
-          title="Liste des coordinateurs"
-          type="share"
-          actionTitle="Exporter la liste des coordinateurs"
-          onAction={() => {
-            // Fonction d'export
-          }}
-          secondType="add"
-          secondActionTitle="Ajouter un coordinateur"
-          onSecondAction={() => navigate("/ajout-coordinateur")}
-        />
+       {isAdmin ? (
+  <NavigationHeader
+    title="Liste des coordinateurs"
+    type="share"
+    actionTitle="Exporter la liste des coordinateurs"
+    onAction={handleExport}
+    secondType="add"
+    secondActionTitle="Ajouter un coordinateur"
+    onSecondAction={() => navigate("/ajout-coordinateur")}
+  />
+) : (
+  <NavigationHeader
+    title="Liste des coordinateurs"
+  />
+)}
 
         <div className="my-6">
           <SearchBar
