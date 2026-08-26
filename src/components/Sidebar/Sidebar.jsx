@@ -48,15 +48,16 @@ export default function Sidebar({
   const isAdmin = role === "admin";
   const isCoordinator = role === "coordinator";
 
-  const adminData = {
-    nom: user?.nom || "Admin",
-    id: user?.id ? `id – ${user.id}` : "id – admin",
-    role: "Admin",
-    avatarUrl: user?.profilePicture,
-    email: user?.email,
-    telephone: user?.telephone,
-    region: user?.region,
-  };
+
+const adminData = {
+  nom: user?.nom ?? "",
+  prenom: user?.prenom ?? "",
+  username: user?.username,
+  id: user?.id ? `id – ${user.id}` : "id – admin",
+  role: "Admin",
+  avatarUrl: user?.photo,
+  email: user?.email,
+};
 
   const handleItemClick = () => {
     setMobileOpen(false);
