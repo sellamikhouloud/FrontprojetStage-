@@ -154,7 +154,7 @@ const RapportMensuel = () => {
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = `rapport-${rapport.type}-${rapport.mois ?? "annuel"}-${rapport.annee}.pdf`;
+      link.download = `Rapport-${rapport.type}-${rapport.mois ?? "annuel"}-${rapport.annee}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
