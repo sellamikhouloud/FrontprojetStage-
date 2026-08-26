@@ -260,7 +260,7 @@ const handleExportZakat = async () => {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = "zakat.xlsx";
+    link.download = "Liste_zakat.xlsx";
 
     document.body.appendChild(link);
     link.click();
