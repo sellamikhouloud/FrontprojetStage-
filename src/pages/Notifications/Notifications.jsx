@@ -1,11 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
-
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NotificationCard from "../../components/AlertComposant/NotificationCard";
 import Spinner from "../../components/Spinner";
-
+import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Historique from "../../assets/History.svg";
 
 import { getNotifications } from "@/lib/api/Notifications";
@@ -83,7 +81,7 @@ if (notification.type === "visite_retard") {
 }
 
 if (notification.type === "verification_taux_change") {
-  navigate(`/parametres}`);
+  navigate("/parametres");
   return;
 }
    
@@ -127,41 +125,12 @@ if (notification.type === "verification_taux_change") {
           "
         >
 
-          {/* Fermer */}
-          <button
-            type="button"
-            onClick={handleBack}
-            className="
-              flex
-              items-center
-              gap-2
+          <PageHeader
+    leftTitle="Fermer"
+    showRight={false}
+    onBack={() => navigate("/dashboard")}
+  />
 
-              text-[17px]
-              sm:text-[18px]
-
-              font-medium
-              text-[#1E1E1E]
-
-              hover:opacity-70
-              transition-opacity
-              duration-200
-
-              cursor-pointer
-              flex-shrink-0
-            "
-          >
-            <X
-              className="
-                w-6
-                h-6
-                sm:w-7
-                sm:h-7
-                stroke-[1.8]
-              "
-            />
-
-            <span>Fermer</span>
-          </button>
 
        
             {/* Historique */}
