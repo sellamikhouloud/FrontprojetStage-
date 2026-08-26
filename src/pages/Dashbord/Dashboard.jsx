@@ -325,7 +325,7 @@ const handleAlertClick = (alert) => {
             userName={userName}
             subtitle={subtitle}
             NotificationCount={notificationCount}
-            onNotificationClick={() => navigate("/Notifications")}
+            onNotificationClick={() => navigate("/notifications")}
             onSettingsClick={() => navigate("/parametres")}
           />
 
