@@ -20,3 +20,11 @@ export const createEmailRapport = (payload) => {
 export const deleteEmailRapport = (id) => {
   return api.delete(`/api/parametres/emails-rapport/${id}/`);
 };
+
+export const getPreferences = () => api.get("/api/preferences/");
+
+export const updatePreferences = (payload) => api.patch("/api/preferences/", payload);
+
+export const getJoursGenerationRapports = () => api.get("/api/parametres/jours-generation-rapports/");
+
+export const updateJoursGenerationRapports = (payload) => api.patch("/api/parametres/jours-generation-rapports/", payload);
