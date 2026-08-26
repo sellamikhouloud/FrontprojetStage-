@@ -26,6 +26,8 @@ import Parametres from "./pages/Account/Parametres";
 import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
 import ListeVisites from "./pages/Visites/Listevisites";
+import NotificationsPage from "./pages/Notifications/Notifications";
+import HistoriqueNotificationsPage from "./pages/Notifications/Notificationshistorique";
 import { AuthProvider, useAuth } from "./components/Providers/AuthProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { FamilyFormProvider } from "./context/FamilyFormContext";
