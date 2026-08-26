@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -11,15 +11,16 @@ import VisitsCard from "../../components/DashbordCard/VisitsCard";
 import NutritionCard from "../../components/DashbordCard/NutritionCard";
 import DistributionCard from "../../components/DashbordCard/DistributionCard";
 import ZakatCard from "../../components/DashbordCard/ZakatCard";
+import UpcomingVisitsCard from "../../components/DashbordCard/UpcomingVisitsCard";
 
 import PopupRetard from "../../components/Popups/Popupvisiteretard";
 import PopupMas from "../../components/Popups/PopupMas";
 import PopupDistribution from "../../components/Popups/Popupdistributions";
 
-import UpcomingVisitsCard from "../../components/DashbordCard/UpcomingVisitsCard";
-
 import AttentionIcon from "../../assets/Attention.svg";
 import RetardIcon from "../../assets/retard.svg";
+
+import { getDashboard } from "../../lib/api/dashboard";
 
 const CoordinatorDashboard = () => {
   const navigate = useNavigate();
@@ -28,21 +29,128 @@ const CoordinatorDashboard = () => {
         STATES
   ========================== */
 
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [showHistorique, setShowHistorique] = useState(false);
   const [showRetard, setShowRetard] = useState(false);
   const [showMas, setShowMas] = useState(false);
 
   /* ==========================
+        FETCH DASHBOARD
+  ========================== */
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await getDashboard();
+
+        setDashboardData(response.data);
+      } catch (err) {
+        console.error("Erreur lors du chargement du dashboard :", err);
+
+        setError(
+          err?.response?.data?.detail ||
+            "Impossible de récupérer les données du dashboard."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
+
+  /* ==========================
+        LOADING
+  ========================== */
+
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-white">
+        <Sidebar role="coordinator" />
+
+        <main className="flex-1 flex items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="w-10 h-10 border-4 border-[#69B89C] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+
+            <p className="text-gray-500 text-[16px]">
+              Chargement du dashboard...
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  /* ==========================
+        ERROR
+  ========================== */
+
+  if (error || !dashboardData) {
+    return (
+      <div className="flex h-screen bg-white">
+        <Sidebar role="coordinator" />
+
+        <main className="flex-1 flex items-center justify-center bg-white px-5">
+          <div className="text-center">
+            <p className="text-red-500 text-[16px] font-medium mb-4">
+              {error || "Impossible de charger le dashboard."}
+            </p>
+
+            <button
+              onClick={() => window.location.reload()}
+              className="
+                px-5
+                py-2
+                rounded-lg
+                bg-[#69B89C]
+                text-white
+                font-medium
+                hover:opacity-90
+                transition
+              "
+            >
+              Réessayer
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  /* ==========================
+        DATA FROM API
+  ========================== */
+
+  const {
+    alertes = {},
+    familles = {},
+    statut_nutritionnel = [],
+    visites = {},
+    distributions = {},
+    zakat = {},
+    visites_a_venir = [],
+  } = dashboardData;
+
+  /* ==========================
         WELCOME
   ========================== */
 
-  const userName = "Mohammed";
   const greeting = "Bonjour";
-  const message = "Bon journee !";
+  const userName = "Mohammed";
+  const message = "Bonne journée !";
 
   /* ==========================
         ALERTS
   ========================== */
+
+  const malnutritionAlerts = alertes?.malnutrition?.alertes || [];
+  const retardAlerts = alertes?.visite_retard?.alertes || [];
 
   const alerts = [
     {
@@ -50,7 +158,7 @@ const CoordinatorDashboard = () => {
       icon: AttentionIcon,
       title: "Malnutrition Aiguë Sévère",
       subtitle: "nourrissons",
-      count: 2,
+      count: alertes?.malnutrition?.nb_alertes || 0,
       bgColor: "#FFF7F7",
       iconBgColor: "#FDE8E8",
       borderColor: "#EB5757",
@@ -61,7 +169,7 @@ const CoordinatorDashboard = () => {
       icon: RetardIcon,
       title: "Visites en retard",
       subtitle: "visites en retard",
-      count: 5,
+      count: alertes?.visite_retard?.nb_alertes || 0,
       bgColor: "#FFFBF1",
       iconBgColor: "#FFF0CC",
       borderColor: "#F2B94B",
@@ -78,21 +186,21 @@ const CoordinatorDashboard = () => {
   const familyStats = [
     {
       id: 1,
-      value: 38,
+      value: familles?.nb_actives || 0,
       label: "Actives",
       color: "#22C55E",
       borderColor: "#22C55E",
     },
     {
       id: 2,
-      value: 1,
+      value: familles?.nb_alertees || 0,
       label: "Alertées",
       color: "#F59E0B",
       borderColor: "#F59E0B",
     },
     {
       id: 3,
-      value: 5,
+      value: familles?.nb_sortie || 0,
       label: "Sorties",
       color: "#6D6D6D",
       borderColor: "#6D6D6D",
@@ -105,11 +213,13 @@ const CoordinatorDashboard = () => {
 
   const visitsTitle = "Nombre de visites";
 
-  const completedVisits = 9;
+  const completedVisits = visites?.nb_realisees || 0;
+  const expectedVisits = visites?.nb_prevus || 0;
 
-  const expectedVisits = 21;
-
-  const compliancePercentage = 43;
+  const compliancePercentage =
+    expectedVisits > 0
+      ? Math.round((completedVisits / expectedVisits) * 100)
+      : 0;
 
   /* ==========================
         NUTRITION
@@ -117,50 +227,55 @@ const CoordinatorDashboard = () => {
 
   const nutritionTitle = "État nutritionnel";
 
-  const normalPercentage = 65;
+  const getNutritionPercentage = (status) => {
+    const item = statut_nutritionnel.find(
+      (nutrition) => nutrition?.statut === status
+    );
 
-  const mamPercentage = 25;
+    return item?.pourcentage || 0;
+  };
 
-  const masPercentage = 10;
+  const normalPercentage = getNutritionPercentage("normale");
+
+  /*
+   * The backend currently returns:
+   *
+   * "mas"
+   * null
+   * "normale"
+   *
+   * There is no "mam" value in the response.
+   *
+   * We therefore keep MAM at 0 until the backend
+   * provides a dedicated "mam" status.
+   */
+
+  const mamPercentage = getNutritionPercentage("mam");
+  const masPercentage = getNutritionPercentage("mas");
 
   /* ==========================
-        DISTRIBUTION
+        DISTRIBUTIONS
   ========================== */
 
   const distributionTitle = "Distributions ce mois";
 
-  const products = [
-    {
-      id: 1,
-      name: "Lait",
-      quantity: "38 Kg",
-    },
-    {
-      id: 2,
-      name: "Céréales",
-      quantity: "14 Kg",
-    },
-    {
-      id: 3,
-      name: "Huile",
-      quantity: "8 L",
-    },
-    {
-      id: 4,
-      name: "Sucre",
-      quantity: "8 Kg",
-    },
-    {
-      id: 5,
-      name: "Sélodié",
-      quantity: "8 Kg",
-    },
-    {
-      id: 6,
-      name: "Légumineuses",
-      quantity: "8 Kg",
-    },
-  ];
+  const products = Object.entries(distributions || {}).map(
+    ([name, data], index) => ({
+      id: index + 1,
+      name,
+      quantity: `${data?.quantite ?? 0} ${data?.unite || ""}`.trim(),
+    })
+  );
+
+  /* ==========================
+        DISTRIBUTION HISTORY
+  ========================== */
+
+  const distributionHistory = products.map((product) => ({
+    name: product.name,
+    value: product.quantity,
+    unit: "",
+  }));
 
   /* ==========================
         ZAKAT
@@ -168,109 +283,122 @@ const CoordinatorDashboard = () => {
 
   const zakatTitle = "Zakat";
 
-  const remainingBalanceMRU = "34 000";
+  const remainingBalanceMRU =
+    zakat?.solde_restant !== undefined
+      ? `${zakat.solde_restant} MRU`
+      : "0.00 MRU";
 
-  const remainingBalanceEUR = "/500 Euros";
+  const remainingBalanceEUR = "";
 
-  const monthlyDistributedMRU = "18 500";
+  const monthlyDistributedMRU =
+    zakat?.montant_total_verse_ce_mois !== undefined
+      ? `${zakat.montant_total_verse_ce_mois} MRU`
+      : "0.00 MRU";
 
-  const monthlyDistributedEUR = "/180 Euros";
+  const monthlyDistributedEUR =
+    zakat?.montant_total_verse_ce_mois_eur !== undefined
+      ? `${zakat.montant_total_verse_ce_mois_eur} EUR`
+      : "";
 
-  const beneficiaryFamilies = "38";
+  const beneficiaryFamilies = "";
 
-  const exchangeRate = "1€ = 103.5 MRU";
+  const exchangeRate = "";
 
   /* ==========================
         UPCOMING VISITS
   ========================== */
 
-  const upcomingVisits = [
-    {
-      day: "Aujourd'hui",
-      family: "Famille Mohamed",
-      village: "Guidikhama",
-    },
-    {
-      day: "Demain",
-      family: "Famille Ahmed",
-      village: "Tenali",
-    },
-    {
-      day: "Vendredi",
-      family: "Famille Ali",
-      village: "Sélibaby",
-    },
-    {
-      day: "Samedi",
-      family: "Famille Abdallah",
-      village: "Awoycheu",
-    },
-  ];
+  const formatUpcomingVisitDay = (dateString) => {
+    if (!dateString) {
+      return "";
+    }
+
+    const visitDate = new Date(`${dateString}T00:00:00`);
+
+    if (Number.isNaN(visitDate.getTime())) {
+      return dateString;
+    }
+
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    const visit = new Date(visitDate);
+    visit.setHours(0, 0, 0, 0);
+
+    if (visit.getTime() === today.getTime()) {
+      return "Aujourd'hui";
+    }
+
+    if (visit.getTime() === tomorrow.getTime()) {
+      return "Demain";
+    }
+
+    return visit.toLocaleDateString("fr-FR", {
+      weekday: "long",
+    });
+  };
+
+  const upcomingVisits = (visites_a_venir || []).map((visit, index) => ({
+    id: index + 1,
+    day: formatUpcomingVisitDay(visit?.date_visite),
+    family: visit?.famille || "Famille",
+    village: "",
+    date: visit?.date_visite || "",
+  }));
 
   /* ==========================
-        DISTRIBUTION HISTORY
+        POPUP - MALNUTRITION
   ========================== */
 
-  const distributionHistory = [
-    {
-      id: 1,
-      enfant: "Aïcha Mint Mohamed",
-      code: "GDK-2026-003",
-      distribution: "Distribution numéro 02",
-      date: "15/05/2026",
-      produits: products,
-    },
-  ];
+  const familleMas = malnutritionAlerts.map((alert, index) => ({
+    id: alert?.id || index + 1,
+
+    sexe: "—",
+
+    enfant: "Enfant",
+
+    region: "—",
+
+    naissance: "—",
+
+    code: alert?.famille || "—",
+
+    badges: [
+      {
+        type: "mas",
+        text: "MAS sévère",
+      },
+    ],
+  }));
 
   /* ==========================
-        POPUPS
+        POPUP - VISITES EN RETARD
   ========================== */
 
-  const familleRetard = [
-    {
-      id: 1,
-      sexe: "Fille",
-      enfant: "Aïcha Mint Mohamed",
-      region: "Lexeiba",
-      naissance: "12 mars 2026",
-      code: "GDK-2026-003",
-      badges: [
-        {
-          type: "mam",
-          text: "MAM nourrisson",
-        },
-        {
-          type: "mere",
-          text: "Mère normale",
-        },
-        {
-          type: "retard",
-          text: "Visite en retard",
-        },
-      ],
-    },
-  ];
+  const familleRetard = retardAlerts.map((alert, index) => ({
+    id: alert?.id || index + 1,
 
-  const familleMas = [
-    {
-      id: 1,
-      sexe: "Fille",
-      enfant: "Aïcha Mint Mohamed",
-      region: "Lexeiba",
-      naissance: "12 mars 2026",
-      code: "GDK-2026-003",
-      badges: [
-        {
-          type: "mas",
-          text: "MAS sévère",
-        },
-        {
-          type: "mere",
-          text: "Mère normale",
-        },
-      ],
-    },
-  ];
+    sexe: "—",
+
+    enfant: "Famille",
+
+    region: "—",
+
+    naissance: "—",
+
+    code: alert?.famille || "—",
+
+    badges: [
+      {
+        type: "retard",
+        text: "Visite en retard",
+      },
+    ],
+  }));
 
   /* ==========================
         HANDLERS
@@ -278,22 +406,32 @@ const CoordinatorDashboard = () => {
 
   const handleNotifications = () => {};
 
-  const handleSettings = () => {};
+  const handleSettings = () => {
+    navigate("/parametres");
+  };
 
   const handleAlertClick = (alert) => {
     switch (alert.id) {
       case 2:
-        setShowMas(true);
+        if (malnutritionAlerts.length > 0) {
+          setShowMas(true);
+        }
         break;
 
       case 3:
-        setShowRetard(true);
+        if (retardAlerts.length > 0) {
+          setShowRetard(true);
+        }
         break;
 
       default:
         break;
     }
   };
+
+  /* ==========================
+        RETURN
+  ========================== */
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -322,13 +460,6 @@ const CoordinatorDashboard = () => {
           lg:pb-10
         "
       >
-        {/* 
-          IMPORTANT:
-          One single container for EVERYTHING.
-          This guarantees that the welcome card,
-          alerts, titles and cards have the same
-          left and right boundaries.
-        */}
         <div className="w-full">
           {/* =========================
                 WELCOME
@@ -439,14 +570,14 @@ const CoordinatorDashboard = () => {
               progressMax={100}
               fillColor="#69B89C"
               trackColor="#E8ECEF"
-              onClick={() => navigate("/liste-visites")}
+              onClick={() => navigate("/liste-visite")}
             />
 
             {/* UPCOMING VISITS */}
 
             <UpcomingVisitsCard
               visits={upcomingVisits}
-              onClick={() => navigate("/liste-visites")}
+              onClick={() => navigate("/liste-visite")}
             />
 
             {/* NUTRITION */}
@@ -479,8 +610,12 @@ const CoordinatorDashboard = () => {
             <ZakatCard
               variant="coordinator"
               title={zakatTitle}
-              remainingBalanceMRU="34 000,00 MRU"
-              remainingBalanceEUR="500 Euros"
+              remainingBalanceMRU={remainingBalanceMRU}
+              remainingBalanceEUR={remainingBalanceEUR}
+              monthlyDistributedMRU={monthlyDistributedMRU}
+              monthlyDistributedEUR={monthlyDistributedEUR}
+              beneficiaryFamilies={beneficiaryFamilies}
+              exchangeRate={exchangeRate}
             />
           </div>
 
@@ -549,8 +684,12 @@ const CoordinatorDashboard = () => {
               <ZakatCard
                 variant="coordinator"
                 title={zakatTitle}
-                remainingBalanceMRU="34 000,00 MRU"
-                remainingBalanceEUR="500 Euros"
+                remainingBalanceMRU={remainingBalanceMRU}
+                remainingBalanceEUR={remainingBalanceEUR}
+                monthlyDistributedMRU={monthlyDistributedMRU}
+                monthlyDistributedEUR={monthlyDistributedEUR}
+                beneficiaryFamilies={beneficiaryFamilies}
+                exchangeRate={exchangeRate}
               />
             </div>
 
@@ -578,66 +717,43 @@ const CoordinatorDashboard = () => {
                 progressMax={100}
                 fillColor="#7BC8C4"
                 trackColor="#E8ECEF"
-                onClick={() => navigate("/liste-visites")}
+                onClick={() => navigate("/liste-visite")}
               />
 
               {/* UPCOMING VISITS */}
 
               <UpcomingVisitsCard
                 visits={upcomingVisits}
-                onClick={() => navigate("/liste-visites")}
+                onClick={() => navigate("/liste-visite")}
               />
             </div>
           </div>
 
           {/* =========================
-                POPUPS
+                POPUP DISTRIBUTION
           ========================= */}
 
           {showHistorique && (
             <PopupDistribution
               title="Distributions ce mois"
-              items={[
-                {
-                  name: "Lait",
-                  value: 38,
-                  unit: "Kg",
-                },
-                {
-                  name: "Céréales",
-                  value: 14,
-                  unit: "Kg",
-                },
-                {
-                  name: "Huile",
-                  value: 8,
-                  unit: "L",
-                },
-                {
-                  name: "Sucre",
-                  value: 8,
-                  unit: "Kg",
-                },
-                {
-                  name: "Sélodié",
-                  value: 8,
-                  unit: "Kg",
-                },
-                {
-                  name: "Légumineuses",
-                  value: 8,
-                  unit: "Kg",
-                },
-              ]}
+              items={distributionHistory}
               onClose={() => setShowHistorique(false)}
             />
           )}
+
+          {/* =========================
+                POPUP RETARD
+          ========================= */}
 
           <PopupRetard
             open={showRetard}
             onClose={() => setShowRetard(false)}
             familleretard={familleRetard}
           />
+
+          {/* =========================
+                POPUP MAS
+          ========================= */}
 
           <PopupMas
             open={showMas}
