@@ -179,13 +179,56 @@ function AppRoutes() {
 
       {/* Rapport : le premier onglet (mensuel) est l'entrée par défaut de /rapports,
           les 2 autres onglets naviguent vers leurs propres sous-routes */}
-      <Route path="/rapports" element={<RapportMensuel />} />
-      <Route path="/rapports/bilan-donateurs" element={<RapportBilan />} />
-      <Route path="/rapports/annuel" element={<RapportAnnuel />} />
+      <Route
+  path="/rapports"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <RapportMensuel />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/rapports/bilan-donateurs"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <RapportBilan />
+    </ProtectedRoute>
+  }
+/>
+       <Route
+  path="/rapports/annuel"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <RapportAnnuel />
+    </ProtectedRoute>
+  }
+/>
 
       {/* Parametres */}
       <Route path="/parametres" element={<Parametres />} />
       <Route path="/profile-coor" element={<PageProfilCoordinateur />} />
+
+      {/* Notifications */}
+ <Route
+  path="/notifications"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <NotificationsPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/notifications/historique"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <HistoriqueNotificationsPage />
+    </ProtectedRoute>
+  }
+/>
+
+      
     </Routes>
   );
 }
