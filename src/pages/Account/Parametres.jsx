@@ -1,5 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { getTauxDeChange, updateTauxDeChange , listVillages, createVillage, updateVillage, deleteVillage , getEmailsRapport, createEmailRapport, deleteEmailRapport  } from "../../lib/api/Parametres";
+import { getTauxDeChange, updateTauxDeChange ,
+   listVillages, createVillage, updateVillage, deleteVillage 
+   , getEmailsRapport, createEmailRapport, deleteEmailRapport 
+   , getPreferences, updatePreferences,
+  getJoursGenerationRapports, updateJoursGenerationRapports,  } from "../../lib/api/Parametres";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import omsInfo from "../../assets/oms-info.svg";
 import arrowUpRight from "../../assets/Arrow up-right.svg";
@@ -8,13 +12,11 @@ import {
   AiOutlineReload,
   AiOutlineBell,
   AiOutlineDown,
-  AiOutlineLineChart,
-  AiOutlineExport
+   
 } from "react-icons/ai";
 
-import { HiOutlineCurrencyEuro, HiOutlineLocationMarker, HiOutlineMail } from "react-icons/hi";
+import { HiOutlineCurrencyEuro, HiOutlineLocationMarker, HiOutlineMail ,HiOutlineCalendar } from "react-icons/hi";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
-import Button from "../../components/Button/Button";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
 import ListManagerDialog from "../../components/Popups/ListManagerDialog";
 import VillageListDialog from "../../components/Popups/PopupVillagesListe";
@@ -31,7 +33,56 @@ const formaterDateCourte = (isoString) => {
   const annee = d.getFullYear();
   return `${jour}/${mois}/${annee}`;
 };
+const FREQUENCE_LABEL_TO_VALUE = {
+  "Tous les mois": 1,
+  "Tous les 2 mois": 2,
+  "Tous les 3 mois": 3,
+  "Tous les 4 mois": 4,
+  "Tous les 5 mois": 5,
+  "Tous les 6 mois": 6,
+  "Tous les ans": 12,
+};
 
+const FREQUENCE_VALUE_TO_LABEL = {
+  1: "Tous les mois",
+  2: "Tous les 2 mois",
+  3: "Tous les 3 mois",
+};
+const JOURS_OPTIONS_AFFICHAGE = [28, 29, 30, 31, 1, 2, 3, 4, 5];
+
+const jourAffichageVersBackend = (jourAffiche) => {
+  if (jourAffiche >= 1 && jourAffiche <= 5) return 31 + jourAffiche;
+  return jourAffiche; // 28 à 31 inchangé
+};
+
+const jourBackendVersAffichage = (jourBackend) => {
+  if (jourBackend >= 32 && jourBackend <= 36) return jourBackend - 31;
+  return jourBackend; // 28 à 31 inchangé
+};
+
+const descriptionJourGeneration = (jourAffiche) => {
+  if (jourAffiche >= 28 && jourAffiche <= 31) {
+    return `Le ${jourAffiche} du mois concerné`;
+  }
+  if (jourAffiche >= 1 && jourAffiche <= 5) {
+    return `Le ${jourAffiche} du mois suivant`;
+  }
+  return "";
+};
+
+const labelJourGeneration = (jourAffiche) => {
+  if (jourAffiche >= 28 && jourAffiche <= 31) {
+    return `${jourAffiche} du mois concerné`;
+  }
+  return `${jourAffiche} du mois suivant`;
+};
+
+const JOURS_OPTIONS_AVEC_DESCRIPTION = JOURS_OPTIONS_AFFICHAGE.map((jour) => ({
+  jour,
+  label: labelJourGeneration(jour),
+}));
+
+const extraireJourDepuisLabel = (label) => parseInt(label, 10);
 
 export default function Parametres({ onClose }) {
  const navigate = useNavigate();
@@ -85,6 +136,31 @@ useEffect(() => {
   fetchVillages();
 }, []);
 
+useEffect(() => {
+  const fetchPreferences = async () => {
+    setLoadingPreferences(true);
+    setErreurPreferences("");
+    try {
+      const { data } = await getPreferences();
+
+      setFrequenceRappel(FREQUENCE_VALUE_TO_LABEL[data.frequence_rappel_taux] ?? "Tous les mois");
+      setNotifVisitesRetard(data.notif_visites_retard ?? false);
+      setNotifAlertesMAS(data.notif_alertes_mas ?? false);
+      setNotifAlertesStocks(data.notif_alertes_stock ?? false);
+      setNotifRapportMensuel(data.notif_rappel_rapport_mensuel ?? false);
+      setNotifBilanDonateurs(data.notif_rappel_bilan_donateurs ?? false);
+      setNotifRapportAnnuel(data.notif_rappel_rapport_annuel ?? false);
+    } catch (err) {
+      setErreurPreferences("Impossible de charger les préférences.");
+      console.error(err);
+    } finally {
+      setLoadingPreferences(false);
+    }
+  };
+
+  fetchPreferences();
+}, []);
+
 
 
   const [rappelOuvert, setRappelOuvert] = useState(false);
@@ -96,8 +172,13 @@ useEffect(() => {
     "Tous les mois",
     "Tous les 2 mois",
     "Tous les 3 mois",
-    "Désactivé",
+    "Tous les 4 mois",
+    "Tous les 5 mois",
+    "Tous les 6 mois",
+    "Tous les ans",
+    
   ];
+
 
 
   
@@ -215,6 +296,32 @@ useEffect(() => {
     console.error(err);
   } finally {
     setSavingTaux(false);
+  }
+};
+
+const handleChangerFrequenceRappel = async (label) => {
+  const ancienneValeur = frequenceRappel;
+  setFrequenceRappel(label); // mise à jour immédiate à l'écran
+  setRappelOuvert(false);
+
+  try {
+    await updatePreferences({ frequence_rappel_taux: FREQUENCE_LABEL_TO_VALUE[label] });
+  } catch (err) {
+    setFrequenceRappel(ancienneValeur); // on annule si erreur
+    setErreurPreferences("Impossible de mettre à jour la fréquence de rappel.");
+    console.error(err);
+  }
+};
+
+const handleToggleNotif = (champBackend, setState) => async (nouvelleValeur) => {
+  setState(nouvelleValeur); // mise à jour immédiate à l'écran
+
+  try {
+    await updatePreferences({ [champBackend]: nouvelleValeur });
+  } catch (err) {
+    setState((prev) => !prev); // on annule si erreur
+    setErreurPreferences("Impossible de mettre à jour cette préférence.");
+    console.error(err);
   }
 };
 
@@ -348,24 +455,6 @@ const handleSupprimerEmail = async (id) => {
     setShowEmailsList(true);
   };
 
- 
-const handleSave = () => {
-  console.log("Paramètres enregistrés :", {
-    taux,
-    frequenceRappel,
-    scoreMAMMin,
-    scoreMAMMax,
-    scoreMAS,
-    muacMAM,
-    muacMAS,
-    notifVisitesRetard,
-    notifAlertesMAS,
-    notifAlertesStocks,
-    notifRapportMensuel,
-    notifBilanDonateurs,
-    notifRapportAnnuel,
-  });
-};
 
 const handleSelectionnerSonnerie = () => {
   console.log("Ouvrir le sélecteur de sonnerie");
@@ -414,6 +503,70 @@ const emailsAffiches = useMemo(() => {
       type: "les_deux",
     }));
 }, [emails, filtreTypeEmail]);
+
+const [jourRapportMensuel, setJourRapportMensuel] = useState(28);
+const [jourBilanDonateur, setJourBilanDonateur] = useState(28);
+const [dropdownJourMensuelOuvert, setDropdownJourMensuelOuvert] = useState(false);
+const [dropdownJourBilanOuvert, setDropdownJourBilanOuvert] = useState(false);
+const [loadingJoursGeneration, setLoadingJoursGeneration] = useState(true);
+const [erreurJoursGeneration, setErreurJoursGeneration] = useState("");
+
+useEffect(() => {
+  const fetchJoursGeneration = async () => {
+    setLoadingJoursGeneration(true);
+    setErreurJoursGeneration("");
+    try {
+      const { data } = await getJoursGenerationRapports();
+      setJourRapportMensuel(jourBackendVersAffichage(data.jour_generation_rapport_mensuel));
+      setJourBilanDonateur(jourBackendVersAffichage(data.jour_generation_rapport_bilan_donateur));
+    } catch (err) {
+      if (err.response?.status === 403) {
+        setErreurJoursGeneration("Vous n'avez pas les droits pour consulter ces paramètres.");
+      } else {
+        setErreurJoursGeneration("Impossible de charger les jours de génération des rapports.");
+      }
+      console.error(err);
+    } finally {
+      setLoadingJoursGeneration(false);
+    }
+  };
+
+  fetchJoursGeneration();
+}, []);
+
+const handleChangerJourRapportMensuel = async (jourAfficheStr) => {
+  const jourAffiche = Number(jourAfficheStr);
+  const ancienneValeur = jourRapportMensuel;
+  setJourRapportMensuel(jourAffiche);
+  setDropdownJourMensuelOuvert(false);
+
+  try {
+    await updateJoursGenerationRapports({
+      jour_generation_rapport_mensuel: jourAffichageVersBackend(jourAffiche),
+    });
+  } catch (err) {
+    setJourRapportMensuel(ancienneValeur);
+    setErreurJoursGeneration("Impossible de mettre à jour le jour du rapport mensuel.");
+    console.error(err);
+  }
+};
+
+const handleChangerJourBilanDonateur = async (jourAfficheStr) => {
+  const jourAffiche = Number(jourAfficheStr);
+  const ancienneValeur = jourBilanDonateur;
+  setJourBilanDonateur(jourAffiche);
+  setDropdownJourBilanOuvert(false);
+
+  try {
+    await updateJoursGenerationRapports({
+      jour_generation_rapport_bilan_donateur: jourAffichageVersBackend(jourAffiche),
+    });
+  } catch (err) {
+    setJourBilanDonateur(ancienneValeur);
+    setErreurJoursGeneration("Impossible de mettre à jour le jour du bilan donateurs.");
+    console.error(err);
+  }
+};
 
 return (
   <div className="flex h-screen bg-white overflow-hidden">
@@ -862,14 +1015,15 @@ return (
         />
       </button>
 
-      <OptionsMenu
-        open={rappelOuvert}
-        onClose={() => setRappelOuvert(false)}
-        options={optionsFrequence}
-        onSelect={(value) => setFrequenceRappel(value)}
-        position="top-[46px] left-0 sm:left-auto sm:right-0"
-        width="w-full sm:w-[190px]"
-      />
+     <OptionsMenu
+  open={rappelOuvert}
+  onClose={() => setRappelOuvert(false)}
+  options={optionsFrequence}
+  onSelect={handleChangerFrequenceRappel}   
+  position="top-[46px] left-0 sm:left-auto sm:right-0"
+  width="w-full sm:w-[190px]"
+/>
+      
     </div>
   </div>
 </div>
@@ -1348,6 +1502,207 @@ return (
 )}
 </div>
 
+{/* =========================================
+    JOURS DE GÉNÉRATION DES RAPPORTS
+========================================= */}
+<div
+  className="
+    mt-4
+    w-full
+    rounded-[12px]
+    border
+    border-[#A7DAD8]
+    bg-white
+
+    px-5
+    py-4
+
+    sm:px-6
+    sm:py-4
+  "
+>
+  {/* En-tête */}
+  <div className="flex items-center gap-3">
+    <div
+      className="
+        w-[48px]
+        h-[48px]
+        shrink-0
+        rounded-full
+        bg-[#EAF7F3]
+        flex
+        items-center
+        justify-center
+        text-[#4E9F8A]
+      "
+    >
+      <HiOutlineCalendar className="text-[28px]" />
+    </div>
+
+    <div>
+      <h2 className="text-[20px] font-semibold leading-tight text-[#4E9F8A]">
+        Jours de génération des rapports
+      </h2>
+      <p className="mt-0.5 text-[16px] leading-tight text-[#3E4946]">
+        Choisissez le jour du mois auquel chaque rapport est généré.
+      </p>
+    </div>
+  </div>
+
+ <div className="mt-4" />
+
+{/* Ligne 1 : Rapport mensuel */}
+<div
+  className="
+    flex
+    flex-col
+    gap-2
+
+    sm:flex-row
+    sm:items-center
+    sm:justify-between
+    sm:gap-4
+
+    py-3
+    border-b
+    border-[#E5EAE8]
+  "
+>
+  <p className="text-[16px] font-medium text-[#3E4946]">
+    Rapport mensuel
+  </p>
+
+  <div className="relative shrink-0 w-full sm:w-[240px]">
+    <button
+      type="button"
+      onClick={() => setDropdownJourMensuelOuvert((prev) => !prev)}
+      disabled={loadingJoursGeneration}
+      className="
+        min-h-[40px]
+        w-full
+        px-3
+        py-1.5
+        rounded-[10px]
+        border
+        border-[#7BC8C4]
+        bg-white
+
+        flex
+        items-center
+        justify-between
+        gap-3
+
+        hover:bg-[#F7F9F8]
+        transition
+        disabled:opacity-50
+      "
+    >
+      <div className="flex flex-col items-start text-left">
+        <span className="text-[14px] text-[#3E4946] font-medium">
+          {loadingJoursGeneration ? "..." : jourRapportMensuel}
+        </span>
+        {!loadingJoursGeneration && (
+          <span className="text-[11px] text-[#7A8582]">
+            {labelJourGeneration(jourRapportMensuel)}
+          </span>
+        )}
+      </div>
+      <AiOutlineDown
+        className={`text-[16px] shrink-0 transition-transform ${dropdownJourMensuelOuvert ? "rotate-180" : ""}`}
+      />
+    </button>
+
+    <OptionsMenu
+      open={dropdownJourMensuelOuvert}
+      onClose={() => setDropdownJourMensuelOuvert(false)}
+      options={JOURS_OPTIONS_AVEC_DESCRIPTION.map((o) => o.label)}
+      onSelect={(label) => handleChangerJourRapportMensuel(extraireJourDepuisLabel(label))}
+      position="top-[46px] left-0 sm:left-auto sm:right-0"
+      width="w-full sm:w-[240px]"
+    />
+  </div>
+</div>
+
+{/* Ligne 2 : Bilan donateurs */}
+<div
+  className="
+    flex
+    flex-col
+    gap-2
+
+    sm:flex-row
+    sm:items-center
+    sm:justify-between
+    sm:gap-4
+
+    pt-3
+  "
+>
+  <p className="text-[16px] font-medium text-[#3E4946]">
+    Bilan donateurs
+  </p>
+
+  <div className="relative shrink-0 w-full sm:w-[240px]">
+    <button
+      type="button"
+      onClick={() => setDropdownJourBilanOuvert((prev) => !prev)}
+      disabled={loadingJoursGeneration}
+      className="
+        min-h-[40px]
+        w-full
+        px-3
+        py-1.5
+        rounded-[10px]
+        border
+        border-[#7BC8C4]
+        bg-white
+
+        flex
+        items-center
+        justify-between
+        gap-3
+
+        hover:bg-[#F7F9F8]
+        transition
+        disabled:opacity-50
+      "
+    >
+      <div className="flex flex-col items-start text-left">
+        <span className="text-[14px] text-[#3E4946] font-medium">
+          {loadingJoursGeneration ? "..." : jourBilanDonateur}
+        </span>
+        {!loadingJoursGeneration && (
+          <span className="text-[11px] text-[#7A8582]">
+                {labelJourGeneration(jourBilanDonateur)}
+          </span>
+        )}
+      </div>
+      <AiOutlineDown
+        className={`text-[16px] shrink-0 transition-transform ${dropdownJourBilanOuvert ? "rotate-180" : ""}`}
+      />
+    </button>
+
+    <OptionsMenu
+      open={dropdownJourBilanOuvert}
+      onClose={() => setDropdownJourBilanOuvert(false)}
+      options={JOURS_OPTIONS_AVEC_DESCRIPTION.map((o) => o.label)}
+      onSelect={(label) => handleChangerJourBilanDonateur(extraireJourDepuisLabel(label))}
+      position="top-[46px] left-0 sm:left-auto sm:right-0"
+      width="w-full sm:w-[240px]"
+    />
+  </div>
+</div>
+
+{erreurJoursGeneration && (
+  <div className="mt-3">
+    <ErrorMessage message={erreurJoursGeneration} />
+  </div>
+)}
+
+
+
+</div>
+
 
 <h3 className="text-[20px] font-bold text-black mt-3">
   Notifications
@@ -1515,46 +1870,56 @@ return (
   <div className="flex flex-col">
     <div className="flex items-center justify-between py-4 border-b border-[#E5EAE8]">
       <p className="text-[16px] font-semibold text-[#000000]">Les visites en retard</p>
-      <ToggleSwitch checked={notifVisitesRetard} onChange={setNotifVisitesRetard} />
+      <ToggleSwitch
+       checked={notifVisitesRetard} 
+       onChange={handleToggleNotif("notif_visites_retard", setNotifVisitesRetard)}
+
+       />
     </div>
 
     <div className="flex items-center justify-between py-4 border-b border-[#E5EAE8]">
       <p className="text-[16px] font-semibold text-[#000000]">Les alertes MAS de nourrison</p>
-      <ToggleSwitch checked={notifAlertesMAS} onChange={setNotifAlertesMAS} />
+      <ToggleSwitch
+       checked={notifAlertesMAS}
+        onChange={handleToggleNotif("notif_alertes_mas", setNotifAlertesMAS)}
+       />
     </div>
 
     <div className="flex items-center justify-between py-4 border-b border-[#E5EAE8]">
       <p className="text-[16px] font-semibold text-[#000000]">Les alertes de bas stocks</p>
-      <ToggleSwitch checked={notifAlertesStocks} onChange={setNotifAlertesStocks} />
+      <ToggleSwitch 
+      checked={notifAlertesStocks} 
+      onChange={handleToggleNotif("notif_alertes_stock", setNotifAlertesStocks)}
+      />
     </div>
 
     <div className="flex items-center justify-between py-4 border-b border-[#E5EAE8]">
       <p className="text-[16px] font-semibold text-[#000000]">Les rappels de validation du rapport mensuel</p>
-      <ToggleSwitch checked={notifRapportMensuel} onChange={setNotifRapportMensuel} />
+      <ToggleSwitch 
+      checked={notifRapportMensuel} 
+      onChange={handleToggleNotif("notif_rappel_rapport_mensuel", setNotifRapportMensuel)} 
+      />
     </div>
 
     <div className="flex items-center justify-between py-4 border-b border-[#E5EAE8]">
       <p className="text-[16px] font-semibold text-[#000000]">Les rappels de validation du bilan donateurs</p>
-      <ToggleSwitch checked={notifBilanDonateurs} onChange={setNotifBilanDonateurs} />
+      <ToggleSwitch 
+      checked={notifBilanDonateurs}
+      onChange={handleToggleNotif("notif_rappel_bilan_donateurs", setNotifBilanDonateurs)}
+      />
     </div>
 
     <div className="flex items-center justify-between py-4">
       <p className="text-[16px] font-semibold text-[#000000]">Les rappels de validation du rapport annuel</p>
-      <ToggleSwitch checked={notifRapportAnnuel} onChange={setNotifRapportAnnuel} />
+      <ToggleSwitch 
+      checked={notifRapportAnnuel}
+      onChange={handleToggleNotif("notif_rappel_rapport_annuel", setNotifRapportAnnuel)}
+      />
     </div>
   </div>
 </div>
 
 
- <div className="mt-2 pb-0 w-full">
-  <Button
-    title="Enregistrer les paramètres"
-    variant="save"
-    onClick={handleSave}
-    fullWidth={true}
-    noWrapperPadding
-  />
-   </div>
       </div>
 
       <div
