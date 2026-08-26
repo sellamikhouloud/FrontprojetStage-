@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { X } from "lucide-react";
-
+import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NotificationCard from "../../components/AlertComposant/NotificationCard";
 import Spinner from "../../components/Spinner";
@@ -27,9 +26,7 @@ const HistoriqueNotificationsPage = () => {
     },
   });
 
-  const handleBack = () => {
-    navigate("/notifications");
-  };
+  
 
  
   const handleExport = async () => {
@@ -112,40 +109,12 @@ const HistoriqueNotificationsPage = () => {
           "
         >
 
-          <button
-            type="button"
-            onClick={handleBack}
-            className="
-              flex
-              items-center
-              gap-2
-
-              text-[17px]
-              sm:text-[18px]
-
-              font-medium
-              text-[#1E1E1E]
-
-              hover:opacity-70
-              transition-opacity
-              duration-200
-
-              cursor-pointer
-              flex-shrink-0
-            "
-          >
-            <X
-              className="
-                w-6
-                h-6
-                sm:w-7
-                sm:h-7
-                stroke-[1.8]
-              "
-            />
-
-            <span>Fermer</span>
-          </button>
+          
+          <PageHeader
+    leftTitle="Fermer"
+    showRight={false}
+    onBack={() => navigate("/Notifications")}
+  />
 
         
         <button
