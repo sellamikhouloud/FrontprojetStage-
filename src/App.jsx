@@ -1,15 +1,15 @@
 import ListeFamille from "./pages/Famille/Listefamille";
 import Login from "./pages/Login/Login";
- import Dashboard from "./pages/Dashbord/Dashboard";
- import FamilyProfile from "./pages/Famille/Afficherinfofamille";
- import { BrowserRouter, Routes, Route } from "react-router-dom";
- import Modifyfamilly from "./pages/Famille/Modifierfamille";
- import InformationMere from "./pages/Famille/InformationMere";
+import Dashboard from "./pages/Dashbord/Dashboard";
+import FamilyProfile from "./pages/Famille/Afficherinfofamille";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Modifyfamilly from "./pages/Famille/Modifierfamille";
+import InformationMere from "./pages/Famille/InformationMere";
 import InformationNourrisson from "./pages/Famille/InformationNourrisson";
 import PhotoConfirmation from "./pages/Famille/PhotoConfirmation";
 import ListeCoordinateurs from "./pages/Coordinateurs/ListeCoordinateur";
 import AjoutCoordinateur from "./pages/Coordinateurs/AjoutCoordinateur";
-import  ListeDonateur from "./pages/Donateurs/ListeDonateur";
+import ListeDonateur from "./pages/Donateurs/ListeDonateur";
 import ModifierCoordinateur from "./pages/Coordinateurs/FicheCoordinateur";
 import AjoutDonateur from "./pages/Donateurs/AjoutDonateur";
 import FicheDonateur from "./pages/Donateurs/FicheDonateur";
@@ -26,167 +26,176 @@ import Parametres from "./pages/Account/Parametres";
 import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
 import ListeVisites from "./pages/Visites/Listevisites";
-import { AuthProvider } from "./components/Providers/AuthProvider";
+import { AuthProvider, useAuth } from "./components/Providers/AuthProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { FamilyFormProvider } from "./context/FamilyFormContext";
 
 
-function App() {
+function AppRoutes() {
+  const { user } = useAuth();
+
   return (
-     <BrowserRouter>
-      <AuthProvider>
-        <FamilyFormProvider>
-          <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/login" element={<Login />} />  
-         <Route path="/dashboard" element={<ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}><Dashboard /></ProtectedRoute>} />
-        <Route path="/dashboardCoor" element={<ProtectedRoute allowedRoles={["coordinator"]}><CoordinatorDashboard /></ProtectedRoute>} />  
-    
-          <Route path="/liste-famille" element={<ListeFamille />} />
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboardCoor"
+        element={
+          <ProtectedRoute allowedRoles={["coordinator"]}>
+            <CoordinatorDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Family */}
-        <Route path="/famille/:id" element={<FamilyProfile />} />
-        <Route path="/famille/:id/modifier" element={<Modifyfamilly />} />
+      <Route
+        path="/liste-famille"
+        element={
+          <ProtectedRoute>
+            <ListeFamille />
+          </ProtectedRoute>
+        }
+      />
 
-    {/* Add Family */}
-            <Route
-              path="/information-mere"
-              element={<InformationMere />}
-            />
+      {/* Family */}
+      <Route
+        path="/famille/:id"
+        element={
+          <ProtectedRoute>
+            <FamilyProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/famille/:id/modifier"
+        element={
+          <ProtectedRoute>
+            <Modifyfamilly />
+          </ProtectedRoute>
+        }
+      />
 
-            <Route
-              path="/information-nourrisson"
-              element={<InformationNourrisson />}
-            />
+      {/* Add Family */}
+      <Route path="/information-mere" element={<InformationMere />} />
+      <Route
+        path="/information-nourrisson"
+        element={<InformationNourrisson />}
+      />
+      <Route path="/photo-confirmation" element={<PhotoConfirmation />} />
 
-            <Route
-              path="/photo-confirmation"
-              element={<PhotoConfirmation />}
-            />
+      {/* Coordinateur */}
+      <Route
+        path="/liste-coordinateurs"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+            <ListeCoordinateurs />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ajout-coordinateur"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+            <AjoutCoordinateur />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/fiche-coordinateur/:id"
+        element={
+          <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
+            <ModifierCoordinateur />
+          </ProtectedRoute>
+        }
+      />
 
-
-
-        {/* Coordinateur */}
-        <Route
-  path="/liste-coordinateurs"
-  element={
-    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
-      <ListeCoordinateurs />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/ajout-coordinateur"
-  element={
-    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
-      <AjoutCoordinateur />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/fiche-coordinateur/:id"
-  element={
-    <ProtectedRoute allowedRoles={["admin", "chef_coordinator"]}>
-      <ModifierCoordinateur />
-    </ProtectedRoute>
-  }
-/>
-
-         {/* Donateur */}
-    
-
-<Route
-  path="/liste-Donateurs"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <ListeDonateur />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/ajout-donateur"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <AjoutDonateur />
-    </ProtectedRoute>
-  }
-/>
-
-<Route
-  path="/fiche-donateur/:id"
-  element={
-    <ProtectedRoute allowedRoles={["admin"]}>
-      <FicheDonateur />
-    </ProtectedRoute>
-  }
-/>
+      {/* Donateur */}
+      <Route
+        path="/liste-Donateurs"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <ListeDonateur />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ajout-donateur"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <AjoutDonateur />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/fiche-donateur/:id"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <FicheDonateur />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Distribution */}
-        <Route
-          path="/ajout-distribution" element={<AjoutDistribution />}
-        />
+      <Route path="/ajout-distribution" element={<AjoutDistribution />} />
+      <Route
+        path="/liste-distributions"
+        element={
+          <ProtectedRoute>
+            <DistributionPage />
+          </ProtectedRoute>
+        }
+      />
 
-         <Route
-  path="/liste-distributions"
-  element={
-    <ProtectedRoute>
-      <DistributionPage />
-    </ProtectedRoute>
-  }
-/>
-       
-        
-        {/* Zakat*/}
-          <Route
-  path="/zakat"
-  element={
-    <ProtectedRoute >
-      <ZakatPage />
-    </ProtectedRoute>
-  }
-/>
-         <Route
-          path="/ajout-zakat" element={<AjoutZakat />}
-        />
+      {/* Zakat */}
+      <Route
+        path="/zakat"
+        element={
+          <ProtectedRoute>
+            <ZakatPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/ajout-zakat" element={<AjoutZakat />} />
 
-        {/* Visite*/}
-         <Route
-          path="/liste-visite" element={< ListeVisites/>}
-        />
-           
-         <Route
-          path="/ajout-visite" element={<AjoutVisite />}
-        />
+      {/* Visite */}
+      <Route path="/liste-visite" element={<ListeVisites />} />
+      <Route path="/ajout-visite" element={<AjoutVisite />} />
 
-        {/* Galerie */}
-        <Route
-          path="/galerie" element={<Galerie role="coordinator"/>}
-        />
-  {/* Rapport : le premier onglet (mensuel) est l'entrée par défaut de /rapports,
-      les 2 autres onglets naviguent vers leurs propres sous-routes */}
-         <Route
-          path="/rapports" element={<RapportMensuel/>}
-        />
-         <Route
-          path="/rapports/bilan-donateurs" element={<RapportBilan/>}
-        />
-         <Route
-          path="/rapports/annuel" element={<RapportAnnuel/>}
-        />
-       {/* Parametres */}
-        <Route
-          path="/parametres" element={<Parametres/>}
-        />
+      <Route
+        path="/galerie"
+        element={
+          <ProtectedRoute>
+            <Galerie role={user?.role} />
+          </ProtectedRoute>
+        }
+      />
 
-         <Route
-          path="/profile-coor" element={<PageProfilCoordinateur/>}
-        />
+      {/* Rapport : le premier onglet (mensuel) est l'entrée par défaut de /rapports,
+          les 2 autres onglets naviguent vers leurs propres sous-routes */}
+      <Route path="/rapports" element={<RapportMensuel />} />
+      <Route path="/rapports/bilan-donateurs" element={<RapportBilan />} />
+      <Route path="/rapports/annuel" element={<RapportAnnuel />} />
 
+      {/* Parametres */}
+      <Route path="/parametres" element={<Parametres />} />
+      <Route path="/profile-coor" element={<PageProfilCoordinateur />} />
+    </Routes>
+  );
+}
 
-     </Routes>
+function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <FamilyFormProvider>
+          <AppRoutes />
         </FamilyFormProvider>
       </AuthProvider>
     </BrowserRouter>
@@ -194,4 +203,3 @@ function App() {
 }
 
 export default App;
-

@@ -36,9 +36,6 @@ import donateursWhite from "../../assets/donateurs-white.svg";
 import rapports from "../../assets/rapports.svg";
 import rapportsWhite from "../../assets/rapports-white.svg";
 
-import coord from "../../assets/Coord.svg";
-import coordWhite from "../../assets/WhiteCoord.svg";
-
 export const sidebarConfig = {
   coordinator: {
     logo,
@@ -49,7 +46,7 @@ export const sidebarConfig = {
         icon: home,
         activeIcon: homeWhite,
         label: "Accueil",
-        path: "/dashboard",
+        path: "/dashboardCoor",
       },
       {
         icon: familles,
@@ -133,12 +130,6 @@ export const sidebarConfig = {
         activeIcon: donateursWhite,
         label: "Donateurs",
         path: "/liste-Donateurs",
-      },
-      {
-        icon: coord,
-        activeIcon: coordWhite,
-        label: "Coordinator",
-        path: "/liste-coordinateurs",
       },
       {
         icon: rapports,

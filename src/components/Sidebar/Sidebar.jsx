@@ -8,15 +8,26 @@ import closeIcon from "../../assets/close.svg";
 import bellIcon from "../../assets/Bell.svg";
 import settingsIcon from "../../assets/SettingsBlack.svg";
 import PopupProfilAdmin from "../Popups/PopupProfilAdmin";
+import RoleGate from "../auth/RoleGate";
+import { useAuth } from "../Providers/AuthProvider";
 
 export default function Sidebar({
-  role = "coordinator",
-  user = {},
   showTopBarIcons = true,       // notif + paramètres (admin uniquement)
   showTopBarAvatar = true,      // cercle avatar (coordinateur uniquement)
   hideOnMobile = false,         // masque la sidebar mobile (top bar + drawer) sur certaines pages
 }) {
   const navigate = useNavigate();
+
+  /*
+   * The role and user ALWAYS come from the real logged-in
+   * session, never from a prop threaded down through every
+   * route. A route that forgets to pass a `role` prop can
+   * no longer silently fall back to the wrong sidebar —
+   * there's nothing to forget anymore.
+   */
+  const { user, ready } = useAuth();
+  const role = user?.role;
+
   const [expanded, setExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showProfil, setShowProfil] = useState(false);
@@ -32,19 +43,19 @@ export default function Sidebar({
   } = config;
 
   // User avatar if available, otherwise use the default avatar
-  const displayedAvatar = user.profilePicture || defaultAvatar;
+  const displayedAvatar = user?.profilePicture || defaultAvatar;
 
   const isAdmin = role === "admin";
   const isCoordinator = role === "coordinator";
 
   const adminData = {
-    nom: user.nom || "Admin",
-    id: user.id ? `id – ${user.id}` : "id – admin",
+    nom: user?.nom || "Admin",
+    id: user?.id ? `id – ${user.id}` : "id – admin",
     role: "Admin",
-    avatarUrl: user.profilePicture,
-    email: user.email,
-    telephone: user.telephone,
-    region: user.region,
+    avatarUrl: user?.profilePicture,
+    email: user?.email,
+    telephone: user?.telephone,
+    region: user?.region,
   };
 
   const handleItemClick = () => {
@@ -59,6 +70,16 @@ export default function Sidebar({
       navigate("/profile-coor");
     }
   };
+
+  /*
+   * While the auth check is still in flight, `role` is
+   * undefined — rendering now would briefly show the
+   * coordinator fallback config even for an admin. Wait
+   * for `ready` instead of flashing the wrong sidebar.
+   */
+  if (!ready) {
+    return null;
+  }
 
   return (
     <>
@@ -99,70 +120,74 @@ export default function Sidebar({
           </button>
 
           {/* Notification + Paramètres — admin uniquement */}
-          {isAdmin && showTopBarIcons && (
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                aria-label="Notifications"
-                className="
-                  w-9
-                  h-9
-                  flex
-                  items-center
-                  justify-center
-                  hover:opacity-70
-                  transition
-                "
-              >
-                <img src={bellIcon} alt="Notifications" className="w-7 h-7" />
-              </button>
+          {showTopBarIcons && (
+            <RoleGate allow={["admin"]}>
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  aria-label="Notifications"
+                  className="
+                    w-9
+                    h-9
+                    flex
+                    items-center
+                    justify-center
+                    hover:opacity-70
+                    transition
+                  "
+                >
+                  <img src={bellIcon} alt="Notifications" className="w-7 h-7" />
+                </button>
 
-              <button
-                type="button"
-                onClick={() => navigate("/parametres")}
-                aria-label="Paramètres"
-                className="
-                  w-9
-                  h-9
-                  flex
-                  items-center
-                  justify-center
-                  hover:opacity-70
-                  transition
-                "
-              >
-                <img src={settingsIcon} alt="Paramètres" className="w-7 h-7" />
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/parametres")}
+                  aria-label="Paramètres"
+                  className="
+                    w-9
+                    h-9
+                    flex
+                    items-center
+                    justify-center
+                    hover:opacity-70
+                    transition
+                  "
+                >
+                  <img src={settingsIcon} alt="Paramètres" className="w-7 h-7" />
+                </button>
+              </div>
+            </RoleGate>
           )}
 
           {/* Avatar cercle — coordinateur uniquement */}
-          {isCoordinator && showTopBarAvatar && (
-            <button
-              type="button"
-              onClick={handleAvatarClick}
-              aria-label="Profil"
-              className="
-                w-[45px]
-                h-[45px]
-                rounded-full
-                bg-[#8FC9C3]
+          {showTopBarAvatar && (
+            <RoleGate allow={["coordinator"]}>
+              <button
+                type="button"
+                onClick={handleAvatarClick}
+                aria-label="Profil"
+                className="
+                  w-[45px]
+                  h-[45px]
+                  rounded-full
+                  bg-[#8FC9C3]
 
-                flex
-                items-center
-                justify-center
-                overflow-hidden
+                  flex
+                  items-center
+                  justify-center
+                  overflow-hidden
 
-                hover:opacity-80
-                transition
-              "
-            >
-              <User
-                className="w-9 h-9 text-[#EAF7F3]"
-                strokeWidth={0}
-                fill="#EAF7F3"
-              />
-            </button>
+                  hover:opacity-80
+                  transition
+                "
+              >
+                <User
+                  className="w-9 h-9 text-[#EAF7F3]"
+                  strokeWidth={0}
+                  fill="#EAF7F3"
+                />
+              </button>
+            </RoleGate>
           )}
         </div>
       )}
@@ -408,13 +433,13 @@ export default function Sidebar({
 
       {/* ================= POPUP PROFIL ADMIN (uniquement pour les admins) ================= */}
 
-      {isAdmin && (
+      <RoleGate allow={["admin"]}>
         <PopupProfilAdmin
           open={showProfil}
           admin={adminData}
           onClose={() => setShowProfil(false)}
         />
-      )}
+      </RoleGate>
     </>
   );
 }
