@@ -34,7 +34,7 @@ const CoordinateurSelector = ({
           `}
         >
           {selectedCoordinateur
-            ? selectedCoordinateur.code
+            ? selectedCoordinateur.name
             : "Saisir l'identifiant du coordinateur"}
         </span>
       </button>
