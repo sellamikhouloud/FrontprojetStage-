@@ -3,8 +3,6 @@ import { useState, useEffect } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader.jsx";
 import DateContainer from "../../components/Containers/DateContainer.jsx";
-import Input from "../../components/Containers/ContainerEcriture.jsx";
-import ChoiceContainer from "../../components/Containers/ChoiceContainer.jsx";
 import StepIndicator from "../../components/Progress/StepIndicator.jsx";
 import Button from "../../components/Button/Button.jsx";
 import { useNavigate } from "react-router-dom";
@@ -14,8 +12,9 @@ import PopupListeCoordinateurs from "../../components/Popups/PopupListeCoordinat
 import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
 import { useFamilyForm } from "../../context/FamilyFormContext";
 import { searchMere, createFamille } from "../../lib/api/familles";
-import { listCoordinateurs } from "../../lib/api/coordinateurs";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { listUsers } from "../../lib/api/users";
+import { useAuth } from "../../components/Providers/AuthProvider";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage.jsx";
 
 
 
@@ -23,6 +22,31 @@ import successImage from "../../assets/Success.svg";
 import blackCamera from "../../assets/blackCamera.svg";
 import warning from "../../assets/warning.svg";
 import ArrowRight from "../../assets/right-arrow.png";
+
+function parseBackendErrors(data, parentLabel = "") {
+  if (!data) return [];
+
+  if (typeof data === "string") {
+    return [parentLabel ? `${parentLabel} : ${data}` : data];
+  }
+
+  if (Array.isArray(data)) {
+    return data
+      .filter((m) => typeof m === "string")
+      .map((m) => (parentLabel ? `${parentLabel} : ${m}` : m));
+  }
+
+  if (typeof data === "object") {
+    let messages = [];
+    Object.entries(data).forEach(([field, value]) => {
+      const label = parentLabel ? `${parentLabel} → ${field}` : field;
+      messages = messages.concat(parseBackendErrors(value, label));
+    });
+    return messages;
+  }
+
+  return [String(data)];
+}
 
 
 export default function PhotoConfirmation() {
@@ -319,20 +343,23 @@ console.log(
 
     resetFamilyForm();
 
-  } catch (error) {
+ } catch (error) {
+  console.error(
+    "❌ Erreur lors de la création :",
+    error.response?.data || error.message
+  );
 
-    console.error(
-      "❌ Erreur lors de la création :",
-      error.response?.data || error.message
-    );
+  const backendData = error.response?.data;
+  const messages = parseBackendErrors(backendData);
 
-    setSaveError(
-      "Une erreur est survenue lors de l'enregistrement."
-    );
-
-  } finally {
-    setSaving(false);
-  }
+  setSaveError(
+    messages.length > 0
+      ? messages.join(" — ")
+      : "Une erreur est survenue lors de l'enregistrement."
+  );
+} finally {
+  setSaving(false);
+}
 };
 
  
@@ -342,6 +369,7 @@ const isAdmin = role === "admin" || role === "chef_coordinator";
 
 // Charge la liste réelle des coordinateurs dès qu'on sait que l'utilisateur
 // est admin/chef_coordinator (donc après que isAdmin soit calculé ci-dessus)
+
 useEffect(() => {
   if (!isAdmin) return;
 
@@ -352,19 +380,27 @@ useEffect(() => {
     setCoordinateursError(null);
 
     try {
-      const { data } = await listCoordinateurs();
+      const response = await listUsers();
+      const raw = response.data;
+      const data = Array.isArray(raw) ? raw : raw?.results ?? [];
 
-      // On ne garde que les coordinateurs actifs
-      const activeOnly = data.filter((c) => c.is_active);
+      const activeOnly = data.filter(
+        (c) =>
+          c.is_active &&
+          (c.role === "coordinator" || c.role === "chef_coordinator")
+      );
 
-      const mapped = activeOnly.map((c) => ({
-        id: c.id,
-        name: `${c.prenom} ${c.nom}`,
-        code: c.id,
-        village: c.village?.nom || "",
-        familles: c.nb_familles,
-        status: c.is_active ? "Actif" : "Inactif",
-      }));
+     const mapped = activeOnly.map((c) => ({
+  id: c.id,
+  name: `${c.prenom} ${c.nom}`,
+  code: String(c.id),
+  village: c.village?.nom || "",
+  familles: c.nb_familles,
+  status: c.is_active ? "Actif" : "Inactif",
+  username: c.username || "/",
+  creePar: c.created_by ? `${c.created_by.nom} ${c.created_by.prenom}` : "/",
+  isChef: c.role === "chef_coordinator",
+}));
 
       if (!cancelled) {
         setCoordinateurs(mapped);
@@ -386,7 +422,7 @@ useEffect(() => {
     }
   };
 
-  fetchCoordinateurs();
+  fetchCoordinateurs();   // ← LIGNE MANQUANTE, ajoutée ici
 
   return () => {
     cancelled = true;
@@ -617,7 +653,7 @@ useEffect(() => {
   onClick={handleSave}
   disabled={saving}
 />
-{saveError && <ErrorMessage message={saveError} />}
+{saveError && <BackendErrorMessage message={saveError} className="mt-2" />}
 {showPopup && (
   <Popup
     title="Enregistrer avec succès"
