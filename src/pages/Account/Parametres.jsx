@@ -43,11 +43,9 @@ const FREQUENCE_LABEL_TO_VALUE = {
   "Tous les ans": 12,
 };
 
-const FREQUENCE_VALUE_TO_LABEL = {
-  1: "Tous les mois",
-  2: "Tous les 2 mois",
-  3: "Tous les 3 mois",
-};
+const FREQUENCE_VALUE_TO_LABEL = Object.fromEntries(
+  Object.entries(FREQUENCE_LABEL_TO_VALUE).map(([label, value]) => [value, label])
+);
 const JOURS_OPTIONS_AFFICHAGE = [28, 29, 30, 31, 1, 2, 3, 4, 5];
 
 const jourAffichageVersBackend = (jourAffiche) => {
@@ -94,6 +92,7 @@ export default function Parametres({ onClose }) {
  const [erreurTaux, setErreurTaux] = useState("");
  const [savingTaux, setSavingTaux] = useState(false);
 
+
  useEffect(() => {
   const fetchTaux = async () => {
     setLoadingTaux(true);
@@ -135,6 +134,10 @@ useEffect(() => {
 
   fetchVillages();
 }, []);
+
+const [loadingPreferences, setLoadingPreferences] = useState(true);
+const [erreurPreferences, setErreurPreferences] = useState("");
+
 
 useEffect(() => {
   const fetchPreferences = async () => {
@@ -301,25 +304,27 @@ useEffect(() => {
 
 const handleChangerFrequenceRappel = async (label) => {
   const ancienneValeur = frequenceRappel;
-  setFrequenceRappel(label); // mise à jour immédiate à l'écran
+  setFrequenceRappel(label);
   setRappelOuvert(false);
 
   try {
     await updatePreferences({ frequence_rappel_taux: FREQUENCE_LABEL_TO_VALUE[label] });
+    setErreurPreferences("");
   } catch (err) {
-    setFrequenceRappel(ancienneValeur); // on annule si erreur
+    setFrequenceRappel(ancienneValeur);
     setErreurPreferences("Impossible de mettre à jour la fréquence de rappel.");
     console.error(err);
   }
 };
 
 const handleToggleNotif = (champBackend, setState) => async (nouvelleValeur) => {
-  setState(nouvelleValeur); // mise à jour immédiate à l'écran
+  setState(nouvelleValeur);
 
   try {
     await updatePreferences({ [champBackend]: nouvelleValeur });
+    setErreurPreferences("");
   } catch (err) {
-    setState((prev) => !prev); // on annule si erreur
+    setState((prev) => !prev);
     setErreurPreferences("Impossible de mettre à jour cette préférence.");
     console.error(err);
   }
@@ -344,7 +349,7 @@ const formaterDate = (isoString) => {
 
   try {
     const { data } = await createVillage(nom);
-    setRegions((prev) => [...prev, data]); // objet brut, pas mapVillage
+    setRegions((prev) => [...prev, data]); 
     setNouvelleRegion("");
   } catch (err) {
     if (err.response?.status === 403) {
@@ -579,6 +584,7 @@ return (
        telephone: "+222 00 00 00 00",
        profilePicture: "",
      }}
+     hideOnMobile
    />
 
     <main
@@ -1023,9 +1029,14 @@ return (
   position="top-[46px] left-0 sm:left-auto sm:right-0"
   width="w-full sm:w-[190px]"
 />
-      
     </div>
   </div>
+
+  {erreurPreferences && (
+    <div className="mt-3">
+      <ErrorMessage message={erreurPreferences} />
+    </div>
+  )}
 </div>
 
 <h3 className="text-[20px] font-bold text-black mt-3">
@@ -1868,6 +1879,7 @@ return (
 
   {/* Liste des options */}
   <div className="flex flex-col">
+    
     <div className="flex items-center justify-between py-4 border-b border-[#E5EAE8]">
       <p className="text-[16px] font-semibold text-[#000000]">Les visites en retard</p>
       <ToggleSwitch
@@ -1917,6 +1929,11 @@ return (
       />
     </div>
   </div>
+  {erreurPreferences && (
+    <div className="mt-3">
+      <ErrorMessage message={erreurPreferences} />
+    </div>
+  )}
 </div>
 
 
