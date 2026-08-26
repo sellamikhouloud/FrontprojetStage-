@@ -154,13 +154,16 @@ const PopupListeCoordinateurs = ({
                     }
                     className="cursor-pointer"
                   >
-                    <CardCoordinateur
-                      name={item.name}
-                      code={item.code}
-                      village={item.village}
-                      familles={item.familles}
-                      status={item.status}
-                    />
+                   <CardCoordinateur
+  name={item.name}
+  code={item.code}
+  village={item.village}
+  familles={item.familles}
+  status={item.status}
+  username={item.username}
+  creePar={item.creePar}
+  isChef={item.isChef}
+/>
                   </div>
                 ))
               ) : (
