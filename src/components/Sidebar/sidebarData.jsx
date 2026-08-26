@@ -37,6 +37,10 @@ import rapports from "../../assets/rapports.svg";
 import rapportsWhite from "../../assets/rapports-white.svg";
 
 export const sidebarConfig = {
+  // =========================================================
+  // COORDINATOR
+  // =========================================================
+
   coordinator: {
     logo,
     avatar,
@@ -89,6 +93,67 @@ export const sidebarConfig = {
       },
     ],
   },
+
+  // =========================================================
+  // CHEF COORDINATOR
+  // =========================================================
+
+  chef_coordinator: {
+    logo,
+    avatar,
+
+    navigation: [
+      {
+        icon: home,
+        activeIcon: homeWhite,
+        label: "Accueil",
+        path: "/dashboard",
+      },
+      {
+        icon: familles,
+        activeIcon: famillesWhite,
+        label: "Familles",
+        path: "/liste-famille",
+      },
+      {
+        icon: galerieA,
+        activeIcon: galerieAWhite,
+        label: "Galerie",
+        path: "/galerie",
+      },
+      {
+        icon: zakat,
+        activeIcon: zakatWhite,
+        label: "Zakat",
+        path: "/zakat",
+      },
+      {
+        icon: distrib,
+        activeIcon: distribWhite,
+        label: "Distribution",
+        path: "/liste-distributions",
+      },
+    ],
+
+    actions: [
+      {
+        icon: famille,
+        activeIcon: familleWhite,
+        label: "Ajouter une famille",
+        path: "/information-mere",
+      },
+      {
+        icon: visite,
+        activeIcon: visiteWhite,
+        label: "Ajouter une visite",
+        path: "/ajout-visite",
+      },
+    ],
+  },
+
+  // =========================================================
+  // ADMIN
+  // =========================================================
 
   admin: {
     logo,

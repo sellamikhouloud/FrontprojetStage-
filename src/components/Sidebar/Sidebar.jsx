@@ -12,19 +12,12 @@ import RoleGate from "../auth/RoleGate";
 import { useAuth } from "../Providers/AuthProvider";
 
 export default function Sidebar({
-  showTopBarIcons = true,       // notif + paramètres (admin uniquement)
-  showTopBarAvatar = true,      // cercle avatar (coordinateur uniquement)
-  hideOnMobile = false,         // masque la sidebar mobile (top bar + drawer) sur certaines pages
+  showTopBarIcons = true,
+  showTopBarAvatar = true,
+  hideOnMobile = false,
 }) {
   const navigate = useNavigate();
 
-  /*
-   * The role and user ALWAYS come from the real logged-in
-   * session, never from a prop threaded down through every
-   * route. A route that forgets to pass a `role` prop can
-   * no longer silently fall back to the wrong sidebar —
-   * there's nothing to forget anymore.
-   */
   const { user, ready } = useAuth();
   const role = user?.role;
 
@@ -32,8 +25,20 @@ export default function Sidebar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showProfil, setShowProfil] = useState(false);
 
-  // Fallback to coordinator if role doesn't exist
-  const config = sidebarConfig[role] || sidebarConfig.coordinator;
+  /*
+   * chef_coordinator uses the coordinator sidebar configuration.
+   *
+   * If sidebarConfig contains a specific chef_coordinator config,
+   * it will use that one.
+   *
+   * Otherwise it falls back to the coordinator configuration.
+   */
+  
+  const config =
+    sidebarConfig[role] ||
+    (role === "chef_coordinator"
+      ? sidebarConfig.coordinator
+      : sidebarConfig.coordinator);
 
   const {
     navigation,
@@ -46,7 +51,12 @@ export default function Sidebar({
   const displayedAvatar = user?.profilePicture || defaultAvatar;
 
   const isAdmin = role === "admin";
-  const isCoordinator = role === "coordinator";
+
+  /*
+   * Both coordinator and chef_coordinator are coordinator-type users.
+   */
+  const isCoordinator =
+    role === "coordinator" || role === "chef_coordinator";
 
   const adminData = {
     nom: user?.nom || "Admin",
@@ -62,20 +72,20 @@ export default function Sidebar({
     setMobileOpen(false);
   };
 
-  // Admin -> ouvre la popup profil. Coordinateur -> navigue vers la page profil dédiée.
+  /*
+   * Admin -> ouvre la popup profil.
+   * Coordinator / Chef Coordinator -> page profil coordinateur.
+   */
   const handleAvatarClick = () => {
     if (isAdmin) {
       setShowProfil(true);
-    } else {
+    } else if (isCoordinator) {
       navigate("/profile-coor");
     }
   };
 
   /*
-   * While the auth check is still in flight, `role` is
-   * undefined — rendering now would briefly show the
-   * coordinator fallback config even for an admin. Wait
-   * for `ready` instead of flashing the wrong sidebar.
+   * While auth is loading, don't render the sidebar.
    */
   if (!ready) {
     return null;
@@ -95,11 +105,9 @@ export default function Sidebar({
             h-16
             bg-white
             z-50
-
             flex
             items-center
             justify-between
-
             px-4
           "
         >
@@ -110,13 +118,16 @@ export default function Sidebar({
               w-11
               h-11
               rounded-[12px]
-
               flex
               items-center
               justify-center
             "
           >
-            <img src={menuIcon} alt="Menu" className="w-10 h-10" />
+            <img
+              src={menuIcon}
+              alt="Menu"
+              className="w-10 h-10"
+            />
           </button>
 
           {/* Notification + Paramètres — admin uniquement */}
@@ -136,7 +147,11 @@ export default function Sidebar({
                     transition
                   "
                 >
-                  <img src={bellIcon} alt="Notifications" className="w-7 h-7" />
+                  <img
+                    src={bellIcon}
+                    alt="Notifications"
+                    className="w-7 h-7"
+                  />
                 </button>
 
                 <button
@@ -153,15 +168,21 @@ export default function Sidebar({
                     transition
                   "
                 >
-                  <img src={settingsIcon} alt="Paramètres" className="w-7 h-7" />
+                  <img
+                    src={settingsIcon}
+                    alt="Paramètres"
+                    className="w-7 h-7"
+                  />
                 </button>
               </div>
             </RoleGate>
           )}
 
-          {/* Avatar cercle — coordinateur uniquement */}
+          {/* Avatar — coordinator + chef_coordinator */}
           {showTopBarAvatar && (
-            <RoleGate allow={["coordinator"]}>
+            <RoleGate
+              allow={["coordinator", "chef_coordinator"]}
+            >
               <button
                 type="button"
                 onClick={handleAvatarClick}
@@ -171,21 +192,32 @@ export default function Sidebar({
                   h-[45px]
                   rounded-full
                   bg-[#8FC9C3]
-
                   flex
                   items-center
                   justify-center
                   overflow-hidden
-
                   hover:opacity-80
                   transition
                 "
               >
-                <User
-                  className="w-9 h-9 text-[#EAF7F3]"
-                  strokeWidth={0}
-                  fill="#EAF7F3"
-                />
+                {displayedAvatar ? (
+                  <img
+                    src={displayedAvatar}
+                    alt="Avatar"
+                    className="
+                      w-full
+                      h-full
+                      rounded-full
+                      object-cover
+                    "
+                  />
+                ) : (
+                  <User
+                    className="w-9 h-9 text-[#EAF7F3]"
+                    strokeWidth={0}
+                    fill="#EAF7F3"
+                  />
+                )}
               </button>
             </RoleGate>
           )}
@@ -207,7 +239,6 @@ export default function Sidebar({
       )}
 
       {/* ================= DESKTOP ================= */}
-      {/* mt / mb / ml ajoutent l'espace blanc autour de la sidebar (haut, bas, gauche) sur toutes les pages */}
 
       <aside
         onMouseLeave={() => setExpanded(false)}
@@ -296,21 +327,42 @@ export default function Sidebar({
 
         <div className="flex justify-center flex-shrink-0">
           <button onClick={handleAvatarClick}>
-            <img
-              src={displayedAvatar}
-              alt="Avatar"
-              className="
-                w-10
-                h-10
-                rounded-full
-                object-cover
-              "
-            />
+            {displayedAvatar ? (
+              <img
+                src={displayedAvatar}
+                alt="Avatar"
+                className="
+                  w-10
+                  h-10
+                  rounded-full
+                  object-cover
+                "
+              />
+            ) : (
+              <div
+                className="
+                  w-10
+                  h-10
+                  rounded-full
+                  bg-[#8FC9C3]
+                  flex
+                  items-center
+                  justify-center
+                "
+              >
+                <User
+                  className="w-7 h-7 text-[#EAF7F3]"
+                  strokeWidth={0}
+                  fill="#EAF7F3"
+                />
+              </div>
+            )}
           </button>
         </div>
       </aside>
 
       {/* ================= MOBILE ================= */}
+
       {!hideOnMobile && (
         <aside
           className={`
@@ -416,22 +468,42 @@ export default function Sidebar({
                 handleAvatarClick();
               }}
             >
-              <img
-                src={displayedAvatar}
-                alt="Avatar"
-                className="
-                  w-10
-                  h-10
-                  rounded-full
-                  object-cover
-                "
-              />
+              {displayedAvatar ? (
+                <img
+                  src={displayedAvatar}
+                  alt="Avatar"
+                  className="
+                    w-10
+                    h-10
+                    rounded-full
+                    object-cover
+                  "
+                />
+              ) : (
+                <div
+                  className="
+                    w-10
+                    h-10
+                    rounded-full
+                    bg-[#8FC9C3]
+                    flex
+                    items-center
+                    justify-center
+                  "
+                >
+                  <User
+                    className="w-7 h-7 text-[#EAF7F3]"
+                    strokeWidth={0}
+                    fill="#EAF7F3"
+                  />
+                </div>
+              )}
             </button>
           </div>
         </aside>
       )}
 
-      {/* ================= POPUP PROFIL ADMIN (uniquement pour les admins) ================= */}
+      {/* ================= POPUP PROFIL ADMIN ================= */}
 
       <RoleGate allow={["admin"]}>
         <PopupProfilAdmin

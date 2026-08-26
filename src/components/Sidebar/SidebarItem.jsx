@@ -24,8 +24,8 @@ export default function SidebarItem({
             alt={item.label}
             className="
               w-5 h-5
-              lg:w-6 lg:h-6
-              xl:w-5 xl:h-5
+              lg:w-5 lg:h-5
+              xl:w-4.5 xl:h-4.5
             "
           />
 
@@ -35,7 +35,7 @@ export default function SidebarItem({
                 whitespace-nowrap
                 text-white
                 font-semibold
-                text-[14px]
+                text-[13px]
                 lg:text-[15px]
                 xl:text-[13px]
               "
