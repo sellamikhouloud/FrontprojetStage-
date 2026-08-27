@@ -18,7 +18,7 @@ export default function Sidebar({
 }) {
   const navigate = useNavigate();
 
-  const { user, ready } = useAuth();
+  const { user, ready, updateUser } = useAuth();
   const role = user?.role;
 
   const [expanded, setExpanded] = useState(false);
@@ -67,6 +67,7 @@ const adminData = {
   role: "Admin",
   avatarUrl: user?.photo,
   email: user?.email,
+  telephone: user?.telephone,
 };
 
   const handleItemClick = () => {
@@ -84,6 +85,15 @@ const adminData = {
       navigate("/profile-coor");
     }
   };
+  
+  const handleSaveAdmin = async (updatedFields) => {
+  try {
+    await updateUser(updatedFields);
+    return null; // succès, pas d'erreur
+  } catch (err) {
+    return err.response?.data || { non_field_errors: ["Impossible de mettre à jour le profil."] };
+  }
+};
 
   /*
    * While auth is loading, don't render the sidebar.
@@ -506,13 +516,14 @@ const adminData = {
 
       {/* ================= POPUP PROFIL ADMIN ================= */}
 
-      <RoleGate allow={["admin"]}>
-        <PopupProfilAdmin
-          open={showProfil}
-          admin={adminData}
-          onClose={() => setShowProfil(false)}
-        />
-      </RoleGate>
+     <RoleGate allow={["admin"]}>
+  <PopupProfilAdmin
+    open={showProfil}
+    admin={adminData}
+    onClose={() => setShowProfil(false)}
+    onSave={handleSaveAdmin}
+  />
+</RoleGate>
     </>
   );
 }
