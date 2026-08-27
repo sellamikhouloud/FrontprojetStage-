@@ -361,6 +361,22 @@ const handleExportZakat = async () => {
       <Sidebar />
 
       <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+
+         {/* Espace blanc FIXE en haut — desktop only */}
+   <div
+     className="
+       hidden
+       lg:block
+       lg:absolute
+       lg:top-0
+       lg:left-0
+       lg:right-0
+       lg:h-4
+       bg-white
+       z-20
+     "
+   />
+   
         <div className="h-full overflow-y-auto px-5 pt-18 md:pt-0 lg:p-8 pb-[50px]">
       {user?.role === "admin" && (
   <NavigationHeader
