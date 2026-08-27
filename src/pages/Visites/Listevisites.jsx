@@ -204,7 +204,7 @@ export default function ListeVisites() {
             onChange={(e) => setSearch(e.target.value)}
             onFilterClick={() => {}}
             maxWidth="max-w-full"
-            placeholder="Entrer ici pour chercher"
+            placeholder="Rechercher par informations de la famille"
           />
         </div>
 
@@ -233,7 +233,7 @@ export default function ListeVisites() {
             onChange={(e) => setSearch(e.target.value)}
             onFilterClick={() => setIsFilterOpen((prev) => !prev)}
             maxWidth="max-w-full"
-            placeholder="Entrer ici pour chercher (nom, prénom mère, code famille)"
+             placeholder="Rechercher par informations de la famille"
           />
         </div>
 
