@@ -364,6 +364,7 @@ if  (isFilterOpen && isMobile)  {
           onChange={(e) => setSearch(e.target.value)}
           onFilterClick={() => {}}
           maxWidth="max-w-full"
+              placeholder="Rechercher par informations de la famille"
         />
       </div>
 
@@ -414,6 +415,7 @@ if  (isFilterOpen && isMobile)  {
   }}
   onFilterClick={() => setIsFilterOpen((prev) => !prev)}
   maxWidth="max-w-full"
+ placeholder="Rechercher par informations de la famille"
 />
 {(appliedFilters.village ||
   appliedFilters.statut ||
