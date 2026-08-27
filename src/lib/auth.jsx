@@ -2,6 +2,7 @@ import {
   postLogin,
   postLogout,
   getMe,
+  patchMe,
 } from "./api/auth";
 
 import { fetchCSRFToken } from "./axios";
@@ -42,4 +43,10 @@ export async function getCurrentUser() {
   } catch {
     return null;
   }
+}
+
+export async function updateCurrentUser(payload) {
+  await fetchCSRFToken();
+  const { data } = await patchMe(payload);
+  return data;
 }

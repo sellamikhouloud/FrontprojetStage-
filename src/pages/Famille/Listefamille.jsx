@@ -105,6 +105,8 @@ const [appliedFilters, setAppliedFilters] = useState({
   moisLabel: "",
   sexe: "",
   sexeLabel: "",
+  statut_zakat: "",
+  statutZakatLabel: "",
 });
 const [filters, setFilters] = useState({
   village: "",
@@ -115,6 +117,8 @@ const [filters, setFilters] = useState({
   moisLabel: "",
   sexe: "",
   sexeLabel: "",
+  statut_zakat: "",
+  statutZakatLabel: "",
 });
 
  const {
@@ -165,6 +169,10 @@ const {
     if (appliedFilters.sexe) {
       params.sexe = appliedFilters.sexe;
     }
+
+    if (appliedFilters.statut_zakat) {
+  params.statut_zakat = appliedFilters.statut_zakat;
+}
 
     const response = await listFamilles(params);
 
@@ -242,6 +250,23 @@ const filtersContent = (
   noPadding
 />
 
+<SelectInput2
+  label="Statut Zakat"
+  placeholder="Choisir un statut"
+  value={filters.statut_zakat}
+  onChange={(selected) => {
+    setFilters((prev) => ({
+      ...prev,
+      statut_zakat: selected.value,
+      statutZakatLabel: selected.label,
+    }));
+  }}
+  options={[
+    { label: "A bénéficié", value: "true" },
+    { label: "N'a pas bénéficié", value: "false" },
+  ]}
+  noPadding
+/>
 
     <SelectInput2
       label="Mois d'entrée"
@@ -272,17 +297,19 @@ const filtersContent = (
       title="Annuler les filtres"
       variant="outline"
       noPadding
-     onClick={() => {
+    onClick={() => {
   const empty = {
-  village: "",
-  villageLabel: "",
-  statut: "",
-  statutLabel: "",
-  mois_entree: "",
-  moisLabel: "",
-  sexe: "",
-  sexeLabel: "",
-};
+    village: "",
+    villageLabel: "",
+    statut: "",
+    statutLabel: "",
+    mois_entree: "",
+    moisLabel: "",
+    sexe: "",
+    sexeLabel: "",
+    statut_zakat: "",
+    statutZakatLabel: "",
+  };
   setFilters(empty);
   setAppliedFilters(empty);
 }}
@@ -330,6 +357,19 @@ const filterTagsContent = (
       />
     )}
 
+    {appliedFilters.statut_zakat && (
+  <FilterTag
+    text={appliedFilters.statutZakatLabel}
+    onRemove={() =>
+      setAppliedFilters((prev) => ({
+        ...prev,
+        statut_zakat: "",
+        statutZakatLabel: "",
+      }))
+    }
+  />
+)}
+
    {appliedFilters.village && (
   <FilterTag
     text={appliedFilters.villageLabel || appliedFilters.village}
@@ -364,13 +404,15 @@ if  (isFilterOpen && isMobile)  {
           onChange={(e) => setSearch(e.target.value)}
           onFilterClick={() => {}}
           maxWidth="max-w-full"
+              placeholder="Rechercher par informations de la famille"
         />
       </div>
 
 {(appliedFilters.village ||
   appliedFilters.statut ||
   appliedFilters.mois_entree ||
-  appliedFilters.sexe) &&
+  appliedFilters.sexe ||
+  appliedFilters.statut_zakat) &&
   filterTagsContent}
 
       <div className="mt-6">
@@ -414,11 +456,13 @@ if  (isFilterOpen && isMobile)  {
   }}
   onFilterClick={() => setIsFilterOpen((prev) => !prev)}
   maxWidth="max-w-full"
+ placeholder="Rechercher par informations de la famille"
 />
 {(appliedFilters.village ||
   appliedFilters.statut ||
   appliedFilters.mois_entree ||
-  appliedFilters.sexe) &&
+  appliedFilters.sexe ||
+  appliedFilters.statut_zakat) &&
   filterTagsContent}
 
 

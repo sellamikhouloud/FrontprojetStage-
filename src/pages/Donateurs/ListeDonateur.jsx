@@ -1,20 +1,28 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
 import StatusFilter from "../../components/Filter/StatusFilter";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import SearchBar from "../../components/Filter/Searchbar";
 import CardDonateur from "../../components/Cards/carteDonateur";
+import PopupImportDonateurs from "../../components/Popups/Popupimportdonateurs";
+import PopupImportResult from "../../components/Popups/PopupImportResult";
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
-import { listDonateurs } from "@/lib/api/donateurs";
+
+import { listDonateurs, importDonateurs, exportDonateurs } from "@/lib/api/donateurs";
 
 export default function ListeDonateur() {
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showImportPopup, setShowImportPopup] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
+  const [showResultPopup, setShowResultPopup] = useState(false);
 
   const {
     data: donateurs = [],
@@ -24,8 +32,6 @@ export default function ListeDonateur() {
   } = useQuery({
     queryKey: ["donateurs", search, statusFilter],
     queryFn: async () => {
-      // On ne construit que les params réellement nécessaires,
-      // pour éviter d'envoyer des valeurs vides ou mal typées au backend.
       const params = {};
 
       const trimmedSearch = search.trim();
@@ -33,11 +39,6 @@ export default function ListeDonateur() {
         params.search = trimmedSearch;
       }
 
-      // Actif / Inactif : on n'ajoute is_active QUE si un filtre est choisi.
-      // ⚠️ Si le backend attend un booléen réel (et non la string "true"/"false"),
-      // c'est une cause fréquente d'erreur 500. Vérifie côté API comment
-      // ce paramètre est parsé (ex: Django DRF avec BooleanField/BooleanFilter,
-      // FastAPI avec `is_active: bool = None`, etc.).
       if (statusFilter === "active") {
         params.is_active = true;
       } else if (statusFilter === "inactive") {
@@ -46,8 +47,6 @@ export default function ListeDonateur() {
 
       const response = await listDonateurs(params);
 
-      // Défense supplémentaire : garantir un tableau même si l'API
-      // renvoie un format inattendu (objet paginé, null, etc.)
       const data = response?.data;
       if (Array.isArray(data)) return data;
       if (Array.isArray(data?.results)) return data.results;
@@ -67,6 +66,52 @@ export default function ListeDonateur() {
     return `${jour}/${mois}/${annee}`;
   };
 
+  const handleImportDonateurs = async (file) => {
+    setIsImporting(true);
+    try {
+      const response = await importDonateurs(file);
+
+      await queryClient.invalidateQueries({ queryKey: ["donateurs"] });
+
+      setImportResult(response.data);
+      setShowImportPopup(false);
+      setShowResultPopup(true);
+    } catch (err) {
+      console.error("Erreur lors de l'import des donateurs :", err.response?.data || err);
+      
+      throw err;
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await exportDonateurs();
+
+      const blob = new Blob([response.data], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "Liste-donateurs.xlsx";
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'export de la liste des donateurs :",
+        error
+      );
+    }
+  };
+
   return (
     <div className="flex h-screen overflow-hidden bg-white">
       {/* Sidebar */}
@@ -78,13 +123,13 @@ export default function ListeDonateur() {
           title="Liste des donateurs"
           type="share"
           actionTitle="Exporter la liste des donateurs"
-          onAction={() => console.log("Exporter")}
+          onAction={handleExport}
           secondType="add"
           secondActionTitle="Ajouter un donateur"
           onSecondAction={() => navigate("/ajout-donateur")}
           thirdType="export"
           thirdActionTitle="Importer un fichier"
-          onThirdAction={() => console.log("Importer")}
+          onThirdAction={() => setShowImportPopup(true)}
         />
 
         {/* Recherche */}
@@ -94,7 +139,7 @@ export default function ListeDonateur() {
             onChange={(e) => setSearch(e.target.value)}
             showFilter={false}
             maxWidth="max-w-full"
-            placeholder="Entrer ici pour chercher"
+            placeholder="Rechercher par informations du donateur"
           />
         </div>
 
@@ -151,6 +196,21 @@ export default function ListeDonateur() {
           </div>
         )}
       </main>
+
+      {/* Popup d'import de donateurs */}
+      <PopupImportDonateurs
+        open={showImportPopup}
+        onClose={() => setShowImportPopup(false)}
+        onImport={handleImportDonateurs}
+        isLoading={isImporting}
+      />
+
+      {/* Popup des résultats de l'import */}
+      <PopupImportResult
+        open={showResultPopup}
+        onClose={() => setShowResultPopup(false)}
+        result={importResult}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   login as authLogin,
   logout as authLogout,
   getCurrentUser,
+  updateCurrentUser,
 } from "../../lib/auth";
 
 const AuthContext = createContext(null);
@@ -61,6 +62,13 @@ export function AuthProvider({ children }) {
       setUser(null);
     }
   }, []);
+  
+    //  Mise à jour du profil
+    const updateUser = useCallback(async (payload) => {
+    const updatedUser = await updateCurrentUser(payload);
+    setUser(updatedUser);
+    return updatedUser;
+  }, []);
 
   // CONTEXT VALUE
 
@@ -71,8 +79,9 @@ export function AuthProvider({ children }) {
       isAuthenticated: !!user,
       login,
       logout,
+      updateUser,
     }),
-    [user, ready, login, logout]
+    [user, ready, login, logout , updateUser,]
   );
 
   return (

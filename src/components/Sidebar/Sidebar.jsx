@@ -18,7 +18,7 @@ export default function Sidebar({
 }) {
   const navigate = useNavigate();
 
-  const { user, ready } = useAuth();
+  const { user, ready, updateUser } = useAuth();
   const role = user?.role;
 
   const [expanded, setExpanded] = useState(false);
@@ -56,17 +56,16 @@ export default function Sidebar({
     role === "coordinator" ||
     role === "chef_coordinator";
 
-  const adminData = {
-    nom: user?.nom ?? "",
-    prenom: user?.prenom ?? "",
-    username: user?.username,
-    id: user?.id
-      ? `id – ${user.id}`
-      : "id – admin",
-    role: "Admin",
-    avatarUrl: user?.photo,
-    email: user?.email,
-  };
+const adminData = {
+  nom: user?.nom ?? "",
+  prenom: user?.prenom ?? "",
+  username: user?.username,
+  id: user?.id ? `id – ${user.id}` : "id – admin",
+  role: "Admin",
+  avatarUrl: user?.photo,
+  email: user?.email,
+  telephone: user?.telephone,
+};
 
   const handleItemClick = () => {
     setMobileOpen(false);
@@ -85,6 +84,15 @@ export default function Sidebar({
       navigate("/profile-coor");
     }
   };
+  
+  const handleSaveAdmin = async (updatedFields) => {
+  try {
+    await updateUser(updatedFields);
+    return null; // succès, pas d'erreur
+  } catch (err) {
+    return err.response?.data || { non_field_errors: ["Impossible de mettre à jour le profil."] };
+  }
+};
 
   /*
    * While authentication is still loading,
@@ -579,9 +587,7 @@ export default function Sidebar({
         <PopupProfilAdmin
           open={showProfil}
           admin={adminData}
-          onClose={() =>
-            setShowProfil(false)
-          }
+          onClose={() => setShowProfil(false)}
         />
       </RoleGate>
     </>
