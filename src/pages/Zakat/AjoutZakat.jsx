@@ -9,6 +9,7 @@ import { useState } from "react";
 import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import TextArea from "../../components/Containers/Textarea";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 
 
 import { useNavigate } from "react-router-dom";
@@ -27,7 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles } from "@/lib/api/familles";
 import { getTauxDeChange } from "@/lib/api/parametres";
-import { getSoldeActuel , createAideZakat } from "@/lib/api/zakat";
+import { getSoldeActuel , createAideZakat , getDerniereZakatFamille,} from "@/lib/api/zakat";
 
 
 
@@ -43,6 +44,12 @@ const isFutureDate = (date) => {
 
   return selected > today;
 };
+const formatDateFR = (isoDate) => {
+  if (!isoDate) return null;
+  const [y, m, d] = isoDate.split("-");
+  return `${d}/${m}/${y}`;
+};
+
 
 const formatDateYYYYMMDD = (d) => {
   const dt = d instanceof Date ? d : new Date(d);
@@ -51,13 +58,100 @@ const formatDateYYYYMMDD = (d) => {
   ).padStart(2, "0")}`;
 };
 
+const KNOWN_FIELDS = [
+  "famille",
+  "date_versement",
+  "montant",
+  "cause_principale",
+  "precisions",
+  "observation",
+  "mode_remise",
+  "confirmation",
+];
+
+// Mappe les noms de champs backend vers les clés locales utilisées dans errors/backendFieldErrors
+const FIELD_KEY_MAP = {
+  famille: "famille",
+  date_versement: "date",
+  montant: "montant",
+  cause_principale: "causePrincipale",
+  precisions: "precisions",
+  observation: "observations",
+  mode_remise: "modePaiement",
+  confirmation: "confirmed",
+};
+
+function parseBackendErrors(data) {
+
+  if (!data) return { fieldErrors: {}, generalMessage: null };
+
+  // Réponse HTML (404/500 Django, mauvaise route, serveur down, etc.)
+  if (typeof data === "string" && /<html[\s>]/i.test(data)) {
+    if (status === 404) {
+      return {
+        fieldErrors: {},
+        generalMessage: "Le service demandé est introuvable. Veuillez réessayer plus tard ou contacter le support.",
+      };
+    }
+    return {
+      fieldErrors: {},
+      generalMessage: "Une erreur inattendue est survenue côté serveur. Veuillez réessayer plus tard.",
+    };
+  }
+
+
+
+  if (typeof data === "string") {
+    return { fieldErrors: {}, generalMessage: data };
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    return { fieldErrors: {}, generalMessage: messages.join(" — ") || null };
+  }
+
+  if (data.detail) {
+    return { fieldErrors: {}, generalMessage: data.detail };
+  }
+
+  if (typeof data.code === "string" && typeof data.message === "string") {
+    return { fieldErrors: {}, generalMessage: data.message };
+  }
+
+  if (typeof data === "object") {
+    const fieldErrors = {};
+    const generalMessages = [];
+
+    Object.entries(data).forEach(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+
+      if (KNOWN_FIELDS.includes(field)) {
+        fieldErrors[field] = text;
+      } else if (field === "non_field_errors") {
+        generalMessages.push(text);
+      } else {
+        generalMessages.push(`${field} : ${text}`);
+      }
+    });
+
+    return {
+      fieldErrors,
+      generalMessage: generalMessages.length ? generalMessages.join(" — ") : null,
+    };
+  }
+
+  return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
+}
+
 
 
 export default function AjoutZakat() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
+  
+  const [backendFieldErrors, setBackendFieldErrors] = useState({});
+  const [backendGeneralError, setBackendGeneralError] = useState(null);
 
   const location = useLocation();
   const draft = location.state?.draft;
@@ -81,6 +175,24 @@ const { data: tauxData, isLoading: tauxLoading } = useQuery({
   queryFn: () => getTauxDeChange().then((r) => r.data),
   staleTime: Infinity,
 });
+
+
+const {
+  data: derniereZakatData,
+  isLoading: derniereZakatLoading,
+  isError: derniereZakatIsError,
+  error: derniereZakatError,
+} = useQuery({
+  queryKey: ["derniere-zakat", selectedFamille?.code],
+  queryFn: () =>
+    getDerniereZakatFamille({ famille: selectedFamille.code }).then((r) => r.data),
+  enabled: !!selectedFamille?.code,
+});
+
+const aDejaUneZakat = !!derniereZakatData?.numero_zakat;
+const derniereZakatDateAffichee = formatDateFR(derniereZakatData?.date_versement);
+const prochainNumeroZakat = (derniereZakatData?.numero_zakat ?? 0) + 1;
+
 
 // Solde disponible — récupéré une seule fois à l'ouverture du formulaire
 const { data: soldeData, isLoading: soldeLoading } = useQuery({
@@ -177,35 +289,50 @@ const extractErrorMessage = (error) => {
 };
 
  const handleSave = async () => {
-    if (!validateForm()) return;
+  if (!validateForm()) return;
 
-    setSaving(true);
-    setSaveError(null);
+  setSaving(true);
+  setBackendFieldErrors({});
+  setBackendGeneralError(null);
 
-    const payload = {
-      famille: selectedFamille?.code, // ex: "GDK-2026-002"
-      date_versement: formatDateYYYYMMDD(date),
-      montant: Number(montant),
-      cause_principale: causePrincipale,
-      precisions: precisions || "",
-      observation: observations || "",
-      mode_remise: modePaiement,
-      confirmation: confirmed,
-    };
-
-        try {
-      await createAideZakat(payload);
-      setShowSuccessPopup(true);
-    } catch (error) {
-      console.error(
-        "❌ Erreur lors de la création de la zakat :",
-        error.response?.data || error.message
-      );
-      setSaveError(extractErrorMessage(error));
-    } finally {
-      setSaving(false);
-    }
+  const payload = {
+    famille: selectedFamille?.code,
+    date_versement: formatDateYYYYMMDD(date),
+    montant: Number(montant),
+    cause_principale: causePrincipale,
+    precisions: precisions || "",
+    observation: observations || "",
+    mode_remise: modePaiement,
+    confirmation: confirmed,
   };
+
+  try {
+    await createAideZakat(payload);
+    setShowSuccessPopup(true);
+  } catch (error) {
+  console.error(
+    "❌ Erreur lors de la création de la zakat :",
+    error.response?.data || error.message
+  );
+
+  const { fieldErrors, generalMessage } = parseBackendErrors(
+    error.response?.data,
+    error.response?.status
+  );
+
+    
+    const mappedFieldErrors = {};
+    Object.entries(fieldErrors).forEach(([backendField, message]) => {
+      const localKey = FIELD_KEY_MAP[backendField] || backendField;
+      mappedFieldErrors[localKey] = message;
+    });
+
+    setBackendFieldErrors(mappedFieldErrors);
+    setBackendGeneralError(generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la zakat."));
+  } finally {
+    setSaving(false);
+  }
+};
 
   // Chaque onChange nettoie son propre message d'erreur immediatement
  const handleMontantChange = (raw) => {
@@ -246,7 +373,7 @@ const extractErrorMessage = (error) => {
   const [openFamilles, setOpenFamilles] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
 
-  // --- Récupération des vraies familles depuis l'API (même principe que Ajout Visite) ---
+  
   const {
     data: famillesData,
     isLoading: famillesLoading,
@@ -333,7 +460,7 @@ const extractErrorMessage = (error) => {
       
       <div className="flex h-screen bg-white overflow-hidden">
   
-          <Sidebar role="admin" />
+          <Sidebar />
   
 
   
@@ -396,8 +523,12 @@ const extractErrorMessage = (error) => {
               onAction={handleSearch}
             />
             <ErrorMessage
-              message={errors.famille ? "Veuillez sélectionner une famille" : null}
-            />
+  message={
+    errors.famille
+      ? "Veuillez sélectionner une famille"
+      : backendFieldErrors.famille || null
+  }
+/>
             </div>
           </>
         )}
@@ -455,17 +586,22 @@ const extractErrorMessage = (error) => {
             </div>
           </>
         )}
+            {backendGeneralError && (
+  <div className="mt-2">
+    <BackendErrorMessage message={backendGeneralError} />
+  </div>
+)}
 
         {/* Main content */}
         <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
           {/* LEFT COLUMN */}
-          <div className="flex flex-col gap-4">
-            {selectedFamille && (
-          <>
-            
-            <InfoHeader title="Dernière zakat" value="15/05/2026" />
-          </>
-          )}
+          <div className="flex flex-col gap-3.5">
+          {selectedFamille && !derniereZakatLoading && (
+  <InfoHeader
+    title="Dernière zakat"
+    value={aDejaUneZakat ? derniereZakatDateAffichee : "Aucune"}
+  />
+)}
             {/* Date + Zakat number */}
 
             <div className="flex flex-col gap-0 ">
@@ -504,31 +640,15 @@ const extractErrorMessage = (error) => {
                 />
 
               
-{selectedFamille && (
-          <>
-                <div className="w-full">
-                  <div
-                    className="
-                      h-[45px]
-                      rounded-[15px]
-                      border
-                      border-[#4E9F8A]
-                      bg-white
-                      px-4
-                      pr-12
-                      flex
-                      items-center
-                    "
-                    >
-                    <p className="text-[14px] leading-[20px] text-[#374151]">
-                      Zakat numero 03
-                    </p>
-
-                  </div>
-                </div>
-                 
-                </>
-                )}
+{selectedFamille && !derniereZakatLoading && (
+  <div className="w-full">
+    <div className="h-[45px] rounded-[15px] border border-[#4E9F8A] bg-white px-4 pr-12 flex items-center">
+      <p className="text-[14px] leading-[20px] text-[#374151]">
+        {`Zakat N° ${prochainNumeroZakat}`}
+      </p>
+    </div>
+  </div>
+)}
                  
               </div>
              <div className="
@@ -537,12 +657,12 @@ const extractErrorMessage = (error) => {
             >
 
                <ErrorMessage
-                   message={
-                   errors.date
-                   ? "La date de zakat ne peut pas être supérieure à la date d'aujourd'hui."
-                   : null
-                  }
-                />
+  message={
+    errors.date
+      ? "La date de zakat ne peut pas être supérieure à la date d'aujourd'hui."
+      : backendFieldErrors.date || null
+  }
+/>
 
                 </div>
 
@@ -631,13 +751,13 @@ const extractErrorMessage = (error) => {
       : "Taux de change indisponible"}
   </p>
 )}
-                   <ErrorMessage
+                 <ErrorMessage
   message={
     errors.montant
       ? !montant || parseFloat(montant) <= 0
         ? "Veuillez saisir un montant valide"
         : `Le montant dépasse le solde disponible (${soldeDisponible?.toLocaleString("fr-FR")} MRU)`
-      : null
+      : backendFieldErrors.montant || null
   }
 />
                     </div>
@@ -667,10 +787,12 @@ const extractErrorMessage = (error) => {
                      ]}
                      />
                     <ErrorMessage
-                      message={
-                        errors.modePaiement ? "Veuillez choisir un mode de paiement" : null
-                      }
-                    />
+  message={
+    errors.modePaiement
+      ? "Veuillez choisir un mode de paiement"
+      : backendFieldErrors.modePaiement || null
+  }
+/>
                     </div>
                   </div>
                 </div>
@@ -728,10 +850,12 @@ const extractErrorMessage = (error) => {
   ]}
 />
                     <ErrorMessage
-                      message={
-                        errors.causePrincipale ? "Veuillez choisir une cause principale" : null
-                      }
-                    />
+  message={
+    errors.causePrincipale
+      ? "Veuillez choisir une cause principale"
+      : backendFieldErrors.causePrincipale || null
+  }
+/>
                     </div>
                   </div>
                 </div>
@@ -767,7 +891,7 @@ const extractErrorMessage = (error) => {
                 placeholder="Tapez ici si il y a des observations complémentaires"
                 value={observations}
                 onChange={(e) => setObservations(e.target.value)}
-                height="h-[98px]"
+                height="h-[106px]"
               />
             </div>
 
@@ -793,7 +917,7 @@ const extractErrorMessage = (error) => {
             onClick={handleSave}
             disabled={saving}
           />
-          {saveError && <ErrorMessage message={saveError} />}
+     
         </div>
 
         {showSuccessPopup && (
