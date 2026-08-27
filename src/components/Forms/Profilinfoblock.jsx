@@ -2,6 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { User, Mail, Phone, Building2, MapPin, AtSign } from "lucide-react";
 import UserCard from "../Cards/UserCard";
 import Button from "../Button/Button";
+import OptionsMenu from "../Containers/OptionsMenu";
+import { listVillages } from "../../lib/api/Parametres";
+import { AiOutlineDown } from "react-icons/ai";
+import ErrorMessage from "../Forms/ErrorMessage";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
 
 // Icône flèche de sortie (rouge), encodée en SVG inline — pas besoin de fichier asset séparé
 export const logoutIcon =
@@ -15,23 +20,20 @@ export const logoutIcon =
   `);
 
 export const CHAMPS_DEFAUT = [
+  { key: "username", icon: AtSign, label: "Nom d'utilisateur" },
   { key: "prenom", icon: User, label: "Prénom" },
   { key: "nom", icon: User, label: "Nom" },
-  { key: "username", icon: AtSign, label: "Nom d'utilisateur" },
   { key: "email", icon: Mail, label: "Email" },
   { key: "telephone", icon: Phone, label: "Téléphone" },
-  { key: "structure", icon: Building2, label: "Structure" },
 ];
 
-// Champs pour un profil coordinateur (ajoute "Région")
 export const CHAMPS_COORDINATEUR = [
+  { key: "username", icon: AtSign, label: "Nom d'utilisateur" },
   { key: "prenom", icon: User, label: "Prénom" },
   { key: "nom", icon: User, label: "Nom" },
-  { key: "username", icon: AtSign, label: "Nom d'utilisateur" },
   { key: "email", icon: Mail, label: "Email" },
   { key: "telephone", icon: Phone, label: "Téléphone" },
-  { key: "region", icon: MapPin, label: "Région" },
-  { key: "structure", icon: Building2, label: "Structure" },
+  { key: "village", icon: MapPin, label: "Village" },
 ];
 
 /**
@@ -55,26 +57,65 @@ export default function ProfilInfoBlock({
   const [formData, setFormData] = useState({});
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [erreurGenerale, setErreurGenerale] = useState("");
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef(null);
+
+  const [villages, setVillages] = useState([]);
+  const [loadingVillages, setLoadingVillages] = useState(false);
+  const [dropdownVillageOuvert, setDropdownVillageOuvert] = useState(false);
+
+  const aChampVillage = champs.some((c) => c.key === "village");
 
   useEffect(() => {
     if (admin) {
       const initial = {};
       champs.forEach((c) => {
-        initial[c.key] = admin[c.key] || (c.key === "structure" ? "Nutrigest Mauritanie" : "");
+        if (c.key === "village") {
+          initial.village = admin.village?.id ? String(admin.village.id) : "";
+          return;
+        }
+        initial[c.key] = admin[c.key] || "";
       });
       setFormData(initial);
     }
     setIsEditing(false);
     setAvatarPreview(null);
     setAvatarFile(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [admin]);
+    setFieldErrors({});
+    setErreurGenerale("");
+  }, [admin, champs]);
+
+  useEffect(() => {
+    if (!aChampVillage) return;
+
+    const fetchVillages = async () => {
+      setLoadingVillages(true);
+      try {
+        const { data } = await listVillages();
+        setVillages(data);
+      } catch (err) {
+        console.error("Impossible de charger la liste des villages:", err);
+      } finally {
+        setLoadingVillages(false);
+      }
+    };
+
+    fetchVillages();
+  }, [aChampVillage]);
 
   if (!admin) return null;
 
   const handleChange = (key, value) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
+    // On efface l'erreur de ce champ dès que l'utilisateur le modifie
+    setFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   };
 
   const handleAvatarClick = () => fileInputRef.current?.click();
@@ -87,21 +128,81 @@ export default function ProfilInfoBlock({
     setAvatarPreview(URL.createObjectURL(file));
   };
 
-  const handleSauvegarder = () => {
-    onSave?.({ ...formData, avatarFile, avatarUrl: avatarPreview || admin.avatarUrl });
+  // Validation front : les champs texte visibles ne doivent pas être vides
+  const validerChamps = () => {
+    const erreurs = {};
+
+    champs.forEach((champ) => {
+      if (champ.key === "village") return; // optionnel, pas de validation vide ici
+
+      const valeur = (formData[champ.key] || "").trim();
+      if (!valeur) {
+        erreurs[champ.key] = "Ce champ ne peut être vide.";
+      }
+    });
+
+    return erreurs;
+  };
+
+  const handleSauvegarder = async () => {
+    setErreurGenerale("");
+
+    const erreursValidation = validerChamps();
+    if (Object.keys(erreursValidation).length > 0) {
+      setFieldErrors(erreursValidation);
+      return; // on ne contacte même pas le backend si la validation front échoue
+    }
+
+    const { village, ...champsSansVillage } = formData;
+    const payload = { ...champsSansVillage };
+
+    if (aChampVillage && village) {
+      payload.village_id = Number(village); // ⚠️ à confirmer avec le backend
+    }
+
+    setSaving(true);
+    const erreursBackend = await onSave?.({
+      ...payload,
+      avatarFile,
+      avatarUrl: avatarPreview || admin.avatarUrl,
+    });
+    setSaving(false);
+
+    if (erreursBackend) {
+      // Sépare les erreurs liées à un champ connu de celles qui ne le sont pas
+      const nouvelleFieldErrors = {};
+      const messagesGeneraux = [];
+
+      Object.entries(erreursBackend).forEach(([cle, valeur]) => {
+        const message = Array.isArray(valeur) ? valeur[0] : String(valeur);
+        const champConnu = champs.some((c) => c.key === cle);
+
+        if (champConnu) {
+          nouvelleFieldErrors[cle] = message;
+        } else {
+          messagesGeneraux.push(message);
+        }
+      });
+
+      setFieldErrors(nouvelleFieldErrors);
+      if (messagesGeneraux.length > 0) {
+        setErreurGenerale(messagesGeneraux.join(" "));
+      }
+      return; // on reste en mode édition
+    }
+
+    // Succès
+    setFieldErrors({});
+    setErreurGenerale("");
     setIsEditing(false);
   };
 
-  // Nom complet affiché dans la carte, recalculé à partir de prénom + nom
-  // (reste indépendant du champ "nom" qui est maintenant le nom de famille seul)
   const source = isEditing ? formData : admin;
   const nomComplet =
     `${source.prenom ?? ""} ${source.nom ?? ""}`.trim() ||
     admin.username ||
     "Utilisateur";
 
-  // Mode édition : chaque champ (y compris prénom / nom) reste séparé.
-  // Mode lecture : prénom + nom sont fusionnés sur une seule ligne "Nom".
   const rows = isEditing
     ? champs.map((champ) => ({
         ...champ,
@@ -111,7 +212,7 @@ export default function ProfilInfoBlock({
         const result = [];
 
         champs.forEach((champ) => {
-          if (champ.key === "prenom") return; // fusionné avec "nom" ci-dessous
+          if (champ.key === "prenom") return;
 
           if (champ.key === "nom") {
             const valeur = `${admin.prenom ?? ""} ${admin.nom ?? ""}`.trim();
@@ -121,8 +222,15 @@ export default function ProfilInfoBlock({
             return;
           }
 
-          const valeur =
-            admin[champ.key] || (champ.key === "structure" ? "Nutrigest Mauritanie" : "");
+          if (champ.key === "village") {
+            const valeur = admin.village?.nom;
+            if (valeur) {
+              result.push({ ...champ, value: valeur });
+            }
+            return;
+          }
+
+          const valeur = admin[champ.key];
           if (valeur) {
             result.push({ ...champ, value: valeur });
           }
@@ -131,11 +239,19 @@ export default function ProfilInfoBlock({
         return result;
       })();
 
+  const nomVillageSelectionne =
+    villages.find((v) => String(v.id) === formData.village)?.nom || "Sélectionner un village";
+
   return (
     <div>
+      {erreurGenerale && (
+        <div className="mb-3">
+          <BackendErrorMessage message={erreurGenerale} />
+        </div>
+      )}
+
       <UserCard
         nom={nomComplet}
-        id={admin.id}
         role={admin.role}
         avatarUrl={isEditing ? avatarPreview || admin.avatarUrl : admin.avatarUrl}
         editing={isEditing}
@@ -157,45 +273,90 @@ export default function ProfilInfoBlock({
       {rows.length > 0 && (
         <div
           className={`
-            mt-3 rounded-[15px] overflow-hidden bg-[#F8FBFC]
-            ${isEditing ? "border border-dashed border-[#686868]" : "border border-[#BEC9C5]/30"}
+            mt-3 rounded-[15px] bg-[#F8FBFC]
+            ${isEditing
+              ? "overflow-visible border border-dashed border-[#686868]"
+              : "overflow-hidden border border-[#BEC9C5]/30"
+            }
           `}
         >
           {rows.map((row, index) => {
             const Icon = row.icon;
+            const estVillage = row.key === "village";
+            const erreurChamp = fieldErrors[row.key];
+
             return (
               <div
                 key={row.key}
                 className={`
-                  flex items-center gap-3
+                  flex flex-col
                   px-4 py-3
                   ${index !== rows.length - 1 ? "border-b border-solid border-[#BEC9C5]/30" : ""}
                 `}
               >
-                <div
-                  className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center"
-                  style={{ backgroundColor: "#E6F5F4", color: "#4FA18F" }}
-                >
-                  <Icon size={16} strokeWidth={2.5} />
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: "#E6F5F4", color: "#4FA18F" }}
+                  >
+                    <Icon size={16} strokeWidth={2.5} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] text-[#6E7976]">{row.label}</p>
+
+                    {isEditing && estVillage ? (
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setDropdownVillageOuvert((prev) => !prev)}
+                          disabled={loadingVillages}
+                          className="w-full flex items-center justify-between text-[14px] font-semibold text-[#202124] bg-transparent outline-none disabled:opacity-50"
+                        >
+                          <span>{loadingVillages ? "Chargement..." : nomVillageSelectionne}</span>
+                          <AiOutlineDown
+                            className={`text-[14px] transition-transform ${dropdownVillageOuvert ? "rotate-180" : ""}`}
+                          />
+                        </button>
+
+                        <OptionsMenu
+                          open={dropdownVillageOuvert}
+                          onClose={() => setDropdownVillageOuvert(false)}
+                          options={villages.map((v) => v.nom)}
+                          onSelect={(nomChoisi) => {
+                            const villageTrouve = villages.find((v) => v.nom === nomChoisi);
+                            if (villageTrouve) {
+                              handleChange("village", String(villageTrouve.id));
+                            }
+                            setDropdownVillageOuvert(false);
+                          }}
+                          position="bottom-[24px] left-0 right-0"
+                          width="w-full"
+                        />
+                      </div>
+                    ) : isEditing ? (
+                      <input
+                        type="text"
+                        value={formData[row.key]}
+                        onChange={(e) => handleChange(row.key, e.target.value)}
+                        placeholder={row.label}
+                        className="w-full bg-transparent text-[14px] font-semibold text-[#202124] outline-none"
+                      />
+                    ) : (
+                      <p className="text-[14px] font-semibold text-[#202124] truncate">
+                        {row.value}
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <p className="text-[12px] text-[#6E7976]">{row.label}</p>
+                {isEditing && erreurChamp && (
+                 
+  <div className="mt-1 ml-12">
+    <ErrorMessage message={erreurChamp} />
+  </div>
 
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={formData[row.key]}
-                      onChange={(e) => handleChange(row.key, e.target.value)}
-                      placeholder={row.label}
-                      className="w-full bg-transparent text-[14px] font-semibold text-[#202124] outline-none"
-                    />
-                  ) : (
-                    <p className="text-[14px] font-semibold text-[#202124] truncate">
-                      {row.value}
-                    </p>
-                  )}
-                </div>
+                )}
               </div>
             );
           })}
@@ -204,7 +365,13 @@ export default function ProfilInfoBlock({
 
       <div className="mt-4 flex flex-col gap-0">
         {isEditing ? (
-          <Button title="Sauvegarder" variant="sauvegarder" noPadding onClick={handleSauvegarder} />
+          <Button
+            title={saving ? "Sauvegarde..." : "Sauvegarder"}
+            variant="sauvegarder"
+            noPadding
+            onClick={handleSauvegarder}
+            disabled={saving}
+          />
         ) : (
           <>
             <Button title="Modifier" variant="modifier" noPadding onClick={() => setIsEditing(true)} />
