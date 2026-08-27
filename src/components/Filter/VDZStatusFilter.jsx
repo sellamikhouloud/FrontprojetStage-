@@ -4,7 +4,7 @@ const STATUS_OPTIONS = [
   {
     value: "active",
     label: "Actives",
-    selected: "bg-[#22C55E] text-white border-[#22C55E]",
+    selected: "bg-[#B5ECC9CC] text-[#22C55E] border-[#22C55E]",
     unselected: "bg-white text-[#22C55E] border-[#22C55E]",
   },
   {
