@@ -10,17 +10,16 @@ const STATUS_OPTIONS = [
   {
     value: "active",
     label: "Actif",
-    selected: "bg-[#22C55E] text-white border-[#22C55E]",
+    selected: "bg-[#B5ECC9CC] text-[#22C55E] border-[#22C55E]",
     unselected: "bg-white text-[#22C55E] border-[#22C55E]",
   },
   {
     value: "inactive",
     label: "Inactif",
-    selected: "bg-[#EF4444] text-white border-[#EF4444]",
+    selected: "bg-[#FFD9E2] text-[#EF4444] border-[#EF4444]",
     unselected: "bg-white text-[#EF4444] border-[#EF4444]",
   },
 ];
-
 const ROLE_OPTIONS = [
   { value: "all", label: "Tout" },
   { value: "chef_coordinator", label: "Chef coordinateur" },
@@ -410,3 +409,4 @@ const StatusFilter = ({
 
 export default StatusFilter;
 export { RoleFilter, TypeFilter };
+
