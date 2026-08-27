@@ -25,7 +25,7 @@ import { checkUsernameExists } from "../../lib/api/users";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 
-const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "village", "password", "role"];
+const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "telephone", "village", "password", "role"];
 
 function parseBackendErrors(data) {
   if (!data) return { fieldErrors: {}, generalMessage: null };
@@ -98,6 +98,7 @@ export default function AjoutCoordinateur() {
   const [showPassword, setShowPassword] = useState(false);
   const [statut, setStatut] = useState("Active");
   const [village, setVillage] = useState("");
+  const [telephone, setTelephone] = useState("");
 
   const [errors, setErrors] = useState({});
 
@@ -187,6 +188,7 @@ const timeoutId = setTimeout(async () => {
     if (!email.trim()) newErrors.email = "Veuillez saisir l'email";
     if (!password) newErrors.password = "Veuillez saisir un mot de passe";
     if (!village) newErrors.village = "Veuillez choisir un village";
+    if (!telephone.trim()) newErrors.telephone = "Veuillez saisir le téléphone";
 
    setErrors(newErrors);
 setBackendError(null);
@@ -199,6 +201,7 @@ setSaveError(null);
 try {
   const payload = {
     username,
+    telephone,
     email,
     nom,
     prenom,
@@ -248,7 +251,10 @@ try {
     <div className="flex h-screen bg-white overflow-hidden">
       {/* Sidebar */}
       
-        <Sidebar role={role} />
+       <Sidebar 
+        showTopBarIcons={false} 
+        showTopBarAvatar={false}
+       />
 
         <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
 
@@ -294,7 +300,7 @@ try {
           <PageHeader
             leftTitle="Annuler"
             showRight={false}
-            onBack={() => window.history.back()}
+            onBack={() => navigate("/liste-coordinateurs")}
           />
 
           <h1
@@ -454,6 +460,20 @@ try {
               <ErrorMessage message="Impossible de charger la liste des villages." />
             )}
           </div>
+
+          <div className="flex flex-col gap-1">
+  <Input
+    label="Téléphone"
+    placeholder="Entrez le numéro de téléphone ici"
+    value={telephone}
+    onChange={(e) => {
+      setTelephone(e.target.value);
+      clearError("telephone");
+    }}
+    noPadding
+  />
+  <ErrorMessage message={errors.telephone} />
+</div>
 
           <div className="flex flex-col gap-1">
             <Input

@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
+import { Eye, EyeOff } from "lucide-react";
+
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
@@ -34,7 +36,7 @@ import { listVillages } from "../../lib/api/Parametres";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
 
-const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "village", "password", "photo"];
+const KNOWN_FIELDS = ["username", "nom", "prenom", "email", "telephone", "village", "password", "photo"];
 
 function parseBackendErrors(data) {
   if (!data) return { fieldErrors: {}, generalMessage: null };
@@ -99,6 +101,7 @@ export default function ModifierCoordinateur() {
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
 
+
   const clearError = (field) => {
     setErrors((prev) => {
       if (!prev[field]) return prev;
@@ -122,9 +125,11 @@ export default function ModifierCoordinateur() {
   const [password, setPassword] = useState("");
   const [village, setVillage] = useState("");
   const [familles, setFamilles] = useState(0);
+  const [telephone, setTelephone] = useState("");
   const [creePar, setCreePar] = useState("");
   const [modifiePar, setModifiePar] = useState("");
   const [dateModification, setDateModification] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
 
 
   // Statut original pour ne PAS appeler activate/deactivate si rien n'a changé
@@ -178,6 +183,7 @@ useEffect(() => {
   setNom(found.nom || "");
   setPrenom(found.prenom || "");
   setEmail(found.email || "");
+  setTelephone(found.telephone || "");
   setFamilles(found.nb_familles ?? 0);
 
   // created_by / updated_by arrivent déjà résolus en {nom, prenom}
@@ -272,6 +278,8 @@ const handleSave = async () => {
     newErrors.email = "Format d'email invalide";
   }
 
+  if (!telephone.trim()) newErrors.telephone = "Veuillez saisir le téléphone";
+
   if (!village) newErrors.village = "Veuillez choisir un village";
 
   if (password && password.length < 8) {
@@ -296,7 +304,7 @@ const handleSave = async () => {
       setStatutOriginal(statut);
     }
 
-    const payload = { username, nom, prenom, email, village };
+    const payload = { username, nom, prenom, email, telephone, village };
 
     if (isAdmin) {
     payload.role = roleCoordinateur;
@@ -342,7 +350,10 @@ const handleSave = async () => {
      <div className="flex h-screen bg-white overflow-hidden">
          {/* Sidebar */}
          
-           <Sidebar  />
+          <Sidebar 
+            showTopBarIcons={false} 
+            showTopBarAvatar={false}
+             />
 
       {/* Contenu */}
 
@@ -382,7 +393,7 @@ const handleSave = async () => {
           <PageHeader
             leftTitle="Annuler"
             showRight={false}
-            onBack={() => navigate(-1)}
+           onBack={() => navigate("/liste-coordinateurs")}
           />
 
           <h1 className="text-[20px] lg:text-[24px] font-bold text-center">
@@ -557,10 +568,25 @@ const handleSave = async () => {
           : "Coordinateur"
       }
       disabled
+      readOnly
       noPadding
     />
   )}
   <ErrorMessage message={errors.role} />
+</div>
+
+{/* Téléphone */}
+<div className="flex flex-col gap-1">
+  <ContainerEcritureModifier
+    label="Téléphone"
+    value={telephone}
+    onChange={(e) => {
+      setTelephone(e.target.value);
+      clearError("telephone");
+    }}
+    noPadding
+  />
+  <ErrorMessage message={errors.telephone} />
 </div>
 
               {/* Email */}
@@ -584,53 +610,89 @@ const handleSave = async () => {
                 label="Date d'entrée"
                 value={dateEntree}
                 disabled
+                readOnly
                 noPadding
               />
 
              
 
               {/* Créé par  */}
-              <Input label="Créé par" value={creePar} disabled noPadding />
+              <Input label="Créé par" value={creePar} disabled readOnly noPadding />
 
 
                {modifiePar && (
                  <>
 
               {/* Modifié par (non modifiable) */}
-              <Input label="Modifié par" value={modifiePar} disabled noPadding />
+              <Input label="Modifié par" value={modifiePar} disabled readOnly noPadding />
 
               {/* Date de modification (non modifiable) */}
               <DateContainer
                 label="Date de modification"
                 value={dateModification}
                 disabled
+                readOnly
                 noPadding
               />
                </>
                )}
 
-              <div className="flex flex-col gap-1">
-                <ContainerEcritureModifier
-                  label="Mot de passe"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    clearError("password");
-                  }}
-                  placeholder="Laisser vide pour ne pas modifier"
-                  noPadding
-                />
-                <ErrorMessage message={errors.password} />
+             <div className="flex flex-col gap-1">
+  <label className="text-[14px] lg:text-[16px] font-semibold text-black">
+    Mot de passe
+  </label>
+  <div className="relative w-full">
+    <input
+      type={showPassword ? "text" : "password"}
+      placeholder="Laisser vide pour ne pas modifier"
+      value={password}
+      onChange={(e) => {
+        setPassword(e.target.value);
+        clearError("password");
+      }}
+      autoComplete="new-password"
+      name="modifier-coordinator-password"
+      className="
+        w-full
+        h-[45px]
+        rounded-[15px]
+        border
+        border-[#4E9F8A]
+        bg-white
+        px-4
+        pr-10
+        text-[14px]
+        sm:text-[15px]
+        lg:text-[16px]
+        text-black
+        placeholder:text-gray-400
+        focus:outline-none
+      "
+    />
+    <button
+      type="button"
+      onClick={() => setShowPassword((prev) => !prev)}
+      className="
+        absolute
+        right-3
+        top-1/2
+        -translate-y-1/2
+        text-gray-500
+      "
+    >
+      {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+    </button>
+  </div>
+  <ErrorMessage message={errors.password} />
 
-                <div className="mt-1 flex items-center gap-1 text-[#F59E0B]">
-                  <AiOutlineInfoCircle className="text-[16px] shrink-0" />
-                  <p className="text-[13px] font-medium leading-4">
-                    Toute modification du mot de passe sera automatiquement envoyée au
-                    coordinateur par e-mail après l'enregistrement.
-                  </p>
-                </div>
-              </div>
-
+  <div className="mt-1 flex items-center gap-1 text-[#F59E0B]">
+    <AiOutlineInfoCircle className="text-[16px] shrink-0" />
+    <p className="text-[13px] font-medium leading-4">
+      Toute modification du mot de passe sera automatiquement envoyée au
+      coordinateur par e-mail après l'enregistrement.
+    </p>
+  </div>
+</div>
               {/* Statut */}
           
 <ChoiceContainerModifier
