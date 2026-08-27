@@ -5,7 +5,6 @@ import Sidebar from "../../components/Sidebar/Sidebar";
 
 import CoordinatorWelcomeCard from "../../components/DashbordCard/CoordinatorWelcomeCard";
 import AlertBanner from "../../components/AlertComposant/AlertBanner";
-
 import FamilyStatusCard from "../../components/DashbordCard/FamilyStatusCard";
 import VisitsCard from "../../components/DashbordCard/VisitsCard";
 import NutritionCard from "../../components/DashbordCard/NutritionCard";
@@ -21,13 +20,20 @@ import AttentionIcon from "../../assets/Attention.svg";
 import RetardIcon from "../../assets/retard.svg";
 
 import { getDashboard } from "../../lib/api/dashboard";
+import { useAuth } from "../../components/providers/AuthProvider";
 
 const CoordinatorDashboard = () => {
   const navigate = useNavigate();
 
-  /* ==========================
-        STATES
-  ========================== */
+  // =====================================================
+  // AUTHENTICATED USER
+  // =====================================================
+
+  const { user, ready } = useAuth();
+
+  // =====================================================
+  // STATES
+  // =====================================================
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,11 +43,25 @@ const CoordinatorDashboard = () => {
   const [showRetard, setShowRetard] = useState(false);
   const [showMas, setShowMas] = useState(false);
 
-  /* ==========================
-        FETCH DASHBOARD
-  ========================== */
+  // =====================================================
+  // FETCH DASHBOARD
+  // =====================================================
 
   useEffect(() => {
+    // Wait until AuthProvider has finished checking
+    // the existing session.
+    if (!ready) {
+      return;
+    }
+
+    // If there is no authenticated user,
+    // do not request the dashboard.
+    if (!user) {
+      setLoading(false);
+      setError("Utilisateur non authentifié.");
+      return;
+    }
+
     const fetchDashboard = async () => {
       try {
         setLoading(true);
@@ -51,10 +71,18 @@ const CoordinatorDashboard = () => {
 
         setDashboardData(response.data);
       } catch (err) {
-        console.error("Erreur lors du chargement du dashboard :", err);
+        console.error(
+          "Erreur lors du chargement du dashboard :",
+          err
+        );
+
+        // If backend returns a detail
+        const backendError =
+          err?.response?.data?.detail ||
+          err?.response?.data?.message;
 
         setError(
-          err?.response?.data?.detail ||
+          backendError ||
             "Impossible de récupérer les données du dashboard."
         );
       } finally {
@@ -63,13 +91,13 @@ const CoordinatorDashboard = () => {
     };
 
     fetchDashboard();
-  }, []);
+  }, [ready, user]);
 
-  /* ==========================
-        LOADING
-  ========================== */
+  // =====================================================
+  // LOADING
+  // =====================================================
 
-  if (loading) {
+  if (!ready || loading) {
     return (
       <div className="flex h-screen bg-white">
         <Sidebar role="coordinator" />
@@ -87,9 +115,9 @@ const CoordinatorDashboard = () => {
     );
   }
 
-  /* ==========================
-        ERROR
-  ========================== */
+  // =====================================================
+  // ERROR
+  // =====================================================
 
   if (error || !dashboardData) {
     return (
@@ -123,9 +151,9 @@ const CoordinatorDashboard = () => {
     );
   }
 
-  /* ==========================
-        DATA FROM API
-  ========================== */
+  // =====================================================
+  // DATA FROM API
+  // =====================================================
 
   const {
     alertes = {},
@@ -137,20 +165,30 @@ const CoordinatorDashboard = () => {
     visites_a_venir = [],
   } = dashboardData;
 
-  /* ==========================
-        WELCOME
-  ========================== */
+  // =====================================================
+  // WELCOME
+  // =====================================================
 
   const greeting = "Bonjour";
-  const userName = "Mohammed";
+
+  // Use the authenticated user's name
+  const userName =
+    user?.prenom ||
+    user?.nom ||
+    user?.username ||
+    "Utilisateur";
+
   const message = "Bonne journée !";
 
-  /* ==========================
-        ALERTS
-  ========================== */
+  // =====================================================
+  // ALERTS
+  // =====================================================
 
-  const malnutritionAlerts = alertes?.malnutrition?.alertes || [];
-  const retardAlerts = alertes?.visite_retard?.alertes || [];
+  const malnutritionAlerts =
+    alertes?.malnutrition?.alertes || [];
+
+  const retardAlerts =
+    alertes?.visite_retard?.alertes || [];
 
   const alerts = [
     {
@@ -177,9 +215,9 @@ const CoordinatorDashboard = () => {
     },
   ];
 
-  /* ==========================
-        FAMILY STATUS
-  ========================== */
+  // =====================================================
+  // FAMILY STATUS
+  // =====================================================
 
   const familyStatusTitle = "Statut des familles";
 
@@ -207,79 +245,80 @@ const CoordinatorDashboard = () => {
     },
   ];
 
-  /* ==========================
-        VISITS
-  ========================== */
+  // =====================================================
+  // VISITS
+  // =====================================================
 
   const visitsTitle = "Nombre de visites";
 
-  const completedVisits = visites?.nb_realisees || 0;
-  const expectedVisits = visites?.nb_prevus || 0;
+  const completedVisits =
+    visites?.nb_realisees || 0;
+
+  const expectedVisits =
+    visites?.nb_prevus || 0;
 
   const compliancePercentage =
     expectedVisits > 0
-      ? Math.round((completedVisits / expectedVisits) * 100)
+      ? Math.round(
+          (completedVisits / expectedVisits) * 100
+        )
       : 0;
 
-  /* ==========================
-        NUTRITION
-  ========================== */
+  // =====================================================
+  // NUTRITION
+  // =====================================================
 
   const nutritionTitle = "État nutritionnel";
 
   const getNutritionPercentage = (status) => {
     const item = statut_nutritionnel.find(
-      (nutrition) => nutrition?.statut === status
+      (nutrition) =>
+        nutrition?.statut === status
     );
 
     return item?.pourcentage || 0;
   };
 
-  const normalPercentage = getNutritionPercentage("normale");
+  const normalPercentage =
+    getNutritionPercentage("normale");
 
-  /*
-   * The backend currently returns:
-   *
-   * "mas"
-   * null
-   * "normale"
-   *
-   * There is no "mam" value in the response.
-   *
-   * We therefore keep MAM at 0 until the backend
-   * provides a dedicated "mam" status.
-   */
+  const mamPercentage =
+    getNutritionPercentage("mam");
 
-  const mamPercentage = getNutritionPercentage("mam");
-  const masPercentage = getNutritionPercentage("mas");
+  const masPercentage =
+    getNutritionPercentage("mas");
 
-  /* ==========================
-        DISTRIBUTIONS
-  ========================== */
+  // =====================================================
+  // DISTRIBUTIONS
+  // =====================================================
 
   const distributionTitle = "Distributions ce mois";
 
-  const products = Object.entries(distributions || {}).map(
-    ([name, data], index) => ({
-      id: index + 1,
-      name,
-      quantity: `${data?.quantite ?? 0} ${data?.unite || ""}`.trim(),
+  const products = Object.entries(
+    distributions || {}
+  ).map(([name, data], index) => ({
+    id: index + 1,
+    name,
+    quantity: `${data?.quantite ?? 0} ${
+      data?.unite || ""
+    }`.trim(),
+  }));
+
+  // =====================================================
+  // DISTRIBUTION HISTORY
+  // =====================================================
+
+  const distributionHistory = products.map(
+    (product) => ({
+      name: product.name,
+      value: product.quantity,
+      unit: "",
     })
   );
 
-  /* ==========================
-        DISTRIBUTION HISTORY
-  ========================== */
-
-  const distributionHistory = products.map((product) => ({
-    name: product.name,
-    value: product.quantity,
-    unit: "",
-  }));
-
-  /* ==========================
-        ZAKAT
-  ========================== */
+  // =====================================================
+  // ZAKAT
+  // =====================================================
 
   const zakatTitle = "Zakat";
 
@@ -301,19 +340,20 @@ const CoordinatorDashboard = () => {
       : "";
 
   const beneficiaryFamilies = "";
-
   const exchangeRate = "";
 
-  /* ==========================
-        UPCOMING VISITS
-  ========================== */
+  // =====================================================
+  // UPCOMING VISITS
+  // =====================================================
 
   const formatUpcomingVisitDay = (dateString) => {
     if (!dateString) {
       return "";
     }
 
-    const visitDate = new Date(`${dateString}T00:00:00`);
+    const visitDate = new Date(
+      `${dateString}T00:00:00`
+    );
 
     if (Number.isNaN(visitDate.getTime())) {
       return dateString;
@@ -324,87 +364,118 @@ const CoordinatorDashboard = () => {
     today.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
+
+    tomorrow.setDate(
+      today.getDate() + 1
+    );
 
     const visit = new Date(visitDate);
+
     visit.setHours(0, 0, 0, 0);
 
-    if (visit.getTime() === today.getTime()) {
+    if (
+      visit.getTime() === today.getTime()
+    ) {
       return "Aujourd'hui";
     }
 
-    if (visit.getTime() === tomorrow.getTime()) {
+    if (
+      visit.getTime() === tomorrow.getTime()
+    ) {
       return "Demain";
     }
 
-    return visit.toLocaleDateString("fr-FR", {
-      weekday: "long",
-    });
+    return visit.toLocaleDateString(
+      "fr-FR",
+      {
+        weekday: "long",
+      }
+    );
   };
 
-  const upcomingVisits = (visites_a_venir || []).map((visit, index) => ({
+  const upcomingVisits = (
+    visites_a_venir || []
+  ).map((visit, index) => ({
     id: index + 1,
-    day: formatUpcomingVisitDay(visit?.date_visite),
-    family: visit?.famille || "Famille",
+    day: formatUpcomingVisitDay(
+      visit?.date_visite
+    ),
+    family:
+      visit?.famille || "Famille",
     village: "",
-    date: visit?.date_visite || "",
+    date:
+      visit?.date_visite || "",
   }));
 
-  /* ==========================
-        POPUP - MALNUTRITION
-  ========================== */
+  // =====================================================
+  // POPUP - MALNUTRITION
+  // =====================================================
 
-  const familleMas = malnutritionAlerts.map((alert, index) => ({
-    id: alert?.id || index + 1,
+  const familleMas = malnutritionAlerts.map(
+    (alert, index) => ({
+      id:
+        alert?.id ||
+        index + 1,
 
-    sexe: "—",
+      sexe: "—",
 
-    enfant: "Enfant",
+      enfant: "Enfant",
 
-    region: "—",
+      region: "—",
 
-    naissance: "—",
+      naissance: "—",
 
-    code: alert?.famille || "—",
+      code:
+        alert?.famille ||
+        "—",
 
-    badges: [
-      {
-        type: "mas",
-        text: "MAS sévère",
-      },
-    ],
-  }));
+      badges: [
+        {
+          type: "mas",
+          text: "MAS sévère",
+        },
+      ],
+    })
+  );
 
-  /* ==========================
-        POPUP - VISITES EN RETARD
-  ========================== */
+  // =====================================================
+  // POPUP - VISITES EN RETARD
+  // =====================================================
 
-  const familleRetard = retardAlerts.map((alert, index) => ({
-    id: alert?.id || index + 1,
+  const familleRetard = retardAlerts.map(
+    (alert, index) => ({
+      id:
+        alert?.id ||
+        index + 1,
 
-    sexe: "—",
+      sexe: "—",
 
-    enfant: "Famille",
+      enfant: "Famille",
 
-    region: "—",
+      region: "—",
 
-    naissance: "—",
+      naissance: "—",
 
-    code: alert?.famille || "—",
+      code:
+        alert?.famille ||
+        "—",
 
-    badges: [
-      {
-        type: "retard",
-        text: "Visite en retard",
-      },
-    ],
-  }));
+      badges: [
+        {
+          type: "retard",
+          text: "Visite en retard",
+        },
+      ],
+    })
+  );
 
-  /* ==========================
-        HANDLERS
-  ========================== */
+  // =====================================================
+  // HANDLERS
+  // =====================================================
 
-  const handleNotifications = () => {};
+  const handleNotifications = () => {
+    // À implémenter si nécessaire
+  };
 
   const handleSettings = () => {
     navigate("/parametres");
@@ -413,13 +484,17 @@ const CoordinatorDashboard = () => {
   const handleAlertClick = (alert) => {
     switch (alert.id) {
       case 2:
-        if (malnutritionAlerts.length > 0) {
+        if (
+          malnutritionAlerts.length > 0
+        ) {
           setShowMas(true);
         }
         break;
 
       case 3:
-        if (retardAlerts.length > 0) {
+        if (
+          retardAlerts.length > 0
+        ) {
           setShowRetard(true);
         }
         break;
@@ -429,21 +504,22 @@ const CoordinatorDashboard = () => {
     }
   };
 
-  /* ==========================
-        RETURN
-  ========================== */
+  // =====================================================
+  // RETURN
+  // =====================================================
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-      {/* =========================
-            SIDEBAR
-      ========================= */}
+
+      {/* =====================================================
+          SIDEBAR
+      ===================================================== */}
 
       <Sidebar role="coordinator" />
 
-      {/* =========================
-            MAIN
-      ========================= */}
+      {/* =====================================================
+          MAIN
+      ===================================================== */}
 
       <main
         className="
@@ -461,9 +537,10 @@ const CoordinatorDashboard = () => {
         "
       >
         <div className="w-full">
-          {/* =========================
-                WELCOME
-          ========================= */}
+
+          {/* =====================================================
+              WELCOME
+          ===================================================== */}
 
           <div className="hidden lg:block w-full">
             <CoordinatorWelcomeCard
@@ -473,9 +550,9 @@ const CoordinatorDashboard = () => {
             />
           </div>
 
-          {/* =========================
-                ALERTS TITLE
-          ========================= */}
+          {/* =====================================================
+              ALERTS TITLE
+          ===================================================== */}
 
           <h3
             className="
@@ -490,9 +567,9 @@ const CoordinatorDashboard = () => {
             Alertes prioritaires
           </h3>
 
-          {/* =========================
-                ALERTS
-          ========================= */}
+          {/* =====================================================
+              ALERTS
+          ===================================================== */}
 
           <div
             className="
@@ -514,17 +591,25 @@ const CoordinatorDashboard = () => {
                 subtitle={alert.subtitle}
                 count={alert.count}
                 bgColor={alert.bgColor}
-                iconBgColor={alert.iconBgColor}
-                borderColor={alert.borderColor}
-                hasLeftBorder={alert.hasLeftBorder}
-                onClick={() => handleAlertClick(alert)}
+                iconBgColor={
+                  alert.iconBgColor
+                }
+                borderColor={
+                  alert.borderColor
+                }
+                hasLeftBorder={
+                  alert.hasLeftBorder
+                }
+                onClick={() =>
+                  handleAlertClick(alert)
+                }
               />
             ))}
           </div>
 
-          {/* =========================
-                KEY INDICATIONS TITLE
-          ========================= */}
+          {/* =====================================================
+              KEY INDICATIONS TITLE
+          ===================================================== */}
 
           <h3
             className="
@@ -539,7 +624,7 @@ const CoordinatorDashboard = () => {
           </h3>
 
           {/* =====================================================
-                MOBILE
+              MOBILE
           ===================================================== */}
 
           <div
@@ -551,47 +636,70 @@ const CoordinatorDashboard = () => {
               lg:hidden
             "
           >
+
             {/* FAMILY STATUS */}
 
             <FamilyStatusCard
               title={familyStatusTitle}
               stats={familyStats}
-              onClick={() => navigate("/liste-famille")}
+              onClick={() =>
+                navigate("/liste-famille")
+              }
             />
 
             {/* VISITS */}
 
             <VisitsCard
               title={visitsTitle}
-              completedVisits={completedVisits}
-              expectedVisits={expectedVisits}
-              compliancePercentage={compliancePercentage}
-              progressValue={compliancePercentage}
+              completedVisits={
+                completedVisits
+              }
+              expectedVisits={
+                expectedVisits
+              }
+              compliancePercentage={
+                compliancePercentage
+              }
+              progressValue={
+                compliancePercentage
+              }
               progressMax={100}
               fillColor="#69B89C"
               trackColor="#E8ECEF"
-              onClick={() => navigate("/liste-visite")}
+              onClick={() =>
+                navigate("/liste-visite")
+              }
             />
 
             {/* UPCOMING VISITS */}
 
             <UpcomingVisitsCard
               visits={upcomingVisits}
-              onClick={() => navigate("/liste-visite")}
+              onClick={() =>
+                navigate("/liste-visite")
+              }
             />
 
             {/* NUTRITION */}
 
             <NutritionCard
               title={nutritionTitle}
-              normalPercentage={normalPercentage}
-              mamPercentage={mamPercentage}
-              masPercentage={masPercentage}
+              normalPercentage={
+                normalPercentage
+              }
+              mamPercentage={
+                mamPercentage
+              }
+              masPercentage={
+                masPercentage
+              }
               normalColor="#22C55E"
               mamColor="#F59E0B"
               masColor="#EF4444"
               trackColor="#E8ECEF"
-              onClick={() => console.log("Nutrition")}
+              onClick={() =>
+                console.log("Nutrition")
+              }
             />
 
             {/* DISTRIBUTION */}
@@ -601,8 +709,14 @@ const CoordinatorDashboard = () => {
               products={products}
               dividerColor="#4E9F8A"
               viewAllText="Voir tous"
-              onClick={() => navigate("/liste-distributions")}
-              onViewAllClick={() => setShowHistorique(true)}
+              onClick={() =>
+                navigate(
+                  "/liste-distributions"
+                )
+              }
+              onViewAllClick={() =>
+                setShowHistorique(true)
+              }
             />
 
             {/* ZAKAT */}
@@ -610,17 +724,29 @@ const CoordinatorDashboard = () => {
             <ZakatCard
               variant="coordinator"
               title={zakatTitle}
-              remainingBalanceMRU={remainingBalanceMRU}
-              remainingBalanceEUR={remainingBalanceEUR}
-              monthlyDistributedMRU={monthlyDistributedMRU}
-              monthlyDistributedEUR={monthlyDistributedEUR}
-              beneficiaryFamilies={beneficiaryFamilies}
-              exchangeRate={exchangeRate}
+              remainingBalanceMRU={
+                remainingBalanceMRU
+              }
+              remainingBalanceEUR={
+                remainingBalanceEUR
+              }
+              monthlyDistributedMRU={
+                monthlyDistributedMRU
+              }
+              monthlyDistributedEUR={
+                monthlyDistributedEUR
+              }
+              beneficiaryFamilies={
+                beneficiaryFamilies
+              }
+              exchangeRate={
+                exchangeRate
+              }
             />
           </div>
 
           {/* =====================================================
-                DESKTOP
+              DESKTOP
           ===================================================== */}
 
           <div
@@ -633,9 +759,10 @@ const CoordinatorDashboard = () => {
               items-start
             "
           >
-            {/* =========================
-                  LEFT COLUMN
-            ========================= */}
+
+            {/* =====================================================
+                LEFT COLUMN
+            ===================================================== */}
 
             <div
               className="
@@ -646,26 +773,41 @@ const CoordinatorDashboard = () => {
                 gap-[18px]
               "
             >
+
               {/* FAMILY STATUS */}
 
               <FamilyStatusCard
                 title={familyStatusTitle}
                 stats={familyStats}
-                onClick={() => navigate("/liste-famille")}
+                onClick={() =>
+                  navigate(
+                    "/liste-famille"
+                  )
+                }
               />
 
               {/* NUTRITION */}
 
               <NutritionCard
                 title={nutritionTitle}
-                normalPercentage={normalPercentage}
-                mamPercentage={mamPercentage}
-                masPercentage={masPercentage}
+                normalPercentage={
+                  normalPercentage
+                }
+                mamPercentage={
+                  mamPercentage
+                }
+                masPercentage={
+                  masPercentage
+                }
                 normalColor="#22C55E"
                 mamColor="#F59E0B"
                 masColor="#EF4444"
                 trackColor="#E8ECEF"
-                onClick={() => console.log("Nutrition")}
+                onClick={() =>
+                  console.log(
+                    "Nutrition"
+                  )
+                }
               />
 
               {/* DISTRIBUTION */}
@@ -675,8 +817,16 @@ const CoordinatorDashboard = () => {
                 products={products}
                 dividerColor="#4E9F8A"
                 viewAllText="Voir tous"
-                onClick={() => navigate("/liste-distributions")}
-                onViewAllClick={() => setShowHistorique(true)}
+                onClick={() =>
+                  navigate(
+                    "/liste-distributions"
+                  )
+                }
+                onViewAllClick={() =>
+                  setShowHistorique(
+                    true
+                  )
+                }
               />
 
               {/* ZAKAT */}
@@ -684,18 +834,30 @@ const CoordinatorDashboard = () => {
               <ZakatCard
                 variant="coordinator"
                 title={zakatTitle}
-                remainingBalanceMRU={remainingBalanceMRU}
-                remainingBalanceEUR={remainingBalanceEUR}
-                monthlyDistributedMRU={monthlyDistributedMRU}
-                monthlyDistributedEUR={monthlyDistributedEUR}
-                beneficiaryFamilies={beneficiaryFamilies}
-                exchangeRate={exchangeRate}
+                remainingBalanceMRU={
+                  remainingBalanceMRU
+                }
+                remainingBalanceEUR={
+                  remainingBalanceEUR
+                }
+                monthlyDistributedMRU={
+                  monthlyDistributedMRU
+                }
+                monthlyDistributedEUR={
+                  monthlyDistributedEUR
+                }
+                beneficiaryFamilies={
+                  beneficiaryFamilies
+                }
+                exchangeRate={
+                  exchangeRate
+                }
               />
             </div>
 
-            {/* =========================
-                  RIGHT COLUMN
-            ========================= */}
+            {/* =====================================================
+                RIGHT COLUMN
+            ===================================================== */}
 
             <div
               className="
@@ -706,58 +868,85 @@ const CoordinatorDashboard = () => {
                 gap-[18px]
               "
             >
+
               {/* VISITS */}
 
               <VisitsCard
                 title={visitsTitle}
-                completedVisits={completedVisits}
-                expectedVisits={expectedVisits}
-                compliancePercentage={compliancePercentage}
-                progressValue={compliancePercentage}
+                completedVisits={
+                  completedVisits
+                }
+                expectedVisits={
+                  expectedVisits
+                }
+                compliancePercentage={
+                  compliancePercentage
+                }
+                progressValue={
+                  compliancePercentage
+                }
                 progressMax={100}
                 fillColor="#7BC8C4"
                 trackColor="#E8ECEF"
-                onClick={() => navigate("/liste-visite")}
+                onClick={() =>
+                  navigate(
+                    "/liste-visite"
+                  )
+                }
               />
 
               {/* UPCOMING VISITS */}
 
               <UpcomingVisitsCard
                 visits={upcomingVisits}
-                onClick={() => navigate("/liste-visite")}
+                onClick={() =>
+                  navigate(
+                    "/liste-visite"
+                  )
+                }
               />
             </div>
           </div>
 
-          {/* =========================
-                POPUP DISTRIBUTION
-          ========================= */}
+          {/* =====================================================
+              POPUP DISTRIBUTION
+          ===================================================== */}
 
           {showHistorique && (
             <PopupDistribution
               title="Distributions ce mois"
               items={distributionHistory}
-              onClose={() => setShowHistorique(false)}
+              onClose={() =>
+                setShowHistorique(
+                  false
+                )
+              }
             />
           )}
 
-          {/* =========================
-                POPUP RETARD
-          ========================= */}
+          {/* =====================================================
+              POPUP RETARD
+          ===================================================== */}
 
           <PopupRetard
             open={showRetard}
-            onClose={() => setShowRetard(false)}
-            familleretard={familleRetard}
+            onClose={() =>
+              setShowRetard(false)
+            }
+            familleretard={
+              familleRetard
+            }
           />
 
-          {/* =========================
-                POPUP MAS
-          ========================= */}
+          {/* =====================================================
+              POPUP MAS
+          ===================================================== */}
 
           <PopupMas
             open={showMas}
-            onClose={() => setShowMas(false)}
+            onClose={() =>
+              setShowMas(false)
+            }
             familleMas={familleMas}
           />
         </div>
