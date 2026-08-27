@@ -14,3 +14,7 @@ export const postLogout = () =>
 // Get the currently authenticated user
 export const getMe = () =>
   api.get("/api/auth/me/");
+
+
+export const patchMe = (payload) =>
+  api.patch("/api/auth/me/", payload);
