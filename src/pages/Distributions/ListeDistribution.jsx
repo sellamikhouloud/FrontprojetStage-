@@ -185,7 +185,15 @@ const {
   enabled: showHistorique && !!produitHistorique?.id, // ne fetch que si le popup est ouvert
 });
 
- const historiqueMouvements = mapHistorique(historiqueResponse);
+ const historiqueData = Array.isArray(historiqueResponse)
+  ? historiqueResponse
+  : Array.isArray(historiqueResponse?.results)
+  ? historiqueResponse.results
+  : Array.isArray(historiqueResponse?.data)
+  ? historiqueResponse.data
+  : [];
+
+const historiqueMouvements = mapHistorique(historiqueData); 
  
 
   const handleCardClick = (item, index) => {
