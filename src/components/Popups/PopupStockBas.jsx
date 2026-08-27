@@ -1,13 +1,244 @@
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pencil } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import quitter from "../../assets/quitter.svg";
+import { listStock } from "../../lib/api/stock";
 
 export default function PopupStockBas({
   isOpen,
   onClose,
   products = [],
-  onGoToStock,
+  onLowStockCountChange,
 }) {
+  const navigate = useNavigate();
+
+  // =========================================================
+  // STATES
+  // =========================================================
+
+  const [lowStockProducts, setLowStockProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // =========================================================
+  // FORMAT QUANTITY
+  // =========================================================
+
+  const formatQuantity = (value) => {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
+      return 0;
+    }
+
+    const number = Number(value);
+
+    if (Number.isNaN(number)) {
+      return 0;
+    }
+
+    return Number(number.toFixed(2));
+  };
+
+  // =========================================================
+  // BACKEND UNIT -> FRONTEND UNIT
+  // =========================================================
+
+  const getDisplayUnit = (unit) => {
+    switch (unit) {
+      case "kg":
+        return "Kg";
+
+      case "litre":
+      case "litres":
+        return "Litres";
+
+      case "boite":
+      case "boîtes":
+        return "boîtes";
+
+      case "sac":
+      case "sacs":
+        return "Sacs";
+
+      case "piece":
+      case "pièce":
+      case "pieces":
+        return "Pièces";
+
+      default:
+        return unit || "Kg";
+    }
+  };
+
+  // =========================================================
+  // GET LOW STOCK PRODUCTS
+  // =========================================================
+
+  useEffect(() => {
+    const fetchLowStockProducts = async () => {
+      setIsLoading(true);
+
+      try {
+        // =====================================================
+        // GET PRODUCTS FROM BACKEND
+        // =====================================================
+
+        const response = await listStock();
+
+        const backendProducts =
+          response?.data?.results ??
+          response?.data ??
+          [];
+
+        // =====================================================
+        // FORMAT + FILTER LOW STOCK
+        // stock_courant <= alerte_seuil
+        // =====================================================
+
+        const formattedProducts = backendProducts
+          .map((product) => {
+            const quantity = formatQuantity(
+              product.stock_courant ??
+                product.quantity ??
+                0
+            );
+
+            const threshold = formatQuantity(
+              product.alerte_seuil ??
+                product.threshold ??
+                1
+            );
+
+            return {
+              id: product.id,
+
+              name:
+                product.nom ??
+                product.name ??
+                product.title ??
+                "",
+
+              quantity,
+
+              unit: getDisplayUnit(
+                product.unite ??
+                  product.unit
+              ),
+
+              threshold,
+            };
+          })
+          .filter(
+            (product) =>
+              product.quantity <=
+              product.threshold
+          );
+
+        // =====================================================
+        // SAVE LOW STOCK PRODUCTS
+        // =====================================================
+
+        setLowStockProducts(
+          formattedProducts
+        );
+
+        // =====================================================
+        // SEND EXACT COUNT TO PARENT
+        // =====================================================
+
+        onLowStockCountChange?.(
+          formattedProducts.length
+        );
+      } catch (error) {
+        console.error(
+          "Erreur lors de la récupération du stock bas :",
+          error
+        );
+
+        // =====================================================
+        // FALLBACK TO PRODUCTS FROM PARENT
+        // =====================================================
+
+        const fallbackProducts = products
+          .map((product) => {
+            const quantity =
+              formatQuantity(
+                product.quantity ??
+                  product.stock_courant ??
+                  0
+              );
+
+            const threshold =
+              formatQuantity(
+                product.threshold ??
+                  product.alerte_seuil ??
+                  1
+              );
+
+            return {
+              id: product.id,
+
+              name:
+                product.name ??
+                product.title ??
+                product.nom ??
+                "",
+
+              quantity,
+
+              unit: getDisplayUnit(
+                product.unit ??
+                  product.unite
+              ),
+
+              threshold,
+            };
+          })
+          .filter(
+            (product) =>
+              product.quantity <=
+              product.threshold
+          );
+
+        setLowStockProducts(
+          fallbackProducts
+        );
+
+        // =====================================================
+        // SEND EXACT FALLBACK COUNT TO PARENT
+        // =====================================================
+
+        onLowStockCountChange?.(
+          fallbackProducts.length
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // =========================================================
+    // FETCH EVEN WHEN POPUP IS CLOSED
+    // =========================================================
+
+    fetchLowStockProducts();
+  }, [products, onLowStockCountChange]);
+
+  // =========================================================
+  // GO TO STOCK PAGE
+  // =========================================================
+
+  const handleGoToStock = () => {
+    onClose();
+    navigate("/liste-distributions");
+  };
+
+  // =========================================================
+  // RENDER
+  // =========================================================
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -28,11 +259,24 @@ export default function PopupStockBas({
           onClick={onClose}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.2 }}
-            onClick={(e) => e.stopPropagation()}
+            initial={{
+              opacity: 0,
+              scale: 0.96,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.96,
+            }}
+            transition={{
+              duration: 0.2,
+            }}
+            onClick={(e) =>
+              e.stopPropagation()
+            }
             className="
               w-full
 
@@ -86,6 +330,7 @@ export default function PopupStockBas({
                 alt="Fermer"
                 className="w-5 h-5"
               />
+
               Fermer
             </button>
 
@@ -107,14 +352,21 @@ export default function PopupStockBas({
             {/* Products */}
 
             <div
-            className={`
+              className={`
                 space-y-4
-                ${products.length > 4 ? "max-h-[45vh] overflow-y-auto" : ""}
-            `}
-
+                ${
+                  lowStockProducts.length > 4
+                    ? "max-h-[45vh] overflow-y-auto"
+                    : ""
+                }
+              `}
             >
-              {products.length > 0 ? (
-                products.map((item) => (
+              {isLoading ? (
+                <div className="py-10 text-center text-gray-500 text-[16px]">
+                  Chargement...
+                </div>
+              ) : lowStockProducts.length > 0 ? (
+                lowStockProducts.map((item) => (
                   <div
                     key={item.id}
                     className="flex justify-between items-center"
@@ -144,7 +396,7 @@ export default function PopupStockBas({
             {/* Button */}
 
             <button
-              onClick={onGoToStock}
+              onClick={handleGoToStock}
               className="
                 mt-10
                 sm:mt-12
@@ -170,6 +422,7 @@ export default function PopupStockBas({
               "
             >
               <Pencil size={20} />
+
               Aller à la page de stock
             </button>
           </motion.div>
