@@ -110,37 +110,22 @@ export const sidebarConfig = {
         path: "/dashboard",
       },
       {
-        icon: familles,
-        activeIcon: famillesWhite,
-        label: "Familles",
-        path: "/liste-famille",
+        icon: famille,
+        activeIcon: familleWhite,
+        label: "Ajouter une famille",
+        path: "/information-mere",
       },
       {
-        icon: galerieA,
+        icon: galerie,
         activeIcon: galerieAWhite,
         label: "Galerie",
         path: "/galerie",
       },
       {
-        icon: zakat,
-        activeIcon: zakatWhite,
-        label: "Zakat",
-        path: "/zakat",
-      },
-      {
-        icon: distrib,
-        activeIcon: distribWhite,
-        label: "Distribution",
-        path: "/liste-distributions",
-      },
-    ],
-
-    actions: [
-      {
-        icon: famille,
-        activeIcon: familleWhite,
-        label: "Ajouter une famille",
-        path: "/information-mere",
+        icon: moneyAdd,
+        activeIcon: moneyAddWhite,
+        label: "Ajouter zakat",
+        path: "/ajout-zakat",
       },
       {
         icon: visite,
@@ -148,7 +133,15 @@ export const sidebarConfig = {
         label: "Ajouter une visite",
         path: "/ajout-visite",
       },
+      {
+        icon: distrib,
+        activeIcon: distribWhite,
+        label: "Distributions",
+        path: "/liste-distributions",
+      },
     ],
+
+    actions: [],
   },
 
   // =========================================================

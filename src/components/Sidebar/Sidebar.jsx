@@ -26,19 +26,14 @@ export default function Sidebar({
   const [showProfil, setShowProfil] = useState(false);
 
   /*
-   * chef_coordinator uses the coordinator sidebar configuration.
+   * Each role has its own sidebar configuration.
    *
-   * If sidebarConfig contains a specific chef_coordinator config,
-   * it will use that one.
-   *
-   * Otherwise it falls back to the coordinator configuration.
+   * admin              -> admin sidebar
+   * chef_coordinator   -> chef coordinator sidebar
+   * coordinator        -> coordinator sidebar
    */
-  
   const config =
-    sidebarConfig[role] ||
-    (role === "chef_coordinator"
-      ? sidebarConfig.coordinator
-      : sidebarConfig.coordinator);
+    sidebarConfig[role] || sidebarConfig.coordinator;
 
   const {
     navigation,
@@ -48,34 +43,40 @@ export default function Sidebar({
   } = config;
 
   // User avatar if available, otherwise use the default avatar
-  const displayedAvatar = user?.profilePicture || defaultAvatar;
+  const displayedAvatar =
+    user?.profilePicture || user?.photo || defaultAvatar;
 
   const isAdmin = role === "admin";
 
   /*
-   * Both coordinator and chef_coordinator are coordinator-type users.
+   * Both coordinator and chef_coordinator
+   * use the coordinator-style profile navigation.
    */
   const isCoordinator =
-    role === "coordinator" || role === "chef_coordinator";
+    role === "coordinator" ||
+    role === "chef_coordinator";
 
-
-const adminData = {
-  nom: user?.nom ?? "",
-  prenom: user?.prenom ?? "",
-  username: user?.username,
-  id: user?.id ? `id – ${user.id}` : "id – admin",
-  role: "Admin",
-  avatarUrl: user?.photo,
-  email: user?.email,
-};
+  const adminData = {
+    nom: user?.nom ?? "",
+    prenom: user?.prenom ?? "",
+    username: user?.username,
+    id: user?.id
+      ? `id – ${user.id}`
+      : "id – admin",
+    role: "Admin",
+    avatarUrl: user?.photo,
+    email: user?.email,
+  };
 
   const handleItemClick = () => {
     setMobileOpen(false);
   };
 
   /*
-   * Admin -> ouvre la popup profil.
-   * Coordinator / Chef Coordinator -> page profil coordinateur.
+   * Admin -> opens admin profile popup.
+   *
+   * Coordinator / Chef Coordinator
+   * -> navigates to coordinator profile page.
    */
   const handleAvatarClick = () => {
     if (isAdmin) {
@@ -86,7 +87,8 @@ const adminData = {
   };
 
   /*
-   * While auth is loading, don't render the sidebar.
+   * While authentication is still loading,
+   * don't render the sidebar.
    */
   if (!ready) {
     return null;
@@ -94,7 +96,10 @@ const adminData = {
 
   return (
     <>
-      {/* ================= MOBILE TOP BAR ================= */}
+      {/* ===================================================== */}
+      {/* MOBILE TOP BAR */}
+      {/* ===================================================== */}
+
       {!hideOnMobile && (
         <div
           className="
@@ -113,6 +118,7 @@ const adminData = {
           "
         >
           {/* Hamburger */}
+
           <button
             onClick={() => setMobileOpen(true)}
             className="
@@ -131,7 +137,10 @@ const adminData = {
             />
           </button>
 
-          {/* Notification + Paramètres — admin uniquement */}
+          {/* ================================================= */}
+          {/* NOTIFICATION + SETTINGS — ADMIN ONLY */}
+          {/* ================================================= */}
+
           {showTopBarIcons && (
             <RoleGate allow={["admin"]}>
               <div className="flex items-center gap-4">
@@ -157,7 +166,9 @@ const adminData = {
 
                 <button
                   type="button"
-                  onClick={() => navigate("/parametres")}
+                  onClick={() =>
+                    navigate("/parametres")
+                  }
                   aria-label="Paramètres"
                   className="
                     w-9
@@ -179,10 +190,16 @@ const adminData = {
             </RoleGate>
           )}
 
-          {/* Avatar — coordinator + chef_coordinator */}
+          {/* ================================================= */}
+          {/* AVATAR — COORDINATOR + CHEF COORDINATOR */}
+          {/* ================================================= */}
+
           {showTopBarAvatar && (
             <RoleGate
-              allow={["coordinator", "chef_coordinator"]}
+              allow={[
+                "coordinator",
+                "chef_coordinator",
+              ]}
             >
               <button
                 type="button"
@@ -225,7 +242,10 @@ const adminData = {
         </div>
       )}
 
-      {/* ================= OVERLAY ================= */}
+      {/* ===================================================== */}
+      {/* MOBILE OVERLAY */}
+      {/* ===================================================== */}
+
       {!hideOnMobile && mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
@@ -239,7 +259,9 @@ const adminData = {
         />
       )}
 
-      {/* ================= DESKTOP ================= */}
+      {/* ===================================================== */}
+      {/* DESKTOP SIDEBAR */}
+      {/* ===================================================== */}
 
       <aside
         onMouseLeave={() => setExpanded(false)}
@@ -258,10 +280,15 @@ const adminData = {
           transition-all
           duration-300
           overflow-hidden
-          ${expanded ? "w-[295px] px-8" : "w-[86px] px-[18px]"}
+          ${expanded
+            ? "w-[295px] px-8"
+            : "w-[86px] px-[18px]"
+          }
         `}
       >
-        {/* Logo */}
+        {/* ================================================= */}
+        {/* LOGO */}
+        {/* ================================================= */}
 
         <div className="flex justify-center flex-shrink-0">
           <img
@@ -271,7 +298,9 @@ const adminData = {
           />
         </div>
 
-        {/* Navigation */}
+        {/* ================================================= */}
+        {/* NAVIGATION */}
+        {/* ================================================= */}
 
         <div
           className="
@@ -294,17 +323,26 @@ const adminData = {
                 flex
                 flex-col
                 gap-7
-                ${expanded ? "items-start" : "items-center"}
+                ${expanded
+                  ? "items-start"
+                  : "items-center"
+                }
               `}
             >
+              {/* Navigation items */}
+
               {navigation.map((item, index) => (
                 <SidebarItem
                   key={index}
                   item={item}
                   expanded={expanded}
-                  onMouseEnter={() => setExpanded(true)}
+                  onMouseEnter={() =>
+                    setExpanded(true)
+                  }
                 />
               ))}
+
+              {/* Action rapide */}
 
               {actions.length > 0 && expanded && (
                 <p className="text-white font-bold">
@@ -312,19 +350,25 @@ const adminData = {
                 </p>
               )}
 
+              {/* Action items */}
+
               {actions.map((item, index) => (
                 <SidebarItem
                   key={index}
                   item={item}
                   expanded={expanded}
-                  onMouseEnter={() => setExpanded(true)}
+                  onMouseEnter={() =>
+                    setExpanded(true)
+                  }
                 />
               ))}
             </nav>
           </div>
         </div>
 
-        {/* Avatar */}
+        {/* ================================================= */}
+        {/* DESKTOP AVATAR */}
+        {/* ================================================= */}
 
         <div className="flex justify-center flex-shrink-0">
           <button onClick={handleAvatarClick}>
@@ -362,7 +406,9 @@ const adminData = {
         </div>
       </aside>
 
-      {/* ================= MOBILE ================= */}
+      {/* ===================================================== */}
+      {/* MOBILE SIDEBAR */}
+      {/* ===================================================== */}
 
       {!hideOnMobile && (
         <aside
@@ -383,13 +429,22 @@ const adminData = {
             transition-transform
             duration-300
             lg:hidden
-            ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
+            ${mobileOpen
+              ? "translate-x-0"
+              : "-translate-x-full"
+            }
           `}
         >
-          {/* Top */}
+          {/* ================================================= */}
+          {/* MOBILE TOP */}
+          {/* ================================================= */}
 
           <div className="flex-shrink-0">
-            <button onClick={() => setMobileOpen(false)}>
+            <button
+              onClick={() =>
+                setMobileOpen(false)
+              }
+            >
               <img
                 src={closeIcon}
                 alt="Close"
@@ -406,7 +461,9 @@ const adminData = {
             </div>
           </div>
 
-          {/* Navigation */}
+          {/* ================================================= */}
+          {/* MOBILE NAVIGATION */}
+          {/* ================================================= */}
 
           <div
             className="
@@ -423,6 +480,8 @@ const adminData = {
               </p>
 
               <nav className="flex flex-col gap-3">
+                {/* Navigation */}
+
                 {navigation.map((item, index) => (
                   <div
                     key={index}
@@ -435,6 +494,8 @@ const adminData = {
                   </div>
                 ))}
 
+                {/* Actions */}
+
                 {actions.length > 0 && (
                   <>
                     <p className="text-white font-bold text-[18px] mt-4 mb-2">
@@ -442,17 +503,21 @@ const adminData = {
                     </p>
 
                     <div className="flex flex-col gap-3">
-                      {actions.map((item, index) => (
-                        <div
-                          key={index}
-                          onClick={handleItemClick}
-                        >
-                          <SidebarItem
-                            item={item}
-                            expanded={true}
-                          />
-                        </div>
-                      ))}
+                      {actions.map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            onClick={
+                              handleItemClick
+                            }
+                          >
+                            <SidebarItem
+                              item={item}
+                              expanded={true}
+                            />
+                          </div>
+                        )
+                      )}
                     </div>
                   </>
                 )}
@@ -460,7 +525,9 @@ const adminData = {
             </div>
           </div>
 
-          {/* Avatar */}
+          {/* ================================================= */}
+          {/* MOBILE AVATAR */}
+          {/* ================================================= */}
 
           <div className="flex justify-center flex-shrink-0 pt-2">
             <button
@@ -504,13 +571,17 @@ const adminData = {
         </aside>
       )}
 
-      {/* ================= POPUP PROFIL ADMIN ================= */}
+      {/* ===================================================== */}
+      {/* ADMIN PROFILE POPUP */}
+      {/* ===================================================== */}
 
       <RoleGate allow={["admin"]}>
         <PopupProfilAdmin
           open={showProfil}
           admin={adminData}
-          onClose={() => setShowProfil(false)}
+          onClose={() =>
+            setShowProfil(false)
+          }
         />
       </RoleGate>
     </>
