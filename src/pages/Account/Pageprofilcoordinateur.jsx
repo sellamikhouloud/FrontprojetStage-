@@ -11,27 +11,35 @@ import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
 export default function PageProfilCoordinateur() {
-  const { user, logout } = useAuth();
+  const { user, logout ,updateUser} = useAuth();
+  
 
-  const coordinateur = {
-    nom: user?.nom ?? "",
-    prenom: user?.prenom ?? "",
-    username: user?.username ?? "",
-    id: user?.id ? `id – ${user.id}` : "id – coordinateur",
-    role: user?.role === "chef_coordinator" ? "Chef Coordinateur" : "Coordinateur",
-    avatarUrl: user?.profilePicture || "",
-    email: user?.email,
-    structure: "Nutrigest Mauritanie",
-  };
+const coordinateur = {
+  nom: user?.nom || "",
+  prenom: user?.prenom || "",
+  username: user?.username,
+  id: user?.id ? `id – ${user.id}` : "id – coordinateur",
+  role: user?.role === "chef_coordinator" ? "Chef Coordinateur" : "Coordinateur",
+  avatarUrl: user?.photo || "",
+  email: user?.email,
+  telephone: user?.telephone,
+  village: user?.village, 
+};
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
 
-  const handleSave = (updatedFields) => {
-    // TODO: appel API pour persister les modifications du coordinateur
-    console.log("À sauvegarder :", updatedFields);
-  };
+  
+const [erreurSauvegarde, setErreurSauvegarde] = useState("");
 
+const handleSave = async (updatedFields) => {
+  try {
+    await updateUser(updatedFields);
+    return null; // succès, pas d'erreur
+  } catch (err) {
+    return err.response?.data || { non_field_errors: ["Impossible de mettre à jour le profil."] };
+  }
+};
   const handleDeconnexion = async () => {
     setShowLogoutConfirm(false);
     try {
