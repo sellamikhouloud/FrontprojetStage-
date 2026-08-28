@@ -300,13 +300,14 @@ const PopupDetailVisite = ({
                 poids={visite.poids_mere}
                 taille={visite.taille_mere}
                 muac={visite.muac_mere}
+                hemoglobine={visite.hemoglobine}
               />
 
               <AfficherMesure
                 title="Informations complémentaires"
                 variant="complement"
                 statutImc={visite.statut_imc}
-                hemoglobine={visite.statut_hemoglobine}
+                hemoglobineStatut={visite.statut_hemoglobine}
               />
 
               <InfoCard
@@ -352,13 +353,14 @@ const PopupDetailVisite = ({
               poids={visite.poids_mere}
               taille={visite.taille_mere}
               muac={visite.muac_mere}
+              hemoglobine={visite.hemoglobine}
             />
 
             <AfficherMesure
               title="Informations complémentaires"
               variant="complement"
               statutImc={visite.statut_imc}
-              hemoglobine={visite.statut_hemoglobine}
+              hemoglobineStatut={visite.statut_hemoglobine}
             />
 
             <InfoCard
