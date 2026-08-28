@@ -2,10 +2,76 @@ import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import SuccessBanner from "./SuccessBanner";
-import PageHeader from "../Navigation,Pageheader/PageHeader";
+
 import Button from "../Button/Button";
-import trash from "../../assets/Delete.svg";
+
 import quitter from "../../assets/quitter.svg";
+import ErrorMessage from "../Forms/ErrorMessage";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
+
+const KNOWN_FIELDS = ["stock_initial"];
+
+const FIELD_KEY_MAP = {
+  stock_initial: "quantite",
+};
+
+function parseBackendErrors(data, status) {
+  if (!data) return { fieldErrors: {}, generalMessage: null };
+
+  if (typeof data === "string" && /<html[\s>]/i.test(data)) {
+    if (status === 404) {
+      return {
+        fieldErrors: {},
+        generalMessage: "Le service demandé est introuvable. Veuillez réessayer plus tard ou contacter le support.",
+      };
+    }
+    return {
+      fieldErrors: {},
+      generalMessage: "Une erreur inattendue est survenue côté serveur. Veuillez réessayer plus tard.",
+    };
+  }
+
+  if (typeof data === "string") {
+    return { fieldErrors: {}, generalMessage: data };
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    return { fieldErrors: {}, generalMessage: messages.join(" — ") || null };
+  }
+
+  if (data.detail) {
+    return { fieldErrors: {}, generalMessage: data.detail };
+  }
+
+  if (typeof data.code === "string" && typeof data.message === "string") {
+    return { fieldErrors: {}, generalMessage: data.message };
+  }
+
+  if (typeof data === "object") {
+    const fieldErrors = {};
+    const generalMessages = [];
+
+    Object.entries(data).forEach(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+
+      if (KNOWN_FIELDS.includes(field)) {
+        fieldErrors[field] = text;
+      } else if (field === "non_field_errors") {
+        generalMessages.push(text);
+      } else {
+        generalMessages.push(`${field} : ${text}`);
+      }
+    });
+
+    return {
+      fieldErrors,
+      generalMessage: generalMessages.length ? generalMessages.join(" — ") : null,
+    };
+  }
+
+  return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
+}
 
 export default function PopupValidationProduit({
   open,
@@ -17,50 +83,90 @@ export default function PopupValidationProduit({
   const [quantite, setQuantite] = useState("");
   const [showBanner, setShowBanner] = useState(false);
   const [bannerMessage, setBannerMessage] = useState("");
+  
+
+
+const [saving, setSaving] = useState(false);
+const [backendFieldErrors, setBackendFieldErrors] = useState({});
+const [backendGeneralError, setBackendGeneralError] = useState(null);
 
   // Réinitialise le champ à chaque ouverture avec un nouveau produit
-  useEffect(() => {
-    if (open && produit) {
-      setQuantite("");
-    }
-  }, [open, produit]);
+   useEffect(() => {
+  if (open && produit) {
+    setQuantite("");
+    setBackendFieldErrors({});
+    setBackendGeneralError(null);
+    setSaving(false);
+  }
+}, [open, produit]);
 
   if (!open || !produit) return null;
+  
+ 
 
-  const handleQuantiteChange = (value) => {
-    // n'autorise que des chiffres
-    if (/^\d*$/.test(value)) {
-      setQuantite(value);
+
+ const handleQuantiteChange = (value) => {
+  if (/^\d*$/.test(value)) {
+    setQuantite(value);
+    if (backendFieldErrors.quantite) {
+      setBackendFieldErrors((prev) => ({ ...prev, quantite: null }));
     }
-  };
+  }
+};
 
   const handleClose = () => {
-    setQuantite("");
-    onClose?.();
+  setQuantite("");
+  setBackendFieldErrors({});
+  setBackendGeneralError(null);
+  onClose?.();
+};
+
+    const handleValider = async () => {
+  const quantiteFinale =
+    quantite === "" ? Number(produit.quantite) : Number(quantite);
+
+  const data = {
+    id: produit.id,
+    quantite: quantiteFinale,
   };
 
-      const handleValider = async () => {
-    // Si l'admin n'a pas touché le champ, on garde la valeur actuelle du produit
-    const quantiteFinale =
-      quantite === "" ? Number(produit.quantite) : Number(quantite);
+  setSaving(true);
+  setBackendFieldErrors({});
+  setBackendGeneralError(null);
 
-    const data = {
-      id: produit.id,
-      quantite: quantiteFinale,
-    };
-    try {
-      await onValider?.(data);
-      setBannerMessage("Le produit a été validé avec succès.");
-      setShowBanner(true);
-      setTimeout(() => {
-        setShowBanner(false);
-        handleClose();
-      }, 1500);
-    } catch (err) {
-      console.error("Erreur validation:", err);
-      // pas de bannière succès, le popup reste ouvert pour réessayer
-    }
-  };
+  try {
+    await onValider?.(data);
+    setBannerMessage("Le produit a été validé avec succès.");
+    setShowBanner(true);
+    setTimeout(() => {
+      setShowBanner(false);
+      handleClose();
+    }, 1500);
+  } catch (err) {
+    console.error("Erreur validation:", err);
+
+    const { fieldErrors, generalMessage } = parseBackendErrors(
+      err.response?.data,
+      err.response?.status
+    );
+
+    const mappedFieldErrors = {};
+    Object.entries(fieldErrors).forEach(([backendField, message]) => {
+      const localKey = FIELD_KEY_MAP[backendField] || backendField;
+      mappedFieldErrors[localKey] = message;
+    });
+
+    setBackendFieldErrors(mappedFieldErrors);
+    setBackendGeneralError(
+      generalMessage ||
+        (Object.keys(mappedFieldErrors).length
+          ? null
+          : "Une erreur est survenue lors de la validation du produit.")
+    );
+  } finally {
+    setSaving(false);
+  }
+};
 
  
 
@@ -188,6 +294,12 @@ export default function PopupValidationProduit({
             )}
           </div>
 
+          {backendGeneralError && (
+                 <div className="mt-3">
+                 <BackendErrorMessage message={backendGeneralError} />
+                   </div>
+            )}
+
           {/* Quantité — modifiable, optionnelle (défaut envoyé au backend : 0) */}
           <div className="mt-5">
             <label className="font-semibold text-[16px] text-black">
@@ -232,6 +344,7 @@ export default function PopupValidationProduit({
                 </span>
               )}
             </div>
+            <ErrorMessage message={backendFieldErrors.quantite || null} />
           </div>
 
           {/* Banner succès */}
@@ -246,14 +359,16 @@ export default function PopupValidationProduit({
            
             
 
-            <div className="flex-1">
-              <Button
-                title="Valider"
-                variant="success"
-                fullWidth
-                noPadding
-                onClick={handleValider}
-              />
+           <div className="flex-1">
+  <Button
+    title={saving ? "Validation..." : "Valider"}
+    variant="success"
+    fullWidth
+    noPadding
+    onClick={handleValider}
+    disabled={saving}
+  />
+
             </div>
           </div>
         </motion.div>
