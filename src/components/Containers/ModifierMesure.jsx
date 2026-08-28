@@ -15,33 +15,16 @@ export default function ModifierMesure({
 }) {
   const isMere = variant === "mere";
 
-  // =====================================================
-  // VALEURS AFFICHÉES
-  // =====================================================
 
-  // API : grammes → affichage mère : kg
+
   const poidsAffiche =
-    poids === "" || poids === null || poids === undefined
-      ? ""
-      : isMere
-      ? Number(poids) / 1000
-      : poids;
+    poids === "" || poids === null || poids === undefined ? "" : poids;
 
-  // API : cm → affichage mère : m
   const tailleAffiche =
-    taille === "" || taille === null || taille === undefined
-      ? ""
-      : isMere
-      ? Number(taille) / 100
-      : taille;
+    taille === "" || taille === null || taille === undefined ? "" : taille;
 
-  // API : mm → affichage mère : cm
   const muacAffiche =
-    muac === "" || muac === null || muac === undefined
-      ? ""
-      : isMere
-      ? Number(muac) / 10
-      : muac;
+    muac === "" || muac === null || muac === undefined ? "" : muac;
 
   // =====================================================
   // MODIFICATION POIDS
@@ -57,9 +40,7 @@ export default function ModifierMesure({
 
     if (isNaN(number)) return;
 
-    // Mère : kg → grammes pour l'API
-    // Nourrisson : on garde les grammes
-    setPoids?.(isMere ? number * 1000 : value);
+    setPoids?.(value);
   };
 
   // =====================================================
@@ -76,9 +57,7 @@ export default function ModifierMesure({
 
     if (isNaN(number)) return;
 
-    // Mère : mètres → cm pour l'API
-    // Nourrisson : on garde les cm
-    setTaille?.(isMere ? number * 100 : value);
+    setTaille?.(value);
   };
 
   // =====================================================
@@ -95,9 +74,7 @@ export default function ModifierMesure({
 
     if (isNaN(number)) return;
 
-    // Mère : cm → mm pour l'API
-    // Nourrisson : on garde les mm
-    setMuac?.(isMere ? number * 10 : value);
+    setMuac?.(value);
   };
 
   // =====================================================
