@@ -8,7 +8,7 @@ export default function AfficherMesure({
   variant = "mesures",
   type = "nourrisson",
 }) {
- 
+
   if (variant === "complement") {
     return (
       <div className="w-full">
@@ -47,44 +47,17 @@ export default function AfficherMesure({
     );
   }
 
-  
-
   const isMere = type === "mere";
 
-  
-  const poidsAffiche = isMere
-    ? poids != null
-      ? (Number(poids) / 1000).toFixed(2)
-      : "-"
-    : poids != null
-    ? Number(poids).toFixed(2)
-    : "-";
-
+  // Affichage direct, sans conversion, pour tout le monde (mère et nourrisson)
+  const poidsAffiche = poids != null ? Number(poids).toFixed(2) : "-";
   const poidsUnite = isMere ? "kg" : "g";
 
-  
-  const tailleAffiche = isMere
-    ? taille != null
-      ? (Number(taille) / 100).toFixed(2)
-      : "-"
-    : taille != null
-    ? Number(taille).toFixed(2)
-    : "-";
-
+  const tailleAffiche = taille != null ? Number(taille).toFixed(2) : "-";
   const tailleUnite = isMere ? "m" : "cm";
 
- 
-  const muacAffiche = isMere
-    ? muac != null
-      ? (Number(muac) / 10).toFixed(2)
-      : "-"
-    : muac != null
-    ? Number(muac).toFixed(2)
-    : "-";
-
+  const muacAffiche = muac != null ? Number(muac).toFixed(2) : "-";
   const muacUnite = isMere ? "cm" : "mm";
-
-  
 
   return (
     <div className="w-full">
