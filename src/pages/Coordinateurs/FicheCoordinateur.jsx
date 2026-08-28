@@ -304,19 +304,37 @@ const handleSave = async () => {
       setStatutOriginal(statut);
     }
 
-    const payload = { username, nom, prenom, email, telephone, village };
+   let payload;
 
-    if (isAdmin) {
+if (photoFile) {
+  payload = new FormData();
+  payload.append("username", username);
+  payload.append("nom", nom);
+  payload.append("prenom", prenom);
+  payload.append("email", email);
+  payload.append("telephone", telephone);
+  payload.append("village", village);
+
+  if (isAdmin) {
+    payload.append("role", roleCoordinateur);
+  }
+  if (password.trim()) {
+    payload.append("password", password);
+  }
+
+  payload.append("photo", photoFile);
+} else {
+  payload = { username, nom, prenom, email, telephone, village };
+
+  if (isAdmin) {
     payload.role = roleCoordinateur;
-    }
-    if (password.trim()) {
-      payload.password = password;
-    }
-    if (photoFile) {
-    payload.photo = photoFile;
-    }
+  }
+  if (password.trim()) {
+    payload.password = password;
+  }
+}
 
-    await updateCoordinateur(id, payload);
+await updateCoordinateur(id, payload);
 
     // Succès réel uniquement
     setShowBanner(true);
@@ -448,7 +466,9 @@ const handleSave = async () => {
       </span>
     </span>
   </button>
+  
 </div>
+<BackendErrorMessage message={errors.photo} />
 
 <PopupPhoto
   open={showPhotoPopup}
@@ -457,6 +477,7 @@ const handleSave = async () => {
   onImageSelected={(file) => {
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+    clearError("photo");
   }}
 />
 
@@ -707,7 +728,7 @@ const handleSave = async () => {
 />
 
               
-
+      {showBanner && <SuccessBanner text="Enregistrer avec succès" />}
               {/* Boutons */}
               <div className="flex flex-col gap-[0px]">
                 <Button
@@ -718,7 +739,7 @@ const handleSave = async () => {
                   disabled={saving}
                 />
 
-                {showBanner && <SuccessBanner text="Enregistrer avec succès" />}
+                
 
             
               </div>
