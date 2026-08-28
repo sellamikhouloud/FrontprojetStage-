@@ -31,6 +31,7 @@ function extractEditableVisiteFields(visite) {
     poids_mere: visite?.poids_mere ?? "",
     taille_mere: visite?.taille_mere ?? "",
     muac_mere: visite?.muac_mere ?? "",
+    hemoglobine: visite?.hemoglobine ?? "",
 
     observations_cliniques_bebe:
       visite?.observations_cliniques_bebe ?? "",
@@ -453,38 +454,40 @@ const PopupDetailVisiteModifier = ({
             <div className="space-y-3">
               <StatutCalculeBlock />
 
-              <ModifierMesure
-                title="Mesure mère"
-                variant="mere"
-                poids={form.poids_mere}
-                taille={form.taille_mere}
-                muac={form.muac_mere}
-                setPoids={(v) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    poids_mere: v,
-                  }))
-                }
-                setTaille={(v) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    taille_mere: v,
-                  }))
-                }
-                setMuac={(v) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    muac_mere: v,
-                  }))
-                }
-              />
+            <ModifierMesure
+  title="Mesure mère"
+  variant="mere"
+  poids={form.poids_mere}
+  taille={form.taille_mere}
+  muac={form.muac_mere}
+  hemoglobine={form.hemoglobine}
+  setPoids={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      poids_mere: v,
+    }))
+  }
+  setTaille={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      taille_mere: v,
+    }))
+  }
+  setMuac={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      muac_mere: v,
+    }))
+  }
+  setHemoglobine={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      hemoglobine: v,
+    }))
+  }
+/>
 
-              <AfficherMesure
-                title="Informations complémentaires"
-                variant="complement"
-                statutImc={visite.statut_imc}
-                hemoglobine={visite.statut_hemoglobine}
-              />
+            
 
               <TextareaModifier
                 label="Observations cliniques mère"
@@ -559,38 +562,40 @@ const PopupDetailVisiteModifier = ({
               height="h-[55px]"
             />
 
-            <ModifierMesure
-              title="Mesure mère"
-              variant="mere"
-              poids={form.poids_mere}
-              taille={form.taille_mere}
-              muac={form.muac_mere}
-              setPoids={(v) =>
-                setForm((prev) => ({
-                  ...prev,
-                  poids_mere: v,
-                }))
-              }
-              setTaille={(v) =>
-                setForm((prev) => ({
-                  ...prev,
-                  taille_mere: v,
-                }))
-              }
-              setMuac={(v) =>
-                setForm((prev) => ({
-                  ...prev,
-                  muac_mere: v,
-                }))
-              }
-            />
+          <ModifierMesure
+  title="Mesure mère"
+  variant="mere"
+  poids={form.poids_mere}
+  taille={form.taille_mere}
+  muac={form.muac_mere}
+  hemoglobine={form.hemoglobine}
+  setPoids={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      poids_mere: v,
+    }))
+  }
+  setTaille={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      taille_mere: v,
+    }))
+  }
+  setMuac={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      muac_mere: v,
+    }))
+  }
+  setHemoglobine={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      hemoglobine: v,
+    }))
+  }
+/>
 
-            <AfficherMesure
-              title="Informations complémentaires"
-              variant="complement"
-              statutImc={visite.statut_imc}
-              hemoglobine={visite.statut_hemoglobine}
-            />
+          
 
             <TextareaModifier
               label="Observations cliniques mère"
