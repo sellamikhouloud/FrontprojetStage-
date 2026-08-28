@@ -344,7 +344,9 @@ const [backendGeneralError, setBackendGeneralError] = useState(null);
                 </span>
               )}
             </div>
+             <div className="mt-1">
             <ErrorMessage message={backendFieldErrors.quantite || null} />
+            </div>
           </div>
 
           {/* Banner succès */}
