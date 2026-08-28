@@ -16,6 +16,7 @@ import DistributionItem from "../../components/Report/DistributionItem";
 import TextArea from "../../components/Containers/Textarea";
 import Spinner from "../../components/Spinner";
 import { getRapportBilanDonateur, validerRapport, genererPdfRapport } from "@/lib/api/Rapport";
+import { getPhoto } from "@/lib/api/galerie";
 
 const MONTH_NAMES = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -50,12 +51,17 @@ const RapportBilan = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [narrativeMessage, setNarrativeMessage] = useState("");
 
+  const [terrainPhotos, setTerrainPhotos] = useState([]);
+  const [photosLoading, setPhotosLoading] = useState(false);
+
   const requestIdRef = useRef(0);
+  const photosRequestIdRef = useRef(0);
 
   const handleMonthChange = async (value) => {
     setSelectedMonth(buildMonthValue(value.year, value.month));
     setRapport(null);
     setNarrativeMessage("");
+    setTerrainPhotos([]);
     setStatus(STATUS.LOADING);
 
     const currentRequestId = ++requestIdRef.current;
@@ -83,6 +89,38 @@ const RapportBilan = () => {
     handleMonthChange(getCurrentMonthValue());
   }, []);
 
+  
+  useEffect(() => {
+    const photoIds = rapport?.photos ?? [];
+
+    if (photoIds.length === 0) {
+      setTerrainPhotos([]);
+      return;
+    }
+
+    const currentPhotosRequestId = ++photosRequestIdRef.current;
+    setPhotosLoading(true);
+
+    Promise.all(
+      photoIds.map((id) =>
+        getPhoto(id)
+          .then((res) => res.data)
+          .catch((error) => {
+            console.error(`Erreur lors du chargement de la photo ${id} :`, error);
+            return null;
+          })
+      )
+    )
+      .then((results) => {
+        if (currentPhotosRequestId !== photosRequestIdRef.current) return;
+        setTerrainPhotos(results.filter(Boolean));
+      })
+      .finally(() => {
+        if (currentPhotosRequestId !== photosRequestIdRef.current) return;
+        setPhotosLoading(false);
+      });
+  }, [rapport?.photos]);
+
   const isLoading = status === STATUS.LOADING;
 
   const getPourcentage = (statut) =>
@@ -96,8 +134,6 @@ const RapportBilan = () => {
         unit: details.unite,
       }))
     : [];
-
-  const terrainPhotos = rapport?.photos ?? [];
 
   const handleValidation = async () => {
     if (!rapport) return;
@@ -320,20 +356,30 @@ const RapportBilan = () => {
                   title="Bilan donateurs"
                 />
 
-                {terrainPhotos.length > 0 ? (
+                {photosLoading ? (
+                  <div className="flex justify-center items-center py-10">
+                    <Spinner />
+                  </div>
+                ) : terrainPhotos.length > 0 ? (
                   <div className="space-y-6">
-                    {terrainPhotos.map((photo, index) => (
-                      <img
-                        key={index}
-                        src={photo}
-                        alt={`Photo terrain ${index + 1}`}
-                        className="w-[85%] mx-auto rounded-[10px] object-cover"
-                      />
+                    {terrainPhotos.map((photo) => (
+                      <div key={photo.id} className="mx-auto w-[85%]">
+                        <img
+                          src={photo.image}
+                          alt={photo.titre || `Photo terrain ${photo.id}`}
+                          className="w-full rounded-[10px] object-cover"
+                        />
+                        {photo.titre && (
+                          <p className="mt-2 text-[17px] font-semibold text-[#202124] text-center">
+                            {photo.titre}
+                          </p>
+                        )}
+                      </div>
                     ))}
                   </div>
                 ) : (
                   <p className="text-center text-[#818181] py-6">
-                    Aucune photo de terrain disponible.
+                    Selectionnez les photos depuis la Galerie .
                   </p>
                 )}
               </div>
