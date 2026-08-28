@@ -163,23 +163,30 @@ const [products, setProducts] = useState([]);
 useEffect(() => {
   if (produitsData.length) {
     setProducts(
-      produitsData.map((p) => ({
-        id: p.id,
-        nom: p.nom,
-        quantity: Number(p.stock_courant),
-        unite: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "Kg" : p.unite,
-        threshold: Number(p.alerte_seuil),
-        statut: p.validee ? "valide" : "en_attente",
-        date: p.audit?.date_creation
-          ? new Date(p.audit.date_creation).toLocaleDateString("fr-FR")
-          : null,
-        enregistrePar: p.audit?.cree_par
-          ? `${p.audit.cree_par.nom ?? ""} ${p.audit.cree_par.prenom ?? ""}`.trim()
-          : null,
-      }))
+      produitsData.map((p) => {
+        const estEnAttente = !p.validee;
+        const doitAfficherStockInitial = estEnAttente && canManageStock;
+
+        return {
+          id: p.id,
+          nom: p.nom,
+          quantity: Number(
+            doitAfficherStockInitial ? p.stock_initial : p.stock_courant
+          ),
+          unite: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "Kg" : p.unite,
+          threshold: Number(p.alerte_seuil),
+          statut: p.validee ? "valide" : "en_attente",
+          date: p.audit?.date_creation
+            ? new Date(p.audit.date_creation).toLocaleDateString("fr-FR")
+            : null,
+          enregistrePar: p.audit?.cree_par
+            ? `${p.audit.cree_par.nom ?? ""} ${p.audit.cree_par.prenom ?? ""}`.trim()
+            : null,
+        };
+      })
     );
   }
-}, [produitsResponse]);
+}, [produitsResponse, canManageStock]);
  
 
 const {
