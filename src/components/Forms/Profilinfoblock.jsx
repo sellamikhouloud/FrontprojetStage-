@@ -157,7 +157,7 @@ export default function ProfilInfoBlock({
     const payload = { ...champsSansVillage };
 
     if (aChampVillage && village) {
-      payload.village_id = Number(village); // ⚠️ à confirmer avec le backend
+      payload.village = Number(village); 
     }
 
     setSaving(true);
