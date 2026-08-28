@@ -258,16 +258,17 @@ const Modifyfamilly = () => {
   const [errorMessage, setErrorMessage] = useState(null);
   const [infoMessage, setInfoMessage] = useState(null);
 
-  const {
-    data: famille,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["famille", id],
-    queryFn: () => getFamille(id).then((res) => res.data),
-    enabled: !!id,
-  });
+ const {
+  data: famille,
+  isLoading,
+  isError,
+  error,
+  refetch: refetchFamille,
+} = useQuery({
+  queryKey: ["famille", id],
+  queryFn: () => getFamille(id).then((res) => res.data),
+  enabled: !!id,
+});
 
   const { data: visitesResponse, isLoading: visitesLoading  , isError: visitesError, } = useQuery({
     queryKey: ["visites", id],
@@ -711,19 +712,23 @@ const makeHandler = (fields) => (index, value) => {
   famille={famille}
   isLoading={visitesLoading}
 />
+<PopupFinSuivi
+  open={openFinSuivi}
+  onClose={() => setOpenFinSuivi(false)}
+  onConfirm={async (motif, dateSortie) => {
+    await marquerSortie(famille.id, {
+      date_sortie: dateSortie,
+      motif_sortie: motif,
+    });
 
-            <PopupFinSuivi
-        open={openFinSuivi}
-        onClose={() => setOpenFinSuivi(false)}
-        onConfirm={async (motif, dateSortie) => {
-          await marquerSortie(famille.id, {
-            date_sortie: dateSortie,
-            motif_sortie: motif,
-          });
-          setOpenFinSuivi(false);
-          await queryClient.invalidateQueries({ queryKey: ["famille", id] });
-        }}
-      />
+    setOpenFinSuivi(false);
+
+    const { data: updated } = await refetchFamille();
+    if (updated) {
+      setForm(extractEditableFields(updated));
+    }
+  }}
+/>
 
       {openSuccess && (
         <Popup
