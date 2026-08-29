@@ -67,6 +67,20 @@ const isFutureDate = (date) => {
   return selected > today;
 };
 
+
+const areProduitsEqual = (a = [], b = []) => {
+  if (a.length !== b.length) return false;
+
+  const normalize = (list) =>
+    [...list]
+      .map((p) => `${p.produit}:${Number(p.quantite ?? 0)}`)
+      .sort(); // insensible à l'ordre
+
+  const na = normalize(a);
+  const nb = normalize(b);
+
+  return na.every((val, i) => val === nb[i]);
+};
 const detectLaitTypeValue = (nomProduitLait = "") => {
   const nom = nomProduitLait.toLowerCase();
   if (nom.includes("1er")) return "1er_age";
@@ -164,7 +178,10 @@ const baselineRef = useRef(
     : null
 );
 
-  const [confirmed, setConfirmed] = useState(source?.confirmed || false);
+ const [confirmed, setConfirmed] = useState(() => {
+  if (isEditMode) return Boolean(distributionAModifier?.reception_confirmee);
+  return source?.confirmed || false;
+});
 
   // --- Lait infantile ---
   // type : "1er_age" | "2eme_age"
@@ -382,23 +399,35 @@ useEffect(() => {
 };
 
   try {
-       if (isEditMode) {
-      const currentPayload = {
-        produits: produitsPayload,
-        date_distribution: payload.date_distribution,
-        reception_confirmee: payload.reception_confirmee,
-      };
+    if (isEditMode) {
+  const currentPayload = {
+    produits: produitsPayload,
+    date_distribution: payload.date_distribution,
+    reception_confirmee: payload.reception_confirmee,
+  };
 
-      const patch = diffPatch(baselineRef.current, currentPayload);
+  const patch = diffPatch(baselineRef.current, currentPayload);
 
-      if (!isEmptyPatch(patch)) {
-        await updateDistribution(distributionAModifier.id, patch);
-      }
-    } else {
-      await createDistribution(payload);
-    }
+  if (
+    "produits" in patch &&
+    areProduitsEqual(baselineRef.current.produits, currentPayload.produits)
+  ) {
+    delete patch.produits;
+  }
 
-    setShowSuccessPopup(true);
+  if (isEmptyPatch(patch)) {
+    setSaveError("Aucune modification à enregistrer.");
+    setSaving(false);
+    return;
+  }
+
+  await updateDistribution(distributionAModifier.id, patch);
+
+} else {
+  await createDistribution(payload);
+}
+
+setShowSuccessPopup(true);
     } catch (error) {
     console.error(
       isEditMode
