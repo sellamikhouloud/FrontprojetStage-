@@ -17,3 +17,4 @@ export const CreateProduit  = (payload) => api.post("/api/produits/", payload);
 
 export const getHistoriqueProduit = (id) => api.get(`/api/produits/${id}/historique/`);
 
+
