@@ -12,19 +12,27 @@ export default function PopupProfilAdmin({
   onSave,
 }) {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+    const [erreurDeconnexion, setErreurDeconnexion] = useState(""); 
+
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   if (!open || !admin) return null;
 
-  const handleConfirmDeconnexion = async () => {
+ const handleConfirmDeconnexion = async () => {
     setShowLogoutConfirm(false);
+    setErreurDeconnexion(""); // ← ajouté
     try {
       await logout();
       onClose?.();
       navigate("/");
     } catch (error) {
       console.error("Échec de la déconnexion :", error);
+      setErreurDeconnexion( // ← ajouté
+        error?.response?.data?.detail ||
+        error?.message ||
+        "Échec de la déconnexion. Veuillez réessayer."
+      );
     }
   };
 
@@ -108,6 +116,7 @@ export default function PopupProfilAdmin({
               champs={CHAMPS_DEFAUT}
               onSave={onSave}
               onDeconnexion={() => setShowLogoutConfirm(true)}
+              erreurDeconnexion={erreurDeconnexion}
             />
           </div>
         </div>
