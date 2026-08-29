@@ -67,6 +67,7 @@ export default function ProfilInfoBlock({
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const successTimeoutRef = useRef(null);
+   const [avatarRemoved, setAvatarRemoved] = useState(false);
   
 
 
@@ -101,7 +102,7 @@ const patch = useMemo(
   [baseline, formData]
 );
 
-const nothingChanged = isEmptyPatch(patch) && !avatarFile;
+const nothingChanged = isEmptyPatch(patch) && !avatarFile && !avatarRemoved;
 
   useEffect(() => {
   return () => {
@@ -127,9 +128,10 @@ const nothingChanged = isEmptyPatch(patch) && !avatarFile;
       });
       setFormData(initial);
     }
-    setIsEditing(false);
+       setIsEditing(false);
     setAvatarPreview(null);
     setAvatarFile(null);
+    setAvatarRemoved(false);
     setFieldErrors({});
     setErreurGenerale("");
   }, [admin, champs]);
@@ -172,6 +174,7 @@ const handleImageSelected = (file) => {
   if (avatarPreview) URL.revokeObjectURL(avatarPreview);
   setAvatarFile(file);
   setAvatarPreview(URL.createObjectURL(file));
+  setAvatarRemoved(false); // ← annule la suppression si une nouvelle photo est choisie
 
   setFieldErrors((prev) => {
     if (!prev.photo) return prev;
@@ -179,6 +182,13 @@ const handleImageSelected = (file) => {
     delete next.photo;
     return next;
   });
+};
+
+const handleRemoveAvatar = () => {
+  if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+  setAvatarFile(null);
+  setAvatarPreview(null);
+  setAvatarRemoved(true);
 };
 
 
@@ -217,7 +227,7 @@ const validerChamps = () => {
 
   let payload;
 
-  if (avatarFile) {
+   if (avatarFile) {
     payload = new FormData();
     Object.entries(patchSansVillage).forEach(([key, value]) => {
       payload.append(key, value);
@@ -228,6 +238,12 @@ const validerChamps = () => {
     }
 
     payload.append("photo", avatarFile);
+  } else if (avatarRemoved) {
+    payload = { ...patchSansVillage, photo: null };
+
+    if (aChampVillage && "village" in patch) {
+      payload.village = Number(patch.village);
+    }
   } else {
     payload = { ...patchSansVillage };
 
@@ -331,12 +347,19 @@ successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 1000);
   return (
     <div>
      
-     <UserCard
+          <UserCard
   nom={nomComplet}
   role={admin.role}
-  avatarUrl={isEditing ? avatarPreview || admin.avatarUrl : admin.avatarUrl}
+  avatarUrl={
+    avatarRemoved
+      ? null
+      : isEditing
+      ? avatarPreview || admin.avatarUrl
+      : admin.avatarUrl
+  }
   editing={isEditing}
   onAvatarClick={handleAvatarClick}
+  onRemovePhoto={handleRemoveAvatar}
 />
 
  
