@@ -7,8 +7,20 @@ import AssistanceCard from "../../components/Forms/AssistanceCard";
 import Button from "../../components/Button/Button";
 import ConfirmDialog from "../../components/Popups/ConfirmdialogPopup";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 
 import { useAuth } from "../../components/Providers/AuthProvider";
+
+
+const API_BASE_URL = "http://127.0.0.1:8000"; // à adapter selon ton environnement
+
+export const resolvePhotoUrl = (photo) => {
+  if (!photo) return null;
+  if (photo.startsWith("http://") || photo.startsWith("https://")) {
+    return photo; // déjà une URL complète
+  }
+  return `${API_BASE_URL}${photo}`;
+};
 
 export default function PageProfilCoordinateur() {
   const { user, logout ,updateUser} = useAuth();
@@ -20,17 +32,20 @@ const coordinateur = {
   username: user?.username,
   id: user?.id ? `id – ${user.id}` : "id – coordinateur",
   role: user?.role === "chef_coordinator" ? "Chef Coordinateur" : "Coordinateur",
-  avatarUrl: user?.photo || "",
+  avatarUrl: resolvePhotoUrl(user?.photo),
   email: user?.email,
   telephone: user?.telephone,
   village: user?.village, 
 };
 
+
+
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
-
   
-const [erreurSauvegarde, setErreurSauvegarde] = useState("");
+
+  const [erreurDeconnexion, setErreurDeconnexion] = useState("");
+
 
 const handleSave = async (updatedFields) => {
   try {
@@ -40,15 +55,21 @@ const handleSave = async (updatedFields) => {
     return err.response?.data || { non_field_errors: ["Impossible de mettre à jour le profil."] };
   }
 };
-  const handleDeconnexion = async () => {
-    setShowLogoutConfirm(false);
-    try {
-      await logout();
-      navigate("/");
-    } catch (error) {
-      console.error("Échec de la déconnexion :", error);
-    }
-  };
+const handleDeconnexion = async () => {
+  setShowLogoutConfirm(false);
+  setErreurDeconnexion("");
+  try {
+    await logout();
+    navigate("/");
+  } catch (error) {
+    console.error("Échec de la déconnexion :", error);
+    setErreurDeconnexion(
+      error?.response?.data?.detail ||
+      error?.message ||
+      "Échec de la déconnexion. Veuillez réessayer."
+    );
+  }
+};
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -130,23 +151,31 @@ const handleSave = async (updatedFields) => {
                   syncStatus="synchronise"
                   version="1.0.0"
                 />
+                 <div className="mt-0 lg:mt-8">
 
                 <AssistanceCard
                   onCentreAide={() => console.log("Centre d'aide")}
                   onConditions={() => console.log("Conditions d'utilisation")}
                   onPolitique={() => console.log("Politique de confidentialité")}
                 />
+                </div>
               </div>
             </div>
-            <div className="mt-0">
-              <Button
-                title="Déconnexion"
-                variant="deconnexion"
-                icon={logoutIcon}
-                noPadding
-                onClick={() => setShowLogoutConfirm(true)}
-              />
-            </div>
+            <div className="mt-2">
+  {erreurDeconnexion && (
+    <div className="mb-3">
+      <BackendErrorMessage message={erreurDeconnexion} />
+    </div>
+  )}
+
+  <Button
+    title="Déconnexion"
+    variant="deconnexion"
+    icon={logoutIcon}
+    noPadding
+    onClick={() => setShowLogoutConfirm(true)}
+  />
+</div>
           </div>
          </div>
     
