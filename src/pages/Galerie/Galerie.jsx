@@ -66,37 +66,26 @@ const mapPhotoFromApi = (photo, villagesList = []) => ({
 const Galerie = ({ role = "coordinator" }) => {
   /*
    * ============================================================
-   * ROLES
+   * ROLE HANDLING
    * ============================================================
    *
-   * admin:
+   * Admin:
    *   -> keeps the admin Galerie behavior
    *
-   * coordinator:
-   *   -> coordinator Galerie
+   * Coordinator:
+   *   -> uses the coordinator Galerie behavior
    *
-   * chef_coordinator:
-   *   -> EXACTLY the same Galerie behavior as coordinator
-   *
-   * We normalize chef_coordinator to coordinator only for
-   * Galerie components that use the role to decide their UI.
+   * Chef Coordinator:
+   *   -> MUST use exactly the same Galerie behavior as coordinator
    */
 
   const isAdmin = role === "admin";
 
   const isCoordinator =
-    role === "coordinator" ||
-    role === "chef_coordinator";
-
-  const galerieRole =
-    role === "chef_coordinator"
-      ? "coordinator"
-      : role;
+    role === "coordinator" || role === "chef_coordinator";
 
   /*
-   * ============================================================
    * PHOTOS
-   * ============================================================
    */
 
   const [photos, setPhotos] = useState([]);
@@ -118,9 +107,7 @@ const Galerie = ({ role = "coordinator" }) => {
   const [selectedImageFile, setSelectedImageFile] = useState(null);
 
   /*
-   * ============================================================
    * POPUPS / PAGES
-   * ============================================================
    */
 
   const [showPopupPhoto, setShowPopupPhoto] = useState(false);
@@ -141,9 +128,7 @@ const Galerie = ({ role = "coordinator" }) => {
   const [searchValue, setSearchValue] = useState("");
 
   /*
-   * ============================================================
    * SELECTION
-   * ============================================================
    */
 
   const [selectionMode, setSelectionMode] = useState(false);
@@ -219,7 +204,7 @@ const Galerie = ({ role = "coordinator" }) => {
    * LOAD PENDING COUNT
    * ============================================================
    *
-   * Only admin uses the pending counter.
+   * Only admin needs the pending counter.
    */
 
   const fetchPendingCount = async () => {
@@ -261,32 +246,35 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    * PHOTO CLICK
    * ============================================================
-   *
-   * Coordinator + Chef Coordinator:
-   *
-   *   validated -> consulter
-   *   pending   -> modifier
-   *   refused   -> refused page
-   *
-   * Admin:
-   *
-   *   validated -> consulter
-   *   pending   -> validation page
-   *   refused   -> refused page
    */
 
   const handlePhotoClick = (photo) => {
     setSelectedPhoto(photo);
 
     if (photo.status === "validated") {
+      /*
+       * Validated photos:
+       * both coordinator and chef_coordinator
+       * use the normal consultation page.
+       */
       setShowConsulter(true);
     } else if (photo.status === "pending") {
+      /*
+       * Admin:
+       * -> pending photo approval page
+       *
+       * Coordinator + Chef Coordinator:
+       * -> modification page
+       */
       if (isAdmin) {
         setShowEnAttente(true);
       } else if (isCoordinator) {
         setShowModifier(true);
       }
     } else {
+      /*
+       * Refused photo
+       */
       setShowRefusee(true);
     }
   };
@@ -329,7 +317,7 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    */
 
-  const handleAddPhoto = () => {
+  const handleAddPhoto = (newPhoto) => {
     setShowAjouterPhoto(false);
 
     setSelectedImage(null);
@@ -354,9 +342,7 @@ const Galerie = ({ role = "coordinator" }) => {
 
     setSelectedImageFile(file);
 
-    setSelectedImage(
-      URL.createObjectURL(file)
-    );
+    setSelectedImage(URL.createObjectURL(file));
   };
 
   /*
@@ -376,7 +362,7 @@ const Galerie = ({ role = "coordinator" }) => {
    * BILAN CANDIDATES
    * ============================================================
    *
-   * Only admin can use the bilan selection.
+   * Only admin uses bilan selection.
    */
 
   const fetchBilanCandidates = async () => {
@@ -407,9 +393,7 @@ const Galerie = ({ role = "coordinator" }) => {
        */
 
       const alreadyIncluded = mapped
-        .filter(
-          (photo) => photo.includedInReport
-        )
+        .filter((photo) => photo.includedInReport)
         .map((photo) => photo.id);
 
       setSelectedPhotos(alreadyIncluded);
@@ -460,9 +444,7 @@ const Galerie = ({ role = "coordinator" }) => {
    */
 
   const filteredPhotos = (
-    selectionMode
-      ? bilanCandidates
-      : photos
+    selectionMode ? bilanCandidates : photos
   )
     .filter((photo) => {
       const search = searchValue
@@ -514,9 +496,7 @@ const Galerie = ({ role = "coordinator" }) => {
 
   const handleSaveSelection = async () => {
     try {
-      await saveBilanSelection(
-        selectedPhotos
-      );
+      await saveBilanSelection(selectedPhotos);
 
       /*
        * Backend expects the COMPLETE list
@@ -554,39 +534,26 @@ const Galerie = ({ role = "coordinator" }) => {
     try {
       setError("");
 
-      const response =
-        await getBilanCandidates();
+      const response = await getBilanCandidates();
 
-      const data = Array.isArray(
-        response.data
-      )
+      const data = Array.isArray(response.data)
         ? response.data
         : response.data?.results || [];
 
       const currentlyIncludedIds = data
-        .filter(
-          (p) => p.inclus_bilan
-        )
+        .filter((p) => p.inclus_bilan)
         .map((p) => p.id);
 
       const isCurrentlyIncluded =
-        currentlyIncludedIds.includes(
-          photo.id
-        );
+        currentlyIncludedIds.includes(photo.id);
 
-      const newSelection =
-        isCurrentlyIncluded
-          ? currentlyIncludedIds.filter(
-              (id) => id !== photo.id
-            )
-          : [
-              ...currentlyIncludedIds,
-              photo.id,
-            ];
+      const newSelection = isCurrentlyIncluded
+        ? currentlyIncludedIds.filter(
+            (id) => id !== photo.id
+          )
+        : [...currentlyIncludedIds, photo.id];
 
-      await saveBilanSelection(
-        newSelection
-      );
+      await saveBilanSelection(newSelection);
 
       /*
        * Refresh local state so inclus_bilan
@@ -596,8 +563,7 @@ const Galerie = ({ role = "coordinator" }) => {
       await fetchPhotos();
 
       setSelectedPhoto((prev) =>
-        prev &&
-        prev.id === photo.id
+        prev && prev.id === photo.id
           ? {
               ...prev,
               includedInReport:
@@ -623,13 +589,12 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    */
 
-  const handleApprovePhoto = async (
-    photoId
-  ) => {
+  const handleApprovePhoto = async (photoId) => {
     try {
       await approvePhoto(photoId);
 
       /*
+       * Don't only modify React state.
        * Reload backend data.
        */
 
@@ -658,10 +623,7 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    */
 
-  const handleRefusePhoto = async (
-    photoId,
-    reason
-  ) => {
+  const handleRefusePhoto = async (photoId, reason) => {
     try {
       await refusePhoto(photoId, {
         motif_refus: reason,
@@ -692,9 +654,7 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    */
 
-  const handleReexaminePhoto = async (
-    photoId
-  ) => {
+  const handleReexaminePhoto = async (photoId) => {
     try {
       await reexaminePhoto(photoId);
 
@@ -703,6 +663,11 @@ const Galerie = ({ role = "coordinator" }) => {
       if (isAdmin) {
         await fetchPendingCount();
       }
+
+      /*
+       * Close the popup and go back to gallery
+       * after successful reexamination.
+       */
 
       setShowRefusee(false);
     } catch (err) {
@@ -726,12 +691,10 @@ const Galerie = ({ role = "coordinator" }) => {
   if (loading) {
     return (
       <div className="h-screen bg-white flex">
-        <Sidebar />
+        <Sidebar role={role} />
 
         <main className="flex-1 flex items-center justify-center">
-          <p>
-            Chargement des photos...
-          </p>
+          <p>Chargement des photos...</p>
         </main>
       </div>
     );
@@ -739,16 +702,12 @@ const Galerie = ({ role = "coordinator" }) => {
 
   /*
    * ============================================================
-   * RETURN
+   * GALLERY
    * ============================================================
    */
 
   return (
     <>
-      {/* ======================================================
-          GALLERY
-      ====================================================== */}
-
       <div
         className={`${
           showAjouterPhoto ||
@@ -761,52 +720,27 @@ const Galerie = ({ role = "coordinator" }) => {
             : "flex"
         } h-screen bg-white overflow-hidden`}
       >
-        {/* Sidebar gets the REAL authenticated role */}
-        <Sidebar />
+        <Sidebar role={role} />
 
         <main className="flex-1 flex flex-col h-screen overflow-hidden">
-
-          {/* ==================================================
-              HEADER
-          ================================================== */}
+          {/* HEADER */}
 
           <GalleryHeader
-            /*
-             * chef_coordinator is deliberately passed as
-             * "coordinator" here so the page uses exactly
-             * the coordinator header.
-             */
-            role={galerieRole}
+            role={role}
             selectionMode={selectionMode}
-            onAdd={() =>
-              setShowPopupPhoto(true)
-            }
-            onSelection={
-              handleStartSelection
-            }
-            onCancelSelection={
-              handleCancelSelection
-            }
+            onAdd={() => setShowPopupPhoto(true)}
+            onSelection={handleStartSelection}
+            onCancelSelection={handleCancelSelection}
             searchValue={searchValue}
-            setSearchValue={
-              setSearchValue
-            }
-            photosEnAttente={
-              pendingCount
-            }
-            photosSelectionnees={
-              selectedPhotos.length
-            }
+            setSearchValue={setSearchValue}
+            photosEnAttente={pendingCount}
+            photosSelectionnees={selectedPhotos.length}
             onAlertClick={() =>
-              setShowPendingPhotosPage(
-                true
-              )
+              setShowPendingPhotosPage(true)
             }
           />
 
-          {/* ==================================================
-              ERROR
-          ================================================== */}
+          {/* ERROR */}
 
           {error && (
             <div className="px-8 pt-3 text-red-600 text-sm">
@@ -814,49 +748,28 @@ const Galerie = ({ role = "coordinator" }) => {
             </div>
           )}
 
-          {/* ==================================================
-              FILTERS
-          ================================================== */}
+          {/* FILTERS */}
 
           {!selectionMode && (
             <GalleryFilters
-              selectedFilter={
-                selectedFilter
-              }
-              setSelectedFilter={
-                setSelectedFilter
-              }
+              selectedFilter={selectedFilter}
+              setSelectedFilter={setSelectedFilter}
             />
           )}
 
-          {/* ==================================================
-              SCROLLABLE GALLERY
-          ================================================== */}
+          {/* GALLERY */}
 
           <div className="flex-1 overflow-y-auto">
-
             <GalleryGrid
               photos={filteredPhotos}
-              selectedFilter={
-                selectedFilter
-              }
-              onPhotoClick={
-                handlePhotoClick
-              }
-              selectionMode={
-                selectionMode
-              }
-              selectedPhotos={
-                selectedPhotos
-              }
-              setSelectedPhotos={
-                setSelectedPhotos
-              }
+              selectedFilter={selectedFilter}
+              onPhotoClick={handlePhotoClick}
+              selectionMode={selectionMode}
+              selectedPhotos={selectedPhotos}
+              setSelectedPhotos={setSelectedPhotos}
             />
 
-            {/* ==================================================
-                SELECTION BUTTON
-            ================================================== */}
+            {/* SELECTION BUTTON */}
 
             {selectionMode && (
               <div className="sticky bottom-0 flex justify-end px-8 py-4 bg-white">
@@ -864,9 +777,7 @@ const Galerie = ({ role = "coordinator" }) => {
                   title="Sauvegarder les photos"
                   variant="changer"
                   noWrapperPadding
-                  onClick={
-                    handleSaveSelection
-                  }
+                  onClick={handleSaveSelection}
                 />
               </div>
             )}
@@ -881,15 +792,9 @@ const Galerie = ({ role = "coordinator" }) => {
       {showPopupPhoto && (
         <PopupPhoto
           open={showPopupPhoto}
-          onClose={() =>
-            setShowPopupPhoto(false)
-          }
-          onImageSelected={
-            handleImageSelected
-          }
-          onStartAddPhoto={
-            handleStartAddPhoto
-          }
+          onClose={() => setShowPopupPhoto(false)}
+          onImageSelected={handleImageSelected}
+          onStartAddPhoto={handleStartAddPhoto}
         />
       )}
 
@@ -903,25 +808,13 @@ const Galerie = ({ role = "coordinator" }) => {
 
           <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
             <AjouterPhoto
-              initialImage={
-                selectedImage
-              }
-              initialImageFile={
-                selectedImageFile
-              }
-              onSave={
-                handleAddPhoto
-              }
+              initialImage={selectedImage}
+              initialImageFile={selectedImageFile}
+              onSave={handleAddPhoto}
               onClose={() => {
-                setShowAjouterPhoto(
-                  false
-                );
-                setSelectedImage(
-                  null
-                );
-                setSelectedImageFile(
-                  null
-                );
+                setShowAjouterPhoto(false);
+                setSelectedImage(null);
+                setSelectedImageFile(null);
               }}
             />
           </div>
@@ -930,25 +823,13 @@ const Galerie = ({ role = "coordinator" }) => {
 
           <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
             <AjouterPhoto
-              initialImage={
-                selectedImage
-              }
-              initialImageFile={
-                selectedImageFile
-              }
-              onSave={
-                handleAddPhoto
-              }
+              initialImage={selectedImage}
+              initialImageFile={selectedImageFile}
+              onSave={handleAddPhoto}
               onClose={() => {
-                setShowAjouterPhoto(
-                  false
-                );
-                setSelectedImage(
-                  null
-                );
-                setSelectedImageFile(
-                  null
-                );
+                setShowAjouterPhoto(false);
+                setSelectedImage(null);
+                setSelectedImageFile(null);
               }}
             />
           </div>
@@ -956,7 +837,7 @@ const Galerie = ({ role = "coordinator" }) => {
       )}
 
       {/* ======================================================
-          CONSULTER PHOTO
+          CONSULTER
       ====================================================== */}
 
       {showConsulter && (
@@ -965,35 +846,19 @@ const Galerie = ({ role = "coordinator" }) => {
 
           <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
             <ConsulterPhoto
-              /*
-               * IMPORTANT:
-               * chef_coordinator receives "coordinator"
-               * so it gets the exact coordinator behavior.
-               */
-              role={galerieRole}
+              role={role}
               photo={selectedPhoto}
               includedInReport={
-                selectedPhoto?.includedInReport ||
-                false
+                selectedPhoto?.includedInReport || false
               }
               onToggleReport={() =>
-                handleToggleReport(
-                  selectedPhoto
-                )
+                handleToggleReport(selectedPhoto)
               }
               onEdit={() => {
-                setShowConsulter(
-                  false
-                );
-                setShowModifier(
-                  true
-                );
+                setShowConsulter(false);
+                setShowModifier(true);
               }}
-              onClose={() =>
-                setShowConsulter(
-                  false
-                )
-              }
+              onClose={() => setShowConsulter(false)}
             />
           </div>
 
@@ -1001,30 +866,19 @@ const Galerie = ({ role = "coordinator" }) => {
 
           <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
             <ConsulterPhoto
-              role={galerieRole}
+              role={role}
               photo={selectedPhoto}
               includedInReport={
-                selectedPhoto?.includedInReport ||
-                false
+                selectedPhoto?.includedInReport || false
               }
               onToggleReport={() =>
-                handleToggleReport(
-                  selectedPhoto
-                )
+                handleToggleReport(selectedPhoto)
               }
               onEdit={() => {
-                setShowConsulter(
-                  false
-                );
-                setShowModifier(
-                  true
-                );
+                setShowConsulter(false);
+                setShowModifier(true);
               }}
-              onClose={() =>
-                setShowConsulter(
-                  false
-                )
-              }
+              onClose={() => setShowConsulter(false)}
             />
           </div>
         </>
@@ -1042,26 +896,18 @@ const Galerie = ({ role = "coordinator" }) => {
             <PhotoEnAttente
               photo={selectedPhoto}
               onClose={() =>
-                setShowEnAttente(
-                  false
-                )
+                setShowEnAttente(false)
               }
               onEdit={() => {
-                setShowEnAttente(
-                  false
-                );
-                setShowModifier(
-                  true
-                );
+                setShowEnAttente(false);
+                setShowModifier(true);
               }}
               onApprove={() =>
                 handleApprovePhoto(
                   selectedPhoto.id
                 )
               }
-              onConfirmRefusal={(
-                reason
-              ) =>
+              onConfirmRefusal={(reason) =>
                 handleRefusePhoto(
                   selectedPhoto.id,
                   reason
@@ -1076,26 +922,18 @@ const Galerie = ({ role = "coordinator" }) => {
             <PhotoEnAttente
               photo={selectedPhoto}
               onClose={() =>
-                setShowEnAttente(
-                  false
-                )
+                setShowEnAttente(false)
               }
               onEdit={() => {
-                setShowEnAttente(
-                  false
-                );
-                setShowModifier(
-                  true
-                );
+                setShowEnAttente(false);
+                setShowModifier(true);
               }}
               onApprove={() =>
                 handleApprovePhoto(
                   selectedPhoto.id
                 )
               }
-              onConfirmRefusal={(
-                reason
-              ) =>
+              onConfirmRefusal={(reason) =>
                 handleRefusePhoto(
                   selectedPhoto.id,
                   reason
@@ -1107,7 +945,7 @@ const Galerie = ({ role = "coordinator" }) => {
       )}
 
       {/* ======================================================
-          MODIFIER PHOTO
+          MODIFIER
       ====================================================== */}
 
       {showModifier && (
@@ -1118,13 +956,9 @@ const Galerie = ({ role = "coordinator" }) => {
             <ModifierPhoto
               photo={selectedPhoto}
               onClose={() =>
-                setShowModifier(
-                  false
-                )
+                setShowModifier(false)
               }
-              onSave={
-                handleSavePhoto
-              }
+              onSave={handleSavePhoto}
             />
           </div>
 
@@ -1134,13 +968,9 @@ const Galerie = ({ role = "coordinator" }) => {
             <ModifierPhoto
               photo={selectedPhoto}
               onClose={() =>
-                setShowModifier(
-                  false
-                )
+                setShowModifier(false)
               }
-              onSave={
-                handleSavePhoto
-              }
+              onSave={handleSavePhoto}
             />
           </div>
         </>
@@ -1156,12 +986,10 @@ const Galerie = ({ role = "coordinator" }) => {
 
           <div className="hidden lg:flex fixed inset-0 bg-black/30 items-center justify-center z-50">
             <PhotoRefusee
-              role={galerieRole}
+              role={role}
               photo={selectedPhoto}
               onClose={() =>
-                setShowRefusee(
-                  false
-                )
+                setShowRefusee(false)
               }
               onReexamine={() =>
                 handleReexaminePhoto(
@@ -1175,12 +1003,10 @@ const Galerie = ({ role = "coordinator" }) => {
 
           <div className="lg:hidden fixed inset-0 z-50 bg-white overflow-y-auto">
             <PhotoRefusee
-              role={galerieRole}
+              role={role}
               photo={selectedPhoto}
               onClose={() =>
-                setShowRefusee(
-                  false
-                )
+                setShowRefusee(false)
               }
               onReexamine={() =>
                 handleReexaminePhoto(
@@ -1204,19 +1030,11 @@ const Galerie = ({ role = "coordinator" }) => {
             <PendingPhotosPage
               photos={pendingPhotos}
               onBack={() =>
-                setShowPendingPhotosPage(
-                  false
-                )
+                setShowPendingPhotosPage(false)
               }
-              onApprove={
-                handleApprovePhoto
-              }
-              onRefuse={
-                handleRefusePhoto
-              }
-              onAddPhoto={
-                handleAddPhoto
-              }
+              onApprove={handleApprovePhoto}
+              onRefuse={handleRefusePhoto}
+              onAddPhoto={handleAddPhoto}
             />
           </div>
 
@@ -1226,19 +1044,11 @@ const Galerie = ({ role = "coordinator" }) => {
             <PendingPhotosPage
               photos={pendingPhotos}
               onBack={() =>
-                setShowPendingPhotosPage(
-                  false
-                )
+                setShowPendingPhotosPage(false)
               }
-              onApprove={
-                handleApprovePhoto
-              }
-              onRefuse={
-                handleRefusePhoto
-              }
-              onAddPhoto={
-                handleAddPhoto
-              }
+              onApprove={handleApprovePhoto}
+              onRefuse={handleRefusePhoto}
+              onAddPhoto={handleAddPhoto}
             />
           </div>
         </>
