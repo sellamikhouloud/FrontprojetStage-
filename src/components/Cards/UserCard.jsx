@@ -1,4 +1,5 @@
-import { User, Camera } from "lucide-react";
+import { Camera } from "lucide-react";
+import userIcon from "../../assets/user.svg"; 
 
 /**
  * UserCard — carte profil utilisateur (avatar + nom/id + badge rôle)
@@ -65,12 +66,10 @@ export default function UserCard({
               className="w-full h-full object-cover"
             />
           ) : (
-            <User
-              size={64}
-              color="#EAF6F2"
-              fill="#EAF6F2"
-              strokeWidth={0}
-              style={{ transform: "translateY(4px)" }}
+            <img
+              src={userIcon}
+              alt="Avatar par défaut"
+              className="w-17 h-17 translate-y-[2px]"
             />
           )}
         </div>
@@ -97,12 +96,7 @@ export default function UserCard({
         )}
       </div>
 
-      {/*
-        Bloc droit : contient le nom/id ET le badge rôle.
-        - Mobile (par défaut) : flex-col -> le badge tombe SOUS le nom/id.
-        - >= sm : flex-row -> on retrouve la mise en page originale,
-          nom/id à gauche, badge poussé à droite via sm:ml-auto.
-      */}
+      {/* Bloc droit : nom/id + badge rôle */}
       <div
         className="
           flex
@@ -115,15 +109,12 @@ export default function UserCard({
           sm:gap-8
         "
       >
-        {/* Nom + id */}
-        {/* Nom */}
-<div className="flex flex-col justify-center min-w-0">
-  <p className="text-[20px] font-extrabold text-black leading-tight truncate">
-    {nom}
-  </p>
-</div>
+        <div className="flex flex-col justify-center min-w-0">
+          <p className="text-[20px] font-extrabold text-black leading-tight truncate">
+            {nom}
+          </p>
+        </div>
 
-        {/* Badge rôle */}
         <div
           className="
             self-start
