@@ -722,7 +722,7 @@ const Galerie = ({ role = "coordinator" }) => {
       >
         <Sidebar role={role} />
 
-        <main className="flex-1 flex flex-col h-screen overflow-hidden">
+        <main className="flex-1 flex flex-col h-screen overflow-hidden pt-[45px] lg:pt-0">
           {/* HEADER */}
 
           <GalleryHeader
