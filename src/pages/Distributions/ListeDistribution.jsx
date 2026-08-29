@@ -425,7 +425,7 @@ const historiqueMouvements = mapHistorique(historiqueData);
   </div>
 </div>
 
-         {user?.role === "admin" ? (
+       {user?.role === "admin" ? (
   <NavigationHeader
     title="Liste des distributions"
     type="share"
@@ -435,10 +435,16 @@ const historiqueMouvements = mapHistorique(historiqueData);
     secondActionTitle="Ajouter une distribution"
     onSecondAction={() => navigate("/ajout-distribution")}
   />
+) : user?.role === "chef_coordinator" ? (
+  <NavigationHeader
+    title="Liste des distributions"
+    secondType="add"
+    secondActionTitle="Ajouter une distribution"
+    onSecondAction={() => navigate("/ajout-distribution")}
+  />
 ) : (
   <NavigationHeader
     title="Liste des distributions"
-   
   />
 )}
 
