@@ -1,92 +1,70 @@
 import { useEffect, useState } from "react";
-
 import { useNavigate } from "react-router-dom";
-
 import { useAuth } from "../../components/providers/AuthProvider";
-
 import { getDashboard } from "@/lib/api/dashboard";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
-
 import PopupStockBas from "../../components/Popups/PopupStockBas";
-
 import WelcomeCard from "../../components/DashbordCard/WelcomeCard";
-
 import AlertBanner from "../../components/AlertComposant/AlertBanner";
-
 import FamilyStatusCard from "../../components/DashbordCard/FamilyStatusCard";
-
 import VisitsCard from "../../components/DashbordCard/VisitsCard";
-
 import NutritionCard from "../../components/DashbordCard/NutritionCard";
-
 import DistributionCard from "../../components/DashbordCard/DistributionCard";
-
 import CoordinatorCard from "../../components/DashbordCard/CoordinatorCard";
-
 import ZakatCard from "../../components/DashbordCard/ZakatCard";
-
 import DonorCard from "../../components/DashbordCard/DonorCard";
 
 import PopupRetard from "../../components/Popups/Popupvisiteretard";
-
 import PopupMas from "../../components/Popups/PopupMas";
-
 import PopupDistribution from "../../components/Popups/Popupdistributions";
 
 import AttentionIcon from "../../assets/Attention.svg";
-
 import RetardIcon from "../../assets/retard.svg";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
-  /* =========================================================
-     AUTHENTICATED USER
-  ========================================================= */
-
   const { user } = useAuth();
 
-  /* =========================================================
-     DASHBOARD API DATA
-  ========================================================= */
+  // =========================================================
+  // DASHBOARD API DATA
+  // =========================================================
 
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  /* =========================================================
-     POPUPS
-  ========================================================= */
+  // =========================================================
+  // POPUPS
+  // =========================================================
 
   const [showHistorique, setShowHistorique] = useState(false);
   const [showBas, setShowBas] = useState(false);
   const [showRetard, setShowRetard] = useState(false);
   const [showMas, setShowMas] = useState(false);
 
-  /* =========================================================
-     EXACT LOW STOCK COUNT
-  ========================================================= */
+  // =========================================================
+  // LOW STOCK COUNT
+  // =========================================================
 
   const [lowStockCount, setLowStockCount] = useState(0);
 
-  /* =========================================================
-     REAL USER INFORMATION
-  ========================================================= */
+  // =========================================================
+  // USER INFORMATION
+  // =========================================================
 
   const userName =
-    [user?.prenom, user?.nom]
-      .filter(Boolean)
-      .join(" ") || "Utilisateur";
+    [user?.prenom, user?.nom].filter(Boolean).join(" ") ||
+    "Utilisateur";
 
   const subtitle =
     "Voici un aperçu des activités de votre association.";
 
   const notificationCount = 2;
 
-  /* =========================================================
-     GET DASHBOARD DATA
-  ========================================================= */
+  // =========================================================
+  // GET DASHBOARD DATA
+  // =========================================================
 
   useEffect(() => {
     const fetchDashboard = async () => {
@@ -115,9 +93,9 @@ const Dashboard = () => {
     fetchDashboard();
   }, []);
 
-  /* =========================================================
-     LOADING
-  ========================================================= */
+  // =========================================================
+  // LOADING
+  // =========================================================
 
   if (loading) {
     return (
@@ -140,9 +118,9 @@ const Dashboard = () => {
     );
   }
 
-  /* =========================================================
-     ERROR
-  ========================================================= */
+  // =========================================================
+  // ERROR
+  // =========================================================
 
   if (error || !dashboardData) {
     return (
@@ -190,9 +168,9 @@ const Dashboard = () => {
     );
   }
 
-  /* =========================================================
-     BACKEND DATA
-  ========================================================= */
+  // =========================================================
+  // BACKEND DATA
+  // =========================================================
 
   const alertes = dashboardData.alertes || {};
 
@@ -232,9 +210,9 @@ const Dashboard = () => {
   const donateurs =
     dashboardData.donateurs || {};
 
-  /* =========================================================
-     ALERTS
-  ========================================================= */
+  // =========================================================
+  // ALERTS
+  // =========================================================
 
   const alerts = [
     {
@@ -272,12 +250,9 @@ const Dashboard = () => {
     },
   ];
 
-  /* =========================================================
-     FAMILY STATUS
-  ========================================================= */
-
-  const familyStatusTitle =
-    "Statut des familles";
+  // =========================================================
+  // FAMILY STATUS
+  // =========================================================
 
   const familyStats = [
     {
@@ -303,11 +278,9 @@ const Dashboard = () => {
     },
   ];
 
-  /* =========================================================
-     VISITS
-  ========================================================= */
-
-  const visitsTitle = "Visites";
+  // =========================================================
+  // VISITS
+  // =========================================================
 
   const completedVisits =
     visites.nb_realisees || 0;
@@ -322,12 +295,9 @@ const Dashboard = () => {
         )
       : 0;
 
-  /* =========================================================
-     NUTRITION
-  ========================================================= */
-
-  const nutritionTitle =
-    "État nutritionnel";
+  // =========================================================
+  // NUTRITION
+  // =========================================================
 
   const normalPercentage =
     nutritionStatuses.find(
@@ -344,12 +314,9 @@ const Dashboard = () => {
       (item) => item.statut === "mas"
     )?.pourcentage || 0;
 
-  /* =========================================================
-     DISTRIBUTION
-  ========================================================= */
-
-  const distributionTitle =
-    "Distribution";
+  // =========================================================
+  // DISTRIBUTION
+  // =========================================================
 
   const products =
     Object.entries(distributions).map(
@@ -370,9 +337,9 @@ const Dashboard = () => {
       })
     );
 
-  /* =========================================================
-     LOW STOCK
-  ========================================================= */
+  // =========================================================
+  // LOW STOCK
+  // =========================================================
 
   const lowStockProducts =
     stockAlerts.map((alert) => ({
@@ -382,18 +349,12 @@ const Dashboard = () => {
       unit: "",
     }));
 
-  /* =========================================================
-     COORDINATORS
-  ========================================================= */
-
-  const coordinatorTitle =
-    "Coordinateurs";
+  // =========================================================
+  // COORDINATORS
+  // =========================================================
 
   const coordinatorCount =
     coordinateurs.nb_coordinateur || 0;
-
-  const coordinatorLabel =
-    "Coordinateurs";
 
   const lastConnection =
     coordinateurs.derniere_connexion?.last_login
@@ -408,32 +369,18 @@ const Dashboard = () => {
         })
       : "Aucune connexion";
 
-  const lastConnectionLabel =
-    "Dernière connexion";
-
-  const manageCoordinatorText =
-    "Gerer les coordinateurs";
-
-  /* =========================================================
-     ZAKAT
-  ========================================================= */
-
-  const zakatTitle = "Zakat";
+  // =========================================================
+  // ZAKAT
+  // =========================================================
 
   const remainingBalanceMRU =
     `${zakat.solde_restant || "0.00"} MRU`;
 
   const monthlyDistributedMRU =
-    `${
-      zakat.montant_total_verse_ce_mois ||
-      "0.00"
-    } MRU`;
+    `${zakat.montant_total_verse_ce_mois || "0.00"} MRU`;
 
   const monthlyDistributedEUR =
-    `${
-      zakat.montant_total_verse_ce_mois ||
-      "0.00"
-    } EUR`;
+    `${zakat.montant_total_verse_ce_mois || "0.00"} EUR`;
 
   const remainingBalanceEUR =
     zakat.taux_change_actuel
@@ -446,11 +393,9 @@ const Dashboard = () => {
   const exchangeRate =
     zakat.taux_change_actuel || "0.00";
 
-  /* =========================================================
-     DONORS
-  ========================================================= */
-
-  const donorTitle = "Donateurs";
+  // =========================================================
+  // DONORS
+  // =========================================================
 
   const totalDonors =
     donateurs.nb_total || 0;
@@ -461,9 +406,9 @@ const Dashboard = () => {
   const newDonorsThisMonth =
     donateurs.nb_nouveaux_ce_mois || 0;
 
-  /* =========================================================
-     MAS POPUP
-  ========================================================= */
+  // =========================================================
+  // MAS POPUP
+  // =========================================================
 
   const familleMas =
     malnutritionAlerts.map((alert) => ({
@@ -481,9 +426,9 @@ const Dashboard = () => {
       ],
     }));
 
-  /* =========================================================
-     RETARD POPUP
-  ========================================================= */
+  // =========================================================
+  // RETARD POPUP
+  // =========================================================
 
   const familleRetard =
     retardAlerts.map((alert) => ({
@@ -501,9 +446,9 @@ const Dashboard = () => {
       ],
     }));
 
-  /* =========================================================
-     HANDLERS
-  ========================================================= */
+  // =========================================================
+  // HANDLERS
+  // =========================================================
 
   const handleAlertClick = (alert) => {
     switch (alert.id) {
@@ -524,9 +469,9 @@ const Dashboard = () => {
     }
   };
 
-  /* =========================================================
-     RENDER
-  ========================================================= */
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -540,13 +485,26 @@ const Dashboard = () => {
         user={user}
       />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
+      <main
+        className="
+          flex-1
+          overflow-y-auto
+          px-5
+          pt-18
+          md:pt-0
+          pb-8
+          md:p-8
+          lg:p-10
+          bg-white
+        "
+      >
 
         {/* ===================================================
-            DESKTOP WELCOME
+            WELCOME
+            Visible à partir de md
         =================================================== */}
 
-        <div className="hidden lg:block">
+        <div className="hidden md:block">
           <WelcomeCard
             userName={userName}
             subtitle={subtitle}
@@ -562,15 +520,16 @@ const Dashboard = () => {
 
         {/* ===================================================
             ALERTS
+            Mobile : vertical
+            Tablet/Desktop : 3 colonnes
         =================================================== */}
 
         <div
           className="
-            flex
-            flex-col
+            flex flex-col
             gap-[8px]
-            lg:grid
-            lg:grid-cols-3
+            md:grid
+            md:grid-cols-3
             pt-3
             pb-3
           "
@@ -594,7 +553,9 @@ const Dashboard = () => {
         </div>
 
         {/* ===================================================
-            MOBILE
+            MOBILE ONLY
+            IMPORTANT :
+            md:hidden = uniquement téléphone
         =================================================== */}
 
         <div
@@ -602,11 +563,11 @@ const Dashboard = () => {
             flex
             flex-col
             gap-[18px]
-            lg:hidden
+            md:hidden
           "
         >
           <FamilyStatusCard
-            title={familyStatusTitle}
+            title="Statut des familles"
             stats={familyStats}
             onClick={() =>
               navigate("/liste-famille")
@@ -614,10 +575,8 @@ const Dashboard = () => {
           />
 
           <NutritionCard
-            title={nutritionTitle}
-            normalPercentage={
-              normalPercentage
-            }
+            title="État nutritionnel"
+            normalPercentage={normalPercentage}
             mamPercentage={mamPercentage}
             masPercentage={masPercentage}
             normalColor="#69B89C"
@@ -630,14 +589,12 @@ const Dashboard = () => {
           />
 
           <DistributionCard
-            title={distributionTitle}
+            title="Distribution"
             products={products}
             dividerColor="#4E9F8A"
             viewAllText="Voir tous"
             onClick={() =>
-              navigate(
-                "/liste-distributions"
-              )
+              navigate("/liste-distributions")
             }
             onViewAllClick={() =>
               setShowHistorique(true)
@@ -645,19 +602,11 @@ const Dashboard = () => {
           />
 
           <VisitsCard
-            title={visitsTitle}
-            completedVisits={
-              completedVisits
-            }
-            expectedVisits={
-              expectedVisits
-            }
-            compliancePercentage={
-              compliancePercentage
-            }
-            progressValue={
-              compliancePercentage
-            }
+            title="Visites"
+            completedVisits={completedVisits}
+            expectedVisits={expectedVisits}
+            compliancePercentage={compliancePercentage}
+            progressValue={compliancePercentage}
             progressMax={100}
             fillColor="#69B89C"
             trackColor="#E8ECEF"
@@ -668,76 +617,50 @@ const Dashboard = () => {
 
           <ZakatCard
             variant="admin"
-            title={zakatTitle}
-            remainingBalanceMRU={
-              remainingBalanceMRU
-            }
-            remainingBalanceEUR={
-              remainingBalanceEUR
-            }
-            monthlyDistributedMRU={
-              monthlyDistributedMRU
-            }
-            monthlyDistributedEUR={
-              monthlyDistributedEUR
-            }
-            beneficiaryFamilies={
-              beneficiaryFamilies
-            }
-            exchangeRate={
-              exchangeRate
-            }
+            title="Zakat"
+            remainingBalanceMRU={remainingBalanceMRU}
+            remainingBalanceEUR={remainingBalanceEUR}
+            monthlyDistributedMRU={monthlyDistributedMRU}
+            monthlyDistributedEUR={monthlyDistributedEUR}
+            beneficiaryFamilies={beneficiaryFamilies}
+            exchangeRate={exchangeRate}
           />
 
           <DonorCard
-            title={donorTitle}
+            title="Donateurs"
             totalDonors={totalDonors}
             activeDonors={activeDonors}
-            newDonorsThisMonth={
-              newDonorsThisMonth
-            }
+            newDonorsThisMonth={newDonorsThisMonth}
             onClick={() =>
-              navigate(
-                "/liste-Donateurs"
-              )
+              navigate("/liste-Donateurs")
             }
           />
 
           <CoordinatorCard
-            title={coordinatorTitle}
-            manageText={
-              manageCoordinatorText
-            }
-            coordinatorCount={
-              coordinatorCount
-            }
-            coordinatorLabel={
-              coordinatorLabel
-            }
-            lastConnection={
-              lastConnection
-            }
-            lastConnectionLabel={
-              lastConnectionLabel
-            }
+            title="Coordinateurs"
+            manageText="Gerer les coordinateurs"
+            coordinatorCount={coordinatorCount}
+            coordinatorLabel="Coordinateurs"
+            lastConnection={lastConnection}
+            lastConnectionLabel="Dernière connexion"
             valueColor="#69B89C"
             onClick={() =>
-              navigate(
-                "/liste-coordinateurs"
-              )
+              navigate("/liste-coordinateurs")
             }
           />
         </div>
 
         {/* ===================================================
-            DESKTOP
+            TABLET + DESKTOP
+            md:grid = à partir de 768px
         =================================================== */}
 
         <div
           className="
             hidden
-            lg:grid
-            grid-cols-[1.2fr_1fr]
+            md:grid
+            grid-cols-1
+            lg:grid-cols-[1.2fr_1fr]
             gap-[18px]
           "
         >
@@ -749,46 +672,34 @@ const Dashboard = () => {
           <div className="flex flex-col gap-[18px]">
 
             <FamilyStatusCard
-              title={familyStatusTitle}
+              title="Statut des familles"
               stats={familyStats}
               onClick={() =>
-                navigate(
-                  "/liste-famille"
-                )
+                navigate("/liste-famille")
               }
             />
 
             <NutritionCard
-              title={nutritionTitle}
-              normalPercentage={
-                normalPercentage
-              }
-              mamPercentage={
-                mamPercentage
-              }
-              masPercentage={
-                masPercentage
-              }
+              title="État nutritionnel"
+              normalPercentage={normalPercentage}
+              mamPercentage={mamPercentage}
+              masPercentage={masPercentage}
               normalColor="#69B89C"
               mamColor="#F4B860"
               masColor="#EB5757"
               trackColor="#E8ECEF"
               onClick={() =>
-                console.log(
-                  "Nutrition"
-                )
+                console.log("Nutrition")
               }
             />
 
             <DistributionCard
-              title={distributionTitle}
+              title="Distribution"
               products={products}
               dividerColor="#4E9F8A"
               viewAllText="Voir tous"
               onClick={() =>
-                navigate(
-                  "/liste-distributions"
-                )
+                navigate("/liste-distributions")
               }
               onViewAllClick={() =>
                 setShowHistorique(true)
@@ -796,27 +707,15 @@ const Dashboard = () => {
             />
 
             <CoordinatorCard
-              title={coordinatorTitle}
-              manageText={
-                manageCoordinatorText
-              }
-              coordinatorCount={
-                coordinatorCount
-              }
-              coordinatorLabel={
-                coordinatorLabel
-              }
-              lastConnection={
-                lastConnection
-              }
-              lastConnectionLabel={
-                lastConnectionLabel
-              }
+              title="Coordinateurs"
+              manageText="Gerer les coordinateurs"
+              coordinatorCount={coordinatorCount}
+              coordinatorLabel="Coordinateurs"
+              lastConnection={lastConnection}
+              lastConnectionLabel="Dernière connexion"
               valueColor="#69B89C"
               onClick={() =>
-                navigate(
-                  "/liste-coordinateurs"
-                )
+                navigate("/liste-coordinateurs")
               }
             />
           </div>
@@ -828,67 +727,37 @@ const Dashboard = () => {
           <div className="flex flex-col gap-[18px]">
 
             <VisitsCard
-              title={visitsTitle}
-              completedVisits={
-                completedVisits
-              }
-              expectedVisits={
-                expectedVisits
-              }
-              compliancePercentage={
-                compliancePercentage
-              }
-              progressValue={
-                compliancePercentage
-              }
+              title="Visites"
+              completedVisits={completedVisits}
+              expectedVisits={expectedVisits}
+              compliancePercentage={compliancePercentage}
+              progressValue={compliancePercentage}
               progressMax={100}
               fillColor="#7BC8C4"
               trackColor="#E8ECEF"
               onClick={() =>
-                console.log(
-                  "Visits"
-                )
+                console.log("Visits")
               }
             />
 
             <ZakatCard
               variant="admin"
-              title={zakatTitle}
-              remainingBalanceMRU={
-                remainingBalanceMRU
-              }
-              remainingBalanceEUR={
-                remainingBalanceEUR
-              }
-              monthlyDistributedMRU={
-                monthlyDistributedMRU
-              }
-              monthlyDistributedEUR={
-                monthlyDistributedEUR
-              }
-              beneficiaryFamilies={
-                beneficiaryFamilies
-              }
-              exchangeRate={
-                exchangeRate
-              }
+              title="Zakat"
+              remainingBalanceMRU={remainingBalanceMRU}
+              remainingBalanceEUR={remainingBalanceEUR}
+              monthlyDistributedMRU={monthlyDistributedMRU}
+              monthlyDistributedEUR={monthlyDistributedEUR}
+              beneficiaryFamilies={beneficiaryFamilies}
+              exchangeRate={exchangeRate}
             />
 
             <DonorCard
-              title={donorTitle}
-              totalDonors={
-                totalDonors
-              }
-              activeDonors={
-                activeDonors
-              }
-              newDonorsThisMonth={
-                newDonorsThisMonth
-              }
+              title="Donateurs"
+              totalDonors={totalDonors}
+              activeDonors={activeDonors}
+              newDonorsThisMonth={newDonorsThisMonth}
               onClick={() =>
-                navigate(
-                  "/liste-Donateurs"
-                )
+                navigate("/liste-Donateurs")
               }
             />
           </div>
@@ -902,9 +771,7 @@ const Dashboard = () => {
       {showHistorique && (
         <PopupDistribution
           title="Distributions ce mois"
-          items={
-            distributionHistory
-          }
+          items={distributionHistory}
           onClose={() =>
             setShowHistorique(false)
           }
@@ -920,9 +787,7 @@ const Dashboard = () => {
         onClose={() =>
           setShowRetard(false)
         }
-        familleretard={
-          familleRetard
-        }
+        familleretard={familleRetard}
       />
 
       {/* =====================================================
@@ -934,9 +799,7 @@ const Dashboard = () => {
         onClose={() =>
           setShowMas(false)
         }
-        familleMas={
-          familleMas
-        }
+        familleMas={familleMas}
       />
 
       {/* =====================================================
