@@ -66,6 +66,24 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
 
   const milkTypeOptions = ["Lait 1er âge", "Lait 2ème âge"];
 
+  /*
+   * IMPORTANT:
+   *
+   * Backend choices:
+   *
+   * ('kg', 'Kg')
+   * ('L', 'Litre')
+   * ('boite', 'Boite')
+   *
+   * Therefore the frontend must send:
+   *
+   * Kg      -> kg
+   * Litres  -> L
+   * boîtes  -> boite
+   */
+
+  const unitOptions = ["Kg", "Litres"];
+
   // =========================================================
   // NORMALIZE TEXT
   // =========================================================
@@ -124,12 +142,7 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
       return "";
     }
 
-    return (
-      product.nom ??
-      product.title ??
-      product.produit?.nom ??
-      ""
-    );
+    return product.nom ?? product.title ?? product.produit?.nom ?? "";
   };
 
   // =========================================================
@@ -174,22 +187,13 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
       case "kg":
         return "Kg";
 
-      case "litre":
-      case "litres":
+      case "L":
+      case "l":
         return "Litres";
 
       case "boite":
       case "boîtes":
         return "boîtes";
-
-      case "sac":
-      case "sacs":
-        return "Sacs";
-
-      case "piece":
-      case "pièce":
-      case "pieces":
-        return "Pièces";
 
       default:
         return unit || "Kg";
@@ -206,16 +210,10 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
         return "kg";
 
       case "Litres":
-        return "litre";
+        return "L";
 
       case "boîtes":
         return "boite";
-
-      case "Sacs":
-        return "sac";
-
-      case "Pièces":
-        return "piece";
 
       default:
         return unit?.toLowerCase() || "kg";
@@ -283,7 +281,7 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
   };
 
   // =========================================================
-  // BACKEND PRODUCT TYPE
+  // GET BACKEND PRODUCT TYPE
   // =========================================================
 
   const getBackendProductType = (displayType) => {
@@ -324,15 +322,15 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
     const normalized = normalizeText(productName);
 
     if (
-      normalized.includes("lait 1er age") ||
-      normalized.includes("1er age")
+      normalized.includes("1er") &&
+      normalized.includes("age")
     ) {
       return "Lait 1er âge";
     }
 
     if (
-      normalized.includes("lait 2eme age") ||
-      normalized.includes("2eme age")
+      normalized.includes("2eme") &&
+      normalized.includes("age")
     ) {
       return "Lait 2ème âge";
     }
@@ -342,11 +340,6 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
 
   // =========================================================
   // IS MILK PRODUCT
-  //
-  // IMPORTANT:
-  // We check BOTH the backend type and the product name.
-  // This makes the milk ChoiceContainer survive reloads
-  // even if the parent object is incomplete.
   // =========================================================
 
   const isMilkProduct = (product) => {
@@ -354,21 +347,23 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
       return false;
     }
 
-    const backendType = normalizeText(
-      product.type_produit ??
-      product.produit?.type_produit ??
-      ""
-    );
-
-    if (backendType === "lait") {
+    /*
+     * First check backend type.
+     */
+    if (
+      product.type_produit === "lait" ||
+      product.produit?.type_produit === "lait"
+    ) {
       return true;
     }
 
-    const productName = getProductName(product);
+    /*
+     * Fallback for products where type_produit might
+     * be missing or inconsistent after reload.
+     */
+    const name = getProductName(product);
 
-    const milkType = getMilkTypeFromName(productName);
-
-    return milkType !== "";
+    return Boolean(getMilkTypeFromName(name));
   };
 
   // =========================================================
@@ -433,163 +428,24 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
 
       grammage_boite:
         grammage !== null &&
-        grammage !== undefined &&
-        grammage !== ""
+        grammage !== undefined
           ? Number(grammage)
           : null,
     };
   };
 
   // =========================================================
-  // EXTRACT PRODUCTS FROM RESPONSE
-  // =========================================================
-
-  const extractProductsFromResponse = (response) => {
-    if (Array.isArray(response?.data)) {
-      return response.data;
-    }
-
-    if (Array.isArray(response?.data?.results)) {
-      return response.data.results;
-    }
-
-    return [];
-  };
-
-  // =========================================================
-  // LOAD COMPLETE PRODUCTS
-  //
-  // IMPORTANT FIX:
-  //
-  // initialProducts may not contain grammage_boite after
-  // a page reload.
-  //
-  // Therefore we ALWAYS retrieve the complete product list
-  // from the backend.
-  // =========================================================
-
-  const loadProductsFromBackend = async () => {
-    try {
-      const response = await listProduits();
-
-      const firstPageProducts =
-        extractProductsFromResponse(response);
-
-      let allProducts = [...firstPageProducts];
-
-      // =====================================================
-      // PAGINATION
-      // =====================================================
-
-      let next = response?.data?.next;
-      let page = 2;
-
-      const MAX_PAGES = 100;
-
-      while (next && page <= MAX_PAGES) {
-        const nextResponse = await listProduits({
-          page,
-        });
-
-        const pageProducts =
-          extractProductsFromResponse(nextResponse);
-
-        allProducts = [
-          ...allProducts,
-          ...pageProducts,
-        ];
-
-        next = nextResponse?.data?.next;
-
-        page += 1;
-      }
-
-      // =====================================================
-      // FORMAT BACKEND DATA
-      // =====================================================
-
-      const formattedBackendProducts = allProducts
-        .map(formatProduct)
-        .filter(
-          (product) =>
-            getProductId(product) !== null &&
-            getProductId(product) !== undefined
-        );
-
-      // =====================================================
-      // FALLBACK TO INITIAL PRODUCTS
-      // =====================================================
-
-      if (formattedBackendProducts.length === 0) {
-        const formattedInitialProducts =
-          (initialProducts || [])
-            .map(formatProduct)
-            .filter(
-              (product) =>
-                getProductId(product) !== null &&
-                getProductId(product) !== undefined
-            );
-
-        setProducts(formattedInitialProducts);
-
-        return;
-      }
-
-      console.log(
-        "Produits complets récupérés depuis le backend :",
-        formattedBackendProducts
-      );
-
-      console.log(
-        "Grammages récupérés :",
-        formattedBackendProducts.map((product) => ({
-          id: product.id,
-          nom: product.title,
-          type: product.type_produit,
-          grammage_boite: product.grammage_boite,
-        }))
-      );
-
-      setProducts(formattedBackendProducts);
-    } catch (error) {
-      console.error(
-        "Erreur récupération des produits :",
-        error
-      );
-
-      // =====================================================
-      // FALLBACK
-      // =====================================================
-
-      const formattedInitialProducts =
-        (initialProducts || [])
-          .map(formatProduct)
-          .filter(
-            (product) =>
-              getProductId(product) !== null &&
-              getProductId(product) !== undefined
-          );
-
-      setProducts(formattedInitialProducts);
-    }
-  };
-
-  // =========================================================
   // INITIAL PRODUCTS
-  //
-  // We first display initialProducts.
-  // Then we retrieve the COMPLETE backend data.
   // =========================================================
 
   useEffect(() => {
-    const formattedProducts =
-      (initialProducts || [])
-        .map(formatProduct)
-        .filter(
-          (product) =>
-            getProductId(product) !== null &&
-            getProductId(product) !== undefined
-        );
+    const formattedProducts = (initialProducts || [])
+      .map(formatProduct)
+      .filter(
+        (product) =>
+          getProductId(product) !== null &&
+          getProductId(product) !== undefined
+      );
 
     console.log(
       "Produits reçus après refresh :",
@@ -597,13 +453,11 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
     );
 
     console.log(
-      "Produits initialement formatés :",
+      "Produits formatés dans StockPopup :",
       formattedProducts
     );
 
     setProducts(formattedProducts);
-
-    loadProductsFromBackend();
   }, [initialProducts]);
 
   // =========================================================
@@ -664,6 +518,22 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
   };
 
   // =========================================================
+  // EXTRACT PRODUCTS FROM RESPONSE
+  // =========================================================
+
+  const extractProductsFromResponse = (response) => {
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+
+    if (Array.isArray(response?.data?.results)) {
+      return response.data.results;
+    }
+
+    return [];
+  };
+
+  // =========================================================
   // FIND CREATED PRODUCT AFTER POST
   // =========================================================
 
@@ -671,8 +541,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
     createdProduct,
     payload
   ) => {
-    const directId =
-      getProductId(createdProduct);
+    const directId = getProductId(
+      createdProduct
+    );
 
     if (
       directId !== null &&
@@ -691,11 +562,14 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
       hasNextPage &&
       page <= MAX_PAGES
     ) {
-      const response =
-        await listProduits({ page });
+      const response = await listProduits({
+        page,
+      });
 
       const pageProducts =
-        extractProductsFromResponse(response);
+        extractProductsFromResponse(
+          response
+        );
 
       allProducts = [
         ...allProducts,
@@ -711,7 +585,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
         hasNextPage = false;
       }
 
-      if (Array.isArray(response?.data)) {
+      if (
+        Array.isArray(response?.data)
+      ) {
         hasNextPage = false;
       }
     }
@@ -732,7 +608,8 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
       matchingProducts =
         matchingProducts.filter(
           (product) =>
-            product?.type_produit === "lait" &&
+            product?.type_produit ===
+              "lait" &&
             Number(
               product?.grammage_boite
             ) ===
@@ -758,15 +635,15 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
       foundProduct =
         [...matchingProducts].sort(
           (a, b) => {
-            const dateA =
-              new Date(
-                a?.audit?.date_creation || 0
-              ).getTime();
+            const dateA = new Date(
+              a?.audit
+                ?.date_creation || 0
+            ).getTime();
 
-            const dateB =
-              new Date(
-                b?.audit?.date_creation || 0
-              ).getTime();
+            const dateB = new Date(
+              b?.audit
+                ?.date_creation || 0
+            ).getTime();
 
             return dateB - dateA;
           }
@@ -815,56 +692,67 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
     }
 
     setProductError("");
-    setEditingProductId(productId);
+
+    setEditingProductId(
+      productId
+    );
 
     const productName =
       getProductName(product);
 
     // =======================================================
-    // MILK
+    // NORMAL PRODUCT
     // =======================================================
 
-    if (isMilkProduct(product)) {
-      const milkType =
-        getMilkTypeFromName(
-          productName
-        );
-
-      console.log(
-        "Modification lait :",
-        {
-          id: productId,
-          nom: productName,
-          type_produit:
-            product.type_produit,
-          grammage_boite:
-            product.grammage_boite,
-          choiceValue: milkType,
-        }
-      );
-
-      // ALWAYS set milk type.
-      setEditingMilkType(
-        milkType
-      );
-
-      // Keep original name internally.
+    if (!isMilkProduct(product)) {
       setEditingProductName(
         productName
       );
+
+      setEditingMilkType("");
 
       return;
     }
 
     // =======================================================
-    // NORMAL PRODUCT
+    // MILK PRODUCT
     // =======================================================
 
+    const milkType =
+      getMilkTypeFromName(
+        productName
+      );
+
+    console.log(
+      "Modification lait :",
+      {
+        id: productId,
+        nom: productName,
+        type_produit:
+          getProductType(product),
+        grammage_boite:
+          getProductGrammage(
+            product
+          ),
+        choiceValue:
+          milkType,
+      }
+    );
+
+    /*
+     * ALWAYS reconstruct the ChoiceContainer
+     * value from the product name.
+     */
+    setEditingMilkType(
+      milkType
+    );
+
+    /*
+     * Keep original name internally.
+     */
     setEditingProductName(
       productName
     );
-
-    setEditingMilkType("");
   };
 
   // =========================================================
@@ -886,427 +774,430 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
   // SAVE PRODUCT NAME
   // =========================================================
 
-  const handleSaveProductName =
-    async () => {
-      if (
-        editingProductId === null ||
-        editingProductId === undefined
-      ) {
+  const handleSaveProductName = async () => {
+    if (
+      editingProductId === null ||
+      editingProductId === undefined
+    ) {
+      setProductError(
+        "Produit invalide."
+      );
+      return;
+    }
+
+    const product =
+      products.find(
+        (item) =>
+          String(item.id) ===
+          String(editingProductId)
+      );
+
+    if (!product) {
+      setProductError(
+        "Produit introuvable."
+      );
+      return;
+    }
+
+    const isMilk =
+      isMilkProduct(product);
+
+    // =====================================================
+    // DETERMINE NEW NAME
+    // =====================================================
+
+    let newName =
+      editingProductName.trim();
+
+    // =====================================================
+    // MILK
+    // =====================================================
+
+    if (isMilk) {
+      if (!editingMilkType) {
         setProductError(
-          "Produit invalide."
+          "Veuillez choisir le type de lait."
         );
         return;
       }
 
-      const product =
-        products.find(
-          (item) =>
-            String(item.id) ===
-            String(editingProductId)
+      newName =
+        getMilkProductName(
+          editingMilkType
         );
 
-      if (!product) {
+      if (!newName) {
         setProductError(
-          "Produit introuvable."
+          "Type de lait invalide."
         );
         return;
       }
+    }
 
-      const isMilk =
-        isMilkProduct(product);
+    // =====================================================
+    // NORMAL PRODUCT
+    // =====================================================
 
-      // =====================================================
-      // DETERMINE NEW NAME
-      // =====================================================
+    if (
+      !isMilk &&
+      !newName
+    ) {
+      setProductError(
+        "Veuillez saisir le nom du produit."
+      );
+      return;
+    }
 
-      let newName =
-        editingProductName.trim();
+    // =====================================================
+    // NEVER ALLOW JUST "LAIT"
+    // =====================================================
 
-      // =====================================================
-      // MILK
-      // =====================================================
+    if (
+      normalizeText(newName) ===
+      "lait"
+    ) {
+      setProductError(
+        "Un produit lait doit être 1er âge ou 2ème âge."
+      );
+      return;
+    }
 
-      if (isMilk) {
-        if (!editingMilkType) {
-          setProductError(
-            "Veuillez choisir le type de lait."
-          );
-          return;
+    // =====================================================
+    // CHECK NAME CHANGE
+    // =====================================================
+
+    const nameChanged =
+      normalizeText(newName) !==
+      normalizeText(product.title);
+
+    if (!nameChanged) {
+      handleCancelEditProduct();
+      return;
+    }
+
+    // =====================================================
+    // DUPLICATE
+    // =====================================================
+
+    const alreadyExists =
+      products.some((item) => {
+        if (
+          String(item.id) ===
+          String(editingProductId)
+        ) {
+          return false;
         }
 
-        newName =
-          getMilkProductName(
-            editingMilkType
-          );
-
-        if (!newName) {
-          setProductError(
-            "Type de lait invalide."
-          );
-          return;
-        }
-      }
-
-      // =====================================================
-      // NORMAL PRODUCT
-      // =====================================================
-
-      if (
-        !isMilk &&
-        !newName
-      ) {
-        setProductError(
-          "Veuillez saisir le nom du produit."
+        return (
+          normalizeText(
+            item.title
+          ) ===
+          normalizeText(
+            newName
+          )
         );
-        return;
-      }
+      });
 
-      // =====================================================
-      // NEVER ALLOW JUST "LAIT"
-      // =====================================================
+    if (alreadyExists) {
+      setProductError(
+        "Ce produit existe déjà."
+      );
+      return;
+    }
 
-      if (
-        normalizeText(newName) ===
-        "lait"
-      ) {
-        setProductError(
-          "Un produit lait doit être 1er âge ou 2ème âge."
-        );
-        return;
-      }
+    setProductError("");
+    setIsEditingProduct(true);
 
-      // =====================================================
-      // CHECK NAME CHANGE
-      // =====================================================
+    try {
+      /*
+       * IMPORTANT:
+       *
+       * ONLY NOM IS SENT.
+       *
+       * We NEVER send grammage_boite.
+       *
+       * Therefore the backend grammage
+       * remains untouched.
+       */
 
-      const nameChanged =
-        normalizeText(newName) !==
-        normalizeText(product.title);
+      const payload = {
+        nom: newName,
+      };
 
-      if (!nameChanged) {
-        handleCancelEditProduct();
-        return;
-      }
+      console.log(
+        "PATCH MODIFICATION PRODUIT"
+      );
 
-      // =====================================================
-      // DUPLICATE
-      // =====================================================
+      console.log(
+        "ID :",
+        editingProductId
+      );
 
-      const alreadyExists =
-        products.some((item) => {
-          if (
-            String(item.id) ===
-            String(editingProductId)
-          ) {
-            return false;
-          }
+      console.log(
+        "Payload :",
+        payload
+      );
 
-          return (
-            normalizeText(
-              item.title
-            ) ===
-            normalizeText(newName)
-          );
-        });
-
-      if (alreadyExists) {
-        setProductError(
-          "Ce produit existe déjà."
-        );
-        return;
-      }
-
-      setProductError("");
-      setIsEditingProduct(true);
-
-      try {
-        // ===================================================
-        // ONLY SEND NAME
-        //
-        // IMPORTANT:
-        // grammage_boite is NOT sent.
-        // ===================================================
-
-        const payload = {
-          nom: newName,
-        };
-
-        console.log(
-          "PATCH MODIFICATION PRODUIT"
-        );
-
-        console.log(
-          "ID :",
-          editingProductId
-        );
-
-        console.log(
-          "Payload :",
+      const response =
+        await updateProduit(
+          editingProductId,
           payload
         );
 
-        const response =
-          await updateProduit(
-            editingProductId,
-            payload
-          );
+      console.log(
+        "Réponse PATCH :",
+        response?.data
+      );
 
-        console.log(
-          "Réponse PATCH :",
-          response?.data
-        );
+      const updatedProduct =
+        response?.data;
 
-        const updatedProduct =
-          response?.data;
-
-        // ===================================================
-        // UPDATE LOCAL PRODUCT
-        //
-        // NEVER replace grammage with null.
-        // ===================================================
-
-        const updatedProducts =
-          products.map(
-            (currentProduct) => {
-              if (
-                String(
-                  currentProduct.id
-                ) !==
-                String(
-                  editingProductId
-                )
-              ) {
-                return currentProduct;
-              }
-
-              return {
-                ...currentProduct,
-
-                id:
-                  getProductId(
-                    updatedProduct
-                  ) ??
-                  currentProduct.id,
-
-                title:
-                  updatedProduct?.nom ??
-                  newName,
-
-                quantity:
-                  formatQuantity(
-                    updatedProduct?.stock_courant ??
-                      currentProduct.quantity
-                  ),
-
-                unit:
-                  getDisplayUnit(
-                    updatedProduct?.unite ??
-                      getBackendUnit(
-                        currentProduct.unit
-                      )
-                  ),
-
-                threshold:
-                  formatQuantity(
-                    updatedProduct?.alerte_seuil ??
-                      currentProduct.threshold
-                  ),
-
-                type_produit:
-                  updatedProduct?.type_produit ??
-                  currentProduct.type_produit,
-
-                // =========================================
-                // VERY IMPORTANT
-                //
-                // Preserve the existing grammage.
-                // =========================================
-
-                grammage_boite:
-                  currentProduct.grammage_boite,
-              };
+      const updatedProducts =
+        products.map(
+          (currentProduct) => {
+            if (
+              String(
+                currentProduct.id
+              ) !==
+              String(
+                editingProductId
+              )
+            ) {
+              return currentProduct;
             }
-          );
 
-        setProducts(
-          updatedProducts
+            return {
+              ...currentProduct,
+
+              id:
+                getProductId(
+                  updatedProduct
+                ) ??
+                currentProduct.id,
+
+              title:
+                updatedProduct?.nom ??
+                newName,
+
+              quantity:
+                formatQuantity(
+                  updatedProduct?.stock_courant ??
+                    currentProduct.quantity
+                ),
+
+              unit:
+                getDisplayUnit(
+                  updatedProduct?.unite ??
+                    getBackendUnit(
+                      currentProduct.unit
+                    )
+                ),
+
+              threshold:
+                formatQuantity(
+                  updatedProduct?.alerte_seuil ??
+                    currentProduct.threshold
+                ),
+
+              type_produit:
+                updatedProduct?.type_produit ??
+                currentProduct.type_produit,
+
+              /*
+               * NEVER CHANGE GRAMMAGE.
+               */
+              grammage_boite:
+                currentProduct.grammage_boite,
+            };
+          }
         );
 
-        saveToDistributionPage(
-          updatedProducts
-        );
+      setProducts(
+        updatedProducts
+      );
 
-        // ===================================================
-        // CLOSE EDIT
-        // ===================================================
+      saveToDistributionPage(
+        updatedProducts
+      );
 
-        setEditingProductId(null);
-        setEditingProductName("");
-        setEditingMilkType("");
-        setProductError("");
-      } catch (error) {
-        console.error(
-          "Erreur modification produit :",
-          error
-        );
+      setEditingProductId(null);
+      setEditingProductName("");
+      setEditingMilkType("");
+      setProductError("");
+    } catch (error) {
+      console.error(
+        "Erreur modification produit :",
+        error
+      );
 
-        setProductError(
-          getBackendErrorMessage(
-            error,
-            "Impossible de modifier le produit."
-          )
-        );
-      } finally {
-        setIsEditingProduct(false);
-      }
-    };
+      setProductError(
+        getBackendErrorMessage(
+          error,
+          "Impossible de modifier le produit."
+        )
+      );
+    } finally {
+      setIsEditingProduct(false);
+    }
+  };
 
   // =========================================================
   // SAVE THRESHOLDS
   // =========================================================
 
-  const handleSaveThresholds =
-    async (updatedThresholds) => {
-      if (
-        !Array.isArray(
-          updatedThresholds
-        ) ||
-        updatedThresholds.length === 0
+  const handleSaveThresholds = async (
+    updatedThresholds
+  ) => {
+    if (
+      !Array.isArray(
+        updatedThresholds
+      ) ||
+      updatedThresholds.length === 0
+    ) {
+      return;
+    }
+
+    setIsSavingThresholds(true);
+    setProductError("");
+
+    try {
+      const updatedProducts =
+        [...products];
+
+      for (
+        const editedProduct of
+        updatedThresholds
       ) {
-        return;
-      }
+        const editedId =
+          getProductId(
+            editedProduct
+          );
 
-      setIsSavingThresholds(true);
-      setProductError("");
-
-      try {
-        const updatedProducts = [
-          ...products,
-        ];
-
-        for (
-          const editedProduct of
-            updatedThresholds
+        if (
+          editedId === null ||
+          editedId === undefined
         ) {
-          const editedId =
-            getProductId(
-              editedProduct
-            );
-
-          if (
-            editedId === null ||
-            editedId === undefined
-          ) {
-            continue;
-          }
-
-          const newThreshold =
-            Number(
-              editedProduct.threshold ??
-                editedProduct.alerte_seuil
-            );
-
-          if (
-            Number.isNaN(
-              newThreshold
-            ) ||
-            newThreshold < 0
-          ) {
-            throw new Error(
-              `Seuil invalide pour le produit ${getProductName(
-                editedProduct
-              )}`
-            );
-          }
-
-          const currentProduct =
-            products.find(
-              (product) =>
-                String(product.id) ===
-                String(editedId)
-            );
-
-          if (!currentProduct) {
-            continue;
-          }
-
-          if (
-            Number(
-              currentProduct.threshold
-            ) !==
-            newThreshold
-          ) {
-            const payload = {
-              alerte_seuil:
-                newThreshold,
-            };
-
-            const response =
-              await modifierSeuil(
-                editedId,
-                payload
-              );
-
-            const backendProduct =
-              response?.data;
-
-            const productIndex =
-              updatedProducts.findIndex(
-                (product) =>
-                  String(product.id) ===
-                  String(editedId)
-              );
-
-            if (
-              productIndex !== -1
-            ) {
-              updatedProducts[
-                productIndex
-              ] = {
-                ...updatedProducts[
-                  productIndex
-                ],
-
-                threshold:
-                  formatQuantity(
-                    backendProduct?.alerte_seuil ??
-                      newThreshold
-                  ),
-
-                grammage_boite:
-                  updatedProducts[
-                    productIndex
-                  ].grammage_boite,
-              };
-            }
-          }
+          continue;
         }
 
-        setProducts(
-          updatedProducts
-        );
+        const newThreshold =
+          Number(
+            editedProduct.threshold ??
+              editedProduct.alerte_seuil
+          );
 
-        saveToDistributionPage(
-          updatedProducts
-        );
+        if (
+          Number.isNaN(
+            newThreshold
+          ) ||
+          newThreshold < 0
+        ) {
+          throw new Error(
+            `Seuil invalide pour le produit ${getProductName(
+              editedProduct
+            )}`
+          );
+        }
 
-        setShowEditPopup(false);
-      } catch (error) {
-        console.error(
-          "Erreur modification seuil :",
-          error
-        );
+        const currentProduct =
+          products.find(
+            (product) =>
+              String(
+                product.id
+              ) ===
+              String(
+                editedId
+              )
+          );
 
-        setProductError(
-          getBackendErrorMessage(
-            error,
-            "Impossible de modifier le seuil."
-          )
-        );
-      } finally {
-        setIsSavingThresholds(false);
+        if (!currentProduct) {
+          continue;
+        }
+
+        if (
+          Number(
+            currentProduct.threshold
+          ) !==
+          newThreshold
+        ) {
+          const payload = {
+            alerte_seuil:
+              newThreshold,
+          };
+
+          const response =
+            await modifierSeuil(
+              editedId,
+              payload
+            );
+
+          const backendProduct =
+            response?.data;
+
+          const productIndex =
+            updatedProducts.findIndex(
+              (product) =>
+                String(
+                  product.id
+                ) ===
+                String(
+                  editedId
+                )
+            );
+
+          if (
+            productIndex !== -1
+          ) {
+            updatedProducts[
+              productIndex
+            ] = {
+              ...updatedProducts[
+                productIndex
+              ],
+
+              threshold:
+                formatQuantity(
+                  backendProduct?.alerte_seuil ??
+                    newThreshold
+                ),
+
+              /*
+               * Preserve grammage.
+               */
+              grammage_boite:
+                updatedProducts[
+                  productIndex
+                ].grammage_boite,
+            };
+          }
+        }
       }
-    };
+
+      setProducts(
+        updatedProducts
+      );
+
+      saveToDistributionPage(
+        updatedProducts
+      );
+
+      setShowEditPopup(false);
+    } catch (error) {
+      console.error(
+        "Erreur modification seuil :",
+        error
+      );
+
+      setProductError(
+        getBackendErrorMessage(
+          error,
+          "Impossible de modifier le seuil."
+        )
+      );
+    } finally {
+      setIsSavingThresholds(false);
+    }
+  };
 
   // =========================================================
   // START INCREMENT
@@ -1335,148 +1226,153 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
   // CONFIRM INCREMENT
   // =========================================================
 
-  const handleConfirm =
-    async () => {
-      if (
-        incrementValue === "" ||
-        Number(incrementValue) <= 0
-      ) {
-        setProductError(
-          "Veuillez saisir une quantité valide."
+  const handleConfirm = async () => {
+    if (
+      incrementValue === "" ||
+      Number(incrementValue) <= 0
+    ) {
+      setProductError(
+        "Veuillez saisir une quantité valide."
+      );
+      return;
+    }
+
+    if (
+      pendingIndex === null
+    ) {
+      return;
+    }
+
+    const product =
+      products[pendingIndex];
+
+    const productId =
+      getProductId(product);
+
+    if (
+      productId === null ||
+      productId === undefined
+    ) {
+      setProductError(
+        "Impossible de modifier ce produit : identifiant manquant."
+      );
+      return;
+    }
+
+    setProductError("");
+    setIsAddingStock(true);
+
+    try {
+      const quantityToAdd =
+        Number(
+          incrementValue
         );
-        return;
-      }
 
-      if (
-        pendingIndex === null
-      ) {
-        return;
-      }
+      const payload = {
+        quantite:
+          String(
+            quantityToAdd
+          ),
+      };
 
-      const product =
-        products[pendingIndex];
-
-      const productId =
-        getProductId(product);
-
-      if (
-        productId === null ||
-        productId === undefined
-      ) {
-        setProductError(
-          "Impossible de modifier ce produit : identifiant manquant."
+      const response =
+        await ajouterStock(
+          productId,
+          payload
         );
-        return;
-      }
 
-      setProductError("");
-      setIsAddingStock(true);
+      const updatedProduct =
+        response?.data;
 
-      try {
-        const quantityToAdd =
-          Number(incrementValue);
-
-        const payload = {
-          quantite:
-            String(quantityToAdd),
-        };
-
-        const response =
-          await ajouterStock(
-            productId,
-            payload
-          );
-
-        const updatedProduct =
-          response?.data;
-
-        const updatedProducts =
-          products.map(
-            (
-              currentProduct,
-              index
-            ) => {
-              if (
-                index !==
-                pendingIndex
-              ) {
-                return currentProduct;
-              }
-
-              return {
-                ...currentProduct,
-
-                id:
-                  getProductId(
-                    updatedProduct
-                  ) ??
-                  currentProduct.id,
-
-                title:
-                  updatedProduct?.nom ??
-                  currentProduct.title,
-
-                quantity:
-                  formatQuantity(
-                    updatedProduct?.stock_courant ??
-                      Number(
-                        currentProduct.quantity
-                      ) +
-                        quantityToAdd
-                  ),
-
-                unit:
-                  getDisplayUnit(
-                    updatedProduct?.unite ??
-                      currentProduct.unit
-                  ),
-
-                threshold:
-                  formatQuantity(
-                    updatedProduct?.alerte_seuil ??
-                      currentProduct.threshold
-                  ),
-
-                type_produit:
-                  updatedProduct?.type_produit ??
-                  currentProduct.type_produit,
-
-                // Preserve grammage
-                grammage_boite:
-                  updatedProduct?.grammage_boite ??
-                  currentProduct.grammage_boite,
-              };
+      const updatedProducts =
+        products.map(
+          (
+            currentProduct,
+            index
+          ) => {
+            if (
+              index !==
+              pendingIndex
+            ) {
+              return currentProduct;
             }
-          );
 
-        setProducts(
-          updatedProducts
+            return {
+              ...currentProduct,
+
+              id:
+                getProductId(
+                  updatedProduct
+                ) ??
+                currentProduct.id,
+
+              title:
+                updatedProduct?.nom ??
+                currentProduct.title,
+
+              quantity:
+                formatQuantity(
+                  updatedProduct?.stock_courant ??
+                    Number(
+                      currentProduct.quantity
+                    ) +
+                      quantityToAdd
+                ),
+
+              unit:
+                getDisplayUnit(
+                  updatedProduct?.unite ??
+                    currentProduct.unit
+                ),
+
+              threshold:
+                formatQuantity(
+                  updatedProduct?.alerte_seuil ??
+                    currentProduct.threshold
+                ),
+
+              type_produit:
+                updatedProduct?.type_produit ??
+                currentProduct.type_produit,
+
+              /*
+               * Preserve grammage.
+               */
+              grammage_boite:
+                updatedProduct?.grammage_boite ??
+                currentProduct.grammage_boite,
+            };
+          }
         );
 
-        saveToDistributionPage(
-          updatedProducts
-        );
+      setProducts(
+        updatedProducts
+      );
 
-        setPendingIndex(null);
-        setIncrementValue("");
-        setBackupProducts([]);
-        setProductError("");
-      } catch (error) {
-        console.error(
-          "Erreur lors de l'ajout du stock :",
-          error
-        );
+      saveToDistributionPage(
+        updatedProducts
+      );
 
-        setProductError(
-          getBackendErrorMessage(
-            error,
-            "Impossible d'ajouter le stock."
-          )
-        );
-      } finally {
-        setIsAddingStock(false);
-      }
-    };
+      setPendingIndex(null);
+      setIncrementValue("");
+      setBackupProducts([]);
+      setProductError("");
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'ajout du stock :",
+        error
+      );
+
+      setProductError(
+        getBackendErrorMessage(
+          error,
+          "Impossible d'ajouter le stock."
+        )
+      );
+    } finally {
+      setIsAddingStock(false);
+    }
+  };
 
   // =========================================================
   // CANCEL INCREMENT
@@ -1497,465 +1393,449 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
   // OPEN ADD PRODUCT
   // =========================================================
 
-  const handleOpenAddProduct =
-    () => {
-      setProductError("");
+  const handleOpenAddProduct = () => {
+    setProductError("");
 
-      setNewProduct({
-        title: "",
-        quantity: 0,
-        unit: "Kg",
-        type_produit: "aliment",
-        laitType: "",
-        grammage_boite: "",
-      });
+    setNewProduct({
+      title: "",
+      quantity: 0,
+      unit: "Kg",
+      type_produit: "aliment",
+      laitType: "",
+      grammage_boite: "",
+    });
 
-      setShowAddProduct(true);
-    };
+    setShowAddProduct(true);
+  };
 
   // =========================================================
   // SELECT PRODUCT TYPE
   // =========================================================
 
-  const handleProductTypeChange =
-    (selectedType) => {
-      const isMilk =
-        selectedType ===
-        "Lait infantile";
+  const handleProductTypeChange = (
+    selectedType
+  ) => {
+    const isMilk =
+      selectedType ===
+      "Lait infantile";
 
-      setProductError("");
+    setProductError("");
 
-      setNewProduct(
-        (previous) => ({
-          ...previous,
+    setNewProduct(
+      (previous) => ({
+        ...previous,
 
-          type_produit:
-            getBackendProductType(
-              selectedType
-            ),
+        type_produit:
+          getBackendProductType(
+            selectedType
+          ),
 
-          title: isMilk
-            ? ""
-            : previous.title,
+        title: isMilk
+          ? ""
+          : previous.title,
 
-          laitType: isMilk
-            ? previous.laitType
-            : "",
+        laitType: isMilk
+          ? previous.laitType
+          : "",
 
-          unit: isMilk
-            ? "boîtes"
-            : previous.unit,
+        /*
+         * Milk ALWAYS uses boite.
+         */
+        unit: isMilk
+          ? "boîtes"
+          : previous.unit,
 
-          grammage_boite:
-            isMilk
-              ? previous.grammage_boite
-              : "",
-        })
-      );
-    };
+        grammage_boite: isMilk
+          ? previous.grammage_boite
+          : "",
+      })
+    );
+  };
 
   // =========================================================
   // SELECT MILK TYPE - ADD
   // =========================================================
 
-  const handleMilkTypeChange =
-    (selectedMilkType) => {
-      const milkName =
-        getMilkProductName(
-          selectedMilkType
-        );
-
-      setProductError("");
-
-      setNewProduct(
-        (previous) => ({
-          ...previous,
-
-          laitType:
-            selectedMilkType,
-
-          title: milkName,
-        })
+  const handleMilkTypeChange = (
+    selectedMilkType
+  ) => {
+    const milkName =
+      getMilkProductName(
+        selectedMilkType
       );
-    };
+
+    setProductError("");
+
+    setNewProduct(
+      (previous) => ({
+        ...previous,
+
+        laitType:
+          selectedMilkType,
+
+        title:
+          milkName,
+      })
+    );
+  };
 
   // =========================================================
   // ADD PRODUCT
   // =========================================================
 
-  const handleAddProduct =
-    async () => {
-      const isMilk =
-        newProduct.type_produit ===
-        "lait";
+  const handleAddProduct = async () => {
+    const isMilk =
+      newProduct.type_produit ===
+      "lait";
 
-      // =====================================================
-      // MILK TYPE
-      // =====================================================
+    // =====================================================
+    // MILK TYPE
+    // =====================================================
 
-      if (
-        isMilk &&
-        !newProduct.laitType
-      ) {
-        setProductError(
-          "Veuillez choisir le type de lait."
+    if (
+      isMilk &&
+      !newProduct.laitType
+    ) {
+      setProductError(
+        "Veuillez choisir le type de lait."
+      );
+      return;
+    }
+
+    let title =
+      newProduct.title.trim();
+
+    if (isMilk) {
+      title =
+        getMilkProductName(
+          newProduct.laitType
         );
-        return;
-      }
-
-      let title =
-        newProduct.title.trim();
-
-      if (isMilk) {
-        title =
-          getMilkProductName(
-            newProduct.laitType
-          );
-
-        if (!title) {
-          setProductError(
-            "Type de lait invalide."
-          );
-          return;
-        }
-      }
-
-      // =====================================================
-      // NAME
-      // =====================================================
 
       if (!title) {
         setProductError(
-          "Veuillez saisir le nom du produit."
+          "Type de lait invalide."
         );
         return;
       }
+    }
 
+    // =====================================================
+    // NAME
+    // =====================================================
+
+    if (!title) {
+      setProductError(
+        "Veuillez saisir le nom du produit."
+      );
+      return;
+    }
+
+    if (
+      normalizeText(title) ===
+      "lait"
+    ) {
+      setProductError(
+        "Un produit lait doit être 1er âge ou 2ème âge."
+      );
+      return;
+    }
+
+    // =====================================================
+    // QUANTITY
+    // =====================================================
+
+    const quantity =
+      Number(
+        newProduct.quantity
+      );
+
+    if (
+      newProduct.quantity ===
+        "" ||
+      Number.isNaN(
+        quantity
+      ) ||
+      quantity < 0
+    ) {
+      setProductError(
+        "Veuillez saisir une quantité valide."
+      );
+      return;
+    }
+
+    // =====================================================
+    // GRAMMAGE
+    // =====================================================
+
+    let grammage = null;
+
+    if (isMilk) {
       if (
-        normalizeText(title) ===
-        "lait"
+        newProduct.grammage_boite ===
+          "" ||
+        newProduct.grammage_boite ===
+          null ||
+        newProduct.grammage_boite ===
+          undefined
       ) {
         setProductError(
-          "Un produit lait doit être 1er âge ou 2ème âge."
+          "Le grammage de la boîte est obligatoire pour un produit de type lait."
         );
         return;
       }
 
-      // =====================================================
-      // QUANTITY
-      // =====================================================
-
-      const quantity =
+      grammage =
         Number(
-          newProduct.quantity
+          newProduct.grammage_boite
         );
 
       if (
-        newProduct.quantity === "" ||
-        Number.isNaN(quantity) ||
-        quantity < 0
+        Number.isNaN(
+          grammage
+        ) ||
+        grammage <= 0
       ) {
         setProductError(
-          "Veuillez saisir une quantité valide."
+          "Le grammage de la boîte doit être supérieur à 0."
         );
         return;
       }
 
-      // =====================================================
-      // GRAMMAGE
-      // =====================================================
+      grammage =
+        Math.round(
+          grammage
+        );
+    }
 
-      let grammage = null;
+    // =====================================================
+    // DUPLICATE
+    // =====================================================
 
-      if (isMilk) {
-        if (
-          newProduct.grammage_boite ===
-            "" ||
-          newProduct.grammage_boite ===
-            null ||
-          newProduct.grammage_boite ===
-            undefined
-        ) {
-          setProductError(
-            "Le grammage de la boîte est obligatoire pour un produit de type lait."
-          );
-          return;
-        }
+    const alreadyExists =
+      products.some(
+        (product) => {
+          const sameName =
+            normalizeText(
+              product.title
+            ) ===
+            normalizeText(
+              title
+            );
 
-        grammage =
-          Number(
-            newProduct.grammage_boite
-          );
-
-        if (
-          Number.isNaN(
-            grammage
-          ) ||
-          grammage <= 0
-        ) {
-          setProductError(
-            "Le grammage de la boîte doit être supérieur à 0."
-          );
-          return;
-        }
-
-        grammage =
-          Math.round(grammage);
-      }
-
-      // =====================================================
-      // DUPLICATE
-      // =====================================================
-
-      const alreadyExists =
-        products.some(
-          (product) => {
-            const sameName =
-              normalizeText(
-                product.title
-              ) ===
-              normalizeText(
-                title
-              );
-
-            if (!sameName) {
-              return false;
-            }
-
-            if (isMilk) {
-              return (
-                product.type_produit ===
-                  "lait" &&
-                Number(
-                  product.grammage_boite
-                ) ===
-                  Number(grammage)
-              );
-            }
-
-            return true;
+          if (!sameName) {
+            return false;
           }
-        );
 
-      if (alreadyExists) {
-        setProductError(
-          "Ce produit existe déjà."
-        );
-        return;
-      }
+          if (isMilk) {
+            return (
+              product.type_produit ===
+                "lait" &&
+              Number(
+                product.grammage_boite
+              ) ===
+                Number(
+                  grammage
+                )
+            );
+          }
 
-      setProductError("");
-      setIsAddingProduct(true);
+          return true;
+        }
+      );
 
-      try {
-        // ===================================================
-        // CREATE PAYLOAD
-        // ===================================================
+    if (alreadyExists) {
+      setProductError(
+        "Ce produit existe déjà."
+      );
+      return;
+    }
 
-        const payload = {
-          nom: title,
+    setProductError("");
+    setIsAddingProduct(true);
 
-          type_produit: isMilk
+    try {
+      // ===================================================
+      // CREATE PAYLOAD
+      // ===================================================
+
+      const payload = {
+        nom: title,
+
+        type_produit:
+          isMilk
             ? "lait"
             : "aliment",
 
-          unite: isMilk
-            ? "boite"
-            : getBackendUnit(
-                newProduct.unit
-              ),
+        /*
+         * Milk -> boite
+         * Aliment -> exact backend unit
+         */
+        unite: isMilk
+          ? "boite"
+          : getBackendUnit(
+              newProduct.unit
+            ),
 
-          stock_courant:
-            String(quantity),
+        stock_courant:
+          String(
+            quantity
+          ),
 
-          alerte_seuil: "1",
+        alerte_seuil:
+          "1",
 
-          grammage_boite:
-            isMilk
-              ? grammage
-              : null,
-        };
+        grammage_boite:
+          isMilk
+            ? grammage
+            : null,
+      };
 
-        console.log(
-          "CRÉATION PRODUIT",
+      console.log(
+        "CRÉATION PRODUIT",
+        payload
+      );
+
+      const response =
+        await CreateProduit(
           payload
         );
 
-        const response =
-          await CreateProduit(
+      const createdProduct =
+        response?.data;
+
+      const directCreatedId =
+        getProductId(
+          createdProduct
+        );
+
+      let productWithId;
+
+      if (
+        directCreatedId !==
+          null &&
+        directCreatedId !==
+          undefined
+      ) {
+        productWithId =
+          createdProduct;
+      } else {
+        productWithId =
+          await findCreatedProductAfterPost(
+            createdProduct,
             payload
           );
+      }
 
-        const createdProduct =
-          response?.data;
+      const createdProductId =
+        getProductId(
+          productWithId
+        );
 
-        const directCreatedId =
-          getProductId(
-            createdProduct
-          );
+      if (
+        createdProductId ===
+          null ||
+        createdProductId ===
+          undefined
+      ) {
+        throw new Error(
+          "Le produit créé n'a pas pu être retrouvé."
+        );
+      }
 
-        let productWithId;
+      // ===================================================
+      // VERIFY GRAMMAGE
+      // ===================================================
 
-        if (
-          directCreatedId !==
-            null &&
-          directCreatedId !==
-            undefined
-        ) {
-          productWithId =
-            createdProduct;
-        } else {
-          productWithId =
-            await findCreatedProductAfterPost(
-              createdProduct,
-              payload
-            );
-        }
+      let realGrammage = null;
 
-        const createdProductId =
-          getProductId(
-            productWithId
-          );
+      if (isMilk) {
+        realGrammage =
+          productWithId?.grammage_boite;
 
         if (
-          createdProductId ===
+          realGrammage ===
             null ||
-          createdProductId ===
+          realGrammage ===
             undefined
         ) {
           throw new Error(
-            "Le produit créé n'a pas pu être retrouvé."
+            "Le produit a été créé, mais le backend a retourné grammage_boite = null."
           );
         }
 
-        // ===================================================
-        // VERIFY GRAMMAGE
-        // ===================================================
-
-        let realGrammage = null;
-
-        if (isMilk) {
-          realGrammage =
-            productWithId?.grammage_boite;
-
-          if (
-            realGrammage ===
-              null ||
-            realGrammage ===
-              undefined
-          ) {
-            throw new Error(
-              "Le produit a été créé, mais le backend a retourné grammage_boite = null."
-            );
-          }
-
-          if (
-            Number(
-              realGrammage
-            ) !==
-            Number(grammage)
-          ) {
-            throw new Error(
-              `Le backend a enregistré ${realGrammage} g au lieu de ${grammage} g.`
-            );
-          }
-        }
-
-        // ===================================================
-        // FORMAT CREATED PRODUCT
-        // ===================================================
-
-        const formattedProduct = {
-          id: createdProductId,
-
-          title:
-            productWithId?.nom ||
-            title,
-
-          quantity:
-            formatQuantity(
-              productWithId?.stock_courant ??
-                quantity
-            ),
-
-          unit:
-            getDisplayUnit(
-              productWithId?.unite ??
-                payload.unite
-            ),
-
-          threshold:
-            formatQuantity(
-              productWithId?.alerte_seuil ??
-                1
-            ),
-
-          type_produit:
-            productWithId?.type_produit ??
-            payload.type_produit,
-
-          grammage_boite:
-            isMilk
-              ? Number(
-                  realGrammage
-                )
-              : null,
-        };
-
-        const updatedProducts =
-          [
-            ...products,
-            formattedProduct,
-          ];
-
-        setProducts(
-          updatedProducts
-        );
-
-        saveToDistributionPage(
-          updatedProducts
-        );
-
-        // ===================================================
-        // RESET
-        // ===================================================
-
-        setNewProduct({
-          title: "",
-          quantity: 0,
-          unit: "Kg",
-          type_produit: "aliment",
-          laitType: "",
-          grammage_boite: "",
-        });
-
-        setProductError("");
-        setShowAddProduct(false);
-      } catch (error) {
-        console.error(
-          "Erreur lors de la création du produit :",
-          error
-        );
-
-        setProductError(
-          getBackendErrorMessage(
-            error,
-            "Impossible de créer le produit."
+        if (
+          Number(
+            realGrammage
+          ) !==
+          Number(
+            grammage
           )
-        );
-      } finally {
-        setIsAddingProduct(false);
+        ) {
+          throw new Error(
+            `Le backend a enregistré ${realGrammage} g au lieu de ${grammage} g.`
+          );
+        }
       }
-    };
 
-  // =========================================================
-  // CANCEL ADD PRODUCT
-  // =========================================================
+      // ===================================================
+      // FORMAT CREATED PRODUCT
+      // ===================================================
 
-  const handleCancelAddProduct =
-    () => {
-      setShowAddProduct(false);
-      setProductError("");
+      const formattedProduct = {
+        id:
+          createdProductId,
+
+        title:
+          productWithId?.nom ||
+          title,
+
+        quantity:
+          formatQuantity(
+            productWithId?.stock_courant ??
+              quantity
+          ),
+
+        unit:
+          getDisplayUnit(
+            productWithId?.unite ??
+              payload.unite
+          ),
+
+        threshold:
+          formatQuantity(
+            productWithId?.alerte_seuil ??
+              1
+          ),
+
+        type_produit:
+          productWithId?.type_produit ??
+          payload.type_produit,
+
+        grammage_boite:
+          isMilk
+            ? Number(
+                realGrammage
+              )
+            : null,
+      };
+
+      const updatedProducts =
+        [
+          ...products,
+          formattedProduct,
+        ];
+
+      setProducts(
+        updatedProducts
+      );
+
+      saveToDistributionPage(
+        updatedProducts
+      );
+
+      // ===================================================
+      // RESET
+      // ===================================================
 
       setNewProduct({
         title: "",
@@ -1965,7 +1845,43 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
         laitType: "",
         grammage_boite: "",
       });
-    };
+
+      setProductError("");
+      setShowAddProduct(false);
+    } catch (error) {
+      console.error(
+        "Erreur lors de la création du produit :",
+        error
+      );
+
+      setProductError(
+        getBackendErrorMessage(
+          error,
+          "Impossible de créer le produit."
+        )
+      );
+    } finally {
+      setIsAddingProduct(false);
+    }
+  };
+
+  // =========================================================
+  // CANCEL ADD PRODUCT
+  // =========================================================
+
+  const handleCancelAddProduct = () => {
+    setShowAddProduct(false);
+    setProductError("");
+
+    setNewProduct({
+      title: "",
+      quantity: 0,
+      unit: "Kg",
+      type_produit: "aliment",
+      laitType: "",
+      grammage_boite: "",
+    });
+  };
 
   // =========================================================
   // RENDER
@@ -2033,11 +1949,6 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                         product.id
                       );
 
-                  const milkProduct =
-                    isMilkProduct(
-                      product
-                    );
-
                   return (
                     <div
                       key={
@@ -2046,17 +1957,19 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                       }
                       className="min-h-[44px] border border-[#84D6D0] rounded-[12px] px-3 py-1.5 flex items-center justify-between gap-2"
                     >
-                      {/* =========================================
+                      {/* =================================================
                           EDIT MODE
-                      ========================================= */}
+                      ================================================= */}
 
                       {isEditing ? (
                         <div className="flex items-center gap-2 flex-1 min-w-0">
-                          {/* =======================================
+                          {/* =================================================
                               MILK EDIT
-                          ======================================= */}
+                          ================================================= */}
 
-                          {milkProduct ? (
+                          {isMilkProduct(
+                            product
+                          ) ? (
                             <div className="flex-1 min-w-0">
                               <SelectInput
                                 label=""
@@ -2082,9 +1995,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                               />
                             </div>
                           ) : (
-                            /* =====================================
-                               NORMAL PRODUCT EDIT
-                            ===================================== */
+                            /* =================================================
+                                NORMAL PRODUCT EDIT
+                            ================================================= */
 
                             <input
                               type="text"
@@ -2099,7 +2012,8 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                                 e
                               ) => {
                                 setEditingProductName(
-                                  e.target
+                                  e
+                                    .target
                                     .value
                                 );
 
@@ -2128,9 +2042,7 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                             />
                           )}
 
-                          {/* =======================================
-                              SAVE
-                          ======================================= */}
+                          {/* SAVE */}
 
                           <button
                             onClick={
@@ -2148,9 +2060,7 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                             />
                           </button>
 
-                          {/* =======================================
-                              CANCEL
-                          ======================================= */}
+                          {/* CANCEL */}
 
                           <button
                             onClick={
@@ -2169,14 +2079,16 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                           </button>
                         </div>
                       ) : (
-                        /* =========================================
+                        /* =================================================
                            NORMAL DISPLAY
-                        ========================================= */
+                        ================================================= */
 
                         <span className="text-[15px] font-medium flex-1 min-w-0 truncate">
                           {product.title}
 
-                          {milkProduct &&
+                          {isMilkProduct(
+                            product
+                          ) &&
                             product.grammage_boite !==
                               null &&
                             product.grammage_boite !==
@@ -2192,15 +2104,13 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                         </span>
                       )}
 
-                      {/* =========================================
+                      {/* =================================================
                           RIGHT SIDE
-                      ========================================= */}
+                      ================================================= */}
 
                       {!isEditing && (
                         <div className="flex items-center gap-2 shrink-0">
-                          {/* =====================================
-                              MODIFY
-                          ===================================== */}
+                          {/* MODIFY */}
 
                           <button
                             onClick={() =>
@@ -2223,9 +2133,7 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                             />
                           </button>
 
-                          {/* =====================================
-                              QUANTITY
-                          ===================================== */}
+                          {/* QUANTITY */}
 
                           <div className="flex items-end gap-1">
                             <span className="text-[#4E9F8A] font-bold text-[18px]">
@@ -2241,9 +2149,7 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                             </span>
                           </div>
 
-                          {/* =====================================
-                              INCREMENT
-                          ===================================== */}
+                          {/* INCREMENT */}
 
                           {pendingIndex !==
                           index ? (
@@ -2337,14 +2243,14 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
               </div>
             )}
 
-            {/* ===============================================
-                ERROR
-            =============================================== */}
+            {/* ERROR */}
 
             {productError &&
               !showAddProduct && (
                 <p className="text-[#DC2626] text-[13px] mt-2 ml-1">
-                  {productError}
+                  {
+                    productError
+                  }
                 </p>
               )}
           </div>
@@ -2365,9 +2271,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
               />
             ) : (
               <div className="space-y-3">
-                {/* =============================================
+                {/* =================================================
                     PRODUCT TYPE
-                ============================================= */}
+                ================================================= */}
 
                 <SelectInput
                   label="Type de produit"
@@ -2387,9 +2293,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                   noPadding
                 />
 
-                {/* =============================================
+                {/* =================================================
                     MILK TYPE
-                ============================================= */}
+                ================================================= */}
 
                 {newProduct.type_produit ===
                   "lait" && (
@@ -2409,9 +2315,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                   />
                 )}
 
-                {/* =============================================
+                {/* =================================================
                     NAME + QUANTITY + UNIT
-                ============================================= */}
+                ================================================= */}
 
                 <div className="flex items-center bg-[#F2FAFA] border border-[#91A09F] rounded-[10px] h-[48px] overflow-hidden">
                   {/* NAME */}
@@ -2432,11 +2338,14 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                       newProduct.type_produit ===
                         "lait"
                     }
-                    onChange={(e) => {
+                    onChange={(
+                      e
+                    ) => {
                       setNewProduct({
                         ...newProduct,
                         title:
-                          e.target.value,
+                          e.target
+                            .value,
                       });
 
                       setProductError(
@@ -2457,7 +2366,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                     disabled={
                       isAddingProduct
                     }
-                    onChange={(e) => {
+                    onChange={(
+                      e
+                    ) => {
                       const value =
                         e.target.value.replace(
                           /\D/g,
@@ -2468,7 +2379,8 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                         ...newProduct,
 
                         quantity:
-                          value === ""
+                          value ===
+                          ""
                             ? 0
                             : Number(
                                 value
@@ -2496,40 +2408,46 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                       newProduct.type_produit ===
                         "lait"
                     }
-                    onChange={(e) =>
+                    onChange={(
+                      e
+                    ) =>
                       setNewProduct({
                         ...newProduct,
                         unit:
-                          e.target.value,
+                          e.target
+                            .value,
                       })
                     }
                     className="h-full bg-transparent outline-none cursor-pointer text-[15px] pr-3"
                   >
-                    <option>
-                      Kg
-                    </option>
+                    {unitOptions.map(
+                      (unit) => (
+                        <option
+                          key={unit}
+                          value={unit}
+                        >
+                          {unit}
+                        </option>
+                      )
+                    )}
 
-                    <option>
-                      Litres
-                    </option>
-
-                    <option>
-                      boîtes
-                    </option>
-
-                    <option>
-                      Sacs
-                    </option>
-
-                    <option>
-                      Pièces
-                    </option>
+                    {/*
+                     * Milk is displayed as boîtes,
+                     * but this option is not selectable
+                     * for Aliment.
+                     */}
+                    {newProduct.type_produit ===
+                      "lait" && (
+                      <option value="boîtes">
+                        boîtes
+                      </option>
+                    )}
                   </select>
                 </div>
 
-                {/* =============================================
+                {/* =================================================
                     GRAMMAGE
-                ============================================= */}
+                ================================================= */}
 
                 {newProduct.type_produit ===
                   "lait" && (
@@ -2549,7 +2467,9 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                         disabled={
                           isAddingProduct
                         }
-                        onChange={(e) => {
+                        onChange={(
+                          e
+                        ) => {
                           const value =
                             e.target.value.replace(
                               /\D/g,
@@ -2558,7 +2478,6 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
 
                           setNewProduct({
                             ...newProduct,
-
                             grammage_boite:
                               value,
                           });
@@ -2577,19 +2496,17 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                   </div>
                 )}
 
-                {/* =============================================
-                    ERROR
-                ============================================= */}
+                {/* ERROR */}
 
                 {productError && (
                   <p className="text-[#DC2626] text-[13px] mt-1 ml-1">
-                    {productError}
+                    {
+                      productError
+                    }
                   </p>
                 )}
 
-                {/* =============================================
-                    BUTTONS
-                ============================================= */}
+                {/* BUTTONS */}
 
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="flex-1">
@@ -2648,12 +2565,8 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
 
       {showEditPopup && (
         <EditStockPopup
-          open={
-            showEditPopup
-          }
-          products={
-            products
-          }
+          open={showEditPopup}
+          products={products}
           isSaving={
             isSavingThresholds
           }
