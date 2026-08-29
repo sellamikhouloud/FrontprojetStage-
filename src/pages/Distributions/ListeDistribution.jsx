@@ -438,9 +438,7 @@ const historiqueMouvements = mapHistorique(historiqueData);
 ) : (
   <NavigationHeader
     title="Liste des distributions"
-    secondType="add"
-    secondActionTitle="Ajouter une distribution"
-    onSecondAction={() => navigate("/ajout-distribution")}
+   
   />
 )}
 
