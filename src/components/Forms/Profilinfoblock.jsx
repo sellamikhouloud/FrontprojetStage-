@@ -1,12 +1,15 @@
-import { useState, useEffect, useRef } from "react";
-import { User, Mail, Phone, Building2, MapPin, AtSign } from "lucide-react";
+import { useState, useEffect, useRef, useMemo} from "react";
+import { User, Mail, Phone, MapPin, AtSign } from "lucide-react";
 import UserCard from "../Cards/UserCard";
 import Button from "../Button/Button";
 import OptionsMenu from "../Containers/OptionsMenu";
 import { listVillages } from "../../lib/api/Parametres";
 import { AiOutlineDown } from "react-icons/ai";
+import { diffPatch, isEmptyPatch } from "@/lib/diff";
+import PopupPhoto from "../Popups/PopupPhoto";
 import ErrorMessage from "../Forms/ErrorMessage";
 import BackendErrorMessage from "../Forms/BackendErrorMessage";
+import SuccessBanner from "../Popups/SuccessBanner"; 
 
 // Icône flèche de sortie (rouge), encodée en SVG inline — pas besoin de fichier asset séparé
 export const logoutIcon =
@@ -18,6 +21,7 @@ export const logoutIcon =
       <line x1="21" y1="12" x2="9" y2="12" />
     </svg>
   `);
+  const CHAMPS_OPTIONNELS = ["telephone"];
 
 export const CHAMPS_DEFAUT = [
   { key: "username", icon: AtSign, label: "Nom d'utilisateur" },
@@ -52,6 +56,7 @@ export default function ProfilInfoBlock({
   onSave,
   onDeconnexion,
   showDeconnexion = true,
+ erreurDeconnexion = "",
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -60,22 +65,64 @@ export default function ProfilInfoBlock({
   const [fieldErrors, setFieldErrors] = useState({});
   const [erreurGenerale, setErreurGenerale] = useState("");
   const [saving, setSaving] = useState(false);
-  const fileInputRef = useRef(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const successTimeoutRef = useRef(null);
+  
+
 
   const [villages, setVillages] = useState([]);
   const [loadingVillages, setLoadingVillages] = useState(false);
   const [dropdownVillageOuvert, setDropdownVillageOuvert] = useState(false);
+  const [showPhotoPopup, setShowPhotoPopup] = useState(false);
 
   const aChampVillage = champs.some((c) => c.key === "village");
+
+ const baseline = useMemo(() => {
+  if (!admin) return null;
+  const initial = {};
+  champs.forEach((c) => {
+    if (c.key === "village") {
+      if (admin.village && typeof admin.village === "object") {
+        initial.village = admin.village.id ? String(admin.village.id) : "";
+      } else if (admin.village) {
+        initial.village = String(admin.village);
+      } else {
+        initial.village = "";
+      }
+      return;
+    }
+    initial[c.key] = admin[c.key] || "";
+  });
+  return initial;
+}, [admin, champs]);
+
+const patch = useMemo(
+  () => (baseline && formData ? diffPatch(baseline, formData) : {}),
+  [baseline, formData]
+);
+
+const nothingChanged = isEmptyPatch(patch) && !avatarFile;
+
+  useEffect(() => {
+  return () => {
+    if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+  };
+}, []);
 
   useEffect(() => {
     if (admin) {
       const initial = {};
       champs.forEach((c) => {
         if (c.key === "village") {
-          initial.village = admin.village?.id ? String(admin.village.id) : "";
-          return;
-        }
+  if (admin.village && typeof admin.village === "object") {
+    initial.village = admin.village.id ? String(admin.village.id) : "";
+  } else if (admin.village) {
+    initial.village = String(admin.village);
+  } else {
+    initial.village = "";
+  }
+  return;
+}
         initial[c.key] = admin[c.key] || "";
       });
       setFormData(initial);
@@ -118,55 +165,80 @@ export default function ProfilInfoBlock({
     });
   };
 
-  const handleAvatarClick = () => fileInputRef.current?.click();
+ const handleAvatarClick = () => setShowPhotoPopup(true);
 
-  const handleAvatarChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
-    setAvatarFile(file);
-    setAvatarPreview(URL.createObjectURL(file));
-  };
+const handleImageSelected = (file) => {
+  if (!file) return;
+  if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+  setAvatarFile(file);
+  setAvatarPreview(URL.createObjectURL(file));
+
+  setFieldErrors((prev) => {
+    if (!prev.photo) return prev;
+    const next = { ...prev };
+    delete next.photo;
+    return next;
+  });
+};
+
 
   // Validation front : les champs texte visibles ne doivent pas être vides
-  const validerChamps = () => {
-    const erreurs = {};
+const validerChamps = () => {
+  const erreurs = {};
 
-    champs.forEach((champ) => {
-      if (champ.key === "village") return; // optionnel, pas de validation vide ici
+  champs.forEach((champ) => {
+    if (champ.key === "village") return; // optionnel
+    if (CHAMPS_OPTIONNELS.includes(champ.key)) return; // ← ajouter cette ligne
 
-      const valeur = (formData[champ.key] || "").trim();
-      if (!valeur) {
-        erreurs[champ.key] = "Ce champ ne peut être vide.";
-      }
-    });
+    const valeur = (formData[champ.key] || "").trim();
+    if (!valeur) {
+      erreurs[champ.key] = "Ce champ ne peut être vide.";
+    }
+  });
 
-    return erreurs;
-  };
+  return erreurs;
+};
 
   const handleSauvegarder = async () => {
-    setErreurGenerale("");
+     setErreurGenerale("");
 
-    const erreursValidation = validerChamps();
-    if (Object.keys(erreursValidation).length > 0) {
-      setFieldErrors(erreursValidation);
-      return; // on ne contacte même pas le backend si la validation front échoue
-    }
+  const erreursValidation = validerChamps();
+  if (Object.keys(erreursValidation).length > 0) {
+    setFieldErrors(erreursValidation);
+    return;
+  }
 
-    const { village, ...champsSansVillage } = formData;
-    const payload = { ...champsSansVillage };
+  if (nothingChanged) {
+    setErreurGenerale("Aucune modification à enregistrer.");
+    return;
+  }
 
-    if (aChampVillage && village) {
-      payload.village = Number(village); 
-    }
+  const { village, ...patchSansVillage } = patch;
 
-    setSaving(true);
-    const erreursBackend = await onSave?.({
-      ...payload,
-      avatarFile,
-      avatarUrl: avatarPreview || admin.avatarUrl,
+  let payload;
+
+  if (avatarFile) {
+    payload = new FormData();
+    Object.entries(patchSansVillage).forEach(([key, value]) => {
+      payload.append(key, value);
     });
-    setSaving(false);
+
+    if (aChampVillage && "village" in patch) {
+      payload.append("village", Number(patch.village));
+    }
+
+    payload.append("photo", avatarFile);
+  } else {
+    payload = { ...patchSansVillage };
+
+    if (aChampVillage && "village" in patch) {
+      payload.village = Number(patch.village);
+    }
+  }
+
+  setSaving(true);
+  const erreursBackend = await onSave?.(payload);
+  setSaving(false);
 
     if (erreursBackend) {
       // Sépare les erreurs liées à un champ connu de celles qui ne le sont pas
@@ -195,6 +267,10 @@ export default function ProfilInfoBlock({
     setFieldErrors({});
     setErreurGenerale("");
     setIsEditing(false);
+
+if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
+setShowSuccess(true);
+successTimeoutRef.current = setTimeout(() => setShowSuccess(false), 1000);
   };
 
   const source = isEditing ? formData : admin;
@@ -223,12 +299,22 @@ export default function ProfilInfoBlock({
           }
 
           if (champ.key === "village") {
-            const valeur = admin.village?.nom;
-            if (valeur) {
-              result.push({ ...champ, value: valeur });
-            }
-            return;
-          }
+  let valeur;
+
+  if (admin.village && typeof admin.village === "object") {
+    // Format objet : { id, nom }
+    valeur = admin.village.nom;
+  } else if (admin.village) {
+    // Format id brut : on cherche le nom dans la liste des villages déjà chargée
+    const villageTrouve = villages.find((v) => String(v.id) === String(admin.village));
+    valeur = villageTrouve?.nom;
+  }
+
+  if (valeur) {
+    result.push({ ...champ, value: valeur });
+  }
+  return;
+}
 
           const valeur = admin[champ.key];
           if (valeur) {
@@ -244,27 +330,30 @@ export default function ProfilInfoBlock({
 
   return (
     <div>
-      {erreurGenerale && (
-        <div className="mb-3">
-          <BackendErrorMessage message={erreurGenerale} />
-        </div>
-      )}
+     
+     <UserCard
+  nom={nomComplet}
+  role={admin.role}
+  avatarUrl={isEditing ? avatarPreview || admin.avatarUrl : admin.avatarUrl}
+  editing={isEditing}
+  onAvatarClick={handleAvatarClick}
+/>
 
-      <UserCard
-        nom={nomComplet}
-        role={admin.role}
-        avatarUrl={isEditing ? avatarPreview || admin.avatarUrl : admin.avatarUrl}
-        editing={isEditing}
-        onAvatarClick={handleAvatarClick}
-      />
+ 
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleAvatarChange}
-        className="hidden"
-      />
+<PopupPhoto
+  open={showPhotoPopup}
+  title="Photo de profil"
+  onClose={() => setShowPhotoPopup(false)}
+  onImageSelected={handleImageSelected}
+/>
+
+{isEditing && fieldErrors.photo && (
+  <div className="mt-2 flex justify-center">
+    <ErrorMessage message={fieldErrors.photo} />
+  </div>
+)}
+   
 
       <p className="mt-5 text-[15px] font-bold text-[#202124]">
         Informations du compte
@@ -363,7 +452,24 @@ export default function ProfilInfoBlock({
         </div>
       )}
 
-      <div className="mt-4 flex flex-col gap-0">
+      {showSuccess && (
+  <div className=" mt-2">
+    <SuccessBanner text="Enregistré avec succès" />
+  </div>
+)}
+{erreurGenerale && (
+      <div className="mt-3">
+        <BackendErrorMessage message={erreurGenerale} />
+      </div>
+    )}
+
+    {erreurDeconnexion && (
+  <div className="mt-3">
+    <BackendErrorMessage message={erreurDeconnexion} />
+  </div>
+)}
+
+      <div className="mt-3 flex flex-col gap-0">
         {isEditing ? (
           <Button
             title={saving ? "Sauvegarde..." : "Sauvegarder"}
@@ -376,7 +482,15 @@ export default function ProfilInfoBlock({
           <>
             <Button title="Modifier" variant="modifier" noPadding onClick={() => setIsEditing(true)} />
             {showDeconnexion && (
-              <Button title="Déconnexion" variant="deconnexion" icon={logoutIcon} noPadding onClick={onDeconnexion} />
+              
+  <Button
+    title="Déconnexion"
+    variant="deconnexion"
+    icon={logoutIcon}
+    noPadding
+   onClick={onDeconnexion}
+  />
+
             )}
           </>
         )}
