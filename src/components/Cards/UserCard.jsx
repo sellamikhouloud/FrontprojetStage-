@@ -1,4 +1,4 @@
-import { Camera, X } from "lucide-react";
+import { X } from "lucide-react";
 import userIcon from "../../assets/user.svg"; // ← adaptez le chemin
 
 /**
@@ -45,87 +45,91 @@ export default function UserCard({
           relative
           shrink-0
           rounded-full
+          group
           ${editing ? "p-[3px] border-2 border-dashed cursor-pointer" : ""}
         `}
         style={editing ? { borderColor: "#4E9F8A" } : undefined}
-        onClick={editing ? onAvatarClick : undefined}
       >
-        <div
-          className="
-            w-[94px] h-[94px]
-            rounded-full
-            flex
-            items-center
-            justify-center
-            overflow-hidden
-          "
-          style={{ backgroundColor: "#9AD1C2" }}
+        <button
+          type="button"
+          onClick={editing ? onAvatarClick : undefined}
+          disabled={!editing}
+          className="relative block"
         >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={nom}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img
-              src={userIcon}
-              alt="Avatar par défaut"
-              className="w-17 h-17 translate-y-[4px]"
-            />
-          )}
-        </div>
-
-        {/* Badge caméra — visible uniquement en mode édition */}
-        {editing && (
           <div
             className="
-              absolute
-              bottom-0
-              right-0
-              w-8 h-8
+              w-[94px] h-[94px]
               rounded-full
               flex
               items-center
               justify-center
-              border-2
-              border-white
+              overflow-hidden
             "
-            style={{ backgroundColor: "#4E9F8A" }}
+            style={{ backgroundColor: "#9AD1C2" }}
           >
-            <Camera size={15} color="#FFFFFF" strokeWidth={2.5} />
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={nom}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={userIcon}
+                alt="Avatar par défaut"
+                className="w-14 h-14 translate-y-[4px]"
+              />
+            )}
           </div>
-        )}
 
-        {/* Badge suppression — visible seulement en édition ET si une photo existe */}
+          {/* Overlay "Modifier" au survol — visible seulement en édition */}
+          {editing && (
+            <span
+              className="
+                absolute
+                inset-0
+                rounded-full
+                bg-black/0
+                group-hover:bg-black/20
+                transition-colors
+                flex
+                items-center
+                justify-center
+              "
+            >
+              <span
+                className="
+                  opacity-0
+                  group-hover:opacity-100
+                  text-white
+                  text-[12px]
+                  font-medium
+                  transition-opacity
+                "
+              >
+                Modifier
+              </span>
+            </span>
+          )}
+        </button>
+
+        {/* Bouton suppression — même style que Fiche/Ajout coordinateur : X noir simple, sans fond */}
         {editing && avatarUrl && (
           <button
             type="button"
             onClick={(e) => {
-              e.stopPropagation(); // évite de déclencher onAvatarClick
+              e.stopPropagation();
               onRemovePhoto?.();
             }}
-            className="
-              absolute
-              top-0
-              right-0
-              w-6 h-6
-              rounded-full
-              flex
-              items-center
-              justify-center
-              border-2
-              border-white
-            "
-            style={{ backgroundColor: "#EF4444" }}
+            className="absolute -top-0.5 -right-0.5"
             aria-label="Supprimer la photo"
           >
-            <X size={13} color="#FFFFFF" strokeWidth={3} />
+            <X size={18} color="#202124" strokeWidth={2.5} />
           </button>
         )}
       </div>
 
-      {/* ... reste inchangé (bloc nom/id + badge rôle) ... */}
+      {/* Bloc droit : nom/id + badge rôle */}
       <div
         className="
           flex
