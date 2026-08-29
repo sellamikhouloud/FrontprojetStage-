@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 
 import SearchBar from "../Filter/Searchbar";
-import CardPopup from "../Cards/card2";
+import CardPopup from "../Cards/Card2";
 
 const PopupListeFamilles = ({
   open,

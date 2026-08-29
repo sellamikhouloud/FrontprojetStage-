@@ -379,7 +379,8 @@ const RapportBilan = () => {
                   </div>
                 ) : (
                   <p className="text-center text-[#818181] py-6">
-                    Selectionnez les photos depuis la Galerie .
+                    Sélectionnez les photos depuis la galerie,
+               Les photos seront affichées après la validation du rapport.
                   </p>
                 )}
               </div>

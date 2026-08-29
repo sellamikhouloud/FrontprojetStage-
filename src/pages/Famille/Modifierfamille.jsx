@@ -475,11 +475,11 @@ const coordinateurs = coordinateursData
       readOnly: true,
     },
 
-  {
+ {
   key: "date_creation",
   label: "Date de création",
-  value: famille?.date_creation
-    ? new Date(famille.date_creation).toLocaleDateString("fr-FR")
+  value: famille?.audit?.date_creation
+    ? new Date(famille.audit.date_creation).toLocaleDateString("fr-FR")
     : "/",
   editable: false,
 },

@@ -1,7 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-import CardPopup from "../Cards/card2";
+import CardPopup from "../Cards/Card2";
 
 const PopupMas = ({
   open,

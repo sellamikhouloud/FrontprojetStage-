@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo  } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X } from "lucide-react";
+
+import { diffPatch, isEmptyPatch } from "@/lib/diff";
 
 
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -98,8 +100,9 @@ export default function ModifierCoordinateur() {
   const [checkingUsername, setCheckingUsername] = useState(false);
 
   const [showPhotoPopup, setShowPhotoPopup] = useState(false);
-  const [photoFile, setPhotoFile] = useState(null);
-  const [photoPreview, setPhotoPreview] = useState(null);
+ const [photoFile, setPhotoFile] = useState(null);
+const [photoPreview, setPhotoPreview] = useState(null);
+const [photoRemoved, setPhotoRemoved] = useState(false);
 
 
   const clearError = (field) => {
@@ -151,12 +154,7 @@ const {
   enabled: !!id,
 });
 
-const loading = userLoading && !found;
-const loadError = userError
-  ? userErrorObj?.response?.data?.detail || "Coordinateur introuvable."
-  : null;
-
-  // Liste réelle des villages 
+ // Liste réelle des villages 
   const {
     data: villagesData,
     isLoading: villagesLoading,
@@ -173,6 +171,48 @@ const loadError = userError
     label: v.nom,
     value: v.id,
   }));
+
+const baseline = useMemo(() => {
+  if (!found) return null;
+  return {
+    username: found.username || "",
+    nom: found.nom || "",
+    prenom: found.prenom || "",
+    email: found.email || "",
+    telephone: found.telephone || "",
+    village: found.village?.id ? String(found.village.id) : "",
+    ...(isAdmin ? { role: found.role || "" } : {}),
+  };
+}, [found, isAdmin]);
+
+const current = useMemo(() => ({
+  username,
+  nom,
+  prenom,
+  email,
+  telephone,
+  village: village ? String(village) : "",
+  ...(isAdmin ? { role: roleCoordinateur } : {}),
+}), [username, nom, prenom, email, telephone, village, isAdmin, roleCoordinateur]);
+
+const patch = useMemo(
+  () => (baseline && current ? diffPatch(baseline, current) : {}),
+  [baseline, current]
+);
+
+const nothingChanged =
+  isEmptyPatch(patch) &&
+  !photoFile &&
+  !photoRemoved &&
+  !password.trim() &&
+  statut === statutOriginal;
+
+const loading = userLoading && !found;
+const loadError = userError
+  ? userErrorObj?.response?.data?.detail || "Coordinateur introuvable."
+  : null;
+
+ 
 
 
 useEffect(() => {
@@ -210,6 +250,7 @@ setDateModification(
   setRoleCoordinateur(found.role || "");
   setPhotoPreview(found.photo || null);
   setPhotoFile(null);
+  setPhotoRemoved(false);
 
   //  On ne préremplit JAMAIS le vrai mot de passe.
   setPassword("");
@@ -261,6 +302,13 @@ const timeoutId = setTimeout(async () => {
   return () => clearTimeout(timeoutId);
 }, [username, found]);
 
+const handleRemovePhoto = () => {
+  setPhotoFile(null);
+  setPhotoPreview(null);
+  setPhotoRemoved(true);
+  clearError("photo");
+};
+
 const handleSave = async () => {
   const newErrors = {};
 
@@ -278,18 +326,21 @@ const handleSave = async () => {
     newErrors.email = "Format d'email invalide";
   }
 
-  if (!telephone.trim()) newErrors.telephone = "Veuillez saisir le téléphone";
-
   if (!village) newErrors.village = "Veuillez choisir un village";
 
   if (password && password.length < 8) {
     newErrors.password = "Le mot de passe doit contenir au moins 8 caractères";
   }
 
-  setErrors(newErrors);
+   setErrors(newErrors);
   setBackendError(null);
 
   if (Object.keys(newErrors).length > 0) return;
+
+  if (nothingChanged) {
+    setBackendError("Aucune modification à enregistrer.");
+    return;
+  }
 
   setSaving(true);
   setSaveError(null);
@@ -304,7 +355,7 @@ const handleSave = async () => {
       setStatutOriginal(statut);
     }
 
-   let payload;
+ let payload;
 
 if (photoFile) {
   payload = new FormData();
@@ -323,6 +374,15 @@ if (photoFile) {
   }
 
   payload.append("photo", photoFile);
+} else if (photoRemoved) {
+  payload = { username, nom, prenom, email, telephone, village, photo: null };
+
+  if (isAdmin) {
+    payload.role = roleCoordinateur;
+  }
+  if (password.trim()) {
+    payload.password = password;
+  }
 } else {
   payload = { username, nom, prenom, email, telephone, village };
 
@@ -420,53 +480,71 @@ await updateCoordinateur(id, payload);
 
          
 
-         {/* Photo */}
+        
+{/* Photo */}
 <div className="flex justify-center">
-  <button
-    type="button"
-    onClick={() => setShowPhotoPopup(true)}
-    className="relative group"
-  >
-    <img
-      src={photoPreview || Coordinator}
-      alt="Coordinateur"
-      className="
-        w-[120px]
-        h-[120px]
-        lg:w-[160px]
-        lg:h-[160px]
-        rounded-full
-        object-cover
-      "
-    />
-    <span
-      className="
-        absolute
-        inset-0
-        rounded-full
-        bg-black/0
-        group-hover:bg-black/20
-        transition-colors
-        flex
-        items-center
-        justify-center
-      "
+  <div className="relative group inline-block">
+    <button
+      type="button"
+      onClick={() => setShowPhotoPopup(true)}
+      className="relative"
     >
+      <img
+        src={photoPreview || Coordinator}
+        alt="Coordinateur"
+        className="
+          w-[120px]
+          h-[120px]
+          lg:w-[160px]
+          lg:h-[160px]
+          rounded-full
+          object-cover
+        "
+      />
       <span
         className="
-          opacity-0
-          group-hover:opacity-100
-          text-white
-          text-[13px]
-          font-medium
-          transition-opacity
+          absolute
+          inset-0
+          rounded-full
+          bg-black/0
+          group-hover:bg-black/20
+          transition-colors
+          flex
+          items-center
+          justify-center
         "
       >
-        Modifier
+        <span
+          className="
+            opacity-0
+            group-hover:opacity-100
+            text-white
+            text-[13px]
+            font-medium
+            transition-opacity
+          "
+        >
+          Modifier
+        </span>
       </span>
-    </span>
-  </button>
+    </button>
+
   
+{/* Bouton suppression — visible uniquement si une photo existe */}
+{photoPreview && (
+  <button
+    type="button"
+    onClick={(e) => {
+      e.stopPropagation();
+      handleRemovePhoto();
+    }}
+    className="absolute top-0.5 -right-1 lg:top-2 lg:right-1"
+    aria-label="Supprimer la photo"
+  >
+    <X size={20} color="#202124" strokeWidth={2.5} />
+  </button>
+)}
+  </div>
 </div>
 <BackendErrorMessage message={errors.photo} />
 
@@ -477,6 +555,7 @@ await updateCoordinateur(id, payload);
   onImageSelected={(file) => {
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
+    setPhotoRemoved(false);
     clearError("photo");
   }}
 />
@@ -491,7 +570,7 @@ await updateCoordinateur(id, payload);
 
           
 
-          <BackendErrorMessage message={backendError || saveError} className="mt-2" />
+          
 
           {!loading && !loadError && (
             <>
@@ -727,7 +806,7 @@ await updateCoordinateur(id, payload);
   noPadding
 />
 
-              
+              <BackendErrorMessage message={backendError || saveError} className="mt-2" />
       {showBanner && <SuccessBanner text="Enregistrer avec succès" />}
               {/* Boutons */}
               <div className="flex flex-col gap-[0px]">

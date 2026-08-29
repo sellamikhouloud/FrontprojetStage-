@@ -1,13 +1,13 @@
 
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, X  } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Input from "../../components/Containers/ContainerEcriture";
-import ChoiceContainer from "../../components/Containers/ChoiceContainer";
+
 import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import Button from "../../components/Button/Button";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
@@ -170,6 +170,11 @@ const timeoutId = setTimeout(async () => {
       return updated;
     });
   };
+  const handleRemovePhoto = () => {
+  setPhotoFile(null);
+  setPhotoPreview(null);
+};
+
 
 
  const handleSave = async () => {
@@ -188,7 +193,7 @@ const timeoutId = setTimeout(async () => {
     if (!email.trim()) newErrors.email = "Veuillez saisir l'email";
     if (!password) newErrors.password = "Veuillez saisir un mot de passe";
     if (!village) newErrors.village = "Veuillez choisir un village";
-    if (!telephone.trim()) newErrors.telephone = "Veuillez saisir le téléphone";
+   
 
    setErrors(newErrors);
 setBackendError(null);
@@ -332,53 +337,70 @@ try {
 
          <BackendErrorMessage message={backendError || saveError} className="mt-2" />
 
-                   {/* Photo */}
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={() => setShowPhotoPopup(true)}
-              className="relative group"
-            >
-              <img
-                src={photoPreview || Coordinator}
-                alt="Coordinateur"
-                className="
-                  w-[120px]
-                  h-[120px]
-                  lg:w-[160px]
-                  lg:h-[160px]
-                  rounded-full
-                  object-cover
-                "
-              />
-              <span
-                className="
-                  absolute
-                  inset-0
-                  rounded-full
-                  bg-black/0
-                  group-hover:bg-black/20
-                  transition-colors
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
-                <span
-                  className="
-                    opacity-0
-                    group-hover:opacity-100
-                    text-white
-                    text-[13px]
-                    font-medium
-                    transition-opacity
-                  "
-                >
-                  Modifier
-                </span>
-              </span>
-            </button>
-          </div>
+                  {/* Photo */}
+<div className="flex justify-center">
+  <div className="relative group inline-block">
+    <button
+      type="button"
+      onClick={() => setShowPhotoPopup(true)}
+      className="relative"
+    >
+      <img
+        src={photoPreview || Coordinator}
+        alt="Coordinateur"
+        className="
+          w-[120px]
+          h-[120px]
+          lg:w-[160px]
+          lg:h-[160px]
+          rounded-full
+          object-cover
+        "
+      />
+      <span
+        className="
+          absolute
+          inset-0
+          rounded-full
+          bg-black/0
+          group-hover:bg-black/20
+          transition-colors
+          flex
+          items-center
+          justify-center
+        "
+      >
+        <span
+          className="
+            opacity-0
+            group-hover:opacity-100
+            text-white
+            text-[13px]
+            font-medium
+            transition-opacity
+          "
+        >
+          Modifier
+        </span>
+      </span>
+    </button>
+
+    {/* Bouton suppression — visible uniquement si une photo est sélectionnée */}
+    {photoPreview && (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleRemovePhoto();
+        }}
+        className="absolute top-0.5 -right-1 lg:top-1.5 lg:right-1.5"
+        aria-label="Supprimer la photo"
+      >
+        <X size={20} color="#202124" strokeWidth={2.5} />
+      </button>
+    )}
+  </div>
+</div>
 
           <PopupPhoto
             open={showPhotoPopup}
