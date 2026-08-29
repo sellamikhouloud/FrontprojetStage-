@@ -58,9 +58,6 @@ export default function Sidebar({
     avatar: defaultAvatar,
   } = config;
 
- 
-  
-
   const isAdmin = role === "admin";
 
   /*
@@ -82,10 +79,6 @@ const adminData = {
   email: user?.email,
   telephone: user?.telephone,
 };
-
-
-
-
 
   const handleItemClick = () => {
     setMobileOpen(false);
