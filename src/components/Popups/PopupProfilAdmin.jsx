@@ -21,14 +21,14 @@ export default function PopupProfilAdmin({
 
  const handleConfirmDeconnexion = async () => {
     setShowLogoutConfirm(false);
-    setErreurDeconnexion(""); // ← ajouté
+    setErreurDeconnexion(""); 
     try {
       await logout();
       onClose?.();
       navigate("/");
     } catch (error) {
       console.error("Échec de la déconnexion :", error);
-      setErreurDeconnexion( // ← ajouté
+      setErreurDeconnexion( 
         error?.response?.data?.detail ||
         error?.message ||
         "Échec de la déconnexion. Veuillez réessayer."
