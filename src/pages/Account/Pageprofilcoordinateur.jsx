@@ -12,7 +12,7 @@ import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
 
-const API_BASE_URL = "http://127.0.0.1:8000"; // à adapter selon ton environnement
+const API_BASE_URL = "http://127.0.0.1:8000"; 
 
 export const resolvePhotoUrl = (photo) => {
   if (!photo) return null;
