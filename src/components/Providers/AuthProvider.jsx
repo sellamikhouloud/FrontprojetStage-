@@ -55,13 +55,10 @@ export function AuthProvider({ children }) {
 
   // LOGOUT
 
-  const logout = useCallback(async () => {
-    try {
-      await authLogout();
-    } finally {
-      setUser(null);
-    }
-  }, []);
+const logout = useCallback(async () => {
+  await authLogout();   
+  setUser(null);         // seulement exécuté en cas de succès
+}, []);
   
     //  Mise à jour du profil
     const updateUser = useCallback(async (payload) => {

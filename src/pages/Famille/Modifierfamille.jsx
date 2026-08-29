@@ -155,8 +155,7 @@ function extractErrorMessage(error) {
   }
 
   if (typeof data === "object" && !Array.isArray(data)) {
-    // Récursif : gère les erreurs imbriquées comme { mere: { telephone: [...] } },
-    // qui correspondent à la forme que buildFamillePayload() envoie au backend.
+   
     const collect = (obj, parentLabel = "") => {
       const messages = [];
 
@@ -188,7 +187,7 @@ function extractErrorMessage(error) {
   return "Une erreur est survenue.";
 }
 
-// Même helper que dans AjoutDistribution.jsx, pour la validation de date future.
+
 const isFutureDate = (date) => {
   if (!date) return false;
 
@@ -256,18 +255,18 @@ const Modifyfamilly = () => {
 
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
-  const [infoMessage, setInfoMessage] = useState(null);
 
-  const {
-    data: famille,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["famille", id],
-    queryFn: () => getFamille(id).then((res) => res.data),
-    enabled: !!id,
-  });
+ const {
+  data: famille,
+  isLoading,
+  isError,
+  error,
+  refetch: refetchFamille,
+} = useQuery({
+  queryKey: ["famille", id],
+  queryFn: () => getFamille(id).then((res) => res.data),
+  enabled: !!id,
+});
 
   const { data: visitesResponse, isLoading: visitesLoading  , isError: visitesError, } = useQuery({
     queryKey: ["visites", id],
@@ -426,7 +425,6 @@ const coordinateurs = coordinateursData
 
  
     const handleSave = () => {
-    setInfoMessage(null);
     setErrorMessage(null);
 
     if (errors.date_entree) {
@@ -435,7 +433,7 @@ const coordinateurs = coordinateursData
     }
 
     if (nothingChanged) {
-      setInfoMessage("Aucune modification à enregistrer.");
+      setErrorMessage("Aucune modification à enregistrer.");
       return;
     }
     saveMut.mutate(patch);
@@ -711,19 +709,23 @@ const makeHandler = (fields) => (index, value) => {
   famille={famille}
   isLoading={visitesLoading}
 />
+<PopupFinSuivi
+  open={openFinSuivi}
+  onClose={() => setOpenFinSuivi(false)}
+  onConfirm={async (motif, dateSortie) => {
+    await marquerSortie(famille.id, {
+      date_sortie: dateSortie,
+      motif_sortie: motif,
+    });
 
-            <PopupFinSuivi
-        open={openFinSuivi}
-        onClose={() => setOpenFinSuivi(false)}
-        onConfirm={async (motif, dateSortie) => {
-          await marquerSortie(famille.id, {
-            date_sortie: dateSortie,
-            motif_sortie: motif,
-          });
-          setOpenFinSuivi(false);
-          await queryClient.invalidateQueries({ queryKey: ["famille", id] });
-        }}
-      />
+    setOpenFinSuivi(false);
+
+    const { data: updated } = await refetchFamille();
+    if (updated) {
+      setForm(extractEditableFields(updated));
+    }
+  }}
+/>
 
       {openSuccess && (
         <Popup
@@ -755,11 +757,6 @@ const makeHandler = (fields) => (index, value) => {
         />
 
        <BackendErrorMessage message={errorMessage} className="mb-4" />
-        {infoMessage && (
-          <div className="mb-4 rounded-[10px] border border-gray-300 bg-gray-50 px-4 py-3 text-gray-600 text-sm">
-            {infoMessage}
-          </div>
-        )}
 
         <div className="grid grid-cols-1 xl:grid-cols-[520px_minmax(0,1fr)] gap-6 xl:gap-10 mb-8">
           <div className="w-full lg:w-[520px] h-[220px] sm:h-[260px] md:h-[300px] lg:h-[331px] rounded-[15px] overflow-hidden border border-[#E5E7EB] bg-white shadow-sm">

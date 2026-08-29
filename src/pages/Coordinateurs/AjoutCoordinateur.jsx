@@ -199,32 +199,47 @@ setSaving(true);
 setSaveError(null);
 
 try {
-  const payload = {
-    username,
-    telephone,
-    email,
-    nom,
-    prenom,
-    role: isAdmin ? role : "coordinator",
-    is_active: statut === "Active",
-    village,
-    password,
-  };
+  let payload;
 
   if (photoFile) {
-    payload.photo = photoFile;
+    // FormData obligatoire dès qu'on envoie un fichier binaire
+    payload = new FormData();
+    payload.append("username", username);
+    payload.append("telephone", telephone);
+    payload.append("email", email);
+    payload.append("nom", nom);
+    payload.append("prenom", prenom);
+    payload.append("role", isAdmin ? role : "coordinator");
+    payload.append("is_active", statut === "Active");
+    payload.append("village", village);
+    payload.append("password", password);
+    payload.append("photo", photoFile);
+  } else {
+    // Pas de photo : JSON classique, plus simple
+    payload = {
+      username,
+      telephone,
+      email,
+      nom,
+      prenom,
+      role: isAdmin ? role : "coordinator",
+      is_active: statut === "Active",
+      village,
+      password,
+    };
   }
 
   console.log("📦 Payload création coordinateur :", payload);
 
   const response = await createUser(payload);
-  
+
   await queryClient.invalidateQueries({ queryKey: ["users"] });
 
   console.log("✅ Coordinateur créé :", response.data);
 
   setCreatedCoordinatorId(response.data.id);
   setShowSuccessPopup(true);
+
 } catch (error) {
   console.error(
     "❌ Erreur lors de la création du coordinateur :",

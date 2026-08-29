@@ -10,6 +10,7 @@ import MesureInput from "../../components/Containers/MesureInput";
 import TextArea from "../../components/Containers/Textarea";
 import SelectInput from "../../components/Containers/ChoiceContainer";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 import StatusBadge from "../../components/Cards/Badge";
 import ZScoreBox from "../../components/Containers/ZScoreBox";
 
@@ -27,6 +28,112 @@ import { listFamilles } from "@/lib/api/familles";
 
 
 import { createVisite, getPreCreationVisite } from "../../lib/api/visites";
+
+const KNOWN_FIELDS = [
+  "famille",
+  "date_visite",
+  "cycle",
+  "poids_bebe",
+  "taille_bebe",
+  "muac_bebe",
+  "mesure_couchee",
+  "poids_mere",
+  "taille_mere",
+  "muac_mere",
+  "observations_cliniques_bebe",
+  "observations_cliniques_mere",
+  "evaluation_famille",
+  "month",
+  "hemoglobine",
+];
+
+const FIELD_KEY_MAP = {
+  famille: "famille",
+  date_visite: "date",
+  cycle: "numeroCycle",
+  poids_bebe: "poidsNourrisson",
+  taille_bebe: "tailleNourrisson",
+  muac_bebe: "muacNourrisson",
+  mesure_couchee: "positionNourrisson",
+  poids_mere: "poidsMere",
+  taille_mere: "tailleMere",
+  muac_mere: "muacMere",
+  observations_cliniques_bebe: "observationsNourrisson",
+  observations_cliniques_mere: "observationsMere",
+  evaluation_famille: "evaluationVisuelle",
+  month: "mois",
+  hemoglobine: "hemoglobine",
+};
+
+function parseBackendErrors(data, status) {
+  if (!data) return { fieldErrors: {}, generalMessage: null };
+
+  if (typeof data === "string" && /<html[\s>]/i.test(data)) {
+    if (status === 404) {
+      return {
+        fieldErrors: {},
+        generalMessage: "Le service demandé est introuvable. Veuillez réessayer plus tard ou contacter le support.",
+      };
+    }
+    return {
+      fieldErrors: {},
+      generalMessage: "Une erreur inattendue est survenue côté serveur. Veuillez réessayer plus tard.",
+    };
+  }
+
+  if (typeof data === "string") {
+    return { fieldErrors: {}, generalMessage: data };
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    return { fieldErrors: {}, generalMessage: messages.join(" — ") || null };
+  }
+
+  if (data.detail) {
+    return { fieldErrors: {}, generalMessage: data.detail };
+  }
+
+  if (typeof data.code === "string" && typeof data.message === "string") {
+    return { fieldErrors: {}, generalMessage: data.message };
+  }
+
+  if (typeof data === "object") {
+    const fieldErrors = {};
+    const generalMessages = [];
+
+    Object.entries(data).forEach(([field, messages]) => {
+      const text = Array.isArray(messages) ? messages.join(" ") : String(messages);
+
+      if (KNOWN_FIELDS.includes(field)) {
+        fieldErrors[field] = text;
+      } else if (field === "non_field_errors") {
+        generalMessages.push(text);
+      } else {
+        generalMessages.push(`${field} : ${text}`);
+      }
+    });
+
+    return {
+      fieldErrors,
+      generalMessage: generalMessages.length ? generalMessages.join(" — ") : null,
+    };
+  }
+
+  return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
+}
+
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
 
 const MOIS_OPTIONS = [
   { label: "Janvier", value: "janvier" },
@@ -160,6 +267,7 @@ export default function AjoutVisite() {
   // --- ERROR HANDLING ---
   const [errors, setErrors] = useState({
     famille: false,
+    date: false, 
     mois: false,
     numeroCycle: false,
     poidsNourrisson: false,
@@ -169,11 +277,13 @@ export default function AjoutVisite() {
     poidsMere: false,
     tailleMere: false,
     muacMere: false,
+    hemoglobine: false,
   });
 
   const validateForm = () => {
     const newErrors = {
       famille: !selectedFamille,
+      date: isFutureDate(date),
       mois: !mois,
       numeroCycle: !numeroCycle,
       poidsNourrisson: !poidsNourrisson,
@@ -183,14 +293,16 @@ export default function AjoutVisite() {
       poidsMere: !poidsMere,
       tailleMere: !tailleMere,
       muacMere: !muacMere,
+      hemoglobine: !hemoglobine,  
     };
     setErrors(newErrors);
     return !Object.values(newErrors).some(Boolean);
   };
 
-  // --- État de sauvegarde (appel API) ---
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
+  
+const [saving, setSaving] = useState(false);
+const [backendFieldErrors, setBackendFieldErrors] = useState({});
+const [backendGeneralError, setBackendGeneralError] = useState(null);
 
   // Convertit une date (Date ou string) en format "YYYY-MM-DD"
   const formatDate = (d) => {
@@ -201,59 +313,15 @@ export default function AjoutVisite() {
   };
 
 
-  const extractErrorMessage = (error) => {
-    const data = error.response?.data;
-
-    if (!data) {
-      return error.message || "Une erreur est survenue lors de l'enregistrement de la visite.";
-    }
-
-    if (typeof data === "string") {
-      return data;
-    }
-
-    if (Array.isArray(data)) {
-      const messages = data.filter((m) => typeof m === "string");
-      if (messages.length > 0) {
-        return messages.join(" — ");
-      }
-    }
-
-    if (data?.detail) {
-      return data.detail;
-    }
-
-    if (typeof data === "object" && !Array.isArray(data)) {
-      const messages = [];
-
-      Object.entries(data).forEach(([field, value]) => {
-        const values = Array.isArray(value) ? value : [value];
-
-        values.forEach((msg) => {
-          if (typeof msg !== "string") return;
-          if (field === "non_field_errors" || field === "detail") {
-            messages.push(msg);
-          } else {
-            messages.push(`${field} : ${msg}`);
-          }
-        });
-      });
-
-      if (messages.length > 0) {
-        return messages.join(" — ");
-      }
-    }
-
-    return "Une erreur est survenue lors de l'enregistrement de la visite.";
-  };
-
-
 
   const handleSave = async () => {
     if (!validateForm()) return;
 
     setSaving(true);
-    setSaveError(null);
+    
+    setBackendFieldErrors({});
+    setBackendGeneralError(null);
+   
 
     // "mois" (dropdown) -> numéro 1-12 pour le champ "month" attendu par l'API
     const monthIndex = MOIS_OPTIONS.findIndex((m) => m.value === mois) + 1;
@@ -308,7 +376,21 @@ export default function AjoutVisite() {
     error.response?.data || error.message
   );
 
-  setSaveError(extractErrorMessage(error));
+  const { fieldErrors, generalMessage } = parseBackendErrors(
+    error.response?.data,
+    error.response?.status
+  );
+
+  const mappedFieldErrors = {};
+  Object.entries(fieldErrors).forEach(([backendField, message]) => {
+    const localKey = FIELD_KEY_MAP[backendField] || backendField;
+    mappedFieldErrors[localKey] = message;
+  });
+
+  setBackendFieldErrors(mappedFieldErrors);
+  setBackendGeneralError(
+    generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la visite.")
+  );
 } finally {
   setSaving(false);
 }
@@ -355,6 +437,10 @@ export default function AjoutVisite() {
     if (value) setErrors((prev) => ({ ...prev, muacMere: false }));
   };
 
+  const handleHemoglobineChange = (value) => {
+  setHemoglobine(value);
+  if (value) setErrors((prev) => ({ ...prev, hemoglobine: false }));
+};
   const navigate = useNavigate();
 
   const [openFamilles, setOpenFamilles] = useState(false);
@@ -369,7 +455,7 @@ export default function AjoutVisite() {
   } = useQuery({
     queryKey: ["familles-popup"],
     queryFn: () => listFamilles().then((r) => r.data),
-    enabled: openFamilles, // 👈 ne fetch que quand le popup s'ouvre (optionnel, tu peux retirer si tu veux précharger)
+    enabled: openFamilles, 
   });
 
   const famillesBrutes = famillesData?.results ?? famillesData ?? [];
@@ -460,8 +546,8 @@ export default function AjoutVisite() {
     }
   };
 
-  // --- Pré-création : appelée dès qu'une famille est sélectionnée ---
-  // GET /api/visites/pre_creation/?famille=<code>
+  // Pré-création : appelée dès qu'une famille est sélectionnée
+
   // -> { date_visite, date_derniere_visite, est_visite_retard, nb_jours, numero_visite, cycle }
   const {
     data: preCreationData,
@@ -483,8 +569,7 @@ export default function AjoutVisite() {
     }
   }, [preCreationError, selectedFamille?.code]);
 
-  // Dès que la pré-création répond, on pré-remplit le numéro de cycle
-  // (sauf si on revient sur un brouillon qui avait déjà une valeur saisie)
+
   useEffect(() => {
     if (preCreationData && !draft?.numeroCycle) {
       setNumeroCycle(
@@ -493,13 +578,13 @@ export default function AjoutVisite() {
           : ""
       );
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [preCreationData]);
 
   return (
   <div className="flex h-screen bg-white overflow-hidden">
 
-    <Sidebar role="coordinator" />
+    <Sidebar  />
   
 
   <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
@@ -575,9 +660,14 @@ export default function AjoutVisite() {
               description="Cliquer pour rechercher la famille concerne par la distribution"
               onAction={handleSearch}
             />
+           
             <ErrorMessage
-              message={errors.famille ? "Veuillez sélectionner une famille" : null}
-            />
+  message={
+    errors.famille
+      ? "Veuillez sélectionner une famille"
+      : backendFieldErrors.famille || null
+  }
+/>
           </div>
         )}
 
@@ -636,8 +726,15 @@ export default function AjoutVisite() {
           </>
         )}
 
+ {backendGeneralError && (
+  <div className="mt-2">
+    <BackendErrorMessage message={backendGeneralError} />
+  </div>
+)}
         {/* Main content */}
    <div className="mt-5 grid grid-cols-1 lg:grid-cols-[11fr_9fr] gap-6">
+
+   
           {/* LEFT COLUMN */}
           <div className="flex flex-col gap-4">
             {/* Date + Visite number */}
@@ -655,7 +752,18 @@ export default function AjoutVisite() {
 
               <div className="mt-2 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
                 <div className="flex flex-col gap-1">
-                  <DateContainer value={date} onChange={setDate} noPadding hideLabelSpace />
+                 <DateContainer
+  value={date}
+  onChange={(newDate) => {
+    setDate(newDate);
+    setErrors((prev) => ({
+      ...prev,
+      date: isFutureDate(newDate),
+    }));
+  }}
+  noPadding
+  hideLabelSpace
+/>
                 </div>
 
                 {/* Mois - dropdown */}
@@ -700,10 +808,24 @@ export default function AjoutVisite() {
                     />
                   </div>
                   <ErrorMessage
-                    message={errors.mois ? "Veuillez sélectionner un mois" : null}
-                  />
+  message={
+    errors.mois
+      ? "Veuillez sélectionner un mois"
+      : backendFieldErrors.mois || null
+  }
+/>
                 </div>
+              
               </div>
+               <div className="mt-1">
+                <ErrorMessage
+  message={
+    errors.date
+      ? "La date de la visite ne peut pas être supérieure à la date d'aujourd'hui."
+      : backendFieldErrors.date || null
+  }
+/>
+</div>
 
                {selectedFamille && (
               <div className="mt-3 grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-2 items-start">
@@ -780,7 +902,13 @@ export default function AjoutVisite() {
                     value={poidsNourrisson}
                     onChange={(e) => handlePoidsNourrissonChange(e.target.value)}
                   />
-                  <ErrorMessage message={errors.poidsNourrisson ? "Requis" : null} />
+                  <ErrorMessage
+  message={
+    errors.poidsNourrisson
+      ? "Requis"
+      : backendFieldErrors.poidsNourrisson || null
+  }
+/>
                 </div>
                 <div className="flex flex-col gap-1">
                   <MesureInput
@@ -789,7 +917,13 @@ export default function AjoutVisite() {
                     value={tailleNourrisson}
                     onChange={(e) => handleTailleNourrissonChange(e.target.value)}
                   />
-                  <ErrorMessage message={errors.tailleNourrisson ? "Requis" : null} />
+                  <ErrorMessage
+  message={
+    errors.tailleNourrisson
+      ? "Requis"
+      : backendFieldErrors.tailleNourrisson || null
+  }
+/>
                 </div>
                 <div className="flex flex-col gap-1">
                   <MesureInput
@@ -798,7 +932,13 @@ export default function AjoutVisite() {
                     value={muacNourrisson}
                     onChange={(e) => handleMuacNourrissonChange(e.target.value)}
                   />
-                  <ErrorMessage message={errors.muacNourrisson ? "Requis" : null} />
+                  <ErrorMessage
+  message={
+    errors.muacNourrisson
+      ? "Requis"
+      : backendFieldErrors.muacNourrisson || null
+  }
+/>
                 </div>
               </div>
 
@@ -818,13 +958,13 @@ export default function AjoutVisite() {
                   error={errors.positionNourrisson}
                   noPadding
                 />
-                <ErrorMessage
-                  message={
-                    errors.positionNourrisson
-                      ? "Veuillez préciser la position lors de la prise des mesures"
-                      : null
-                  }
-                />
+              <ErrorMessage
+  message={
+    errors.positionNourrisson
+      ? "Veuillez préciser la position lors de la prise des mesures"
+      : backendFieldErrors.positionNourrisson || null
+  }
+/>
               </div>
 
               <h2 className="text-[18px] font-semibold text-[#000000] mb-2 mt-6">
@@ -840,6 +980,7 @@ export default function AjoutVisite() {
                 bgColor="bg-white"
               />
             </div>
+            <ErrorMessage message={backendFieldErrors.observationsNourrisson || null} />
           </div>
 
           {/* RIGHT COLUMN */}
@@ -868,7 +1009,13 @@ export default function AjoutVisite() {
                     value={poidsMere}
                     onChange={(e) => handlePoidsMereChange(e.target.value)}
                   />
-                  <ErrorMessage message={errors.poidsMere ? "Requis" : null} />
+                  <ErrorMessage
+  message={
+    errors.poidsMere
+      ? "Requis"
+      : backendFieldErrors.poidsMere || null
+  }
+/>
                 </div>
                 <div className="flex flex-col gap-0">
                   <MesureInput
@@ -877,7 +1024,13 @@ export default function AjoutVisite() {
                     value={tailleMere}
                     onChange={(e) => handleTailleMereChange(e.target.value)}
                   />
-                  <ErrorMessage message={errors.tailleMere ? "Requis" : null} />
+                  <ErrorMessage
+  message={
+    errors.tailleMere
+      ? "Requis"
+      : backendFieldErrors.tailleMere || null
+  }
+/>
                 </div>
                 <div className="flex flex-col gap-0">
                   <MesureInput
@@ -886,16 +1039,29 @@ export default function AjoutVisite() {
                     value={muacMere}
                     onChange={(e) => handleMuacMereChange(e.target.value)}
                   />
-                  <ErrorMessage message={errors.muacMere ? "Requis" : null} />
+                  <ErrorMessage
+  message={
+    errors.muacMere
+      ? "Requis"
+      : backendFieldErrors.muacMere || null
+  }
+/>
                 </div>
-                <div className="flex flex-col gap-0">
-                  <MesureInput
-                    label="Hémoglobine"
-                    unit="g/dL"
-                    value={hemoglobine}
-                    onChange={(e) => setHemoglobine(e.target.value)}
-                  />
-                </div>
+               <div className="flex flex-col gap-0">
+  <MesureInput
+    label="Hémoglobine"
+    unit="g/dL"
+    value={hemoglobine}
+    onChange={(e) => handleHemoglobineChange(e.target.value)}
+  />
+  <ErrorMessage
+    message={
+      errors.hemoglobine
+        ? "Requis"
+        : backendFieldErrors.hemoglobine || null
+    }
+  />
+</div>
               </div>
 
              
@@ -912,6 +1078,7 @@ export default function AjoutVisite() {
                 height="h-[70px]"
                 bgColor="bg-white"
               />
+              <ErrorMessage message={backendFieldErrors.observationsMere || null} />
             </div>
 
             {/* Evaluation visuelle */}
@@ -937,6 +1104,7 @@ export default function AjoutVisite() {
                 height="h-[70px]"
                 bgColor="bg-white"
               />
+              <ErrorMessage message={backendFieldErrors.evaluationVisuelle || null} />
             </div>
           </div>
         </div>
@@ -950,7 +1118,7 @@ export default function AjoutVisite() {
             onClick={handleSave}
             disabled={saving}
           />
-          {saveError && <ErrorMessage message={saveError} />}
+        
         </div>
 
         {showSuccessPopup && (

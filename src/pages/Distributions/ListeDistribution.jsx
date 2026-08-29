@@ -158,20 +158,35 @@ const produitsData = produitsResponse?.results || [];
 
 const [products, setProducts] = useState([]);
 
+
+
 useEffect(() => {
   if (produitsData.length) {
     setProducts(
-      produitsData.map((p) => ({
-        id: p.id,
-        nom: p.nom,
-        quantity: Number(p.stock_courant),
-        unite: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "Kg" : p.unite,
-        threshold: Number(p.alerte_seuil),
-        statut: p.validee ? "valide" : "en_attente",
-      }))
+      produitsData.map((p) => {
+        const estEnAttente = !p.validee;
+        const doitAfficherStockInitial = estEnAttente && canManageStock;
+
+        return {
+          id: p.id,
+          nom: p.nom,
+          quantity: Number(
+            doitAfficherStockInitial ? p.stock_initial : p.stock_courant
+          ),
+          unite: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "Kg" : p.unite,
+          threshold: Number(p.alerte_seuil),
+          statut: p.validee ? "valide" : "en_attente",
+          date: p.audit?.date_creation
+            ? new Date(p.audit.date_creation).toLocaleDateString("fr-FR")
+            : null,
+          enregistrePar: p.audit?.cree_par
+            ? `${p.audit.cree_par.nom ?? ""} ${p.audit.cree_par.prenom ?? ""}`.trim()
+            : null,
+        };
+      })
     );
   }
-}, [produitsResponse]);
+}, [produitsResponse, canManageStock]);
  
 
 const {
@@ -205,8 +220,9 @@ const historiqueMouvements = mapHistorique(historiqueData);
         nom: item.nom,
         quantite: item.quantity,
         unite: item.unite,
-        date: item.date,
-        enregistrePar: item.enregistrePar,
+        
+          date: item.date,            
+          enregistrePar: item.enregistrePar,  
       });
       setShowValidation(true);
     
@@ -422,9 +438,7 @@ const historiqueMouvements = mapHistorique(historiqueData);
 ) : (
   <NavigationHeader
     title="Liste des distributions"
-    secondType="add"
-    secondActionTitle="Ajouter une distribution"
-    onSecondAction={() => navigate("/ajout-distribution")}
+   
   />
 )}
 
@@ -589,7 +603,7 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
           />
         )}
 
-      <PopupValidationProduit
+    <PopupValidationProduit
   open={showValidation}
   produit={produitSelectionne}
   onClose={() => {
@@ -599,16 +613,11 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
   onValider={async ({ id, quantite }) => {
     await validerProduit(id, { stock_initial: String(quantite) });
     await refetchProduits();
-    setShowValidation(false);
-    setProduitSelectionne(null);
+    // no more setShowValidation(false) / setProduitSelectionne(null) here —
+    // the popup stays open on its own to show the success banner,
+    // then calls onClose itself once the banner timeout finishes
   }}
-  onRefuser={({ id }) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, statut: "refuse" } : p))
-    );
-    setShowValidation(false);
-    setProduitSelectionne(null);
-  }}
+ 
 />
          <PopupHistoriqueProduit
   open={showHistorique}

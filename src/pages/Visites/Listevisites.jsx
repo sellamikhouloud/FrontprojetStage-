@@ -14,7 +14,7 @@ import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
 import PopupDetailVisite from "../../components/Popups/Popupdetailsvisite";
 import PopupDetailVisiteModifier from "../../components/Popups/PopupdetailvisiteModifier";
-
+import { useAuth } from "../../components/Providers/AuthProvider";
 import { listVisites, getVisite, annulerVisite } from "../../lib/api/visites";
 
 const getBadgeBebe = (statut) => {
@@ -54,6 +54,8 @@ function formatDateYYYYMMDD(date) {
 }
 
 export default function ListeVisites() {
+   const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -220,12 +222,18 @@ export default function ListeVisites() {
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-        <NavigationHeader
-          title="Liste des visites"
-          secondType="add"
-          secondActionTitle="Ajouter une visite"
-          onSecondAction={() => navigate("/ajout-visite")}
-        />
+      {isAdmin ? (
+  <NavigationHeader
+    title="Liste des visites"
+    secondType="add"
+    secondActionTitle="Ajouter une visite"
+    onSecondAction={() => navigate("/ajout-visite")}
+  />
+) : (
+  <NavigationHeader
+    title="Liste des visites"
+  />
+)}
 
         <div className="my-6">
           <SearchBar

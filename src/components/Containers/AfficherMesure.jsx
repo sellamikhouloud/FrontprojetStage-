@@ -3,12 +3,13 @@ export default function AfficherMesure({
   poids,
   taille,
   muac,
-  statutImc,
   hemoglobine,
+  statutImc,
+  hemoglobineStatut,
   variant = "mesures",
   type = "nourrisson",
 }) {
- 
+
   if (variant === "complement") {
     return (
       <div className="w-full">
@@ -20,25 +21,25 @@ export default function AfficherMesure({
           <div className="grid grid-cols-2 items-center text-center">
             {/* Statut IMC */}
             <div className="relative">
-              <p className="text-[16px] text-[#666666]">
+              <p className="text-[14px] sm:text-[16px] text-[#666666]">
                 Statut IMC
               </p>
 
-              <p className="text-[18px] font-bold text-[#202124]">
+              <p className="text-[16px] sm:text-[18px] font-bold text-[#202124]">
                 {statutImc ?? "-"}
               </p>
 
               <div className="absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
             </div>
 
-            {/* Hémoglobine */}
+            {/* Hémoglobine (statut) */}
             <div>
-              <p className="text-[16px] text-[#666666]">
+              <p className="text-[14px] sm:text-[16px] text-[#666666]">
                 Statut Hémoglobine
               </p>
 
-              <p className="text-[18px] font-bold text-[#202124]">
-                {hemoglobine ?? "-"}
+              <p className="text-[16px] sm:text-[18px] font-bold text-[#202124]">
+                {hemoglobineStatut ?? "-"}
               </p>
             </div>
           </div>
@@ -47,44 +48,21 @@ export default function AfficherMesure({
     );
   }
 
-  
-
   const isMere = type === "mere";
 
-  
-  const poidsAffiche = isMere
-    ? poids != null
-      ? (Number(poids) / 1000).toFixed(2)
-      : "-"
-    : poids != null
-    ? Number(poids).toFixed(2)
-    : "-";
-
+  // Affichage direct, sans conversion, pour tout le monde (mère et nourrisson)
+  const poidsAffiche = poids != null ? Number(poids).toFixed(2) : "-";
   const poidsUnite = isMere ? "kg" : "g";
 
-  
-  const tailleAffiche = isMere
-    ? taille != null
-      ? (Number(taille) / 100).toFixed(2)
-      : "-"
-    : taille != null
-    ? Number(taille).toFixed(2)
-    : "-";
-
+  const tailleAffiche = taille != null ? Number(taille).toFixed(2) : "-";
   const tailleUnite = isMere ? "m" : "cm";
 
- 
-  const muacAffiche = isMere
-    ? muac != null
-      ? (Number(muac) / 10).toFixed(2)
-      : "-"
-    : muac != null
-    ? Number(muac).toFixed(2)
-    : "-";
-
+  const muacAffiche = muac != null ? Number(muac).toFixed(2) : "-";
   const muacUnite = isMere ? "cm" : "mm";
 
-  
+  // Hémoglobine (valeur brute) — uniquement pour la mère
+  const hemoglobineAffiche = hemoglobine != null ? Number(hemoglobine).toFixed(2) : "-";
+  const hemoglobineUnite = "g/dL";
 
   return (
     <div className="w-full">
@@ -93,53 +71,91 @@ export default function AfficherMesure({
       </h3>
 
       <div className="rounded-[14px] border border-[#9CD6D2] bg-white px-4 py-2">
-        <div className="grid grid-cols-3 items-center text-center">
+        <div
+          className={`
+            grid
+            ${isMere ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}
+            items-center
+            text-center
+            gap-y-4
+            sm:gap-y-0
+          `}
+        >
 
           {/* ================= POIDS ================= */}
-          <div>
-            <p className="text-[16px] text-[#666666]">
+          <div className="relative">
+            <p className="text-[14px] sm:text-[16px] text-[#666666]">
               Poids
             </p>
 
-            <p className="text-[18px] font-bold text-[#202124]">
+            <p className="text-[16px] sm:text-[18px] font-bold text-[#202124] whitespace-nowrap">
               {poidsAffiche}{" "}
-              <span className="text-[14px]">
+              <span className="text-[12px] sm:text-[14px]">
                 {poidsUnite}
               </span>
             </p>
+
+            {isMere && (
+              <div className="hidden sm:block absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
+            )}
           </div>
 
           {/* ================= TAILLE ================= */}
           <div className="relative">
-            <div className="absolute left-0 top-1/2 h-10 -translate-y-1/2 border-l border-[#E5E7EB]" />
+            {!isMere && (
+              <div className="absolute left-0 top-1/2 h-10 -translate-y-1/2 border-l border-[#E5E7EB]" />
+            )}
+            {isMere && (
+              <div className="hidden sm:block absolute left-0 top-1/2 h-10 -translate-y-1/2 border-l border-[#E5E7EB]" />
+            )}
 
-            <p className="text-[16px] text-[#666666]">
+            <p className="text-[14px] sm:text-[16px] text-[#666666]">
               Taille
             </p>
 
-            <p className="text-[18px] font-bold text-[#202124]">
+            <p className="text-[16px] sm:text-[18px] font-bold text-[#202124] whitespace-nowrap">
               {tailleAffiche}{" "}
-              <span className="text-[14px]">
+              <span className="text-[12px] sm:text-[14px]">
                 {tailleUnite}
               </span>
             </p>
 
-            <div className="absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
+            <div className="hidden sm:block absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
           </div>
 
           {/* ================= MUAC ================= */}
-          <div>
-            <p className="text-[16px] text-[#666666]">
+          <div className="relative">
+            <p className="text-[14px] sm:text-[16px] text-[#666666]">
               MUAC
             </p>
 
-            <p className="text-[18px] font-bold text-[#202124]">
+            <p className="text-[16px] sm:text-[18px] font-bold text-[#202124] whitespace-nowrap">
               {muacAffiche}{" "}
-              <span className="text-[14px]">
+              <span className="text-[12px] sm:text-[14px]">
                 {muacUnite}
               </span>
             </p>
+
+            {isMere && (
+              <div className="hidden sm:block absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
+            )}
           </div>
+
+          {/* ================= HÉMOGLOBINE (mère uniquement) ================= */}
+          {isMere && (
+            <div>
+              <p className="text-[14px] sm:text-[16px] text-[#666666]">
+                Hémoglobine
+              </p>
+
+              <p className="text-[16px] sm:text-[18px] font-bold text-[#202124] whitespace-nowrap">
+                {hemoglobineAffiche}{" "}
+                <span className="text-[12px] sm:text-[14px]">
+                  {hemoglobineUnite}
+                </span>
+              </p>
+            </div>
+          )}
 
         </div>
       </div>

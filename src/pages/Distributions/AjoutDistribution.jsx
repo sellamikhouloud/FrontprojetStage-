@@ -26,13 +26,14 @@ import PopupListeFamilles from "../../components/Popups/PopupListeFamilles";
 import ConfirmationForm from "../../components/Forms/ConfirmationForm";
 import SelectProductsPopup from "../../components/Popups/SelectProductsPopup";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
+import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 
 import { useQuery } from "@tanstack/react-query";
-import { listProduits } from "@/lib/api/stock";
+
 
 import { listFamilles } from "@/lib/api/familles";
 import { createDistribution, getPreCreationDistribution, updateDistribution } from "@/lib/api/distributions";
@@ -66,6 +67,20 @@ const isFutureDate = (date) => {
   return selected > today;
 };
 
+
+const areProduitsEqual = (a = [], b = []) => {
+  if (a.length !== b.length) return false;
+
+  const normalize = (list) =>
+    [...list]
+      .map((p) => `${p.produit}:${Number(p.quantite ?? 0)}`)
+      .sort(); // insensible à l'ordre
+
+  const na = normalize(a);
+  const nb = normalize(b);
+
+  return na.every((val, i) => val === nb[i]);
+};
 const detectLaitTypeValue = (nomProduitLait = "") => {
   const nom = nomProduitLait.toLowerCase();
   if (nom.includes("1er")) return "1er_age";
@@ -127,26 +142,7 @@ const produitLaitSource = isEditMode
 
   const [selectedFamille, setSelectedFamille] = useState(source?.selectedFamille || null);
 
-  // Produits classiques disponibles — chargés seulement une fois la famille choisie
-  const {
-    data: produitsResponse,
-    isLoading: produitsLoading,
-    isError: produitsError,
-  } = useQuery({
-    queryKey: ["produits-list", selectedFamille?.code],
-    queryFn: () => listProduits().then((r) => r.data),
-    enabled: !!selectedFamille?.code,
-  });
-
-  const stockProducts = (produitsResponse?.results || [])
-    .filter((p) => p.validee && p.type_produit !== "lait" && !p.nom?.toLowerCase().includes("lait"))
-    .map((p) => ({
-      id: p.id,
-      icon: iconByNom[p.nom] || DEFAULT_STOCK_ICON,
-      title: p.nom,
-      quantity: Number(p.stock_courant),
-      unit: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "kg" : p.unite,
-    }));
+ 
 
   const [products, setProducts] = useState(withDefaultIcon(source?.products));
 const [date, setDate] = useState(() => {
@@ -182,7 +178,10 @@ const baselineRef = useRef(
     : null
 );
 
-  const [confirmed, setConfirmed] = useState(source?.confirmed || false);
+ const [confirmed, setConfirmed] = useState(() => {
+  if (isEditMode) return Boolean(distributionAModifier?.reception_confirmee);
+  return source?.confirmed || false;
+});
 
   // --- Lait infantile ---
   // type : "1er_age" | "2eme_age"
@@ -204,13 +203,27 @@ const [boxes, setBoxes] = useState(() => {
 
   // Pré-création : donne le détail des grammages dispo (avec nb_boites) par type de lait
   const {
-    data: preCreationData,
-    isFetching: preCreationLoading,
-  } = useQuery({
-    queryKey: ["distribution-pre-creation", selectedFamille?.code],
-    queryFn: () => getPreCreationDistribution(selectedFamille.code).then((r) => r.data),
-    enabled: !!selectedFamille?.code,
-  });
+  data: preCreationData,
+  isFetching: preCreationLoading,
+  isError: preCreationError,
+} = useQuery({
+  queryKey: ["distribution-pre-creation", selectedFamille?.code],
+  queryFn: () => getPreCreationDistribution(selectedFamille.code).then((r) => r.data),
+  enabled: !!selectedFamille?.code,
+});
+
+
+
+const stockProducts = (preCreationData?.produits || [])
+  .filter((p) => !p.nom?.toLowerCase().includes("lait"))
+  .map((p) => ({
+    id: p.id,
+    icon: iconByNom[p.nom] || DEFAULT_STOCK_ICON,
+    title: p.nom,
+    quantity: Number(p.stock),
+    unit: p.unite === "boite" ? "boîtes" : p.unite === "kg" ? "kg" : p.unite,
+  }));
+
 
   // Grammages disponibles pour le type de lait actuellement sélectionné
   const laitOptions = preCreationData?.lait?.[laitType] || [];
@@ -326,70 +339,95 @@ useEffect(() => {
   };
 
   // Extrait un message d'erreur lisible depuis une réponse API (from the backend)
-  const extractErrorMessage = (error) => {
-    const data = error.response?.data;
+ const extractErrorMessage = (error) => {
+  const data = error.response?.data;
+  const contentType = error.response?.headers?.["content-type"] || "";
 
-    if (!data) {
-      return error.message || "Une erreur est survenue lors de l'enregistrement de la distribution.";
+  const messageGenerique = "Une erreur est survenue lors de l'enregistrement de la distribution.";
+
+  // Si la réponse est du HTML (page d'erreur Django/serveur) plutôt que du JSON,
+  // on ne tente même pas de l'analyser — on affiche un message générique.
+  if (contentType.includes("text/html")) {
+    return messageGenerique;
+  }
+
+  if (!data) {
+    return error.message || messageGenerique;
+  }
+
+  if (typeof data === "string") {
+    // Sécurité supplémentaire : si jamais c'est une string mais qu'elle contient du HTML
+    if (data.trim().startsWith("<!DOCTYPE") || data.trim().startsWith("<html")) {
+      return messageGenerique;
     }
+    return data;
+  }
 
-    if (typeof data === "string") {
-      return data;
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
     }
+  }
 
-    if (Array.isArray(data)) {
-      const messages = data.filter((m) => typeof m === "string");
-      if (messages.length > 0) {
-        return messages.join(" — ");
-      }
-    }
+  if (data?.detail) {
+    return data.detail;
+  }
 
-    if (data?.detail) {
-      return data.detail;
-    }
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const messages = [];
 
-    if (typeof data === "object" && !Array.isArray(data)) {
-      const messages = [];
+    Object.entries(data).forEach(([field, value]) => {
+      const values = Array.isArray(value) ? value : [value];
 
-      Object.entries(data).forEach(([field, value]) => {
-        const values = Array.isArray(value) ? value : [value];
-
-        values.forEach((msg) => {
-          if (typeof msg !== "string") return;
-          if (field === "non_field_errors" || field === "detail") {
-            messages.push(msg);
-          } else {
-            messages.push(`${field} : ${msg}`);
-          }
-        });
+      values.forEach((msg) => {
+        if (typeof msg !== "string") return;
+        if (field === "non_field_errors" || field === "detail") {
+          messages.push(msg);
+        } else {
+          messages.push(`${field} : ${msg}`);
+        }
       });
+    });
 
-      if (messages.length > 0) {
-        return messages.join(" — ");
-      }
+    if (messages.length > 0) {
+      return messages.join(" — ");
     }
+  }
 
-    return "Une erreur est survenue lors de l'enregistrement de la distribution.";
-  };
+  return messageGenerique;
+};
 
   try {
-       if (isEditMode) {
-      const currentPayload = {
-        produits: produitsPayload,
-        date_distribution: payload.date_distribution,
-        reception_confirmee: payload.reception_confirmee,
-      };
+    if (isEditMode) {
+  const currentPayload = {
+    produits: produitsPayload,
+    date_distribution: payload.date_distribution,
+    reception_confirmee: payload.reception_confirmee,
+  };
 
-      const patch = diffPatch(baselineRef.current, currentPayload);
+  const patch = diffPatch(baselineRef.current, currentPayload);
 
-      if (!isEmptyPatch(patch)) {
-        await updateDistribution(distributionAModifier.id, patch);
-      }
-    } else {
-      await createDistribution(payload);
-    }
+  if (
+    "produits" in patch &&
+    areProduitsEqual(baselineRef.current.produits, currentPayload.produits)
+  ) {
+    delete patch.produits;
+  }
 
-    setShowSuccessPopup(true);
+  if (isEmptyPatch(patch)) {
+    setSaveError("Aucune modification à enregistrer.");
+    setSaving(false);
+    return;
+  }
+
+  await updateDistribution(distributionAModifier.id, patch);
+
+} else {
+  await createDistribution(payload);
+}
+
+setShowSuccessPopup(true);
     } catch (error) {
     console.error(
       isEditMode
@@ -621,9 +659,23 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar role={role} />
+      <Sidebar  />
 
       <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+        {/* Espace blanc FIXE en haut — desktop only */}
+   <div
+     className="
+       hidden
+       lg:block
+       lg:absolute
+       lg:top-0
+       lg:left-0
+       lg:right-0
+       lg:h-4
+       bg-white
+       z-20
+     "
+   />
        
 
         {/* Zone scrollable UNIQUE */}
@@ -723,6 +775,11 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
             </div>
           </>
         )}
+        {saveError && (
+  <div className="mt-3">
+    <BackendErrorMessage message={saveError} />
+  </div>
+)}
 
         {/* Main content */}
         <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
@@ -826,20 +883,20 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
           <div>
             <ColisAlimentaire
     products={products}
-    onAddProduct={() => {
-      if (!selectedFamille) {
-        setErrors((prev) => ({ ...prev, famille: true }));
-        return;
-      }
-      if (!produitsLoading) setShowStockPopup(true);
-    }}
+   onAddProduct={() => {
+  if (!selectedFamille) {
+    setErrors((prev) => ({ ...prev, famille: true }));
+    return;
+  }
+  if (!preCreationLoading) setShowStockPopup(true);
+}}
     onUpdateQuantity={handleUpdateQuantity}
     onRemoveProduct={handleRemoveProduct}
     errors={errors.produits}
   />
-  {produitsError && (
-    <p className="text-red-500 text-sm mt-1">Impossible de charger le stock disponible.</p>
-  )}
+  {preCreationError && (
+  <p className="text-red-500 text-sm mt-1">Impossible de charger le stock disponible.</p>
+)}
              <ErrorMessage
     message={
       errors.famille
@@ -876,7 +933,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
     onClick={handleSave}
     disabled={saving}
   />
-  {saveError && <ErrorMessage message={saveError} />}
+ 
 </div>
 
         {showSuccessPopup && (

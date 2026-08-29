@@ -31,6 +31,7 @@ function extractEditableVisiteFields(visite) {
     poids_mere: visite?.poids_mere ?? "",
     taille_mere: visite?.taille_mere ?? "",
     muac_mere: visite?.muac_mere ?? "",
+    hemoglobine: visite?.hemoglobine ?? "",
 
     observations_cliniques_bebe:
       visite?.observations_cliniques_bebe ?? "",
@@ -131,10 +132,6 @@ const PopupDetailVisiteModifier = ({
   onSave,
   famille,
 }) => {
-  // =====================================================
-  // ÉTATS
-  // =====================================================
-
   const queryClient = useQueryClient();
 
   const baseline = useMemo(
@@ -161,7 +158,6 @@ const PopupDetailVisiteModifier = ({
   const patch = useMemo(() => {
     if (!baseline || !form) return {};
     const rawPatch = diffPatch(baseline, form);
-    // La date doit être envoyée au format YYYY-MM-DD
     if ("date_visite" in rawPatch) {
       rawPatch.date_visite = toApiDateString(rawPatch.date_visite);
     }
@@ -170,18 +166,12 @@ const PopupDetailVisiteModifier = ({
 
   const nothingChanged = isEmptyPatch(patch);
 
-  // =====================================================
-  // FORMAT DATE
-  // =====================================================
-
   const formatDate = (date) => {
     if (!date) return "-";
     const parsedDate = new Date(date);
     if (isNaN(parsedDate.getTime())) return date;
     return parsedDate.toLocaleDateString("fr-FR");
   };
-
- 
 
   const handleSave = async () => {
     setErrorMessage(null);
@@ -202,7 +192,6 @@ const PopupDetailVisiteModifier = ({
       const response = await updateVisite(visite.id, patch);
       const updatedVisite = response?.data ?? response;
 
-    
       await Promise.all([
         queryClient.invalidateQueries({
           queryKey: ["visites", famille?.id],
@@ -233,7 +222,6 @@ const PopupDetailVisiteModifier = ({
 
   if (!open || !visite || !form) return null;
 
- 
   const enfant = famille?.nourrisson?.prenom || "-";
 
   const mere =
@@ -251,16 +239,12 @@ const PopupDetailVisiteModifier = ({
   const dateNaissance = famille?.nourrisson?.date_naissance || "-";
   const code = famille?.id || "-";
 
-  
-
   const numeroVisite =
     visite.numero_visite !== undefined && visite.numero_visite !== null
       ? visite.numero_visite
       : "-";
 
-  const dateEnregistrement = formatDate(visite.date_creation);
-
- 
+  const dateEnregistrement = formatDate(visite.audit?.date_creation);
 
   const infosGenerales = [
     {
@@ -300,7 +284,7 @@ const PopupDetailVisiteModifier = ({
     {
       key: "date_modification",
       label: "Date de modification",
-      value: formatDate(visite.date_modification),
+      value: formatDate(visite.audit?.date_modification),
       editable: false,
     },
   ];
@@ -314,7 +298,6 @@ const PopupDetailVisiteModifier = ({
       setForm((prev) => ({ ...prev, date_visite: value }));
     }
   };
-
 
   const statutBadges = [
     visite?.statut_nutritionnel === "mam" && {
@@ -362,13 +345,11 @@ const PopupDetailVisiteModifier = ({
     </div>
   );
 
- 
-
   const SaveButtonBlock = () => (
     <div className="w-full">
       {showBanner && <SuccessBanner text="Enregistré avec succès" />}
 
-     <BackendErrorMessage message={errorMessage} className="mb-2" />
+      <BackendErrorMessage message={errorMessage} className="mb-2" />
       <Button
         title={isSaving ? "Enregistrement..." : "Enregistrer"}
         variant="primary"
@@ -380,7 +361,6 @@ const PopupDetailVisiteModifier = ({
     </div>
   );
 
- 
   return (
     <AnimatePresence>
       <div
@@ -474,12 +454,13 @@ const PopupDetailVisiteModifier = ({
             <div className="space-y-3">
               <StatutCalculeBlock />
 
-             <ModifierMesure
+            <ModifierMesure
   title="Mesure mère"
   variant="mere"
   poids={form.poids_mere}
   taille={form.taille_mere}
   muac={form.muac_mere}
+  hemoglobine={form.hemoglobine}
   setPoids={(v) =>
     setForm((prev) => ({
       ...prev,
@@ -498,14 +479,15 @@ const PopupDetailVisiteModifier = ({
       muac_mere: v,
     }))
   }
+  setHemoglobine={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      hemoglobine: v,
+    }))
+  }
 />
 
-              <AfficherMesure
-                title="Informations complémentaires"
-                variant="complement"
-                statutImc={visite.statut_imc}
-                statutHemoglobine={visite.statut_hemoglobine}
-              />
+            
 
               <TextareaModifier
                 label="Observations cliniques mère"
@@ -580,12 +562,13 @@ const PopupDetailVisiteModifier = ({
               height="h-[55px]"
             />
 
-           <ModifierMesure
+          <ModifierMesure
   title="Mesure mère"
   variant="mere"
   poids={form.poids_mere}
   taille={form.taille_mere}
   muac={form.muac_mere}
+  hemoglobine={form.hemoglobine}
   setPoids={(v) =>
     setForm((prev) => ({
       ...prev,
@@ -604,14 +587,15 @@ const PopupDetailVisiteModifier = ({
       muac_mere: v,
     }))
   }
+  setHemoglobine={(v) =>
+    setForm((prev) => ({
+      ...prev,
+      hemoglobine: v,
+    }))
+  }
 />
 
-            <AfficherMesure
-              title="Informations complémentaires"
-              variant="complement"
-              statutImc={visite.statut_imc}
-              statutHemoglobine={visite.statut_hemoglobine}
-            />
+          
 
             <TextareaModifier
               label="Observations cliniques mère"

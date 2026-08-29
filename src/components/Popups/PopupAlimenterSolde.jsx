@@ -10,6 +10,13 @@ import ErrorMessage from "../Forms/ErrorMessage";
 import quitter from "../../assets/quitter.svg";
 import BackendErrorMessage from "../Forms/BackendErrorMessage";
 
+const getTodayString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 const isFutureDate = (date) => {
   if (!date) return false;
@@ -23,7 +30,6 @@ const isFutureDate = (date) => {
   return selected > today;
 };
 
-// Même logique que PopupFinSuivi.jsx — gère aussi le format backend { code, message }.
 function extractErrorMessage(error) {
   const data = error?.response?.data;
 
@@ -82,7 +88,8 @@ export default function PopupAlimenterSolde({
   onClose,
   onSave,
 }) {
-  const [date, setDate] = useState(new Date());
+ 
+  const [date, setDate] = useState(getTodayString());
   const [montant, setMontant] = useState("");
   const [note, setNote] = useState("");
 
@@ -155,15 +162,29 @@ export default function PopupAlimenterSolde({
     }
   };
 
-  /**
-   * Format YYYY-MM-DD pour le backend
-   */
-  const formatDate = (date) => {
-    if (!date) return "";
+  const handleDateChange = (newDate) => {
+  
+    setDate(newDate);
+    setErrors((prev) => ({
+      ...prev,
+      date: isFutureDate(newDate),
+    }));
+  };
 
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+ 
+  const formatDate = (value) => {
+    if (!value) return "";
+
+    if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      return value;
+    }
+
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return "";
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
 
     return `${year}-${month}-${day}`;
   };
@@ -206,7 +227,7 @@ export default function PopupAlimenterSolde({
 
         setMontant("");
         setNote("");
-        setDate(new Date());
+        setDate(getTodayString());
 
         setErrors({
           montant: false,
@@ -227,7 +248,7 @@ export default function PopupAlimenterSolde({
       const handleClose = () => {
     setMontant("");
     setNote("");
-    setDate(new Date());
+    setDate(getTodayString());
 
     setErrors({
       montant: false,
@@ -364,13 +385,7 @@ export default function PopupAlimenterSolde({
                 <DateContainer
                   label="Date"
                   value={date}
-                  onChange={(newDate) => {
-                    setDate(newDate);
-                    setErrors((prev) => ({
-                      ...prev,
-                      date: isFutureDate(newDate),
-                    }));
-                  }}
+                  onChange={handleDateChange}
                   noPadding
                 />
                 <ErrorMessage

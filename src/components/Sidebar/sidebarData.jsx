@@ -4,7 +4,6 @@ import homeWhite from "../../assets/home-white.svg";
 import familles from "../../assets/people.svg";
 import famillesWhite from "../../assets/people-white.svg";
 
-import avatar from "../../assets/Avatar.svg";
 import logo from "../../assets/Logo.svg";
 
 import distrib from "../../assets/distrib.svg";
@@ -43,7 +42,7 @@ export const sidebarConfig = {
 
   coordinator: {
     logo,
-    avatar,
+    
 
     navigation: [
       {
@@ -100,7 +99,7 @@ export const sidebarConfig = {
 
   chef_coordinator: {
     logo,
-    avatar,
+    
 
     navigation: [
       {
@@ -150,7 +149,7 @@ export const sidebarConfig = {
 
   admin: {
     logo,
-    avatar,
+    
 
     navigation: [
       {

@@ -4,48 +4,32 @@ export default function ModifierMesure({
   poids,
   taille,
   muac,
+  hemoglobine,
 
   setPoids,
   setTaille,
   setMuac,
+  setHemoglobine,
 
-  // "nourrisson" par défaut
-  // "mere" pour la mère
   variant = "nourrisson",
 }) {
   const isMere = variant === "mere";
 
-  // =====================================================
-  // VALEURS AFFICHÉES
-  // =====================================================
-
-  // API : grammes → affichage mère : kg
   const poidsAffiche =
-    poids === "" || poids === null || poids === undefined
-      ? ""
-      : isMere
-      ? Number(poids) / 1000
-      : poids;
+    poids === "" || poids === null || poids === undefined ? "" : poids;
 
-  // API : cm → affichage mère : m
   const tailleAffiche =
-    taille === "" || taille === null || taille === undefined
-      ? ""
-      : isMere
-      ? Number(taille) / 100
-      : taille;
+    taille === "" || taille === null || taille === undefined ? "" : taille;
 
-  // API : mm → affichage mère : cm
   const muacAffiche =
-    muac === "" || muac === null || muac === undefined
-      ? ""
-      : isMere
-      ? Number(muac) / 10
-      : muac;
+    muac === "" || muac === null || muac === undefined ? "" : muac;
 
-  // =====================================================
-  // MODIFICATION POIDS
-  // =====================================================
+  const hemoglobineAffiche =
+    hemoglobine === "" ||
+    hemoglobine === null ||
+    hemoglobine === undefined
+      ? ""
+      : hemoglobine;
 
   const handlePoidsChange = (value) => {
     if (value === "") {
@@ -54,17 +38,10 @@ export default function ModifierMesure({
     }
 
     const number = Number(value);
-
     if (isNaN(number)) return;
 
-    // Mère : kg → grammes pour l'API
-    // Nourrisson : on garde les grammes
-    setPoids?.(isMere ? number * 1000 : value);
+    setPoids?.(value);
   };
-
-  // =====================================================
-  // MODIFICATION TAILLE
-  // =====================================================
 
   const handleTailleChange = (value) => {
     if (value === "") {
@@ -73,17 +50,10 @@ export default function ModifierMesure({
     }
 
     const number = Number(value);
-
     if (isNaN(number)) return;
 
-    // Mère : mètres → cm pour l'API
-    // Nourrisson : on garde les cm
-    setTaille?.(isMere ? number * 100 : value);
+    setTaille?.(value);
   };
-
-  // =====================================================
-  // MODIFICATION MUAC
-  // =====================================================
 
   const handleMuacChange = (value) => {
     if (value === "") {
@@ -92,21 +62,47 @@ export default function ModifierMesure({
     }
 
     const number = Number(value);
-
     if (isNaN(number)) return;
 
-    // Mère : cm → mm pour l'API
-    // Nourrisson : on garde les mm
-    setMuac?.(isMere ? number * 10 : value);
+    setMuac?.(value);
   };
 
-  // =====================================================
-  // UNITÉS
-  // =====================================================
+  const handleHemoglobineChange = (value) => {
+    if (value === "") {
+      setHemoglobine?.("");
+      return;
+    }
+
+    const number = Number(value);
+    if (isNaN(number)) return;
+
+    setHemoglobine?.(value);
+  };
 
   const poidsUnit = isMere ? "kg" : "g";
   const tailleUnit = isMere ? "m" : "cm";
   const muacUnit = isMere ? "cm" : "mm";
+  const hemoglobineUnit = "g/dL";
+
+  // Classe commune pour tous les inputs
+  const inputClass = `
+    w-auto
+    max-w-[55px]
+    sm:max-w-[80px]
+    bg-transparent
+    text-center
+    text-[16px]
+    sm:text-[18px]
+    font-bold
+    text-[#202124]
+    outline-none
+    border-none
+    p-0
+    m-0
+    [appearance:textfield]
+    [&::-webkit-inner-spin-button]:appearance-none
+    [&::-webkit-outer-spin-button]:appearance-none
+  `;
 
   return (
     <div className="w-full">
@@ -128,139 +124,123 @@ export default function ModifierMesure({
           py-2
         "
       >
-        <div className="grid grid-cols-3 items-center text-center">
+        <div
+          className={`
+            grid
+            ${isMere ? "grid-cols-2 sm:grid-cols-4" : "grid-cols-3"}
+            items-center
+            text-center
+            gap-y-4
+            sm:gap-y-0
+          `}
+        >
 
           {/* ================= POIDS ================= */}
-          <div>
-            <p className="text-[16px] text-[#666666]">
+          <div className="relative">
+            <p className="text-[14px] sm:text-[16px] text-[#666666]">
               Poids
             </p>
 
-            <div className="flex justify-center items-center gap-1">
+            <div className="flex justify-center items-baseline gap-0">
               <input
                 type="number"
                 step="any"
                 value={poidsAffiche}
-                onChange={(e) =>
-                  handlePoidsChange(e.target.value)
-                }
-                className="
-                  w-auto
-                  max-w-[80px]
-                  bg-transparent
-                  text-center
-                  text-[18px]
-                  font-bold
-                  text-[#202124]
-                  outline-none
-                  border-none
-                  p-0
-                  m-0
-                "
+                onChange={(e) => handlePoidsChange(e.target.value)}
+                className={inputClass}
               />
 
-              <span className="text-[14px] font-bold">
+              <span className="text-[12px] sm:text-[14px] font-bold whitespace-nowrap">
                 {poidsUnit}
               </span>
             </div>
+
+            {isMere && (
+              <div className="hidden sm:block absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
+            )}
           </div>
 
           {/* ================= TAILLE ================= */}
           <div className="relative">
 
-            {/* Séparateur gauche */}
-            <div
-              className="
-                absolute
-                left-0
-                top-1/2
-                h-10
-                -translate-y-1/2
-                border-l
-                border-[#E5E7EB]
-              "
-            />
+            {!isMere && (
+              <div className="absolute left-0 top-1/2 h-10 -translate-y-1/2 border-l border-[#E5E7EB]" />
+            )}
 
-            <p className="text-[16px] text-[#666666]">
+            {isMere && (
+              <div className="hidden sm:block absolute left-0 top-1/2 h-10 -translate-y-1/2 border-l border-[#E5E7EB]" />
+            )}
+
+            <p className="text-[14px] sm:text-[16px] text-[#666666]">
               Taille
             </p>
 
-            <div className="flex justify-center items-center gap-1">
+            <div className="flex justify-center items-baseline gap-0">
               <input
                 type="number"
                 step="any"
                 value={tailleAffiche}
-                onChange={(e) =>
-                  handleTailleChange(e.target.value)
-                }
-                className="
-                  w-auto
-                  max-w-[80px]
-                  bg-transparent
-                  text-center
-                  text-[18px]
-                  font-bold
-                  text-[#202124]
-                  outline-none
-                  border-none
-                  p-0
-                  m-0
-                "
+                onChange={(e) => handleTailleChange(e.target.value)}
+                className={inputClass}
               />
 
-              <span className="text-[14px] font-bold">
+              <span className="text-[12px] sm:text-[14px] font-bold whitespace-nowrap">
                 {tailleUnit}
               </span>
             </div>
 
-            {/* Séparateur droit */}
-            <div
-              className="
-                absolute
-                right-0
-                top-1/2
-                h-10
-                -translate-y-1/2
-                border-r
-                border-[#E5E7EB]
-              "
-            />
+            <div className="hidden sm:block absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
           </div>
 
           {/* ================= MUAC ================= */}
-          <div>
-            <p className="text-[16px] text-[#666666]">
+          <div className="relative">
+            <p className="text-[14px] sm:text-[16px] text-[#666666]">
               MUAC
             </p>
 
-            <div className="flex justify-center items-center gap-1">
+            <div className="flex justify-center items-baseline gap-0">
               <input
                 type="number"
                 step="any"
                 value={muacAffiche}
-                onChange={(e) =>
-                  handleMuacChange(e.target.value)
-                }
-                className="
-                  w-auto
-                  max-w-[80px]
-                  bg-transparent
-                  text-center
-                  text-[18px]
-                  font-bold
-                  text-[#202124]
-                  outline-none
-                  border-none
-                  p-0
-                  m-0
-                "
+                onChange={(e) => handleMuacChange(e.target.value)}
+                className={inputClass}
               />
 
-              <span className="text-[14px] font-bold">
+              <span className="text-[12px] sm:text-[14px] font-bold whitespace-nowrap">
                 {muacUnit}
               </span>
             </div>
+
+            {isMere && (
+              <div className="hidden sm:block absolute right-0 top-1/2 h-10 -translate-y-1/2 border-r border-[#E5E7EB]" />
+            )}
           </div>
+
+          {/* ================= HÉMOGLOBINE (mère uniquement) ================= */}
+          {isMere && (
+            <div>
+              <p className="text-[14px] sm:text-[16px] text-[#666666]">
+                Hémoglobine
+              </p>
+
+              <div className="flex justify-center items-baseline gap-0">
+                <input
+                  type="number"
+                  step="any"
+                  value={hemoglobineAffiche}
+                  onChange={(e) =>
+                    handleHemoglobineChange(e.target.value)
+                  }
+                  className={inputClass}
+                />
+
+                <span className="text-[12px] sm:text-[14px] font-bold whitespace-nowrap">
+                  {hemoglobineUnit}
+                </span>
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

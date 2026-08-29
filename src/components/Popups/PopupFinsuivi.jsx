@@ -141,7 +141,7 @@ const PopupFinSuivi = ({
   onConfirm, 
 }) => {
   const [motif, setMotif] = useState("");
-  const [dateSortie, setDateSortie] = useState(new Date());
+  const [dateSortie, setDateSortie] = useState(null);
   const [errors, setErrors] = useState({ date: null, motif: null });
   const [backendError, setBackendError] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -150,7 +150,12 @@ const PopupFinSuivi = ({
   useEffect(() => {
     if (open) {
       setMotif("");
-      setDateSortie(new Date());
+    const today = new Date();
+
+const formattedDate =
+  `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+setDateSortie(formattedDate);
       setErrors({ date: null, motif: null });
       setBackendError(null);
       setSaving(false);

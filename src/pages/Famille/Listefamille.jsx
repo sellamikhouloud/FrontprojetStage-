@@ -142,6 +142,7 @@ const {
   isLoading,
   isError,
   error,
+  refetch,
 } = useQuery({
   queryKey: ["familles", search, appliedFilters],
 
@@ -512,9 +513,10 @@ if  (isFilterOpen && isMobile)  {
     
   </div>
 )}
+
+          {!isLoading && !isError && familles.length > 0 && (
           <div className="flex gap-6">
            <div className="flex-1 space-y-4">
- {familles.length > 0 && (
   <div className="w-full flex-1 space-y-3">
     { familles.map((famille) => (
       <div key={famille.id}>
@@ -666,7 +668,6 @@ if  (isFilterOpen && isMobile)  {
       </div>
     ))}
   </div>
-)}
 </div>
 
 {isFilterOpen && !isMobile && (
@@ -675,6 +676,7 @@ if  (isFilterOpen && isMobile)  {
   </div>
 )}
           </div>
+)}
         </main>
       </div>
     

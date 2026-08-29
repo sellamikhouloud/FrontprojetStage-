@@ -1,4 +1,5 @@
-import { User, Camera } from "lucide-react";
+import { Camera, X } from "lucide-react";
+import userIcon from "../../assets/user.svg"; // ← adaptez le chemin
 
 /**
  * UserCard — carte profil utilisateur (avatar + nom/id + badge rôle)
@@ -10,6 +11,7 @@ import { User, Camera } from "lucide-react";
  *   avatarUrl?: string   -> si fourni, affiche une vraie image au lieu de l'icône par défaut
  *   editing?  : boolean  -> true = bordure pointillée (mode édition)
  *   onAvatarClick?: () => void -> appelé au clic sur l'avatar (uniquement actif si editing=true)
+ *   onRemovePhoto?: () => void -> appelé au clic sur le bouton de suppression (uniquement si avatarUrl existe et editing=true)
  */
 export default function UserCard({
   nom,
@@ -17,6 +19,7 @@ export default function UserCard({
   avatarUrl,
   editing = false,
   onAvatarClick,
+  onRemovePhoto,
 }) {
   return (
     <div
@@ -65,12 +68,10 @@ export default function UserCard({
               className="w-full h-full object-cover"
             />
           ) : (
-            <User
-              size={64}
-              color="#EAF6F2"
-              fill="#EAF6F2"
-              strokeWidth={0}
-              style={{ transform: "translateY(4px)" }}
+            <img
+              src={userIcon}
+              alt="Avatar par défaut"
+              className="w-17 h-17 translate-y-[4px]"
             />
           )}
         </div>
@@ -95,14 +96,36 @@ export default function UserCard({
             <Camera size={15} color="#FFFFFF" strokeWidth={2.5} />
           </div>
         )}
+
+        {/* Badge suppression — visible seulement en édition ET si une photo existe */}
+        {editing && avatarUrl && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation(); // évite de déclencher onAvatarClick
+              onRemovePhoto?.();
+            }}
+            className="
+              absolute
+              top-0
+              right-0
+              w-6 h-6
+              rounded-full
+              flex
+              items-center
+              justify-center
+              border-2
+              border-white
+            "
+            style={{ backgroundColor: "#EF4444" }}
+            aria-label="Supprimer la photo"
+          >
+            <X size={13} color="#FFFFFF" strokeWidth={3} />
+          </button>
+        )}
       </div>
 
-      {/*
-        Bloc droit : contient le nom/id ET le badge rôle.
-        - Mobile (par défaut) : flex-col -> le badge tombe SOUS le nom/id.
-        - >= sm : flex-row -> on retrouve la mise en page originale,
-          nom/id à gauche, badge poussé à droite via sm:ml-auto.
-      */}
+      {/* ... reste inchangé (bloc nom/id + badge rôle) ... */}
       <div
         className="
           flex
@@ -115,15 +138,12 @@ export default function UserCard({
           sm:gap-8
         "
       >
-        {/* Nom + id */}
-        {/* Nom */}
-<div className="flex flex-col justify-center min-w-0">
-  <p className="text-[20px] font-extrabold text-black leading-tight truncate">
-    {nom}
-  </p>
-</div>
+        <div className="flex flex-col justify-center min-w-0">
+          <p className="text-[20px] font-extrabold text-black leading-tight truncate">
+            {nom}
+          </p>
+        </div>
 
-        {/* Badge rôle */}
         <div
           className="
             self-start

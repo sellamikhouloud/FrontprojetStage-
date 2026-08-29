@@ -126,7 +126,7 @@ export default function ListeCoordinateur() {
             onChange={(e) => setSearch(e.target.value)}
             showFilter={false}
             maxWidth="max-w-full"
-            placeholder="Entrer ici pour chercher"
+            placeholder="Rechercher par informations du coordinateur"
           />
         </div>
 

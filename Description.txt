@@ -59,7 +59,13 @@ StockPopup : composant popup permettant de consulter le stock des produits nutri
 
 EditStockPopup : composant popup permettant de modifier les seuils d'alertes nutritionnelles des produits en saisissant de nouvelles valeurs et en les enregistrant.
 
+VDZstatutFilter : utiliser pour filtrer annule et active dans historique de zakat distribution ou ien visite .
 
+Statufilter : filtre dans la page coordinateur et donateur 
+
+PopupimportDonateur : c'est le pop up pour importer un fichier donateur 
+
+Popupimportresult : c'est le pop up qui affiche les resultat de l'import 
 
 DateSelect : utiliser comme choicecontainer mais ici on selectionne une date depuis la calendrier .
 
@@ -101,5 +107,6 @@ GalleryGrid : composant affichant la galerie sous forme d'une grille responsive 
 GalleryCard : composant représentant une photo dans la galerie avec son aperçu, son titre et son statut. Un clic sur la carte ouvre la fenêtre correspondante selon le statut de la photo.
 
 StatusBadge : composant permettant d'afficher le statut d'une photo (Validée, En attente, Refusée) avec son icône et son style associé.
+
 
 
