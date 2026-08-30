@@ -18,6 +18,18 @@ import { useFamilyForm } from "../../context/FamilyFormContext";
 import { searchMere } from "../../lib/api/familles";
 import { listVillages } from "../../lib/api/Parametres";
 
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
 
 export default function InformationMere() {
 
@@ -73,9 +85,12 @@ export default function InformationMere() {
     newErrors.prenom = "Veuillez saisir le prénom";
   }
 
-  if (!mere.date_naissance) {
+    if (!mere.date_naissance) {
     newErrors.dateNaissance =
       "Veuillez sélectionner la date de naissance";
+  } else if (isFutureDate(mere.date_naissance)) {
+    newErrors.dateNaissance =
+      "La date de naissance ne peut pas être une date future";
   }
 
   if (!mere.statut_matrimonial?.trim()) {
@@ -255,7 +270,7 @@ onChange={(e) => {
             <ErrorMessage message={errors.prenom} />
           </div>
 
-          <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1">
             <DateContainer
               label="Date de naissance"
              value={mere.date_naissance || null}
@@ -263,7 +278,15 @@ onChange={(date) => {
   updateMere({
     date_naissance: date,
   });
-  clearError("dateNaissance");
+
+  if (isFutureDate(date)) {
+    setErrors((prev) => ({
+      ...prev,
+      dateNaissance: "La date de naissance ne peut pas être une date future",
+    }));
+  } else {
+    clearError("dateNaissance");
+  }
 }}
               noPadding
               defaultToToday={false}

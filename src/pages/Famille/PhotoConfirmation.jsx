@@ -49,6 +49,18 @@ function parseBackendErrors(data, parentLabel = "") {
   return [String(data)];
 }
 
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
 
 export default function PhotoConfirmation() {
 
@@ -138,6 +150,10 @@ useEffect(() => {
 
 const handleSave = async () => {
   const newErrors = {};
+
+   if (isFutureDate(formData.date_entree)) {
+    newErrors.date_entree = "La date d'entrée ne peut pas être une date future";
+  }
 
   setErrors(newErrors);
 
@@ -652,17 +668,32 @@ useEffect(() => {
 </div>
 
           {/* Date */}
-          <DateContainer 
-  label="Date d'entrée dans le programme"
-  value={formData.date_entree || null}
-  onChange={(date) => {
-    
-    updateFamilyData({
-      date_entree: date,
-    });
-  }}
-  noPadding
-/>
+                       
+          <div className="flex flex-col gap-1">
+            <DateContainer 
+              label="Date d'entrée dans le programme"
+              value={formData.date_entree || null}
+              onChange={(date) => {
+                updateFamilyData({
+                  date_entree: date,
+                });
+
+                if (isFutureDate(date)) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    date_entree: "La date d'entrée ne peut pas être une date future",
+                  }));
+                } else {
+                  clearError("date_entree");
+                }
+              }}
+              noPadding
+            />
+            <ErrorMessage message={errors.date_entree} />
+
+          </div>
+
+         
 
         {/* Coordinator — réservé à l'admin, optionnel */}
 {isAdmin && (

@@ -13,6 +13,18 @@ import Input from "../../components/Containers/ContainerEcriture.jsx";
 import bunny from "../../assets/images/bunny.svg";
 import { useFamilyForm } from "../../context/FamilyFormContext";
 
+const isFutureDate = (date) => {
+  if (!date) return false;
+
+  const selected = new Date(date);
+  selected.setHours(0, 0, 0, 0);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return selected > today;
+};
+
 export default function InformationNourrisson() {
   const [errors, setErrors] = useState({});
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -77,6 +89,12 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
     }
     if (!nourrisson.taille_naissance?.trim()) {
       newErrors.taille_naissance = "Veuillez saisir la taille de naissance";
+    }
+
+    if (!nourrisson.date_naissance) {
+      newErrors.dateNaissance = "Veuillez sélectionner la date de naissance";
+    } else if (isFutureDate(nourrisson.date_naissance)) {
+      newErrors.dateNaissance = "La date de naissance ne peut pas être une date future";
     }
 
     console.log(
@@ -209,15 +227,27 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
           </div>
 
           {/* Date */}
-          <DateContainer
-            label="Date de naissance"
-            value={nourrisson.date_naissance || null}
-            onChange={(date) => {
-              updateNourrisson(currentIndex, { date_naissance: date });
-              clearError("dateNaissance");
-            }}
-            noPadding
-          />
+                   {/* Date */}
+          <div className="flex flex-col gap-1">
+            <DateContainer
+              label="Date de naissance"
+              value={nourrisson.date_naissance || null}
+              onChange={(date) => {
+                updateNourrisson(currentIndex, { date_naissance: date });
+
+                if (isFutureDate(date)) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    dateNaissance: "La date de naissance ne peut pas être une date future",
+                  }));
+                } else {
+                  clearError("dateNaissance");
+                }
+              }}
+              noPadding
+            />
+            <ErrorMessage message={errors.dateNaissance} />
+          </div>
 
           {/* Weight */}
           <div className="flex flex-col gap-1">
