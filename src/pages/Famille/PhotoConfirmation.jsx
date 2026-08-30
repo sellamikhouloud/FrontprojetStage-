@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-
+import { useInfiniteQuery } from "@tanstack/react-query";
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader.jsx";
 import DateContainer from "../../components/Containers/DateContainer.jsx";
@@ -127,14 +127,6 @@ useEffect(() => {
 
   const [errors, setErrors] = useState({});
 
-  // Liste réelle des coordinateurs, chargée depuis l'API (remplace le tableau en dur)
-  const [coordinateurs, setCoordinateurs] = useState([]);
-  const [coordinateursLoading, setCoordinateursLoading] = useState(false);
-  const [coordinateursError, setCoordinateursError] = useState(null);
-
-  const selectedCoordinateur = coordinateurs.find(
-  (coordinateur) => coordinateur.id === formData.coordinateur
-);
 
   const clearError = (field) => {
     setErrors((prev) => {
@@ -387,67 +379,90 @@ const { user, ready } = useAuth();
 const role = user?.role ?? null;
 const isAdmin = role === "admin" || role === "chef_coordinator";
 
-// Charge la liste réelle des coordinateurs dès qu'on sait que l'utilisateur
-// est admin/chef_coordinator (donc après que isAdmin soit calculé ci-dessus)
+const [searchCoordinateur, setSearchCoordinateur] = useState("");
+
+const {
+  data: coordinateursResponse,
+  isLoading: coordinateursLoading,
+  isError: coordinateursIsError,
+  fetchNextPage: fetchNextCoordinateursPage,
+  hasNextPage: hasNextCoordinateursPage,
+  isFetchingNextPage: isFetchingNextCoordinateursPage,
+} = useInfiniteQuery({
+  queryKey: ["coordinateurs", "infinite", searchCoordinateur],
+
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam, is_active: true };
+
+    const trimmedSearch = searchCoordinateur.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    const response = await listUsers(params);
+    return response.data;
+  },
+
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
+  keepPreviousData: true,
+  enabled: isAdmin,
+});
+
+const coordinateursData = (coordinateursResponse?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
+
+const coordinateurs = coordinateursData
+  .filter((c) => c.role === "coordinator" || c.role === "chef_coordinator")
+  .map((c) => ({
+    id: c.id,
+    name: `${c.prenom} ${c.nom}`,
+    code: String(c.id),
+    village: c.village?.nom || "",
+    familles: c.nb_familles,
+    status: c.is_active ? "Actif" : "Inactif",
+    username: c.username || "/",
+    creePar: c.created_by ? `${c.created_by.nom} ${c.created_by.prenom}` : "/",
+    isChef: c.role === "chef_coordinator",
+  }));
+
+const coordinateursObserverTarget = useRef(null);
 
 useEffect(() => {
-  if (!isAdmin) return;
+  if (!coordinateursObserverTarget.current || !openCoordinateurs) return;
 
-  let cancelled = false;
-
-  const fetchCoordinateurs = async () => {
-    setCoordinateursLoading(true);
-    setCoordinateursError(null);
-
-    try {
-      const response = await listUsers();
-      const raw = response.data;
-      const data = Array.isArray(raw) ? raw : raw?.results ?? [];
-
-      const activeOnly = data.filter(
-        (c) =>
-          c.is_active &&
-          (c.role === "coordinator" || c.role === "chef_coordinator")
-      );
-
-     const mapped = activeOnly.map((c) => ({
-  id: c.id,
-  name: `${c.prenom} ${c.nom}`,
-  code: String(c.id),
-  village: c.village?.nom || "",
-  familles: c.nb_familles,
-  status: c.is_active ? "Actif" : "Inactif",
-  username: c.username || "/",
-  creePar: c.created_by ? `${c.created_by.nom} ${c.created_by.prenom}` : "/",
-  isChef: c.role === "chef_coordinator",
-}));
-
-      if (!cancelled) {
-        setCoordinateurs(mapped);
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextCoordinateursPage &&
+        !isFetchingNextCoordinateursPage
+      ) {
+        fetchNextCoordinateursPage();
       }
-    } catch (error) {
-      console.error(
-        "Erreur lors du chargement des coordinateurs :",
-        error.response?.data || error.message
-      );
-      if (!cancelled) {
-        setCoordinateursError(
-          "Impossible de charger la liste des coordinateurs."
-        );
-      }
-    } finally {
-      if (!cancelled) {
-        setCoordinateursLoading(false);
-      }
-    }
-  };
+    },
+    { threshold: 1 }
+  );
 
-  fetchCoordinateurs();   
+  observer.observe(coordinateursObserverTarget.current);
 
-  return () => {
-    cancelled = true;
-  };
-}, [isAdmin]);
+  return () => observer.disconnect();
+}, [
+  openCoordinateurs,
+  hasNextCoordinateursPage,
+  isFetchingNextCoordinateursPage,
+  fetchNextCoordinateursPage,
+]);
+
+
+  const selectedCoordinateur = coordinateurs.find(
+  (coordinateur) => coordinateur.id === formData.coordinateur
+);
+
+
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -702,9 +717,9 @@ useEffect(() => {
   selectedCoordinateur={selectedCoordinateur}
   onOpenPopup={() => setOpenCoordinateurs(true)}
 />
-    <ErrorMessage message={errors.coordinateur} />
-    {coordinateursError && (
-      <ErrorMessage message={coordinateursError} />
+       <ErrorMessage message={errors.coordinateur} />
+    {coordinateursIsError && (
+      <ErrorMessage message="Impossible de charger la liste des coordinateurs." />
     )}
 
     {!selectedCoordinateur && (
@@ -795,14 +810,16 @@ useEffect(() => {
   onClose={() => setOpenCoordinateurs(false)}
   coordinateurs={coordinateurs}
   loading={coordinateursLoading}
- onSelectCoordinateur={(coordinateur) => {
-  updateFamilyData({
-    coordinateur: coordinateur.id,
-  });
-
-  setOpenCoordinateurs(false);
-  clearError("coordinateur");
-}}
+  isError={coordinateursIsError}
+  search={searchCoordinateur}
+  onSearchChange={setSearchCoordinateur}
+  observerTarget={coordinateursObserverTarget}
+  isFetchingNextPage={isFetchingNextCoordinateursPage}
+  onSelectCoordinateur={(coordinateur) => {
+    updateFamilyData({ coordinateur: coordinateur.id });
+    setOpenCoordinateurs(false);
+    clearError("coordinateur");
+  }}
 />
         </div>
        </div>
