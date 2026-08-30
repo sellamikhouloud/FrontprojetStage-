@@ -6,7 +6,7 @@ import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import LaitInfantile from "../../components/Distribution/LaitInfantile";
-
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import ColisAlimentaire from "../../components/Distribution/ColisAlimentaire";
 import { useState, useEffect, useRef } from "react";
 
@@ -32,7 +32,7 @@ import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 
-import { useQuery } from "@tanstack/react-query";
+
 
 
 import { listFamilles } from "@/lib/api/familles";
@@ -520,21 +520,67 @@ setShowSuccessPopup(true);
     });
   };
 
-   const [openFamilles, setOpenFamilles] = useState(false);
-  const [openOptions, setOpenOptions] = useState(false);
+  const [openFamilles, setOpenFamilles] = useState(false);
+const [openOptions, setOpenOptions] = useState(false);
+const [searchFamille, setSearchFamille] = useState("");
 
-  const {
-  data: famillesData,
+const {
+  data: famillesResponse,
   isLoading: famillesLoading,
   isError: famillesError,
   refetch: refetchFamilles,
-} = useQuery({
-  queryKey: ["familles-popup"],
-  queryFn: () => listFamilles().then((r) => r.data),
+  fetchNextPage: fetchNextFamillesPage,
+  hasNextPage: hasNextFamillesPage,
+  isFetchingNextPage: isFetchingNextFamillesPage,
+} = useInfiniteQuery({
+  queryKey: ["familles-popup", "infinite", searchFamille],
+
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam };
+
+    const trimmedSearch = searchFamille.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    const response = await listFamilles(params);
+    return response.data;
+  },
+
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
+  keepPreviousData: true,
   enabled: openFamilles,
 });
 
-const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
+
+const famillesObserverTarget = useRef(null);
+
+useEffect(() => {
+  if (!famillesObserverTarget.current || !openFamilles) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextFamillesPage &&
+        !isFetchingNextFamillesPage
+      ) {
+        fetchNextFamillesPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(famillesObserverTarget.current);
+
+  return () => observer.disconnect();
+}, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
 
 
 
@@ -975,13 +1021,17 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
         />
       </main>
 
-     <PopupListeFamilles
+    <PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
   familles={listeDesFamilles}
   loading={famillesLoading}
-  error={famillesError}
+  isError={famillesError}
   onRetry={refetchFamilles}
+  search={searchFamille}
+  onSearchChange={setSearchFamille}
+  observerTarget={famillesObserverTarget}
+  isFetchingNextPage={isFetchingNextFamillesPage}
   onSelectFamille={(famille) => {
     setSelectedFamille(famille);
     setOpenFamilles(false);
