@@ -8,12 +8,12 @@ const FamilyStatusCard = ({
   return (
     <>
       {/* =====================================================
-          DESKTOP
+          DESKTOP / TABLET
       ====================================================== */}
       <button
         onClick={onClick}
         className="
-          hidden lg:block
+          hidden md:block
           w-full
           bg-[#F8FBFC]
           rounded-[20px]
@@ -73,7 +73,7 @@ const FamilyStatusCard = ({
       {/* =====================================================
           MOBILE
       ====================================================== */}
-      <div className="lg:hidden w-full">
+      <div className="md:hidden w-full">
         {/* Mobile title - OUTSIDE the card */}
         <h2
           className="

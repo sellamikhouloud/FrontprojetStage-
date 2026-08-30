@@ -23,6 +23,16 @@ const DonorCard = ({
         border
         border-[#BCCAC14D]
 
+        md:bg-[#F8FBFC]
+        md:border
+        md:border-[#BCCAC14D]
+        md:rounded-[20px]
+        md:px-[20px]
+        md:py-[20px]
+        md:shadow-sm
+        md:hover:shadow-md
+        md:hover:scale-[1.01]
+
         max-md:bg-transparent
         max-md:border-0
         max-md:rounded-none

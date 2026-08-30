@@ -1,30 +1,28 @@
 import Arrow from "../../assets/right-arrow.png";
+
 import ProgressBar from "../Progress/ProgressBar";
 
 const NutritionCard = ({
   title,
-
   normalPercentage,
   mamPercentage,
   masPercentage,
-
   normalColor,
   mamColor,
   masColor,
-
   trackColor,
-
   height,
   radius,
 }) => {
   return (
     <>
       {/* =====================================================
-          DESKTOP
+          DESKTOP / TABLET
       ====================================================== */}
+
       <div
         className="
-          hidden lg:flex
+          hidden md:flex
           w-full
           bg-[#F8FBFC]
           rounded-[20px]
@@ -140,7 +138,8 @@ const NutritionCard = ({
       {/* =====================================================
           MOBILE
       ====================================================== */}
-      <div className="lg:hidden w-full">
+
+      <div className="md:hidden w-full">
         {/* Mobile title - OUTSIDE the card */}
         <h2
           className="

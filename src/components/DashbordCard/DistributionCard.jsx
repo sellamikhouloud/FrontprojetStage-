@@ -11,12 +11,13 @@ const DistributionCard = ({
   return (
     <>
       {/* =====================================================
-          DESKTOP
+          DESKTOP / TABLET
       ====================================================== */}
+
       <div
         onClick={onClick}
         className="
-          hidden lg:block
+          hidden md:block
           w-full
           bg-[#F8FBFC]
           rounded-[20px]
@@ -62,7 +63,7 @@ const DistributionCard = ({
           {products.map((product, index) => (
             <div
               key={product.id}
-              className={index >= 4 ? "hidden lg:block" : ""}
+              className={index >= 4 ? "hidden md:block" : ""}
             >
               <DistributionItem
                 name={product.name}
@@ -79,7 +80,8 @@ const DistributionCard = ({
       {/* =====================================================
           MOBILE
       ====================================================== */}
-      <div className="lg:hidden w-full">
+
+      <div className="md:hidden w-full">
         {/* Mobile Header - OUTSIDE the card */}
         <div className="flex items-center justify-between mb-[5px]">
           <h2
