@@ -36,7 +36,8 @@ const WelcomeCard = ({
         <p
           className="
             text-[20px]
-            text-white          "
+            text-white
+          "
         >
           {subtitle}
         </p>
@@ -46,9 +47,13 @@ const WelcomeCard = ({
       <div className="flex items-center gap-5">
         {/* Notifications */}
         <button
+          type="button"
           onClick={onNotificationClick}
           className="
             relative
+            flex
+            items-center
+            justify-center
             transition-transform
             duration-200
             hover:scale-105
@@ -60,34 +65,43 @@ const WelcomeCard = ({
             className="w-[39.6px] h-[39.6px]"
           />
 
+          {/* Notification badge */}
           {notificationCount > 0 && (
             <span
               className="
                 absolute
                 -top-2
-                -right-2
+                -right-1
                 min-w-[20px]
                 h-[20px]
+                px-1
                 rounded-full
                 bg-red-500
                 text-white
                 text-[11px]
-                font-semibold
+                font-bold
+                leading-none
                 flex
                 items-center
                 justify-center
-                px-1
+                whitespace-nowrap
+                border-2
+                border-[#89BFB1]
               "
             >
-              {notificationCount}
+              {notificationCount > 99 ? "99+" : notificationCount}
             </span>
           )}
         </button>
 
         {/* Settings */}
         <button
+          type="button"
           onClick={onSettingsClick}
           className="
+            flex
+            items-center
+            justify-center
             transition-transform
             duration-200
             hover:scale-105

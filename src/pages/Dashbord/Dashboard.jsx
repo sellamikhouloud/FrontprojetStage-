@@ -829,6 +829,8 @@ import DonorCard from "../../components/DashbordCard/DonorCard";
 
 import AlertBanner from "../../components/AlertComposant/AlertBanner";
 
+import { getNotifications } from "@/lib/api/Notifications";
+
 import AttentionIcon from "../../assets/Attention.svg";
 import RetardIcon from "../../assets/retard.svg";
 
@@ -858,7 +860,16 @@ const Dashboard = () => {
   const subtitle =
     "Voici un aperçu des activités de votre association.";
 
-  const notificationCount = 2;
+    const {
+      data: notifications = [],
+    } = useQuery({
+      queryKey: ["notifications"],
+      queryFn: () =>
+        getNotifications().then((res) => res.data),
+      enabled: ready && !!user,
+    });
+
+    const notificationCount = notifications.length;
 
   // =========================================================
   // DASHBOARD API
@@ -1394,9 +1405,6 @@ const exchangeRateValue =
     />
   );
 
-  // =========================================================
-  // RENDER
-  // =========================================================
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -1439,7 +1447,7 @@ const exchangeRateValue =
           <WelcomeCard
             userName={userName}
             subtitle={subtitle}
-            NotificationCount={notificationCount}
+            notificationCount={notificationCount}
             onNotificationClick={() =>
               navigate("/notifications")
             }
