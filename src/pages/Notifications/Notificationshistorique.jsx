@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -20,28 +20,57 @@ const HistoriqueNotificationsPage = () => {
 
   const [typeFilter, setTypeFilter] = useState("all");
 
-  const {
-    data: historique,
+    const {
+    data,
     isLoading,
     isError,
-  } = useQuery({
-    queryKey: ["historique-alertes", typeFilter],
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["historique-alertes", "infinite", typeFilter],
 
-    queryFn: async () => {
-      // Si "Tout" est sélectionné, aucun paramètre n'est envoyé.
-      // Sinon on envoie ?type=malnutrition, etc.
+    queryFn: async ({ pageParam = 1 }) => {
       const params =
         typeFilter === "all"
-          ? {}
+          ? { page: pageParam }
           : {
               type: typeFilter,
+              page: pageParam,
             };
 
       const res = await getHistoriqueAlertes(params);
-
-      return res.data.results || [];
+      return res.data;
     },
+
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+    initialPageParam: 1,
   });
+
+  const historique = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : page?.results ?? []
+  );
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleExport = async () => {
     try {
@@ -267,6 +296,16 @@ const HistoriqueNotificationsPage = () => {
               />
             ))}
 
+             {!isLoading && !isError && historique?.length > 0 && (
+            <div ref={observerTarget} className="h-1" />
+          )}
+
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-4">
+              <Spinner />
+            </div>
+          )}
+
           {/* Aucun résultat */}
           {!isLoading &&
             !isError &&
@@ -290,3 +329,4 @@ const HistoriqueNotificationsPage = () => {
 };
 
 export default HistoriqueNotificationsPage;
+
