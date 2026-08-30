@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import ProfilInfoBlock, { CHAMPS_COORDINATEUR, logoutIcon } from "../../components/Forms/Profilinfoblock";
@@ -8,6 +8,10 @@ import Button from "../../components/Button/Button";
 import ConfirmDialog from "../../components/Popups/ConfirmdialogPopup";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
+import SonneriePopup from "../../components/Popups/SonneriePopup";
+
+import { getPreferences, updatePreferences } from "../../lib/api/Parametres";
+import { setNotificationSound, AVAILABLE_SOUNDS } from "../../lib/notificationSound";
 
 import { useAuth } from "../../components/Providers/AuthProvider";
 
@@ -40,11 +44,47 @@ const coordinateur = {
 
 
 
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const navigate = useNavigate();
   
 
   const [erreurDeconnexion, setErreurDeconnexion] = useState("");
+
+  const [sonnerieNotifications, setSonnerieNotifications] = useState("defaut");
+ 
+  const [sonneriePopupOpen, setSonneriePopupOpen] = useState(false);
+  const [erreurPreferences, setErreurPreferences] = useState("");
+
+  useEffect(() => {
+    const fetchPreferences = async () => {
+      try {
+        const { data } = await getPreferences();
+        const sound = data.sonnerie_notifications ?? "defaut";
+        setSonnerieNotifications(sound);
+        setNotificationSound(sound);
+      } catch (err) {
+        console.error("Erreur lors du chargement des préférences :", err);
+      }
+    };
+
+    fetchPreferences();
+  }, []);
+
+  const handleChoisirSonnerie = async (soundValue) => {
+    const ancienneValeur = sonnerieNotifications;
+    setSonnerieNotifications(soundValue);
+
+    try {
+      await updatePreferences({ sonnerie_notifications: soundValue });
+      setNotificationSound(soundValue);
+      setErreurPreferences("");
+      setSonneriePopupOpen(false);
+    } catch (err) {
+      setSonnerieNotifications(ancienneValeur);
+      setErreurPreferences("Impossible de mettre à jour la sonnerie.");
+      console.error(err);
+    }
+  };
 
 
 const handleSave = async (updatedFields) => {
@@ -146,11 +186,22 @@ const handleDeconnexion = async () => {
 
               {/* Colonne droite — paramètres + assistance + déconnexion */}
               <div className="mt-0 lg:mt-16">
-                <ParametresCard
+                              <ParametresCard
                   lastSync="Aujourd'hui à 09:42"
                   syncStatus="synchronise"
                   version="1.0.0"
+                  onSelectSonnerie={() => setSonneriePopupOpen(true)}
+                  sonnerieLabel={
+                    AVAILABLE_SOUNDS.find((s) => s.value === sonnerieNotifications)?.label ||
+                    "Sélectionner une sonnerie"
+                  }
                 />
+
+                {erreurPreferences && (
+                  <div className="mt-2">
+                    <BackendErrorMessage message={erreurPreferences} />
+                  </div>
+                )}
                  <div className="mt-0 lg:mt-8">
 
                 <AssistanceCard
@@ -195,7 +246,7 @@ const handleDeconnexion = async () => {
   </div>
 </main>
 
-      <ConfirmDialog
+           <ConfirmDialog
         open={showLogoutConfirm}
         title="Se déconnecter ?"
         message="Vous devrez vous reconnecter avec vos identifiants pour accéder de nouveau à votre compte."
@@ -204,6 +255,14 @@ const handleDeconnexion = async () => {
         onConfirm={handleDeconnexion}
         onCancel={() => setShowLogoutConfirm(false)}
       />
+
+           {sonneriePopupOpen && (
+        <SonneriePopup
+          currentValue={sonnerieNotifications}
+          onSelect={handleChoisirSonnerie}
+          onClose={() => setSonneriePopupOpen(false)}
+        />
+      )}
     </div>
   );
 }
