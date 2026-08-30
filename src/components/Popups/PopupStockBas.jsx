@@ -59,15 +59,6 @@ export default function PopupStockBas({
       case "boîtes":
         return "boîtes";
 
-      case "sac":
-      case "sacs":
-        return "Sacs";
-
-      case "piece":
-      case "pièce":
-      case "pieces":
-        return "Pièces";
-
       default:
         return unit || "Kg";
     }
@@ -285,8 +276,6 @@ export default function PopupStockBas({
               sm:min-h-0
               sm:w-[620px]
               sm:max-h-[90vh]
-
-              overflow-y-auto
 
               bg-white
 
