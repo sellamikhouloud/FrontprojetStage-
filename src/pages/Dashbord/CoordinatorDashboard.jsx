@@ -477,6 +477,7 @@ const exchangeRate =
               greeting={greeting}
               userName={userName}
               message={message}
+              onModifyClick={() => navigate("/profile-coor")}
             />
           </div>
 
