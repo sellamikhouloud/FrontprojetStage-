@@ -14,11 +14,11 @@ export const marquerSortie = (id, data) =>  api.patch(`/api/familles/${id}/marqu
 
 export const getCourbes = (id) =>  api.get(`/api/familles/${id}/courbes/`);
 
-export const getVisites = (id) => api.get(`/api/familles/${id}/visites/`);
+export const getVisites = (id, params) => api.get(`/api/familles/${id}/visites/`, { params });
 
-export const getDistributions = (id) =>  api.get(`/api/familles/${id}/distributions/`);
+export const getDistributions = (id, params) => api.get(`/api/familles/${id}/distributions/`, { params });
 
-export const getFamilleZakat = (id) => api.get(`/api/familles/${id}/zakat/`);
+export const getFamilleZakat = (id, params) => api.get(`/api/familles/${id}/zakat/`, { params });
 
 export const exportFamilles = () =>
   api.get("/api/familles/export/", {
