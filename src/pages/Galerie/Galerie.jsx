@@ -124,8 +124,7 @@ const Galerie = ({ role = "coordinator" }) => {
 
   const [showEnAttente, setShowEnAttente] = useState(false);
 
-  const [showPendingPhotosPage, setShowPendingPhotosPage] =
-    useState(false);
+  const [showPendingPhotosPage, setShowPendingPhotosPage] = useState(false);
 
   const [searchValue, setSearchValue] = useState("");
 
@@ -496,31 +495,26 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    */
 
-  const handleSaveSelection = async () => {
-    try {
-      await saveBilanSelection(selectedPhotos);
+const handleSaveSelection = async () => {
+  try {
+    await saveBilanSelection(selectedPhotos);
 
-      /*
-       * Backend expects the COMPLETE list
-       * of checked IDs.
-       */
+    setSelectionMode(false);
+    setBilanCandidates([]);
+    setSelectedPhotos([]);
 
-      setSelectionMode(false);
+    await fetchPhotos();
+  } catch (err) {
+    console.error(
+      "Erreur lors de la sauvegarde du bilan :",
+      err
+    );
 
-      setBilanCandidates([]);
-
-      await fetchPhotos();
-    } catch (err) {
-      console.error(
-        "Erreur lors de la sauvegarde du bilan :",
-        err
-      );
-
-      setError(
-        "Impossible de sauvegarder la sélection."
-      );
-    }
-  };
+    setError(
+      "Impossible de sauvegarder la sélection."
+    );
+  }
+};
 
   /*
    * ============================================================
