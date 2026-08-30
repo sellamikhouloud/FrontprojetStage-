@@ -112,21 +112,47 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-      {/* Sidebar */}
-      <Sidebar role={role} />
-
-      {/* Main Content */}
-      <main
+         {/* Sidebar */}
+       
+          <Sidebar  />
+       
+   
+      
+    <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+   
+     {/* Espace blanc FIXE en haut — desktop only */}
+      <div
         className="
-          flex-1
-          overflow-y-auto
-          px-5
-          pt-5
-          pb-8
-          lg:p-10
+          hidden
+          lg:block
+          lg:absolute
+          lg:top-0
+          lg:left-0
+          lg:right-0
+          lg:h-4
           bg-white
+          z-20
         "
-      >
+      />
+   
+      {/* Zone scrollable UNIQUE */}
+           <div
+             className="
+               h-full
+               overflow-y-auto
+   
+               pt-20
+               lg:pt-4
+   
+               px-4
+               lg:px-10
+   
+               pb-8
+               lg:pb-2
+             "
+           >
+   
+             <div className="min-h-full flex flex-col justify-center">
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
           {/* Header */}
           <PageHeader
@@ -355,6 +381,23 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
             onNext={handleNext}
           />
         </div>
+         </div>
+          </div>
+
+          <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-4
+            bg-white
+            z-20
+          "
+        />
+
+      
+      
       </main>
     </div>
   );
