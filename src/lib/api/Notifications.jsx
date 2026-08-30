@@ -1,6 +1,7 @@
 import api from "@/lib/axios";
 
-export const getNotifications = () => api.get("/api/alertes/notifications/");
+
+export const getNotifications = (params) => api.get("/api/alertes/notifications/", { params });
 
 export const getHistoriqueAlertes = (params) =>api.get("/api/alertes/historique/", { params });
 
