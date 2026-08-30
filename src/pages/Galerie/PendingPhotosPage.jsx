@@ -70,7 +70,7 @@ const PendingPhotosPage = ({
 
       {/* ================= CONTENT ================= */}
 
-      <main className="flex-1 min-w-0 w-full flex flex-col overflow-hidden">
+      <main className="flex-1 min-w-0 w-full flex flex-col overflow-hidden pt-[50px] lg:pt-0">
         {/* ================= HEADER ================= */}
 
         <PendingPhotosHeader

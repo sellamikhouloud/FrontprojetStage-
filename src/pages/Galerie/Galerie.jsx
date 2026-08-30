@@ -18,6 +18,8 @@ import PendingPhotosPage from "../../pages/Galerie/PendingPhotosPage";
 
 import Button from "../../components/Button/Button";
 
+import Spinner from "../../components/Spinner";
+
 import {
   listPhotos,
   listVillages,
@@ -689,14 +691,13 @@ const Galerie = ({ role = "coordinator" }) => {
    */
 
   if (loading) {
-    return (
-      <div className="h-screen bg-white flex">
-        <Sidebar role={role} />
-
-        <main className="flex-1 flex items-center justify-center">
-          <p>Chargement des photos...</p>
-        </main>
-      </div>
+  return (
+    <div className="h-screen bg-white flex">
+      <Sidebar role={role} />
+      <main className="flex-1 flex items-center justify-center">
+        <Spinner />
+      </main>
+    </div>
     );
   }
 
