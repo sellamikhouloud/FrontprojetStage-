@@ -1,5 +1,5 @@
 
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
@@ -22,6 +22,7 @@ import Popup from "../../components/Popups/SuccessPopup.jsx";
 import Button from "../../components/Button/Button";
 import MotherPhoto from "../../assets/photo mere.svg";
 import successImage from "../../assets/Success.svg";
+import { X } from "lucide-react";
 import Spinner from "../../components/Spinner";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
@@ -256,6 +257,11 @@ const Modifyfamilly = () => {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
 
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoRemoved, setPhotoRemoved] = useState(false);
+  const photoInputRef = useRef(null);
+
  const {
   data: famille,
   isLoading,
@@ -332,7 +338,7 @@ const coordinateurs = coordinateursData
       : "/",
   }));
   
-  const baseline = useMemo(
+    const baseline = useMemo(
     () => (famille ? extractEditableFields(famille) : null),
     [famille]
   );
@@ -343,17 +349,79 @@ const coordinateurs = coordinateursData
     if (baseline && !form) setForm(baseline);
   }, [baseline, form]);
 
+  useEffect(() => {
+    if (famille) {
+      setPhotoPreview(famille?.mere?.photo || null);
+      setPhotoFile(null);
+      setPhotoRemoved(false);
+    }
+  }, [famille]);
+
  
-  const patch = useMemo(
+   const patch = useMemo(
     () => (baseline && form ? diffPatch(baseline, form) : {}),
     [baseline, form]
   );
-  const nothingChanged = isEmptyPatch(patch);
+  const nothingChanged = isEmptyPatch(patch) && !photoFile && !photoRemoved;
+
+  const handlePhotoSelected = (file) => {
+    if (!file) return;
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    setPhotoRemoved(false);
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setPhotoRemoved(true);
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
+  };
 
  
-  const saveMut = useMutation({
-  mutationFn: (patch) =>
-    updateFamille(id, buildFamillePayload(patch)).then((r) => r.data),
+   const saveMut = useMutation({
+  mutationFn: (patch) => {
+    const jsonPayload = buildFamillePayload(patch);
+
+    let finalPayload;
+
+    if (photoFile) {
+      // Nouveau fichier photo : FormData avec notation aplatie "mere.xxx"
+      finalPayload = new FormData();
+
+      Object.entries(jsonPayload).forEach(([key, value]) => {
+        if (key === "mere" || key === "nourrisson") return; // gérés séparément ci-dessous
+        if (value === null || value === undefined) return;
+        finalPayload.append(key, value);
+      });
+
+      Object.entries(jsonPayload.mere || {}).forEach(([key, value]) => {
+        if (value === null || value === undefined) return;
+        finalPayload.append(`mere.${key}`, value);
+      });
+
+      Object.entries(jsonPayload.nourrisson || {}).forEach(([key, value]) => {
+        if (value === null || value === undefined) return;
+        finalPayload.append(`nourrisson.${key}`, value);
+      });
+
+      finalPayload.append("mere.photo", photoFile);
+
+    } else if (photoRemoved) {
+      // Suppression de la photo : JSON classique avec mere.photo = null
+      finalPayload = {
+        ...jsonPayload,
+        mere: { ...(jsonPayload.mere || {}), photo: null },
+      };
+    } else {
+      // Pas de changement de photo
+      finalPayload = jsonPayload;
+    }
+
+    return updateFamille(id, finalPayload).then((r) => r.data);
+  },
  onSuccess: (updated) => {
  
   const villageId =
@@ -401,8 +469,13 @@ const coordinateurs = coordinateursData
   console.log("Coordinateur sélectionné :", coordinateurMatch);
   console.log("Famille finale :", fixedUpdated);
 
-  // Mettre à jour le formulaire
+   // Mettre à jour le formulaire
   setForm(extractEditableFields(fixedUpdated));
+
+  // Mettre à jour l'aperçu photo avec la version confirmée par le backend
+  setPhotoPreview(fixedUpdated?.mere?.photo || null);
+  setPhotoFile(null);
+  setPhotoRemoved(false);
 
   // Mettre à jour React Query
   queryClient.setQueryData(
@@ -748,7 +821,7 @@ const makeHandler = (fields) => (index, value) => {
           onBack={() => window.history.back()}
         />
 
-        <NavigationHeader
+          <NavigationHeader
           title="Fiche famille"
           type="save"
           actionTitle={saveMut.isPending ? "Enregistrement..." : "Enregistrer les modifications"}
@@ -759,12 +832,79 @@ const makeHandler = (fields) => (index, value) => {
        <BackendErrorMessage message={errorMessage} className="mb-4" />
 
         <div className="grid grid-cols-1 xl:grid-cols-[520px_minmax(0,1fr)] gap-6 xl:gap-10 mb-8">
-          <div className="w-full lg:w-[520px] h-[220px] sm:h-[260px] md:h-[300px] lg:h-[331px] rounded-[15px] overflow-hidden border border-[#E5E7EB] bg-white shadow-sm">
-            <img
-              src={famille?.mere?.photo || MotherPhoto}
-              alt="Photo de la mère"
-              className="w-full h-full object-cover"
+                   <div className="relative w-full lg:w-[520px] h-[220px] sm:h-[260px] md:h-[300px] lg:h-[331px]">
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => handlePhotoSelected(e.target.files?.[0])}
             />
+
+            <div
+              onClick={() => photoInputRef.current?.click()}
+              className="
+                relative
+                w-full h-full
+                rounded-[15px]
+                overflow-hidden
+                border border-[#E5E7EB]
+                bg-white
+                shadow-sm
+                cursor-pointer
+                group
+              "
+            >
+              <img
+                src={photoPreview || MotherPhoto}
+                alt="Photo de la mère"
+                className="w-full h-full object-cover"
+              />
+
+              <span
+                className="
+                  absolute inset-0
+                  bg-black/0
+                  group-hover:bg-black/20
+                  transition-colors
+                  flex items-center justify-center
+                "
+              >
+                <span
+                  className="
+                    opacity-0
+                    group-hover:opacity-100
+                    text-white
+                    text-[14px]
+                    font-medium
+                    transition-opacity
+                  "
+                >
+                  Modifier
+                </span>
+              </span>
+            </div>
+
+            {photoPreview && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemovePhoto();
+                }}
+                className="
+                  absolute top-3 right-3
+                  w-8 h-8
+                  rounded-full
+                  bg-white
+                  shadow-sm
+                  flex items-center justify-center
+                "
+                aria-label="Supprimer la photo"
+              >
+                <X size={18} color="#202124" strokeWidth={2.5} />
+              </button>
+            )}
           </div>
 
           <div className="min-h-[331px] flex flex-col gap-4">

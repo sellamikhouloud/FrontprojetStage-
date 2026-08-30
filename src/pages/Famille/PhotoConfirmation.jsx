@@ -475,7 +475,7 @@ useEffect(() => {
             "
           >
   
-            <div className="min-h-full flex flex-col justify-center">
+            <div className="min-h-full flex flex-col lg:justify-center">
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
           {/* Header */}
           <PageHeader
@@ -516,9 +516,11 @@ useEffect(() => {
     }}
   />
 
-  <div
+   <div
     onClick={() => photoInputRef.current?.click()}
     className={`
+      relative
+      group
       w-full
       ${photoPreview ? "h-[350px] lg:h-[450px]" : "h-[180px] lg:h-[200px]"}
       border
@@ -537,11 +539,40 @@ useEffect(() => {
     `}
   >
     {photoPreview ? (
-      <img
-        src={photoPreview}
-        alt="Photo de la mère"
-        className="w-full h-full object-cover"
-      />
+      <>
+        <img
+          src={photoPreview}
+          alt="Photo de la mère"
+          className="w-full h-full object-cover"
+        />
+
+        <span
+          className="
+            absolute
+            inset-0
+            rounded-[20px]
+            bg-black/0
+            group-hover:bg-black/20
+            transition-colors
+            flex
+            items-center
+            justify-center
+          "
+        >
+          <span
+            className="
+              opacity-0
+              group-hover:opacity-100
+              text-white
+              text-[14px]
+              font-medium
+              transition-opacity
+            "
+          >
+            Modifier
+          </span>
+        </span>
+      </>
     ) : (
       <>
         <img
