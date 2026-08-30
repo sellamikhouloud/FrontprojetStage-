@@ -4,7 +4,8 @@ import Card from "../../components/Cards/Card";
 import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 
 import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import TextArea from "../../components/Containers/Textarea";
@@ -24,7 +25,7 @@ import ConfirmationForm from "../../components/Forms/ConfirmationForm";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+
 import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles } from "@/lib/api/familles";
 import { getTauxDeChange } from "@/lib/api/parametres";
@@ -371,21 +372,66 @@ const extractErrorMessage = (error) => {
   const navigate = useNavigate();
 
   const [openFamilles, setOpenFamilles] = useState(false);
-  const [openOptions, setOpenOptions] = useState(false);
+const [openOptions, setOpenOptions] = useState(false);
+const [searchFamille, setSearchFamille] = useState("");
 
-  
-  const {
-    data: famillesData,
-    isLoading: famillesLoading,
-    isError: famillesError,
-    refetch: refetchFamilles,
-  } = useQuery({
-    queryKey: ["familles-popup"],
-    queryFn: () => listFamilles().then((r) => r.data),
-    enabled: openFamilles, // ne fetch que quand le popup s'ouvre
-  });
+const {
+  data: famillesResponse,
+  isLoading: famillesLoading,
+  isError: famillesError,
+  refetch: refetchFamilles,
+  fetchNextPage: fetchNextFamillesPage,
+  hasNextPage: hasNextFamillesPage,
+  isFetchingNextPage: isFetchingNextFamillesPage,
+} = useInfiniteQuery({
+  queryKey: ["familles-popup", "infinite", searchFamille],
 
-  const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam };
+
+    const trimmedSearch = searchFamille.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    const response = await listFamilles(params);
+    return response.data;
+  },
+
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
+  keepPreviousData: true,
+  enabled: openFamilles,
+});
+
+const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
+
+const famillesObserverTarget = useRef(null);
+
+useEffect(() => {
+  if (!famillesObserverTarget.current || !openFamilles) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextFamillesPage &&
+        !isFetchingNextFamillesPage
+      ) {
+        fetchNextFamillesPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(famillesObserverTarget.current);
+
+  return () => observer.disconnect();
+}, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
 
   // Mapping vers le format attendu par le popup / les cartes
   // (même logique que dans "Liste des familles" et "Ajout Visite")
@@ -953,19 +999,23 @@ const extractErrorMessage = (error) => {
 
       </main>
 
-      <PopupListeFamilles
-        open={openFamilles}
-        onClose={() => setOpenFamilles(false)}
-        familles={listeDesFamilles}
-        loading={famillesLoading}
-        error={famillesError}
-        onRetry={refetchFamilles}
-        onSelectFamille={(famille) => {
-          setSelectedFamille(famille);
-          setOpenFamilles(false);
-          setErrors((prev) => ({ ...prev, famille: false }));
-        }}
-      />
+   <PopupListeFamilles
+  open={openFamilles}
+  onClose={() => setOpenFamilles(false)}
+  familles={listeDesFamilles}
+  loading={famillesLoading}
+  isError={famillesError}
+  onRetry={refetchFamilles}
+  search={searchFamille}
+  onSearchChange={setSearchFamille}
+  observerTarget={famillesObserverTarget}
+  isFetchingNextPage={isFetchingNextFamillesPage}
+  onSelectFamille={(famille) => {
+    setSelectedFamille(famille);
+    setOpenFamilles(false);
+    setErrors((prev) => ({ ...prev, famille: false }));
+  }}
+/>
     </div>
   );
 }
