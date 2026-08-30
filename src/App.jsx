@@ -31,12 +31,15 @@ import HistoriqueNotificationsPage from "./pages/Notifications/Notificationshist
 import { AuthProvider, useAuth } from "./components/Providers/AuthProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { FamilyFormProvider } from "./context/FamilyFormContext";
+import NotificationWatcher from "./components/NotificationWatcher";
 
 
 function AppRoutes() {
   const { user } = useAuth();
 
   return (
+    <>
+    <NotificationWatcher />
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
@@ -232,6 +235,7 @@ function AppRoutes() {
 
       
     </Routes>
+    </>
   );
 }
 
