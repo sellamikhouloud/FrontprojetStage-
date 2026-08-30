@@ -8,12 +8,14 @@ const DistributionCard = ({
   onClick,
   onViewAllClick,
 }) => {
+  // Only display the first 5 distributions
+  const displayedProducts = products.slice(0, 5);
+
   return (
     <>
       {/* =====================================================
           DESKTOP / TABLET
       ====================================================== */}
-
       <div
         onClick={onClick}
         className="
@@ -60,19 +62,15 @@ const DistributionCard = ({
 
         {/* Products */}
         <div className="flex items-center">
-          {products.map((product, index) => (
-            <div
+          {displayedProducts.map((product, index) => (
+            <DistributionItem
               key={product.id}
-              className={index >= 4 ? "hidden md:block" : ""}
-            >
-              <DistributionItem
-                name={product.name}
-                quantity={product.quantity}
-                unit={product.unit}
-                dividerColor={dividerColor}
-                showDivider={index !== products.length - 1}
-              />
-            </div>
+              name={product.name}
+              quantity={product.quantity}
+              unit={product.unit}
+              dividerColor={dividerColor}
+              showDivider={index !== displayedProducts.length - 1}
+            />
           ))}
         </div>
       </div>
@@ -80,7 +78,6 @@ const DistributionCard = ({
       {/* =====================================================
           MOBILE
       ====================================================== */}
-
       <div className="md:hidden w-full">
         {/* Mobile Header - OUTSIDE the card */}
         <div className="flex items-center justify-between mb-[5px]">
@@ -126,7 +123,7 @@ const DistributionCard = ({
           "
         >
           <div className="flex items-stretch h-full">
-            {products.slice(0, 4).map((product, index) => (
+            {displayedProducts.map((product, index) => (
               <div
                 key={product.id}
                 className="
