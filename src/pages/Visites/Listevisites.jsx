@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -75,17 +74,19 @@ export default function ListeVisites() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   const {
-    data: visites = [],
+    data,
     isLoading,
     isError,
     error,
-  } = useQuery({
-    queryKey: ["visites", search, appliedFilters],
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["visites", "infinite", search, appliedFilters],
 
-    queryFn: async () => {
-      const params = {};
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { page: pageParam };
 
       const trimmedSearch = search.trim();
       if (trimmedSearch) {
@@ -97,22 +98,39 @@ export default function ListeVisites() {
       }
 
       const response = await listVisites(params);
-      const data = response?.data;
-
-      if (Array.isArray(data)) {
-        return data;
-      }
-
-      if (Array.isArray(data?.results)) {
-        return data.results;
-      }
-
-      return [];
+      return response.data;
     },
 
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+    initialPageParam: 1,
     keepPreviousData: true,
     retry: 1,
   });
+
+  const visites = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : page?.results ?? []
+  );
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const buildFamilleFromVisite = (item) => ({
     id: item.code_famille ?? item.famille ?? "-",
@@ -304,6 +322,13 @@ export default function ListeVisites() {
                   />
                 );
               })}
+            <div ref={observerTarget} className="h-1" />
+
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Spinner />
+                </div>
+              )}
             </div>
 
             {isFilterOpen && !isMobile && (
@@ -359,3 +384,4 @@ export default function ListeVisites() {
     </div>
   );
 }
+
