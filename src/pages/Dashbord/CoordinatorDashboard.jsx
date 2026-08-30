@@ -313,42 +313,41 @@ const CoordinatorDashboard = () => {
     }));
 
   // =====================================================
-  // ZAKAT
-  // =====================================================
+// ZAKAT
+// =====================================================
 
-  const zakatTitle = "Zakat";
+const zakatTitle = "Zakat";
 
-  const remainingBalanceMRU =
-    zakat?.solde_restant !== undefined
-      ? `${zakat.solde_restant} MRU`
-      : "0.00 MRU";
+// Coordinator API provides only the amount distributed this month
+const remainingBalanceMRU =
+  zakat?.montant_total_verse_ce_mois !== undefined
+    ? `${zakat.montant_total_verse_ce_mois} MRU`
+    : "0.00 MRU";
 
-  const remainingBalanceEUR =
-    zakat?.solde_restant_eur !== undefined
-      ? `${zakat.solde_restant_eur} EUR`
-      : "";
+const remainingBalanceEUR =
+  zakat?.montant_total_verse_ce_mois_eur !== undefined
+    ? `${zakat.montant_total_verse_ce_mois_eur} EUR`
+    : "";
 
-  const monthlyDistributedMRU =
-    zakat?.montant_total_verse_ce_mois !== undefined
-      ? `${zakat.montant_total_verse_ce_mois} MRU`
-      : "0.00 MRU";
+const monthlyDistributedMRU =
+  zakat?.montant_total_verse_ce_mois !== undefined
+    ? `${zakat.montant_total_verse_ce_mois} MRU`
+    : "0.00 MRU";
 
-  const monthlyDistributedEUR =
-    zakat?.montant_total_verse_ce_mois_eur !==
-    undefined
-      ? `${zakat.montant_total_verse_ce_mois_eur} EUR`
-      : "";
+const monthlyDistributedEUR =
+  zakat?.montant_total_verse_ce_mois_eur !== undefined
+    ? `${zakat.montant_total_verse_ce_mois_eur} EUR`
+    : "";
 
-  const beneficiaryFamilies =
-    zakat?.nb_familles_ce_mois !== undefined
-      ? zakat.nb_familles_ce_mois
-      : "";
+const beneficiaryFamilies =
+  zakat?.nb_familles_ce_mois !== undefined
+    ? zakat.nb_familles_ce_mois
+    : "";
 
-  const exchangeRate =
-    zakat?.taux_change_actuel !== undefined
-      ? zakat.taux_change_actuel
-      : "";
-
+const exchangeRate =
+  zakat?.taux_change_actuel !== undefined
+    ? zakat.taux_change_actuel
+    : "";
   // =====================================================
   // UPCOMING VISITS
   // =====================================================

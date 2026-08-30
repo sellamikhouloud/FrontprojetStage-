@@ -1184,39 +1184,46 @@ const Dashboard = () => {
         })
       : "Aucune connexion";
 
-  // =========================================================
-  // ZAKAT
-  // =========================================================
+ // =====================================================
+// ZAKAT
+// =====================================================
 
-  const remainingBalanceMRU =
-    zakat?.solde_restant !== undefined
-      ? `${zakat.solde_restant} MRU`
-      : "0.00 MRU";
+const zakatTitle = "Zakat";
 
-  const remainingBalanceEUR =
-    zakat?.solde_restant_eur !== undefined
-      ? `${zakat.solde_restant_eur} EUR`
-      : "0.00 EUR";
+const exchangeRate = zakat?.taux_change_actuel ?? 0;
 
-  const monthlyDistributedMRU =
-    zakat?.montant_total_verse_ce_mois !== undefined
-      ? `${zakat.montant_total_verse_ce_mois} MRU`
-      : "0.00 MRU";
+// Solde restant
+const remainingBalanceMRUValue = Number(
+  zakat?.solde_restant ?? 0
+);
 
-  const monthlyDistributedEUR =
-    zakat?.montant_total_verse_ce_mois_eur !== undefined
-      ? `${zakat.montant_total_verse_ce_mois_eur} EUR`
-      : "0.00 EUR";
+const remainingBalanceEURValue =
+  remainingBalanceMRUValue * Number(exchangeRate);
 
-  const beneficiaryFamilies =
-    zakat?.nb_familles_ce_mois !== undefined
-      ? zakat.nb_familles_ce_mois
-      : 0;
+// Montant versé ce mois
+const monthlyDistributedMRUValue = Number(
+  zakat?.montant_total_verse_ce_mois ?? 0
+);
 
-  const exchangeRate =
-    zakat?.taux_change_actuel !== undefined
-      ? zakat.taux_change_actuel
-      : "0.00";
+const monthlyDistributedEURValue =
+  monthlyDistributedMRUValue * Number(exchangeRate);
+
+const remainingBalanceMRU = `${remainingBalanceMRUValue.toFixed(2)} MRU`;
+
+const remainingBalanceEUR =
+  `${remainingBalanceEURValue.toFixed(2)} EUR`;
+
+const monthlyDistributedMRU =
+  `${monthlyDistributedMRUValue.toFixed(2)} MRU`;
+
+const monthlyDistributedEUR =
+  `${monthlyDistributedEURValue.toFixed(2)} EUR`;
+
+const beneficiaryFamilies =
+  zakat?.nb_familles_ce_mois ?? 0;
+
+const exchangeRateValue =
+  zakat?.taux_change_actuel ?? "";
 
   // =========================================================
   // DONORS

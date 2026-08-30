@@ -13,6 +13,7 @@ const ZakatCard = ({
 }) => {
   return (
     <div className="w-full">
+
       {/* Mobile title */}
       <h2
         className="
@@ -65,6 +66,7 @@ const ZakatCard = ({
           }
         `}
       >
+
         {/* Header */}
         <div
           className={`
@@ -78,6 +80,7 @@ const ZakatCard = ({
             }
           `}
         >
+
           {/* Desktop title */}
           <h2
             className={`
@@ -153,6 +156,7 @@ const ZakatCard = ({
         {/* Admin Content */}
         {variant === "admin" && (
           <div className="flex flex-col gap-[16px]">
+
             <ZakatInfoRow
               label="Solde restant"
               value={
