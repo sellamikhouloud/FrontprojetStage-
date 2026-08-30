@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 
 import StatusFilter from "../../components/Filter/StatusFilter";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -24,15 +24,19 @@ export default function ListeDonateur() {
   const [importResult, setImportResult] = useState(null);
   const [showResultPopup, setShowResultPopup] = useState(false);
 
-  const {
-    data: donateurs = [],
+    const {
+    data,
     isLoading,
     isError,
     error,
-  } = useQuery({
-    queryKey: ["donateurs", search, statusFilter],
-    queryFn: async () => {
-      const params = {};
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["donateurs", "infinite", search, statusFilter],
+
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { page: pageParam };
 
       const trimmedSearch = search.trim();
       if (trimmedSearch) {
@@ -46,15 +50,39 @@ export default function ListeDonateur() {
       }
 
       const response = await listDonateurs(params);
-
-      const data = response?.data;
-      if (Array.isArray(data)) return data;
-      if (Array.isArray(data?.results)) return data.results;
-      return [];
+      return response.data;
     },
+
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+    initialPageParam: 1,
     keepPreviousData: true,
     retry: 1,
   });
+
+  const donateurs = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : page?.results ?? []
+  );
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const formatDate = (date) => {
     if (!date) return "";
@@ -193,6 +221,13 @@ export default function ListeDonateur() {
                 />
               </div>
             ))}
+          <div ref={observerTarget} className="h-1" />
+
+            {isFetchingNextPage && (
+              <div className="flex justify-center py-4">
+                <Spinner />
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -214,3 +249,4 @@ export default function ListeDonateur() {
     </div>
   );
 }
+
