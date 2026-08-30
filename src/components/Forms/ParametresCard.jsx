@@ -7,8 +7,9 @@ import { Bell, Info } from "lucide-react";
  * version: string -> "1.0.0"
  */
 export default function ParametresCard({
-  onSelectSonnerie,
-  version,
+    onSelectSonnerie,
+    version,
+    sonnerieLabel = "Selectionner une sonnerie",
 }) {
   return (
     <div>
@@ -35,7 +36,7 @@ export default function ParametresCard({
             </div>
           </div>
 
-          <button
+                    <button
             type="button"
             onClick={onSelectSonnerie}
             className="
@@ -57,7 +58,7 @@ export default function ParametresCard({
               transition
             "
           >
-            Selectionner une sonnerie
+            {sonnerieLabel}
           </button>
         </div>
 
