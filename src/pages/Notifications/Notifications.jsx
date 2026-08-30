@@ -1,5 +1,6 @@
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NotificationCard from "../../components/AlertComposant/NotificationCard";
 import Spinner from "../../components/Spinner";
@@ -11,16 +12,47 @@ import { getNotifications } from "@/lib/api/Notifications";
 const NotificationsPage = () => {
   const navigate = useNavigate();
 
-
   const {
-    data: notifications,
+    data,
     isLoading,
     isError,
-  } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => getNotifications().then((res) => res.data),
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["notifications", "infinite"],
+
+    queryFn: ({ pageParam = 1 }) =>
+      getNotifications({ page: pageParam }).then((res) => res.data),
+
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+    initialPageParam: 1,
   });
 
+  const notifications = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : page?.results ?? []
+  );
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
  
   const handleBack = () => {
     navigate(-1);
@@ -257,6 +289,16 @@ if (notification.type === "verification_taux_change") {
                 }
               />
             ))}
+
+              {!isLoading && !isError && notifications?.length > 0 && (
+            <div ref={observerTarget} className="h-1" />
+          )}
+
+          {isFetchingNextPage && (
+            <div className="flex justify-center py-4">
+              <Spinner />
+            </div>
+          )}
 
           {/* Aucune notification */}
           {!isLoading &&
