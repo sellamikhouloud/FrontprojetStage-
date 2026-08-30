@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 import { useNavigate } from "react-router-dom";
@@ -15,8 +15,10 @@ const PopupDistributionfamille = ({
   Distribution,
   famille,
   isLoading = false,
-
   onDistributionAnnulee,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
 }) => {
   const navigate = useNavigate();
   const [selectedDistribution, setSelectedDistribution] = useState(null);
@@ -37,6 +39,25 @@ const PopupDistributionfamille = ({
       annulee: item.annulee ?? statusFilter !== "active",
     }));
   }, [distributionsBrutes, statusFilter]);
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current || !open) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [open, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const mapDistributionToEditData = (distribution) => {
     const produits = distribution?.produits || [];
@@ -190,30 +211,40 @@ const PopupDistributionfamille = ({
                   <Spinner />
                 </div>
               ) : distributionsTriees.length ? (
-                distributionsTriees.map((item, index) => (
-                  <CardPopupDistribution
-                    key={item.id || `distribution-${index}`}
-                    date={
-                      item.date_distribution
-                        ? new Date(item.date_distribution).toLocaleDateString(
-                            "fr-FR"
-                          )
-                        : "-"
-                    }
-                    produits={(item.produits || []).map((prod) => ({
-                      nom: prod.produit?.nom ?? "-",
-                      quantite: `${Number(prod.quantite ?? 0)} ${
-                        prod.produit?.unite === "boite"
-                          ? "boîtes"
-                          : prod.produit?.unite ?? ""
-                      }`.trim(),
-                    }))}
-                    onClick={() => {
-                      setSelectedDistribution(item);
-                      setOpenDetail(true);
-                    }}
-                  />
-                ))
+                <>
+                  {distributionsTriees.map((item, index) => (
+                    <CardPopupDistribution
+                      key={item.id || `distribution-${index}`}
+                      date={
+                        item.date_distribution
+                          ? new Date(item.date_distribution).toLocaleDateString(
+                              "fr-FR"
+                            )
+                          : "-"
+                      }
+                      produits={(item.produits || []).map((prod) => ({
+                        nom: prod.produit?.nom ?? "-",
+                        quantite: `${Number(prod.quantite ?? 0)} ${
+                          prod.produit?.unite === "boite"
+                            ? "boîtes"
+                            : prod.produit?.unite ?? ""
+                        }`.trim(),
+                      }))}
+                      onClick={() => {
+                        setSelectedDistribution(item);
+                        setOpenDetail(true);
+                      }}
+                    />
+                  ))}
+
+                  <div ref={observerTarget} className="h-1" />
+
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-4">
+                      <Spinner />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="py-10 text-center text-gray-500">
                   {statusFilter === "active"
