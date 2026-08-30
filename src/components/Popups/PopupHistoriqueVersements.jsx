@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Clock, MessageSquare } from "lucide-react";
 import quitter from "../../assets/quitter.svg";
 import SearchBar from "../Filter/Searchbar";
+import Spinner from "../Spinner";
 
 export default function PopupHistoriqueVersements({
   open,
   versements = [],
   onClose,
   onVersementClick,
+  observerTarget,
+  isFetchingNextPage,
 }) {
   const [search, setSearch] = useState("");
 
@@ -160,6 +163,14 @@ export default function PopupHistoriqueVersements({
                 </div>
               ))
             )}
+         
+            {filtered.length > 0 && <div ref={observerTarget} className="h-1" />}
+
+            {isFetchingNextPage && (
+              <div className="flex justify-center py-4">
+                <Spinner />
+              </div>
+            )}
           </div>
         </div>
 
@@ -169,4 +180,5 @@ export default function PopupHistoriqueVersements({
     </div>
   );
 }
+
 
