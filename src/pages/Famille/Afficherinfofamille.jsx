@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useQuery, useQueryClient  } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { getFamille } from "@/lib/api/familles";
 import { marquerSortie} from "@/lib/api/familles";
 import {getVisites} from "@/lib/api/familles";
@@ -53,38 +53,72 @@ const {
   enabled: !!id,
 });
 
+
 const {
-  data: visitesResponse,
+  data: visitesData,
   isLoading: visitesLoading,
   isError: visitesError,
-} = useQuery({
+  fetchNextPage: fetchNextVisitesPage,
+  hasNextPage: hasNextVisitesPage,
+  isFetchingNextPage: isFetchingNextVisitesPage,
+} = useInfiniteQuery({
   queryKey: ["visites", id],
-  queryFn: () => getVisites(id).then((r) => r.data),
+  queryFn: ({ pageParam = 1 }) =>
+    getVisites(id, { page: pageParam }).then((r) => r.data),
+  getNextPageParam: (lastPage, allPages) => {
+    const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
+    return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
+  },
+  initialPageParam: 1,
   enabled: !!id && openVisites,
 });
 
+const visitesActives = (visitesData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
+const visitesAnnulees = (visitesData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
 
 const {
-  data: distributionsResponse,
+  data: distributionsData,
   isLoading: distributionsLoading,
   isError: distributionsError,
-} = useQuery({
+  fetchNextPage: fetchNextDistributionsPage,
+  hasNextPage: hasNextDistributionsPage,
+  isFetchingNextPage: isFetchingNextDistributionsPage,
+} = useInfiniteQuery({
   queryKey: ["distributions", id],
-  queryFn: () => getDistributions(id).then((res) => res.data),
+  queryFn: ({ pageParam = 1 }) =>
+    getDistributions(id, { page: pageParam }).then((r) => r.data),
+  getNextPageParam: (lastPage, allPages) => {
+    const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
+    return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
+  },
+  initialPageParam: 1,
   enabled: !!id && openDistribution,
 });
 
-
+const distributionsActives = (distributionsData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
+const distributionsAnnulees = (distributionsData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
 
 const {
-  data: zakatResponse,
+  data: zakatData,
   isLoading: zakatLoading,
   isError: zakatError,
-} = useQuery({
+  fetchNextPage: fetchNextZakatPage,
+  hasNextPage: hasNextZakatPage,
+  isFetchingNextPage: isFetchingNextZakatPage,
+} = useInfiniteQuery({
   queryKey: ["zakat", id],
-  queryFn: () => getFamilleZakat(id).then((res) => res.data),
+  queryFn: ({ pageParam = 1 }) =>
+    getFamilleZakat(id, { page: pageParam }).then((r) => r.data),
+  getNextPageParam: (lastPage, allPages) => {
+    const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
+    return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
+  },
+  initialPageParam: 1,
   enabled: !!id && openZakat,
 });
+
+const zakatActives = (zakatData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
+const zakatAnnulees = (zakatData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
 
 const {
   data: courbesResponse,
@@ -376,33 +410,38 @@ return (
 
  
   <Sidebar hideOnMobile />
-  
-  
-<PopupDistributionfamille
+  <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
-  Distribution={distributionsResponse}   
+  Distribution={{ actives: distributionsActives, annulees: distributionsAnnulees }}
   famille={famille}
   isLoading={distributionsLoading}
+  fetchNextPage={fetchNextDistributionsPage}
+  hasNextPage={hasNextDistributionsPage}
+  isFetchingNextPage={isFetchingNextDistributionsPage}
 />
 
 <PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
-  zakats={zakatResponse}  
+  zakats={{ actives: zakatActives, annulees: zakatAnnulees }}
   famille={famille}
   isLoading={zakatLoading}
+  fetchNextPage={fetchNextZakatPage}
+  hasNextPage={hasNextZakatPage}
+  isFetchingNextPage={isFetchingNextZakatPage}
 />
-
 
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
-  Visites={visitesResponse}  
+  Visites={{ actives: visitesActives, annulees: visitesAnnulees }}
   famille={famille}
   isLoading={visitesLoading}
+  fetchNextPage={fetchNextVisitesPage}
+  hasNextPage={hasNextVisitesPage}
+  isFetchingNextPage={isFetchingNextVisitesPage}
 />
-
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
