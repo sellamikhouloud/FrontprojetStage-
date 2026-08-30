@@ -29,6 +29,8 @@ const PopupDetailVersement = ({
   };
 
   const dateVersement = formatDate(versement?.date_versement);
+    
+  const dateCreation = formatDate(versement?.date_creation);
 
   const montant = versement?.montant ?? "0";
   const montantEur = versement?.montant_eur ?? null;
@@ -42,6 +44,8 @@ const PopupDetailVersement = ({
 
   const creePar = versement?.cree_par?.nom || "-";
   const modifiePar = versement?.modifie_par?.nom || "-";
+  
+  const dateModification = formatDate(versement?.date_modification);
 
   return (
     <AnimatePresence>
@@ -160,20 +164,28 @@ const PopupDetailVersement = ({
               "
             >
               <div className="space-y-3">
-                <InfoCard
+                                <InfoCard
                   title="Informations générales"
                   data={[
                     {
-                      label: "Date",
+                      label: "Date de versement",
                       value: dateVersement,
                     },
                     {
-                      label: "Enregistré par",
+                      label: "Créé par",
                       value: creePar,
+                    },
+                    {
+                      label: "Date de création",
+                      value: dateCreation,
                     },
                     {
                       label: "Modifié par",
                       value: modifiePar,
+                    },
+                    {
+                      label: "Date de modification",
+                      value: dateModification,
                     },
                   ]}
                 />

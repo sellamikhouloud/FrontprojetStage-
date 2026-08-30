@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
@@ -16,6 +16,7 @@ import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 import Donateur from "../../assets/images/Donateur.svg";
 
 import { getDonateur, updateDonateur } from "../../lib/api/donateurs";
+import { diffPatch, isEmptyPatch } from "@/lib/diff";
 
 const KNOWN_FIELDS = ["nom", "prenom", "email", "date_adhesion"];
 
@@ -118,20 +119,32 @@ export default function FicheDonateur() {
     enabled: !!id,
   });
 
-  const [nom, setNom] = useState("");
+    const [nom, setNom] = useState("");
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [dateAdhesion, setDateAdhesion] = useState(null);
   const [statut, setStatut] = useState("Active");
+  const [statutOriginal, setStatutOriginal] = useState("Active");
+  const [dateCreation, setDateCreation] = useState(null);
+  const [modifiePar, setModifiePar] = useState("");
+  const [dateModification, setDateModification] = useState(null);
 
-  useEffect(() => {
+
+   useEffect(() => {
     if (!donateur) return;
 
     setNom(donateur.nom || "");
     setPrenom(donateur.prenom || "");
     setEmail(donateur.email || "");
     setDateAdhesion(donateur.date_adhesion ? new Date(donateur.date_adhesion) : null);
-    setStatut(donateur.is_active ? "Active" : "Inactive");
+
+    const currentStatut = donateur.is_active ? "Active" : "Inactive";
+    setStatut(currentStatut);
+    setStatutOriginal(currentStatut);
+
+    setDateCreation(donateur.date_creation ? new Date(donateur.date_creation) : null);
+    setModifiePar(donateur.modifie_par || "/");
+    setDateModification(donateur.date_modification ? new Date(donateur.date_modification) : null);
   }, [donateur]);
 
   const formatDate = (date) => {
@@ -142,6 +155,30 @@ export default function FicheDonateur() {
   const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
+
+  const baseline = useMemo(() => {
+    if (!donateur) return null;
+    return {
+      nom: donateur.nom || "",
+      prenom: donateur.prenom || "",
+      email: donateur.email || "",
+      date_adhesion: donateur.date_adhesion ? formatDate(new Date(donateur.date_adhesion)) : "",
+    };
+  }, [donateur]);
+
+  const current = useMemo(() => ({
+    nom,
+    prenom,
+    email,
+    date_adhesion: formatDate(dateAdhesion) || "",
+  }), [nom, prenom, email, dateAdhesion]);
+
+  const patch = useMemo(
+    () => (baseline && current ? diffPatch(baseline, current) : {}),
+    [baseline, current]
+  );
+
+  const nothingChanged = isEmptyPatch(patch) && statut === statutOriginal;
 
   const handleSave = async () => {
     const newErrors = {};
@@ -164,6 +201,11 @@ export default function FicheDonateur() {
 
     if (Object.keys(newErrors).length > 0) return;
 
+    if (nothingChanged) {
+      setBackendError("Aucune modification à enregistrer.");
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -174,6 +216,8 @@ export default function FicheDonateur() {
         date_adhesion: formatDate(dateAdhesion),
         is_active: statut === "Active",
       });
+
+      setStatutOriginal(statut);
 
       setShowBanner(true);
       setTimeout(() => {
@@ -344,7 +388,25 @@ export default function FicheDonateur() {
                 
             
 
-              <Input label="Créé par" value={donateur.cree_par || "—"} disabled noPadding />
+              <Input label="Créé par" value={donateur.cree_par || "/"} disabled noPadding />
+
+                <DateContainer
+                label="Date de création"
+                value={dateCreation}
+                disabled
+                readOnly
+                noPadding
+              />
+
+               <Input label="Modifié par" value={modifiePar || "/"} disabled noPadding />
+
+              <DateContainer
+                label="Date de modification"
+                value={dateModification}
+                disabled
+                readOnly
+                noPadding
+              />
 
               <ChoiceContainerModifier
                 label="Statut"

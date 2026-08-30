@@ -136,6 +136,16 @@ const PopupModifierVersement = ({ open, onClose, versement, onSave }) => {
   const creePar = versement.cree_par?.nom || "-";
   const modifiePar = versement.modifie_par?.nom || "-";
 
+  const formatDisplayDate = (date) => {
+    if (!date) return "-";
+    const parsed = new Date(date);
+    if (isNaN(parsed.getTime())) return date;
+    return parsed.toLocaleDateString("fr-FR");
+  };
+
+  const dateCreation = formatDisplayDate(versement.date_creation);
+  const dateModification = formatDisplayDate(versement.date_modification);
+
   // Taux stocké lors du versement (pas le taux du jour)
   const tauxUtiliseNum =
     versement.taux_utilise !== null && versement.taux_utilise !== undefined
@@ -235,18 +245,28 @@ const handleInfoChange = (index, value) => {
   };
 const infos = [
   {
-    label: "Date",
+    label: "Date de versement",
     value: dateDisplay,
     type: "date",
   },
   {
-    label: "Enregistré par",
+    label: "Créé par",
     value: creePar,
+    editable: false,
+  },
+  {
+    label: "Date de création",
+    value: dateCreation,
     editable: false,
   },
   {
     label: "Modifié par",
     value: modifiePar,
+    editable: false,
+  },
+  {
+    label: "Date de modification",
+    value: dateModification,
     editable: false,
   },
 ];
@@ -307,8 +327,8 @@ const infos = [
             </h2>
           </div>
 
-          {/* Erreurs backend (dont l'erreur 400 solde < 0) juste après le titre */}
-          <BackendErrorMessage message={errorMessage} className="mt-2" />
+        
+         
 
           <div
             className="
@@ -484,6 +504,8 @@ const infos = [
                   <SuccessBanner text="Enregistré avec succès" />
                 )}
                 <div className="mt-3">
+
+                   <BackendErrorMessage message={errorMessage} className="mt-1 mb-3" />
 
                 <Button
                   title={isSaving ? "Enregistrement..." : "Enregistrer"}

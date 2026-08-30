@@ -124,12 +124,13 @@ const [photoRemoved, setPhotoRemoved] = useState(false);
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [statut, setStatut] = useState("Active");
-  const [dateEntree, setDateEntree] = useState(null);
+ 
   const [password, setPassword] = useState("");
   const [village, setVillage] = useState("");
   const [familles, setFamilles] = useState(0);
   const [telephone, setTelephone] = useState("");
   const [creePar, setCreePar] = useState("");
+  const [dateCreation, setDateCreation] = useState(null);
   const [modifiePar, setModifiePar] = useState("");
   const [dateModification, setDateModification] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -230,17 +231,20 @@ useEffect(() => {
   setCreePar(
     found.created_by
       ? `${found.created_by.nom} ${found.created_by.prenom}`
-      : "—"
+      : "/"
   );
+
+  setDateCreation(found.created_at ? new Date(found.created_at) : null);
+
   setModifiePar(
   found.updated_by
     ? `${found.updated_by.nom} ${found.updated_by.prenom}`
-    : null
+    : "/ "
 );
 setDateModification(
   found.updated_by && found.updated_at ? new Date(found.updated_at) : null
 );
-  setDateEntree(found.created_at ? new Date(found.created_at) : null);
+ 
 
   const currentStatut = found.is_active ? "Active" : "Inactive";
   setStatut(currentStatut);
@@ -705,23 +709,23 @@ await updateCoordinateur(id, payload);
 
              
 
-              {/* Date d'entrée (non modifiable) */}
-              <DateContainer
-                label="Date d'entrée"
-                value={dateEntree}
-                disabled
-                readOnly
-                noPadding
-              />
+            
 
              
 
               {/* Créé par  */}
               <Input label="Créé par" value={creePar} disabled readOnly noPadding />
-
-
-               {modifiePar && (
-                 <>
+             
+                 
+                 {/* Date de création (non modifiable) */}
+              <DateContainer
+                label="Date de création"
+                value={dateCreation}
+                disabled
+                readOnly
+                noPadding
+              />
+              <>
 
               {/* Modifié par (non modifiable) */}
               <Input label="Modifié par" value={modifiePar} disabled readOnly noPadding />
@@ -735,7 +739,7 @@ await updateCoordinateur(id, payload);
                 noPadding
               />
                </>
-               )}
+             
 
              <div className="flex flex-col gap-1">
   <label className="text-[14px] lg:text-[16px] font-semibold text-black">
