@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles , exportFamilles } from "@/lib/api/familles";
 import { listVillages } from "@/lib/api/Parametres";
@@ -143,11 +143,14 @@ const {
   isError,
   error,
   refetch,
-} = useQuery({
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+} = useInfiniteQuery({
   queryKey: ["familles", search, appliedFilters],
 
-  queryFn: async () => {
-    const params = {};
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam };
 
     const trimmedSearch = search.trim();
 
@@ -172,29 +175,43 @@ const {
     }
 
     if (appliedFilters.statut_zakat) {
-  params.statut_zakat = appliedFilters.statut_zakat;
-}
+      params.statut_zakat = appliedFilters.statut_zakat;
+    }
 
     const response = await listFamilles(params);
-
-    const data = response?.data;
-
-    if (Array.isArray(data)) {
-      return data;
-    }
-
-    if (Array.isArray(data?.results)) {
-      return data.results;
-    }
-
-    return [];
+    return response.data;
   },
 
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? allPages.length + 1 : undefined,
+
+  initialPageParam: 1,
   keepPreviousData: true,
   retry: 1,
 });
 
-const familles = Array.isArray(data) ? data : [];
+const familles = (data?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
+
+const observerTarget = useRef(null);
+
+useEffect(() => {
+  if (!observerTarget.current) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(observerTarget.current);
+
+  return () => observer.disconnect();
+}, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
 
 
@@ -665,8 +682,16 @@ if  (isFilterOpen && isMobile)  {
   ].filter(Boolean)}
 />
 </div>
-      </div>
+          </div>
     ))}
+
+    <div ref={observerTarget} className="h-1" />
+
+    {isFetchingNextPage && (
+      <div className="flex justify-center py-4">
+        <Spinner />
+      </div>
+    )}
   </div>
 </div>
 
@@ -682,3 +707,4 @@ if  (isFilterOpen && isMobile)  {
     
   );
 }
+
