@@ -1,7 +1,7 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import PopupDetailVisite from "./Popupdetailsvisite";
 import CardPopupvisite from "../Cards/cardvisite";
@@ -16,6 +16,9 @@ const Popupvisites = ({
   Visites, // { actives: [...], annulees: [...] }
   famille,
   isLoading = false,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
 }) => {
   const queryClient = useQueryClient();
 
@@ -40,6 +43,25 @@ const Popupvisites = ({
 
   const visitesAffichees =
     statusFilter === "active" ? visitesActives : visitesAnnulees;
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current || !open) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [open, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleDeleteVisite = async (visite) => {
     try {
@@ -188,54 +210,64 @@ const Popupvisites = ({
                   <Spinner />
                 </div>
               ) : visitesAffichees.length ? (
-                visitesAffichees.map((item, index) => (
-                  <CardPopupvisite
-                    key={item.id ?? `visite-${index}`}
-                    visite={
-                      item.numero_visite !== undefined &&
-                      item.numero_visite !== null
-                        ? `Visite ${item.numero_visite}`
-                        : `Visite ${index }`
-                    }
-                    date={
-                      item.date_visite
-                        ? new Date(item.date_visite).toLocaleDateString("fr-FR")
-                        : "-"
-                    }
-                    poids={item.poids_bebe ?? "-"}
-                    taille={item.taille_bebe ?? "-"}
-                    badges={[
-                      item.statut_nutritionnel === "mam" && {
-                        type: "mam",
-                        text: "MAM nourrisson",
-                      },
-                      item.statut_nutritionnel === "mas" && {
-                        type: "mas",
-                        text: "MAS nourrisson",
-                      },
-                      item.statut_nutritionnel === "normale" && {
-                        type: "mere",
-                        text: "Bébé normal",
-                      },
-                      item.statut_nutritionnel_mere === "normale" && {
-                        type: "mere",
-                        text: "Mère normale",
-                      },
-                      item.statut_nutritionnel_mere === "a_risque" && {
-                        type: "risque",
-                        text: "Mère à risque",
-                      },
-                      item.statut_nutritionnel_mere === "malnutrition" && {
-                        type: "mas",
-                        text: "Mère malnutrie",
-                      },
-                    ].filter(Boolean)}
-                    onClick={() => {
-                      setSelectedVisite(item);
-                      setOpenDetail(true);
-                    }}
-                  />
-                ))
+                <>
+                  {visitesAffichees.map((item, index) => (
+                    <CardPopupvisite
+                      key={item.id ?? `visite-${index}`}
+                      visite={
+                        item.numero_visite !== undefined &&
+                        item.numero_visite !== null
+                          ? `Visite ${item.numero_visite}`
+                          : `Visite ${index }`
+                      }
+                      date={
+                        item.date_visite
+                          ? new Date(item.date_visite).toLocaleDateString("fr-FR")
+                          : "-"
+                      }
+                      poids={item.poids_bebe ?? "-"}
+                      taille={item.taille_bebe ?? "-"}
+                      badges={[
+                        item.statut_nutritionnel === "mam" && {
+                          type: "mam",
+                          text: "MAM nourrisson",
+                        },
+                        item.statut_nutritionnel === "mas" && {
+                          type: "mas",
+                          text: "MAS nourrisson",
+                        },
+                        item.statut_nutritionnel === "normale" && {
+                          type: "mere",
+                          text: "Bébé normal",
+                        },
+                        item.statut_nutritionnel_mere === "normale" && {
+                          type: "mere",
+                          text: "Mère normale",
+                        },
+                        item.statut_nutritionnel_mere === "a_risque" && {
+                          type: "risque",
+                          text: "Mère à risque",
+                        },
+                        item.statut_nutritionnel_mere === "malnutrition" && {
+                          type: "mas",
+                          text: "Mère malnutrie",
+                        },
+                      ].filter(Boolean)}
+                      onClick={() => {
+                        setSelectedVisite(item);
+                        setOpenDetail(true);
+                      }}
+                    />
+                  ))}
+
+                  <div ref={observerTarget} className="h-1" />
+
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-4">
+                      <Spinner />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="py-10 text-center text-gray-500">
                   {statusFilter === "active"
