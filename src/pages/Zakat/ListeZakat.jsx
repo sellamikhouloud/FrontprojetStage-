@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { listAidesZakat ,createVersementSolde,exportAidesZakat , annulerAideZakat, getZakatDashboard , listVersementsSolde , getVersementSolde , updateVersementSolde} from "@/lib/api/zakat";
-import { useQuery ,useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -74,11 +75,19 @@ const queryClient = useQueryClient();
   return Number(n).toLocaleString("fr-FR");
 }
 
- const { data, isLoading, isError, refetch } = useQuery({
+ const {
+  data,
+  isLoading,
+  isError,
+  refetch,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+} = useInfiniteQuery({
   queryKey: ["zakats", search, appliedFilters],
 
-  queryFn: async () => {
-    const params = {};
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam };
 
     const trimmedSearch = search.trim();
 
@@ -97,26 +106,41 @@ const queryClient = useQueryClient();
     }
 
     const response = await listAidesZakat(params);
-
-    const responseData = response?.data;
-
-    if (Array.isArray(responseData)) {
-      return responseData;
-    }
-
-    if (Array.isArray(responseData?.results)) {
-      return responseData.results;
-    }
-
-    return [];
+    return response.data;
   },
 
+   getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
   keepPreviousData: true,
   retry: 1,
 });
 
+  const zakats = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : page?.results ?? []
+  );
 
-  const zakats = data?.results ?? data ?? [];
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+
 
   const {
   data: dashboardData,
@@ -521,8 +545,18 @@ const handleExportZakat = async () => {
             }}
           />
         );
-      })}
+            })}
+
+      <div ref={observerTarget} className="h-1" />
+
+      {isFetchingNextPage && (
+        <div className="flex justify-center py-4">
+          <Spinner />
+        </div>
+      )}
     </div>
+
+    {/* Filtres desktop */}
 
     {/* Filtres desktop */}
     {isFilterOpen && !isMobile && (
@@ -597,7 +631,7 @@ const handleExportZakat = async () => {
   error={versementDetailError}
   onEdit={() => {
     setShowDetailVersementPopup(false);
-    setOpenModifierVersement(true); // 👈 open the edit popup
+    setOpenModifierVersement(true); 
   }}
 />
 <PopupModifierVersement
