@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
-
+import Spinner from "../Spinner";
 import SearchBar from "../Filter/Searchbar";
 import CardCoordinateur from "../Cards/carteCoordinateur";
 
@@ -10,21 +10,13 @@ const PopupListeCoordinateurs = ({
   onClose,
   coordinateurs = [],
   onSelectCoordinateur,
+  loading,
+  isError,
+  search,
+  onSearchChange,
+  observerTarget,
+  isFetchingNextPage,
 }) => {
-  const [search, setSearch] = useState("");
-
-  const data = useMemo(() => {
-    if (!search.trim()) return coordinateurs;
-
-    const value = search.toLowerCase();
-
-    return coordinateurs.filter(
-      (item) =>
-        item.name.toLowerCase().includes(value) ||
-        item.code.toLowerCase().includes(value)
-    );
-  }, [search, coordinateurs]);
-
   return (
     <AnimatePresence>
       {open && (
@@ -77,7 +69,6 @@ const PopupListeCoordinateurs = ({
               sm:p-6
             "
           >
-            {/* Header */}
             <div className="mb-5">
               <button
                 onClick={onClose}
@@ -116,7 +107,6 @@ const PopupListeCoordinateurs = ({
                 Liste des coordinateurs
               </h2>
 
-              {/* Recherche */}
               <div className="mt-5">
                 <SearchBar
                   placeholder="Cherchez ici"
@@ -124,12 +114,11 @@ const PopupListeCoordinateurs = ({
                   maxWidth="max-w-none"
                   showFilter={false}
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => onSearchChange(e.target.value)}
                 />
               </div>
             </div>
 
-            {/* Cartes */}
             <div
               className="
                 mt-5
@@ -145,8 +134,27 @@ const PopupListeCoordinateurs = ({
                 pr-1
               "
             >
-              {data.length ? (
-                data.map((item) => (
+              {loading && (
+                <div className="flex justify-center py-6">
+                  <Spinner />
+                </div>
+              )}
+
+              {isError && !loading && (
+                <p className="text-center text-red-500 py-6">
+                  Impossible de charger les coordinateurs.
+                </p>
+              )}
+
+              {!loading && !isError && coordinateurs.length === 0 && (
+                <div className="py-10 text-center text-gray-500">
+                  Aucun résultat.
+                </div>
+              )}
+
+              {!loading &&
+                !isError &&
+                coordinateurs.map((item) => (
                   <div
                     key={item.id}
                     onClick={() =>
@@ -154,21 +162,26 @@ const PopupListeCoordinateurs = ({
                     }
                     className="cursor-pointer"
                   >
-                   <CardCoordinateur
-  name={item.name}
-  code={item.code}
-  village={item.village}
-  familles={item.familles}
-  status={item.status}
-  username={item.username}
-  creePar={item.creePar}
-  isChef={item.isChef}
-/>
+                    <CardCoordinateur
+                      name={item.name}
+                      code={item.code}
+                      village={item.village}
+                      familles={item.familles}
+                      status={item.status}
+                      username={item.username}
+                      creePar={item.creePar}
+                      isChef={item.isChef}
+                    />
                   </div>
-                ))
-              ) : (
-                <div className="py-10 text-center text-gray-500">
-                  Aucun résultat.
+                ))}
+
+              {!loading && coordinateurs.length > 0 && (
+                <div ref={observerTarget} className="h-1" />
+              )}
+
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Spinner />
                 </div>
               )}
             </div>
