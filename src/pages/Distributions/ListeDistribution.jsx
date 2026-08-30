@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
@@ -117,32 +117,60 @@ const {
   isLoading: distributionsLoading,
   isError: distributionsError,
   refetch: refetchDistributions,
-} = useQuery({
-  queryKey: ["distributions-list", search, appliedFilters],
+  fetchNextPage: fetchNextDistributionsPage,
+  hasNextPage: hasNextDistributionsPage,
+  isFetchingNextPage: isFetchingNextDistributionsPage,
+} = useInfiniteQuery({
+  queryKey: ["distributions-list", "infinite", search, appliedFilters],
 
-  queryFn: () =>
+  queryFn: ({ pageParam = 1 }) =>
     listDistributions({
-      // Recherche dans search bar 
+      page: pageParam,
+
       search: search.trim() || undefined,
 
-      // Filtre date début
       date_debut: appliedFilters.dateDebut
         ? formatDateYYYYMMDD(appliedFilters.dateDebut)
         : undefined,
 
-      // Filtre date fin
       date_fin: appliedFilters.dateFin
         ? formatDateYYYYMMDD(appliedFilters.dateFin)
         : undefined,
     }).then((r) => r.data),
 
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
   keepPreviousData: true,
 });
-const distributionsData = Array.isArray(distributionsResponse)
-  ? distributionsResponse
-  : Array.isArray(distributionsResponse?.results)
-  ? distributionsResponse.results
-  : [];
+
+const distributionsData = (distributionsResponse?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
+
+const distributionsObserverTarget = useRef(null);
+
+useEffect(() => {
+  if (!distributionsObserverTarget.current) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextDistributionsPage &&
+        !isFetchingNextDistributionsPage
+      ) {
+        fetchNextDistributionsPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(distributionsObserverTarget.current);
+
+  return () => observer.disconnect();
+}, [hasNextDistributionsPage, isFetchingNextDistributionsPage, fetchNextDistributionsPage]);
 
  const {
   data: produitsResponse,
@@ -533,6 +561,13 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
                   />
                 );
               })}
+              <div ref={distributionsObserverTarget} className="h-1" />
+
+              {isFetchingNextDistributionsPage && (
+                <div className="flex justify-center py-4">
+                  <Spinner />
+                </div>
+              )}
             </div>
 
             {/* Filtres */}
@@ -640,4 +675,5 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     </div>
   );
 }
+
 
