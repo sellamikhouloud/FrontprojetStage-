@@ -5,7 +5,9 @@ import { getTauxDeChange, updateTauxDeChange ,
    , getPreferences, updatePreferences,
   getJoursGenerationRapports, updateJoursGenerationRapports,  } from "../../lib/api/Parametres";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
-import omsInfo from "../../assets/oms-info.svg";
+import SonneriePopup from "../../components/Popups/SonneriePopup";
+import { setNotificationSound, AVAILABLE_SOUNDS } from "../../lib/notificationSound";
+
 import arrowUpRight from "../../assets/Arrow up-right.svg";
 import {
   AiOutlineInfoCircle,
@@ -91,6 +93,8 @@ export default function Parametres({ onClose }) {
  const [loadingTaux, setLoadingTaux] = useState(true);
  const [erreurTaux, setErreurTaux] = useState("");
  const [savingTaux, setSavingTaux] = useState(false);
+ const [sonnerieNotifications, setSonnerieNotifications] = useState("defaut");
+ const [sonneriePopupOpen, setSonneriePopupOpen] = useState(false);
 
 
  useEffect(() => {
@@ -153,6 +157,7 @@ useEffect(() => {
       setNotifRapportMensuel(data.notif_rappel_rapport_mensuel ?? false);
       setNotifBilanDonateurs(data.notif_rappel_bilan_donateurs ?? false);
       setNotifRapportAnnuel(data.notif_rappel_rapport_annuel ?? false);
+      setSonnerieNotifications(data.sonnerie_notifications ?? "defaut");
     } catch (err) {
       setErreurPreferences("Impossible de charger les préférences.");
       console.error(err);
@@ -462,8 +467,23 @@ const handleSupprimerEmail = async (id) => {
 
 
 const handleSelectionnerSonnerie = () => {
-  console.log("Ouvrir le sélecteur de sonnerie");
-  // TODO: ouvrir le dialog/popup de sélection de sonnerie
+  setSonneriePopupOpen(true);
+};
+
+const handleChoisirSonnerie = async (soundValue) => {
+  const ancienneValeur = sonnerieNotifications;
+  setSonnerieNotifications(soundValue);
+
+  try {
+    await updatePreferences({ sonnerie_notifications: soundValue });
+    setNotificationSound(soundValue);
+    setErreurPreferences("");
+    setSonneriePopupOpen(false);
+  } catch (err) {
+    setSonnerieNotifications(ancienneValeur);
+    setErreurPreferences("Impossible de mettre à jour la sonnerie.");
+    console.error(err);
+  }
 };
 
 const emailsAffiches = useMemo(() => {
@@ -1775,35 +1795,31 @@ return (
     </div>
 
     {/* DROITE — BOUTON */}
-    <button
-      type="button"
-      onClick={handleSelectionnerSonnerie}
-      className="
-        h-[45px]
-        w-full
-        sm:w-auto
-        px-6
-
-        rounded-[15px]
-        bg-[#7BC8C4]
-
-        text-white
-        text-[16px]
-        font-semibold
-
-        flex
-        items-center
-        justify-center
-
-        hover:bg-[#6AB8B3]
-        active:scale-[0.98]
-        transition
-        shrink-0
-      "
-    >
-      Sélectionner une sonnerie
-    </button>
-  </div>
+   <button
+  type="button"
+  onClick={handleSelectionnerSonnerie}
+  className="
+    h-[45px]
+    w-full
+    sm:w-auto
+    px-6
+    rounded-[15px]
+    bg-[#7BC8C4]
+    text-white
+    text-[16px]
+    font-semibold
+    flex
+    items-center
+    justify-center
+    hover:bg-[#6AB8B3]
+    active:scale-[0.98]
+    transition
+    shrink-0
+  "
+>
+  {AVAILABLE_SOUNDS.find((s) => s.value === sonnerieNotifications)?.label || "Sélectionner une sonnerie"}
+</button>
+</div>
 </div>
 
 {/* =========================================
@@ -1962,6 +1978,13 @@ return (
   filterValue={filtreTypeEmail}
   onFilterChange={setFiltreTypeEmail}
 />
+{sonneriePopupOpen && (
+  <SonneriePopup
+    currentValue={sonnerieNotifications}
+    onSelect={handleChoisirSonnerie}
+    onClose={() => setSonneriePopupOpen(false)}
+  />
+)}
   </div>
 );
 }
