@@ -23,6 +23,8 @@ const PopupPhoto = ({
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
 
+  /* ================= CAMERA ================= */
+
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -34,24 +36,30 @@ const PopupPhoto = ({
     return () => stopCamera();
   }, []);
 
+  /* ================= CLOSE ================= */
+
   const handleClose = () => {
     stopCamera();
     setShowWebcam(false);
     onClose?.();
   };
 
+  /* ================= MOBILE CAMERA ================= */
+
   const handleCameraMobile = () => {
     cameraInputRef.current?.click();
   };
 
+  /* ================= DESKTOP CAMERA ================= */
+
   const handleCameraDesktop = async () => {
     try {
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          video: true,
-        });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
 
       streamRef.current = stream;
+
       setShowWebcam(true);
 
       setTimeout(() => {
@@ -66,11 +74,11 @@ const PopupPhoto = ({
     }
   };
 
+  /* ================= CAMERA ================= */
+
   const handleCamera = async () => {
     const isMobile =
-      /Android|iPhone|iPad|iPod/i.test(
-        navigator.userAgent
-      );
+      /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     if (isMobile) {
       handleCameraMobile();
@@ -79,22 +87,33 @@ const PopupPhoto = ({
     }
   };
 
+  /* ================= GALLERY ================= */
+
   const handleGallery = () => {
     galleryInputRef.current?.click();
   };
 
+  /* ================= FILE CHANGE ================= */
+
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
 
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     onImageSelected?.(file);
     onStartAddPhoto?.();
+
     handleClose();
   };
 
+  /* ================= TAKE PHOTO ================= */
+
   const takePhoto = () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      return;
+    }
 
     const canvas = document.createElement("canvas");
 
@@ -107,7 +126,9 @@ const PopupPhoto = ({
 
     canvas.toBlob(
       (blob) => {
-        if (!blob) return;
+        if (!blob) {
+          return;
+        }
 
         const file = new File([blob], "photo.jpg", {
           type: "image/jpeg",
@@ -115,6 +136,7 @@ const PopupPhoto = ({
 
         onImageSelected?.(file);
         onStartAddPhoto?.();
+
         handleClose();
       },
       "image/jpeg"
@@ -130,17 +152,18 @@ const PopupPhoto = ({
             inset-0
             z-50
             bg-black/30
-
             flex
             items-end
             lg:items-center
             justify-center
+            overflow-hidden
           "
         >
           <motion.div
+            /* ================= MOBILE SLIDE ================= */
             initial={{
               opacity: 0,
-              y: 60,
+              y: "100%",
             }}
             animate={{
               opacity: 1,
@@ -148,32 +171,31 @@ const PopupPhoto = ({
             }}
             exit={{
               opacity: 0,
-              y: 60,
+              y: "100%",
             }}
             transition={{
-              duration: 0.25,
+              duration: 0.35,
+              ease: [0.32, 0.72, 0, 1],
             }}
             onClick={(e) => e.stopPropagation()}
             className="
               w-full
-
               lg:w-[520px]
-
               bg-white
-
-              rounded-t-[28px]
+              rounded-t-[24px]
               lg:rounded-[18px]
-
               shadow-2xl
-
               max-h-[90vh]
               overflow-y-auto
             "
           >
-            {/* Mobile Handle */}
-            <div className="lg:hidden flex justify-center pt-3 pb-2">
-              <div className="w-16 h-1 rounded-full bg-gray-300" />
+            {/* ================= MOBILE HANDLE ================= */}
+
+            <div className="lg:hidden flex justify-center pt-2 pb-1">
+              <div className="w-10 h-1 rounded-full bg-gray-300" />
             </div>
+
+            {/* ================= HIDDEN INPUTS ================= */}
 
             <input
               ref={cameraInputRef}
@@ -192,19 +214,27 @@ const PopupPhoto = ({
               className="hidden"
             />
 
-            {/* Header */}
-            <div className="px-5 lg:px-6 pt-2 lg:pt-6 pb-4">
+            {/* ================= HEADER ================= */}
 
-              {/* Desktop only */}
+            <div
+              className="
+                px-4
+                lg:px-6
+                pt-1
+                lg:pt-6
+                pb-3
+                lg:pb-4
+              "
+            >
+              {/* ================= DESKTOP CLOSE ================= */}
+
               <button
                 onClick={handleClose}
                 className="
                   hidden
                   lg:flex
-
                   items-center
                   gap-2
-
                   text-[18px]
                   font-medium
                 "
@@ -214,46 +244,61 @@ const PopupPhoto = ({
                   alt="Fermer"
                   className="w-5 h-5"
                 />
+
                 Fermer
               </button>
+
+              {/* ================= TITLE ================= */}
 
               <h2
                 className="
                   text-left
                   lg:text-center
-
-                  mt-2
+                  mt-1
                   lg:mt-5
-
-                  text-[30px]
+                  text-[22px]
                   lg:text-[24px]
-
                   font-semibold
-                  text-[#1E1E1E]
+                  flex
+                  justify-center
                 "
               >
                 {title}
               </h2>
 
+              {/* ================= MOBILE DESCRIPTION ================= */}
+
               <p
                 className="
-                  mt-2
-
-                  text-[15px]
+                  mt-1
+                  text-[13px]
+                  leading-5
                   text-[#8B8B8B]
-
                   lg:hidden
+                  flex
+                  justify-center
                 "
               >
                 Choisissez une source pour votre photo de terrain
               </p>
             </div>
 
-            {/* Content */}
-            <div className="px-5 lg:px-6 pb-5 space-y-5">
+            {/* ================= CONTENT ================= */}
 
+            <div
+              className="
+                px-7
+                lg:px-6
+                pb-4
+                lg:pb-5
+                space-y-3
+                lg:space-y-5
+              "
+            >
               {!showWebcam ? (
                 <>
+                  {/* ================= CAMERA ================= */}
+
                   <PhotoOption
                     icon={camera}
                     title="Prendre une photo"
@@ -263,6 +308,8 @@ const PopupPhoto = ({
                     background="#F2FBF8"
                     onClick={handleCamera}
                   />
+
+                  {/* ================= GALLERY ================= */}
 
                   <PhotoOption
                     icon={galerie}
@@ -275,7 +322,9 @@ const PopupPhoto = ({
                   />
                 </>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 lg:space-y-4">
+                  {/* ================= WEBCAM ================= */}
+
                   <video
                     ref={videoRef}
                     autoPlay
@@ -284,10 +333,13 @@ const PopupPhoto = ({
                     className="
                       w-full
                       aspect-video
-                      rounded-2xl
+                      rounded-xl
+                      lg:rounded-2xl
                       bg-black
                     "
                   />
+
+                  {/* ================= TAKE PHOTO ================= */}
 
                   <Button
                     title="Prendre la photo"
@@ -296,18 +348,24 @@ const PopupPhoto = ({
                   />
                 </div>
               )}
-
             </div>
 
-            {/* Mobile Cancel */}
-            <div className="lg:hidden pb-6">
+            {/* ================= MOBILE CANCEL ================= */}
+
+            <div
+              className="
+                lg:hidden
+                px-4
+                pb-4
+                pt-0
+              "
+            >
               <Button
                 title="Annuler"
                 variant="annuler"
                 onClick={handleClose}
               />
             </div>
-
           </motion.div>
         </div>
       )}
