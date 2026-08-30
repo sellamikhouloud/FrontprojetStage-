@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { listAidesZakat ,createVersementSolde,exportAidesZakat , annulerAideZakat, getZakatDashboard , listVersementsSolde , getVersementSolde , updateVersementSolde} from "@/lib/api/zakat";
 import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
@@ -154,17 +153,49 @@ const queryClient = useQueryClient();
 });
 
 
-
  const {
   data: versementsData,
   isLoading: versementsLoading,
   isError: versementsError,
   refetch: refetchVersements,
-} = useQuery({
-  queryKey: ["versements-solde"],
-  queryFn: () => listVersementsSolde().then((r) => r.data),
-  enabled: isAdmin && showHistoriqueVersements, // ne fetch qu'à l'ouverture du popup
+  fetchNextPage: fetchNextVersementsPage,
+  hasNextPage: hasNextVersementsPage,
+  isFetchingNextPage: isFetchingNextVersementsPage,
+} = useInfiniteQuery({
+  queryKey: ["versements-solde", "infinite"],
+
+  queryFn: ({ pageParam = 1 }) =>
+    listVersementsSolde({ page: pageParam }).then((r) => r.data),
+
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
+  enabled: isAdmin && showHistoriqueVersements,
 });
+
+const versementsObserverTarget = useRef(null);
+
+useEffect(() => {
+  if (!versementsObserverTarget.current) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextVersementsPage &&
+        !isFetchingNextVersementsPage
+      ) {
+        fetchNextVersementsPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(versementsObserverTarget.current);
+
+  return () => observer.disconnect();
+}, [hasNextVersementsPage, isFetchingNextVersementsPage, fetchNextVersementsPage]);
 
 const {
   data: versementDetail,
@@ -176,7 +207,9 @@ const {
   enabled: isAdmin && showDetailVersementPopup && !!selectedVersementId,
 });
 
-const versementsBruts = versementsData?.results ?? versementsData ?? [];
+const versementsBruts = (versementsData?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
 
 const versements = versementsBruts.map((v) => ({
   id: v.id,
@@ -606,7 +639,7 @@ const handleExportZakat = async () => {
   onSave={handleAlimenterSolde}
 />
 
-      <PopupHistoriqueVersements
+     <PopupHistoriqueVersements
   open={isAdmin && showHistoriqueVersements}
   onClose={() => setShowHistoriqueVersements(false)}
   versements={versements}
@@ -618,7 +651,10 @@ const handleExportZakat = async () => {
     setSelectedVersementId(v.id);
     setShowDetailVersementPopup(true);
   }}
+  observerTarget={versementsObserverTarget}
+  isFetchingNextPage={isFetchingNextVersementsPage}
 />
+
 <PopupDetailVersement
   open={isAdmin && showDetailVersementPopup}
   onClose={() => {
