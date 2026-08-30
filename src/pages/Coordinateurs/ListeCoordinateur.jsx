@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 import StatusFilter from "../../components/Filter/StatusFilter";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -22,29 +22,29 @@ export default function ListeCoordinateur() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  const {
-    data: users = [],
+    const {
+    data,
     isLoading,
     isError,
     error,
-  } = useQuery({
-   
-    queryKey: ["users", search, statusFilter, role],
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useInfiniteQuery({
+    queryKey: ["users", "infinite", search, statusFilter, role],
 
-    queryFn: async () => {
-      const params = {};
+    queryFn: async ({ pageParam = 1 }) => {
+      const params = { page: pageParam };
 
       const trimmedSearch = search.trim();
       if (trimmedSearch) {
         params.search = trimmedSearch;
       }
 
-      // Actif
       if (statusFilter === "active") {
         params.is_active = true;
       }
 
-      // Inactif
       if (statusFilter === "inactive") {
         params.is_active = false;
       }
@@ -54,22 +54,39 @@ export default function ListeCoordinateur() {
       }
 
       const response = await listUsers(params);
-      const data = response?.data;
-
-      if (Array.isArray(data)) {
-        return data;
-      }
-
-      if (Array.isArray(data?.results)) {
-        return data.results;
-      }
-
-      return [];
+      return response.data;
     },
 
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+    initialPageParam: 1,
     keepPreviousData: true,
     retry: 1,
   });
+
+  const users = (data?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : page?.results ?? []
+  );
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleExport = async () => {
   try {
@@ -188,6 +205,13 @@ export default function ListeCoordinateur() {
                 />
               </div>
             ))}
+           <div ref={observerTarget} className="h-1" />
+
+            {isFetchingNextPage && (
+              <div className="flex justify-center py-4">
+                <Spinner />
+              </div>
+            )}
           </div>
         )}
 
@@ -195,3 +219,4 @@ export default function ListeCoordinateur() {
     </div>
   );
 }
+
