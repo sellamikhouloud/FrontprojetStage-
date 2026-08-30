@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { X } from "lucide-react";
 
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader.jsx";
@@ -61,7 +62,8 @@ export default function PhotoConfirmation() {
   updateFamilyData,
   resetFamilyForm,
 } = useFamilyForm();
-   const [photoPreview, setPhotoPreview] = useState(null);
+      const [photoPreview, setPhotoPreview] = useState(null);
+      const photoInputRef = useRef(null);
 
 useEffect(() => {
   const photo = formData.mere?.photo;
@@ -87,6 +89,13 @@ useEffect(() => {
     setPhotoPreview(photo);
   }
 }, [formData.mere?.photo]);
+
+const handleRemovePhoto = () => {
+  updateMere({ photo: null });
+  if (photoInputRef.current) {
+    photoInputRef.current.value = ""; 
+  }
+};
 
 useEffect(() => {
   if (!formData.date_entree) {
@@ -129,11 +138,6 @@ useEffect(() => {
 
 const handleSave = async () => {
   const newErrors = {};
-
-  if (isAdmin && !selectedCoordinateur) {
-    newErrors.coordinateur =
-      "Veuillez sélectionner un coordinateur";
-  }
 
   setErrors(newErrors);
 
@@ -214,56 +218,56 @@ const handleSave = async () => {
       // 3️⃣ CONSTRUCTION DU PAYLOAD
       // =====================================================
 
-      let payload;
+           let payload;
 
-      if (currentIdMere) {
+      const photo = formData.mere?.photo;
+      const isNewPhotoFile = photo instanceof File;
 
-        // ---------------------------------------------------
-        // MÈRE EXISTANTE
-        // ---------------------------------------------------
+      const baseFields = {
+        id_mere: currentIdMere || undefined,
+        nourrisson: nourrissons[i],
+        date_entree: formData.date_entree,
+        statut: formData.statut,
+        date_sortie: formData.date_sortie,
+        motif_sortie: formData.motif_sortie,
+        coordinateur: formData.coordinateur,
+      };
 
-        payload = {
-          mere: formData.mere,
-          id_mere: currentIdMere,
+      if (isNewPhotoFile) {
+        // FormData obligatoire : upload binaire → notation pointée "mere.xxx"
+        payload = new FormData();
 
-          nourrisson: nourrissons[i],
+        Object.entries(formData.mere || {}).forEach(([key, value]) => {
+          if (key === "photo") return; // photo gérée séparément ci-dessous
+          if (value === null || value === undefined) return;
+          payload.append(`mere.${key}`, value);
+        });
 
-          date_entree: formData.date_entree,
-          statut: formData.statut,
-          date_sortie: formData.date_sortie,
-          motif_sortie: formData.motif_sortie,
-          coordinateur: formData.coordinateur,
-        };
+        payload.append("mere.photo", photo);
 
-        console.log(
-          "♻️ Payload avec mère existante :",
-          payload
-        );
+        if (currentIdMere) {
+          payload.append("id_mere", currentIdMere);
+        }
+
+        Object.entries(nourrissons[i] || {}).forEach(([key, value]) => {
+         if (value === null || value === undefined) return;
+         payload.append(`nourrisson.${key}`, value);
+         });
+        payload.append("date_entree", formData.date_entree ?? "");
+        payload.append("statut", formData.statut ?? "");
+        if (formData.date_sortie) payload.append("date_sortie", formData.date_sortie);
+        if (formData.motif_sortie) payload.append("motif_sortie", formData.motif_sortie);
+        if (formData.coordinateur) payload.append("coordinateur", formData.coordinateur);
 
       } else {
-
-        // ---------------------------------------------------
-        // MÈRE NON TROUVÉE
-        // ---------------------------------------------------
-
+        // Pas de nouveau fichier : JSON classique (photo reste null ou URL existante)
         payload = {
-          mere: formData.mere,
-
-          nourrisson: nourrissons[i],
-
-          date_entree: formData.date_entree,
-          statut: formData.statut,
-          date_sortie: formData.date_sortie,
-          motif_sortie: formData.motif_sortie,
-          coordinateur: formData.coordinateur,
+          mere: { ...formData.mere, photo: photo ?? null },
+          ...baseFields,
         };
-
-        console.log(
-          "🆕 Payload avec nouvelle mère :",
-          payload
-        );
       }
 
+      console.log("📦 Payload construit :", payload);
       // =====================================================
       // 4️⃣ CRÉATION DE LA FAMILLE
       // =====================================================
@@ -422,7 +426,7 @@ useEffect(() => {
     }
   };
 
-  fetchCoordinateurs();   // ← LIGNE MANQUANTE, ajoutée ici
+  fetchCoordinateurs();   
 
   return () => {
     cancelled = true;
@@ -431,23 +435,47 @@ useEffect(() => {
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
-      {/* Sidebar */}
-    
-       <Sidebar role={role} />
+        {/* Sidebar */}
+      
+         <Sidebar  />
+      
+  
      
-
-      {/* Main Content */}
-      <main
-        className="
-          flex-1
-          overflow-y-auto
-          px-5
-          pt-5
-          pb-8
-          lg:p-10
-          bg-white
-        "
-      >
+   <main className="relative flex-1 min-h-0 overflow-hidden bg-white">
+  
+    {/* Espace blanc FIXE en haut — desktop only */}
+     <div
+       className="
+         hidden
+         lg:block
+         lg:absolute
+         lg:top-0
+         lg:left-0
+         lg:right-0
+         lg:h-4
+         bg-white
+         z-20
+       "
+     />
+  
+     {/* Zone scrollable UNIQUE */}
+          <div
+            className="
+              h-full
+              overflow-y-auto
+  
+              pt-20
+              lg:pt-4
+  
+              px-4
+              lg:px-10
+  
+              pb-8
+              lg:pb-2
+            "
+          >
+  
+            <div className="min-h-full flex flex-col justify-center">
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
           {/* Header */}
           <PageHeader
@@ -468,75 +496,97 @@ useEffect(() => {
             Photo & confirmation
           </h1>
 
-        <label
-  htmlFor="photo-mere"
- className={`
-    w-full
-    ${photoPreview ? "h-[350px] lg:h-[450px]" : "h-[180px] lg:h-[200px]"}
-    border
-    border-dashed
-    border-[#89BFB1]
-    rounded-[20px]
-    flex
-    flex-col
-    items-center
-    justify-center
-    gap-3
-    cursor-pointer
-    overflow-hidden
-    transition-all
-    duration-300
-  `}
->
+    <div className="relative w-full">
   <input
-  id="photo-mere"
-  type="file"
-  accept="image/*"
-  className="hidden"
-  onChange={(e) => {
-    const file = e.target.files?.[0];
+    id="photo-mere"
+    ref={photoInputRef}
+    type="file"
+    accept="image/*"
+    className="hidden"
+    onChange={(e) => {
+      const file = e.target.files?.[0];
 
-    if (!file) return;
+      if (!file) return;
 
-    console.log("PHOTO SELECTIONNÉE :", file);
+      console.log("PHOTO SELECTIONNÉE :", file);
 
-    updateMere({
-      photo: file,
-    });
-  }}
-/>
+      updateMere({
+        photo: file,
+      });
+    }}
+  />
 
-  {photoPreview ? (
-    <img
-      src={photoPreview}
-      alt="Photo de la mère"
-      className="w-full h-full object-cover"
-    />
-  ) : (
-    <>
+  <div
+    onClick={() => photoInputRef.current?.click()}
+    className={`
+      w-full
+      ${photoPreview ? "h-[350px] lg:h-[450px]" : "h-[180px] lg:h-[200px]"}
+      border
+      border-dashed
+      border-[#89BFB1]
+      rounded-[20px]
+      flex
+      flex-col
+      items-center
+      justify-center
+      gap-3
+      cursor-pointer
+      overflow-hidden
+      transition-all
+      duration-300
+    `}
+  >
+    {photoPreview ? (
       <img
-        src={blackCamera}
-        alt="Camera"
-        className="
-          w-[45px]
-          h-[45px]
-          lg:w-[55px]
-          lg:h-[55px]
-        "
+        src={photoPreview}
+        alt="Photo de la mère"
+        className="w-full h-full object-cover"
       />
+    ) : (
+      <>
+        <img
+          src={blackCamera}
+          alt="Camera"
+          className="
+            w-[45px]
+            h-[45px]
+            lg:w-[55px]
+            lg:h-[55px]
+          "
+        />
 
-      <span
-        className="
-          text-[16px]
-          font-medium
-          text-black
-        "
-      >
-        Tapez pour prendre une photo
-      </span>
-    </>
+        <span className="text-[16px] font-medium text-black">
+          Tapez pour prendre une photo
+        </span>
+      </>
+    )}
+  </div>
+
+  {photoPreview && (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        handleRemovePhoto();
+      }}
+      className="
+        absolute
+        top-3
+        right-3
+        w-7 h-7
+        rounded-full
+        bg-white
+        shadow-sm
+        flex
+        items-center
+        justify-center
+      "
+      aria-label="Supprimer la photo"
+    >
+      <X size={16} color="#202124" strokeWidth={2.5} />
+    </button>
   )}
-</label>
+</div>
 
        
          {/* Warning */}
@@ -583,7 +633,7 @@ useEffect(() => {
   noPadding
 />
 
-         {/* Coordinator — réservé à l'admin */}
+        {/* Coordinator — réservé à l'admin, optionnel */}
 {isAdmin && (
   <div className="flex flex-col gap-1">
    <CoordinateurSelector 
@@ -593,6 +643,19 @@ useEffect(() => {
     <ErrorMessage message={errors.coordinateur} />
     {coordinateursError && (
       <ErrorMessage message={coordinateursError} />
+    )}
+
+    {!selectedCoordinateur && (
+      <div className="flex items-start gap-2 mt-1">
+        <img
+          src={warning}
+          alt="Warning"
+          className="w-[16px] h-[16px] mt-[2px] shrink-0"
+        />
+        <p className="text-[13px] font-medium text-[#CC8409] leading-4">
+          Si vous ne choisissez aucun coordinateur, vous serez désigné(e) comme superviseur de cette famille.
+        </p>
+      </div>
     )}
   </div>
 )}
@@ -644,7 +707,7 @@ useEffect(() => {
             totalSteps={3}
             currentStep={3}
           />
-
+{saveError && <BackendErrorMessage message={saveError} className="mt-1" />}
           {/* Save Button */}
         <Button
   title={saving ? "Enregistrement..." : "Enregistrer"}
@@ -653,7 +716,7 @@ useEffect(() => {
   onClick={handleSave}
   disabled={saving}
 />
-{saveError && <BackendErrorMessage message={saveError} className="mt-2" />}
+
 {showPopup && (
   <Popup
     title="Enregistrer avec succès"
@@ -680,6 +743,22 @@ useEffect(() => {
 }}
 />
         </div>
+       </div>
+          </div>
+
+          <div
+          className="
+            absolute
+            bottom-0
+            left-0
+            right-0
+            h-4
+            bg-white
+            z-20
+          "
+        />
+
+      
       </main>
     </div>
   );
