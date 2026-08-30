@@ -4,7 +4,8 @@ import Card from "../../components/Cards/Card";
 import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import AlertBox from "../../components/AlertComposant/AlertBox";
 import MesureInput from "../../components/Containers/MesureInput";
 import TextArea from "../../components/Containers/Textarea";
@@ -23,7 +24,7 @@ import PopupListeFamilles from "../../components/Popups/PopupListeFamilles";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+
 import { listFamilles } from "@/lib/api/familles";
 
 
@@ -444,21 +445,66 @@ const [backendGeneralError, setBackendGeneralError] = useState(null);
   const navigate = useNavigate();
 
   const [openFamilles, setOpenFamilles] = useState(false);
-  const [openOptions, setOpenOptions] = useState(false);
+const [openOptions, setOpenOptions] = useState(false);
+const [searchFamille, setSearchFamille] = useState("");
 
-  // --- Récupération des vraies familles depuis l'API ---
-  const {
-    data: famillesData,
-    isLoading: famillesLoading,
-    isError: famillesError,
-    refetch: refetchFamilles,
-  } = useQuery({
-    queryKey: ["familles-popup"],
-    queryFn: () => listFamilles().then((r) => r.data),
-    enabled: openFamilles, 
-  });
+const {
+  data: famillesResponse,
+  isLoading: famillesLoading,
+  isError: famillesError,
+  refetch: refetchFamilles,
+  fetchNextPage: fetchNextFamillesPage,
+  hasNextPage: hasNextFamillesPage,
+  isFetchingNextPage: isFetchingNextFamillesPage,
+} = useInfiniteQuery({
+  queryKey: ["familles-popup", "infinite", searchFamille],
 
-  const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam };
+
+    const trimmedSearch = searchFamille.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    const response = await listFamilles(params);
+    return response.data;
+  },
+
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
+  keepPreviousData: true,
+  enabled: openFamilles,
+});
+
+const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
+
+const famillesObserverTarget = useRef(null);
+
+useEffect(() => {
+  if (!famillesObserverTarget.current || !openFamilles) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextFamillesPage &&
+        !isFetchingNextFamillesPage
+      ) {
+        fetchNextFamillesPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(famillesObserverTarget.current);
+
+  return () => observer.disconnect();
+}, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
 
   // Mapping vers le format attendu par le popup / les cartes
   // (même logique que dans la page "Liste des familles")
@@ -1158,13 +1204,17 @@ const [backendGeneralError, setBackendGeneralError] = useState(null);
       />
     </main>
 
-    <PopupListeFamilles
+  <PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
   familles={listeDesFamilles}
   loading={famillesLoading}
-  error={famillesError}
+  isError={famillesError}
   onRetry={refetchFamilles}
+  search={searchFamille}
+  onSearchChange={setSearchFamille}
+  observerTarget={famillesObserverTarget}
+  isFetchingNextPage={isFetchingNextFamillesPage}
   onSelectFamille={(famille) => {
     setSelectedFamille(famille);
     setOpenFamilles(false);
