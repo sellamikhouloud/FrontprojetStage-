@@ -799,13 +799,19 @@
 
 // export default Dashboard;
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 
+import { useQuery } from "@tanstack/react-query";
+
 import { useAuth } from "../../components/providers/AuthProvider";
+
 import { getDashboard } from "@/lib/api/dashboard";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
+
+import Spinner from "../../components/Spinner";
 
 import PopupStockBas from "../../components/Popups/PopupStockBas";
 import PopupRetard from "../../components/Popups/Popupvisiteretard";
@@ -828,15 +834,8 @@ import RetardIcon from "../../assets/retard.svg";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+
   const { user, ready } = useAuth();
-
-  // =========================================================
-  // DASHBOARD API DATA
-  // =========================================================
-
-  const [dashboardData, setDashboardData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   // =========================================================
   // POPUPS
@@ -846,12 +845,6 @@ const Dashboard = () => {
   const [showBas, setShowBas] = useState(false);
   const [showRetard, setShowRetard] = useState(false);
   const [showMas, setShowMas] = useState(false);
-
-  // =========================================================
-  // LOW STOCK COUNT
-  // =========================================================
-
-  const [lowStockCount, setLowStockCount] = useState(0);
 
   // =========================================================
   // USER INFORMATION
@@ -868,60 +861,35 @@ const Dashboard = () => {
   const notificationCount = 2;
 
   // =========================================================
-  // GET DASHBOARD DATA
+  // DASHBOARD API
   // =========================================================
 
-  useEffect(() => {
-    if (!ready) {
-      return;
-    }
+  const {
+    data: dashboardData,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: async () => {
+      const response = await getDashboard();
 
-    if (!user) {
-      setLoading(false);
-      setError("Utilisateur non authentifié.");
-      return;
-    }
+      console.log(
+        "Dashboard admin response :",
+        response.data
+      );
 
-    const fetchDashboard = async () => {
-      try {
-        setLoading(true);
-        setError("");
-
-        const response = await getDashboard();
-
-        console.log(
-          "Dashboard admin response :",
-          response.data
-        );
-
-        setDashboardData(response.data);
-      } catch (err) {
-        console.error(
-          "Erreur lors de la récupération du dashboard :",
-          err
-        );
-
-        const backendError =
-          err?.response?.data?.detail ||
-          err?.response?.data?.message;
-
-        setError(
-          backendError ||
-            "Impossible de récupérer les données du tableau de bord."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboard();
-  }, [ready, user]);
+      return response.data;
+    },
+    enabled: ready && !!user,
+    retry: 1,
+  });
 
   // =========================================================
   // LOADING
   // =========================================================
 
-  if (!ready || loading) {
+  if (!ready || isLoading) {
     return (
       <div className="flex h-screen overflow-hidden bg-white">
         <Sidebar
@@ -931,7 +899,7 @@ const Dashboard = () => {
 
         <main className="flex-1 flex items-center justify-center bg-white px-5">
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-10 h-10 border-4 border-[#69B89C] border-t-transparent rounded-full animate-spin" />
+            <Spinner />
 
             <p className="text-gray-500 text-sm">
               Chargement du tableau de bord...
@@ -946,7 +914,11 @@ const Dashboard = () => {
   // ERROR
   // =========================================================
 
-  if (error || !dashboardData) {
+  if (isError || !dashboardData) {
+    const backendError =
+      error?.response?.data?.detail ||
+      error?.response?.data?.message;
+
     return (
       <div className="flex h-screen overflow-hidden bg-white">
         <Sidebar
@@ -965,7 +937,7 @@ const Dashboard = () => {
             </div>
 
             <p className="text-red-500 font-medium">
-              {error ||
+              {backendError ||
                 "Impossible de charger le tableau de bord."}
             </p>
 
@@ -1007,6 +979,9 @@ const Dashboard = () => {
   const retardAlerts =
     alertes?.visite_retard?.alertes || [];
 
+  const stockAlertCount =
+    alertes?.stock?.nb_alertes || 0;
+
   const malnutritionAlertCount =
     alertes?.malnutrition?.nb_alertes || 0;
 
@@ -1038,18 +1013,19 @@ const Dashboard = () => {
   // ALERTS
   // =========================================================
 
-  const alerts = [
+  const allAlerts = [
     {
       id: 1,
       icon: AttentionIcon,
       title: "Stock bas",
       subtitle: "produits à vérifier",
-      count: lowStockCount,
+      count: stockAlertCount,
       bgColor: "#FFF7F7",
       iconBgColor: "#FDE8E8",
       borderColor: "#EB5757",
       hasLeftBorder: true,
     },
+
     {
       id: 2,
       icon: AttentionIcon,
@@ -1061,6 +1037,7 @@ const Dashboard = () => {
       borderColor: "#EB5757",
       hasLeftBorder: false,
     },
+
     {
       id: 3,
       icon: RetardIcon,
@@ -1075,6 +1052,14 @@ const Dashboard = () => {
   ];
 
   // =========================================================
+  // ONLY SHOW ALERTS WITH COUNT > 0
+  // =========================================================
+
+  const alerts = allAlerts.filter(
+    (alert) => alert.count > 0
+  );
+
+  // =========================================================
   // FAMILY STATUS
   // =========================================================
 
@@ -1086,6 +1071,7 @@ const Dashboard = () => {
       color: "#22C55E",
       borderColor: "#22C55E",
     },
+
     {
       id: 2,
       value: familles?.nb_alertees || 0,
@@ -1093,6 +1079,7 @@ const Dashboard = () => {
       color: "#F59E0B",
       borderColor: "#F59E0B",
     },
+
     {
       id: 3,
       value: familles?.nb_sortie || 0,
@@ -1123,26 +1110,23 @@ const Dashboard = () => {
   // NUTRITION
   // =========================================================
 
-  const normalPercentage =
-    Number(
-      nutritionStatuses.find(
-        (item) => item?.statut === "normale"
-      )?.pourcentage || 0
-    );
+  const normalPercentage = Number(
+    nutritionStatuses.find(
+      (item) => item?.statut === "normale"
+    )?.pourcentage || 0
+  );
 
-  const mamPercentage =
-    Number(
-      nutritionStatuses.find(
-        (item) => item?.statut === "mam"
-      )?.pourcentage || 0
-    );
+  const mamPercentage = Number(
+    nutritionStatuses.find(
+      (item) => item?.statut === "mam"
+    )?.pourcentage || 0
+  );
 
-  const masPercentage =
-    Number(
-      nutritionStatuses.find(
-        (item) => item?.statut === "mas"
-      )?.pourcentage || 0
-    );
+  const masPercentage = Number(
+    nutritionStatuses.find(
+      (item) => item?.statut === "mas"
+    )?.pourcentage || 0
+  );
 
   // =========================================================
   // DISTRIBUTION
@@ -1171,13 +1155,14 @@ const Dashboard = () => {
   // LOW STOCK
   // =========================================================
 
-  const lowStockProducts =
-    stockAlerts.map((alert, index) => ({
+  const lowStockProducts = stockAlerts.map(
+    (alert, index) => ({
       id: alert?.id || index + 1,
       name: alert?.message || "Produit",
       quantity: alert?.quantite ?? "",
       unit: alert?.unite || "",
-    }));
+    })
+  );
 
   // =========================================================
   // COORDINATORS
@@ -1248,10 +1233,6 @@ const Dashboard = () => {
 
   // =========================================================
   // POPUP MAS
-  // IMPORTANT:
-  // On passes les alertes brutes au PopupMas.
-  // PopupMas utilise alert.famille pour appeler getFamille()
-  // et récupérer les informations complètes de la famille.
   // =========================================================
 
   const familleMas = malnutritionAlerts.map(
@@ -1283,7 +1264,9 @@ const Dashboard = () => {
   const handleAlertClick = (alert) => {
     switch (alert.id) {
       case 1:
-        setShowBas(true);
+        if (stockAlerts.length > 0) {
+          setShowBas(true);
+        }
         break;
 
       case 2:
@@ -1440,9 +1423,9 @@ const Dashboard = () => {
           lg:py-10
         "
       >
+
         {/* ===================================================
             WELCOME
-            Tablet/Desktop only
         =================================================== */}
 
         <div className="hidden md:block">
@@ -1459,40 +1442,52 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* ===================================================
-            ALERTS
-        =================================================== */}
+{/* ===================================================
+    ALERTS
+=================================================== */}
 
-        <div
-          className="
-            flex
-            flex-col
-            gap-[8px]
-            pt-3
-            pb-3
-            md:grid
-            md:grid-cols-3
-            md:gap-3
-            lg:gap-[18px]
-          "
-        >
-          {alerts.map((alert) => (
-            <AlertBanner
-              key={alert.id}
-              icon={alert.icon}
-              title={alert.title}
-              subtitle={alert.subtitle}
-              count={alert.count}
-              bgColor={alert.bgColor}
-              iconBgColor={alert.iconBgColor}
-              borderColor={alert.borderColor}
-              hasLeftBorder={alert.hasLeftBorder}
-              onClick={() =>
-                handleAlertClick(alert)
-              }
-            />
-          ))}
-        </div>
+{alerts.length > 0 && (
+  <div
+    className={`
+      grid
+      w-full
+      gap-[8px]
+      pt-3
+      pb-3
+      ${
+        alerts.length === 1
+          ? "grid-cols-1"
+          : alerts.length === 2
+            ? "grid-cols-2"
+            : "grid-cols-3"
+      }
+      md:gap-3
+      lg:gap-[18px]
+    `}
+  >
+    {alerts.map((alert) => (
+      <div
+        key={alert.id}
+        className="w-full min-w-0"
+      >
+        <AlertBanner
+          icon={alert.icon}
+          title={alert.title}
+          subtitle={alert.subtitle}
+          count={alert.count}
+          bgColor={alert.bgColor}
+          iconBgColor={alert.iconBgColor}
+          borderColor={alert.borderColor}
+          hasLeftBorder={alert.hasLeftBorder}
+          onClick={() =>
+            handleAlertClick(alert)
+          }
+        />
+      </div>
+    ))}
+  </div>
+)}
+
 
         {/* ===================================================
             MOBILE
@@ -1530,6 +1525,7 @@ const Dashboard = () => {
             lg:grid-cols-[1.2fr_1fr]
           "
         >
+
           {/* =================================================
               LEFT COLUMN
           ================================================= */}
@@ -1601,9 +1597,6 @@ const Dashboard = () => {
           setShowBas(false)
         }
         products={lowStockProducts}
-        onLowStockCountChange={
-          setLowStockCount
-        }
         onGoToStock={() => {
           setShowBas(false);
           navigate("/stock");
