@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import quitter from "../../assets/quitter.svg";
@@ -16,6 +16,9 @@ const PopupZakatFamille = ({
   zakats, // { actives: [...], annulees: [...] }
   famille,
   isLoading = false,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
 }) => {
   const [selectedZakat, setSelectedZakat] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
@@ -35,6 +38,25 @@ const PopupZakatFamille = ({
   }, [zakats]);
 
   const localZakats = statusFilter === "active" ? localActives : localAnnulees;
+
+  const observerTarget = useRef(null);
+
+  useEffect(() => {
+    if (!observerTarget.current || !open) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(observerTarget.current);
+
+    return () => observer.disconnect();
+  }, [open, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const handleDeleteZakat = async (zakat) => {
     try {
@@ -99,38 +121,48 @@ const PopupZakatFamille = ({
                   <Spinner />
                 </div>
               ) : localZakats.length ? (
-                localZakats.map((item, index) => {
-                  const f = item.famille_info || {};
-                  const sexe =
-                    f.enfant_sexe === "M"
-                      ? "Fils"
-                      : f.enfant_sexe === "F"
-                      ? "Fille"
-                      : "-";
-                  return (
-                    <CardListZakat
-                      key={item.id || `zakat-${index}`}
-                      sexe={sexe}
-                      showNomCode={false}
-                      zakat={`Zakat ${item.numero_zakat ?? "-"}`}
-                      date={
-                        item.date_versement
-                          ? new Date(item.date_versement).toLocaleDateString(
-                              "fr-FR"
-                            )
-                          : "-"
-                      }
-                      montant="Montant"
-                      valeur={`${item.montant ?? "0"} MRU / ${
-                        item.montant_eur ?? "0"
-                      } EUR`}
-                      onClick={() => {
-                        setSelectedZakat(item);
-                        setOpenDetail(true);
-                      }}
-                    />
-                  );
-                })
+                <>
+                  {localZakats.map((item, index) => {
+                    const f = item.famille_info || {};
+                    const sexe =
+                      f.enfant_sexe === "M"
+                        ? "Fils"
+                        : f.enfant_sexe === "F"
+                        ? "Fille"
+                        : "-";
+                    return (
+                      <CardListZakat
+                        key={item.id || `zakat-${index}`}
+                        sexe={sexe}
+                        showNomCode={false}
+                        zakat={`Zakat ${item.numero_zakat ?? "-"}`}
+                        date={
+                          item.date_versement
+                            ? new Date(item.date_versement).toLocaleDateString(
+                                "fr-FR"
+                              )
+                            : "-"
+                        }
+                        montant="Montant"
+                        valeur={`${item.montant ?? "0"} MRU / ${
+                          item.montant_eur ?? "0"
+                        } EUR`}
+                        onClick={() => {
+                          setSelectedZakat(item);
+                          setOpenDetail(true);
+                        }}
+                      />
+                    );
+                  })}
+
+                  <div ref={observerTarget} className="h-1" />
+
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-4">
+                      <Spinner />
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="py-10 text-center text-gray-500">
                   {statusFilter === "active"
