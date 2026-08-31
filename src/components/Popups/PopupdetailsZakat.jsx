@@ -304,7 +304,7 @@ const modeRemise =
                   },
 
                   {
-                    label: "Date de creation ",
+                    label: "Date de création",
                     value: dateCreation,
                   },
 
