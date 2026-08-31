@@ -399,6 +399,7 @@ const PopupDetailVisiteModifier = ({
                     observations_cliniques_bebe: e.target.value,
                   }))
                 }
+                placeholder="Observations cliniques  nourrisson"
                 height="h-[100px]"
               />
 
@@ -454,6 +455,7 @@ const PopupDetailVisiteModifier = ({
                     observations_cliniques_mere: e.target.value,
                   }))
                 }
+                placeholder="Saisir des observations cliniques mère "
                 height="h-[100px]"
               />
 
@@ -466,6 +468,7 @@ const PopupDetailVisiteModifier = ({
                     evaluation_famille: e.target.value,
                   }))
                 }
+                placeholder="Saisir une evaluation visuelle de la situation familiale"
                 height="h-[100px]"
               />
             </div>
@@ -515,6 +518,7 @@ const PopupDetailVisiteModifier = ({
                   observations_cliniques_bebe: e.target.value,
                 }))
               }
+               placeholder="Saisir des observations cliniques nourrisson"
               height="h-[55px]"
             />
 
@@ -562,6 +566,7 @@ const PopupDetailVisiteModifier = ({
                   observations_cliniques_mere: e.target.value,
                 }))
               }
+                placeholder="Saisir des observations cliniques mère"
               height="h-[55px]"
             />
 
@@ -574,6 +579,7 @@ const PopupDetailVisiteModifier = ({
                   evaluation_famille: e.target.value,
                 }))
               }
+                placeholder="Saisir une evaluation  visuelle de la situation familiale"
               height="h-[55px]"
             />
 
