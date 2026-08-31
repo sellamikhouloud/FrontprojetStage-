@@ -165,14 +165,14 @@ const PopupDetailDistribution = ({
                   },
                   
                   {
-                    label: "Enregistrée par",
+                    label: "Créé par",
                     value:
                       distribution.audit?.cree_par
                         ? `${distribution.audit.cree_par.nom} ${distribution.audit.cree_par.prenom}`
                         : "-",
                   },
                   {
-                    label: "Date d'enregistrement",
+                    label: "Date de creation ",
                     value: distribution.audit?.date_creation
                       ? new Date(
                           distribution.audit.date_creation
