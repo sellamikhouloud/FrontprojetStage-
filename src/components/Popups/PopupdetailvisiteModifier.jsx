@@ -173,7 +173,7 @@ const PopupDetailVisiteModifier = ({
     return parsedDate.toLocaleDateString("fr-FR");
   };
 
-  const handleSave = async () => {
+ const handleSave = async () => {
     setErrorMessage(null);
 
     if (isFutureDate(form.date_visite)) {
@@ -192,19 +192,20 @@ const PopupDetailVisiteModifier = ({
       const response = await updateVisite(visite.id, patch);
       const updatedVisite = response?.data ?? response;
 
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: ["visites", famille?.id],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["famille", famille?.id],
-        }),
-      ]);
-
       setShowBanner(true);
 
-      setTimeout(() => {
+      setTimeout(async () => {
         setShowBanner(false);
+
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ["visites", famille?.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["famille", famille?.id],
+          }),
+        ]);
+
         onSave?.(updatedVisite);
         onClose();
       }, 1500);
@@ -261,7 +262,7 @@ const PopupDetailVisiteModifier = ({
     },
     {
       key: "enregistre_par",
-        label: "Créé par",
+      label: "Créé par",
       value: visite.audit?.cree_par
         ? `${visite.audit.cree_par.nom} ${visite.audit.cree_par.prenom}`
         : "-",
@@ -269,7 +270,7 @@ const PopupDetailVisiteModifier = ({
     },
     {
       key: "date_enregistrement",
-      label: "Date de création",
+      label: "Date de creation",
       value: dateEnregistrement,
       editable: false,
     },
