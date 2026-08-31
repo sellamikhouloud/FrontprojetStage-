@@ -346,7 +346,7 @@ const PopupModifierZakat = ({
     },
 
     {
-      label: "Date de creation ",
+      label: "Date de création ",
       value: zakat.date_creation
         ? new Date(
             zakat.date_creation
