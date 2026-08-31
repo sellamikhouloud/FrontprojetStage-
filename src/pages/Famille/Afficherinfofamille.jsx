@@ -249,7 +249,7 @@ const mere = [
       : "/",
   },
   {
-    label: "Enregistré par",
+    label: "Créé par",
     value: famille?.audit?.cree_par
       ? `${famille.audit.cree_par.prenom} ${famille.audit.cree_par.nom}`
       : "/",
@@ -346,7 +346,7 @@ const STATUT_MERE = {
     type: "risque",
   },
 
-   malnutrition: {
+  malnutrition: {
     text: "Mère malnutrie ",
     type: "mas",
   },
@@ -354,8 +354,68 @@ const STATUT_MERE = {
 const statutBebe =
   STATUT_BEBE[famille?.statut_nutritionnel_bebe] || null;
 
-const statutMere =
-  STATUT_MERE[famille?.statut_nutritionnel_mere] || null;
+  const STATUT_IMC_MERE_LABELS = {
+  sous_poids: "Mère sous-poids",
+  sur_poids: "Mère en surpoids",
+};
+
+const STATUT_HEMOGLOBINE_LABELS = {
+  anemie: "Mère anémiée",
+};
+
+const buildStatutsMere = () => {
+  const nutritionnel = famille?.statut_nutritionnel_mere;
+  const imc = famille?.statut_imc_mere;
+  const hemoglobine = famille?.statut_hemoglobine_mere;
+
+  const allNull = !nutritionnel && !imc && !hemoglobine;
+
+  // Aucune donnée du tout -> on n'affiche rien
+  if (allNull) {
+    return [];
+  }
+
+  const isNormal = (v) => !v || v === "normale";
+
+  const allNormal =
+    isNormal(nutritionnel) && isNormal(imc) && isNormal(hemoglobine);
+
+  if (allNormal) {
+    return [{ text: "Mère normale", type: "mereNormal" }];
+  }
+
+  const statuts = [];
+
+  // Statut nutritionnel global (garde son propre style : risque = orange, malnutrition = rouge)
+  if (nutritionnel && nutritionnel !== "normale" && STATUT_MERE[nutritionnel]) {
+    statuts.push({
+      text: STATUT_MERE[nutritionnel].text,
+      type: STATUT_MERE[nutritionnel].type,
+    });
+  }
+
+  // IMC anormal -> rouge (comme malnutrition)
+  if (imc && imc !== "normale" && STATUT_IMC_MERE_LABELS[imc]) {
+    statuts.push({
+      text: STATUT_IMC_MERE_LABELS[imc],
+      type: "mas",
+    });
+  }
+
+  // Hémoglobine anormale -> rouge (comme malnutrition)
+  if (hemoglobine && hemoglobine !== "normale" && STATUT_HEMOGLOBINE_LABELS[hemoglobine]) {
+    statuts.push({
+      text: STATUT_HEMOGLOBINE_LABELS[hemoglobine],
+      type: "mas",
+    });
+  }
+
+  return statuts;
+};
+
+const statutsMere = buildStatutsMere();
+
+
 
 
 
@@ -543,24 +603,24 @@ return (
   />
 )}
 
-
-  <div className="grid grid-cols-2 gap-1">
+<div className="flex flex-row flex-wrap gap-2">
   {statutBebe && (
-  <StatusBadge
-    type={statutBebe.type}
-    text={statutBebe.text}
-    className="w-full h-[40px] rounded-[10px]"
-  />
-)}
+    <StatusBadge
+      type={statutBebe.type}
+      text={statutBebe.text}
+      className="flex-1 min-w-[140px] h-[40px] rounded-[10px]"
+    />
+  )}
 
-{statutMere && (
-  <StatusBadge
-    type={statutMere.type}
-    text={statutMere.text}
-    className="w-full h-[40px] rounded-[10px]"
-  />
-)}
-  </div>
+  {statutsMere.map((s, idx) => (
+    <StatusBadge
+      key={idx}
+      type={s.type}
+      text={s.text}
+      className="flex-1 min-w-[140px] h-[40px] rounded-[10px]"
+    />
+  ))}
+</div>
 
 </div>
 
@@ -697,3 +757,4 @@ return (
 };
 
 export default FamilyProfile;
+
