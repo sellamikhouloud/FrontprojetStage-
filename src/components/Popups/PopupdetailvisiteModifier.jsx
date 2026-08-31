@@ -261,7 +261,7 @@ const PopupDetailVisiteModifier = ({
     },
     {
       key: "enregistre_par",
-      label: "Creé par",
+        label: "Créé par",
       value: visite.audit?.cree_par
         ? `${visite.audit.cree_par.nom} ${visite.audit.cree_par.prenom}`
         : "-",
