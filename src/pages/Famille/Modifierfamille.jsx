@@ -202,7 +202,7 @@ const isFutureDate = (date) => {
 };
 
 const STATUT_BEBE = {
-  normale: {  text: "Nourrisson normal", type: "mereNormal" },
+  normale: { text: "Nourrisson normal", type: "mereNormal" },
   mam: { text: "MAM nourrisson", type: "mam" },
   mas: { text: "MAS nourrisson", type: "mas" },
 };
@@ -216,7 +216,6 @@ const STATUT_MERE = {
     text: "Mère à risque",
     type: "risque",
   },
-
 
   malnutrition: {
     text: "Mère malnutrie ",
@@ -829,7 +828,63 @@ const coordinateurNom = selectedCoordinateur
 
   const statut = famille?.statut;
   const statutBebe = STATUT_BEBE[famille?.statut_nutritionnel_bebe] || null;
-  const statutMere = STATUT_MERE[famille?.statut_nutritionnel_mere] || null;
+  
+  const STATUT_IMC_MERE_LABELS = {
+  sous_poids: "Mère sous-poids",
+  sur_poids: "Mère en surpoids",
+};
+
+const STATUT_HEMOGLOBINE_LABELS = {
+  anemie: "Mère anémiée",
+};
+
+const buildStatutsMere = () => {
+  const nutritionnel = famille?.statut_nutritionnel_mere;
+  const imc = famille?.statut_imc_mere;
+  const hemoglobine = famille?.statut_hemoglobine_mere;
+
+  const allNull = !nutritionnel && !imc && !hemoglobine;
+
+  if (allNull) {
+    return [];
+  }
+
+  const isNormal = (v) => !v || v === "normale";
+
+  const allNormal =
+    isNormal(nutritionnel) && isNormal(imc) && isNormal(hemoglobine);
+
+  if (allNormal) {
+    return [{ text: "Mère normale", type: "mereNormal" }];
+  }
+
+  const statuts = [];
+
+  if (nutritionnel && nutritionnel !== "normale" && STATUT_MERE[nutritionnel]) {
+    statuts.push({
+      text: STATUT_MERE[nutritionnel].text,
+      type: STATUT_MERE[nutritionnel].type,
+    });
+  }
+
+  if (imc && imc !== "normale" && STATUT_IMC_MERE_LABELS[imc]) {
+    statuts.push({
+      text: STATUT_IMC_MERE_LABELS[imc],
+      type: "mas",
+    });
+  }
+
+  if (hemoglobine && hemoglobine !== "normale" && STATUT_HEMOGLOBINE_LABELS[hemoglobine]) {
+    statuts.push({
+      text: STATUT_HEMOGLOBINE_LABELS[hemoglobine],
+      type: "mas",
+    });
+  }
+
+  return statuts;
+};
+
+const statutsMere = buildStatutsMere();
 
 const makeHandler = (fields) => (index, value) => {
   const field = fields[index];
@@ -1044,22 +1099,24 @@ const makeHandler = (fields) => (index, value) => {
                 className="w-full h-[40px] rounded-[10px]"
               />
 
-              <div className="grid grid-cols-2 gap-1">
-                {statutBebe && (
-                  <StatusBadge
-                    type={statutBebe.type}
-                    text={statutBebe.text}
-                    className="w-full h-[40px] rounded-[10px]"
-                  />
-                )}
-                {statutMere && (
-                  <StatusBadge
-                    type={statutMere.type}
-                    text={statutMere.text}
-                    className="w-full h-[40px] rounded-[10px]"
-                  />
-                )}
-              </div>
+            <div className="flex flex-row flex-wrap gap-2">
+  {statutBebe && (
+    <StatusBadge
+      type={statutBebe.type}
+      text={statutBebe.text}
+      className="flex-1 min-w-[140px] h-[40px] rounded-[10px]"
+    />
+  )}
+
+  {statutsMere.map((s, idx) => (
+    <StatusBadge
+      key={idx}
+      type={s.type}
+      text={s.text}
+      className="flex-1 min-w-[140px] h-[40px] rounded-[10px]"
+    />
+  ))}
+</div>
             </div>
 
            
