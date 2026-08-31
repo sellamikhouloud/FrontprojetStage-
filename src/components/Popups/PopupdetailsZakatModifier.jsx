@@ -346,7 +346,7 @@ const PopupModifierZakat = ({
     },
 
     {
-      label: "Date de création ",
+      label: "Date de creation ",
       value: zakat.date_creation
         ? new Date(
             zakat.date_creation
@@ -549,6 +549,7 @@ const PopupModifierZakat = ({
                     e.target.value
                   )
                 }
+                 placeholder="des observations complémentaires"
                 height="h-[60px]"
               />
 
@@ -580,6 +581,7 @@ const PopupModifierZakat = ({
                     e.target.value
                   )
                 }
+                  placeholder="des précisions"
                 height="h-[80px]"
               />
 
