@@ -1084,7 +1084,7 @@ const makeHandler = (fields) => (index, value) => {
           <div className="min-h-[331px] flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="text-[26px] font-bold text-[#202124]">
-                {famille?.mere?.prenom} {famille?.mere?.nom}
+                {famille?.mere?.nom} {famille?.mere?.prenom}
               </h2>
               <span className="text-[#67A7A3] text-[18px] font-semibold">
                 {famille?.id}
