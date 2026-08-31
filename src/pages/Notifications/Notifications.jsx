@@ -13,23 +13,31 @@ const NotificationsPage = () => {
   const navigate = useNavigate();
 
   const {
-    data,
-    isLoading,
-    isError,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useInfiniteQuery({
-    queryKey: ["notifications", "infinite"],
+  data,
+  isLoading,
+  isError,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
+} = useInfiniteQuery({
+  queryKey: ["notifications", "infinite"],
 
-    queryFn: ({ pageParam = 1 }) =>
-      getNotifications({ page: pageParam }).then((res) => res.data),
+  queryFn: ({ pageParam = 1 }) =>
+    getNotifications({ page: pageParam }).then((res) => res.data),
 
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+  getNextPageParam: (lastPage, allPages) => {
+    const results = Array.isArray(lastPage) ? lastPage : lastPage?.results ?? [];
+    if (!lastPage?.next || results.length === 0) return undefined;
 
-    initialPageParam: 1,
-  });
+    const previousPage = allPages[allPages.length - 1];
+    const previousResults = Array.isArray(previousPage) ? previousPage : previousPage?.results ?? [];
+    if (allPages.length > 1 && results[0]?.id === previousResults[0]?.id) return undefined;
+
+    return allPages.length + 1;
+  },
+
+  initialPageParam: 1,
+});
 
   const notifications = (data?.pages ?? []).flatMap((page) =>
     Array.isArray(page) ? page : page?.results ?? []
