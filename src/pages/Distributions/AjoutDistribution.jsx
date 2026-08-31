@@ -37,7 +37,7 @@ import { useLocation } from "react-router-dom";
 
 import { listFamilles } from "@/lib/api/familles";
 import { createDistribution, getPreCreationDistribution, updateDistribution } from "@/lib/api/distributions";
-import { diffPatch, isEmptyPatch } from "@/lib/diff";
+
 
 
 const parseDateFR = (str) => {
@@ -68,19 +68,6 @@ const isFutureDate = (date) => {
 };
 
 
-const areProduitsEqual = (a = [], b = []) => {
-  if (a.length !== b.length) return false;
-
-  const normalize = (list) =>
-    [...list]
-      .map((p) => `${p.produit}:${Number(p.quantite ?? 0)}`)
-      .sort(); // insensible à l'ordre
-
-  const na = normalize(a);
-  const nb = normalize(b);
-
-  return na.every((val, i) => val === nb[i]);
-};
 const detectLaitTypeValue = (nomProduitLait = "") => {
   const nom = nomProduitLait.toLowerCase();
   if (nom.includes("1er")) return "1er_age";
@@ -163,20 +150,7 @@ const [date, setDate] = useState(() => {
   return new Date();
 });
 
-// État "avant modification", figé une seule fois au montage — sert de baseline
-// pour diffPatch() lors de la sauvegarde en mode édition.
-const baselineRef = useRef(
-  isEditMode
-    ? {
-        produits: (distributionAModifier?.produits || []).map((p) => ({
-          produit: p.produit?.id,
-          quantite: Number(p.quantite ?? 0),
-        })),
-        date_distribution: distributionAModifier?.date_distribution ?? null,
-        reception_confirmee: Boolean(distributionAModifier?.reception_confirmee),
-      }
-    : null
-);
+
 
  const [confirmed, setConfirmed] = useState(() => {
   if (isEditMode) return Boolean(distributionAModifier?.reception_confirmee);
@@ -399,30 +373,20 @@ useEffect(() => {
 };
 
   try {
-    if (isEditMode) {
-  const currentPayload = {
+   if (isEditMode) {
+  const patch = {
     produits: produitsPayload,
     date_distribution: payload.date_distribution,
     reception_confirmee: payload.reception_confirmee,
   };
 
-  const patch = diffPatch(baselineRef.current, currentPayload);
-
-  if (
-    "produits" in patch &&
-    areProduitsEqual(baselineRef.current.produits, currentPayload.produits)
-  ) {
-    delete patch.produits;
-  }
-
-  if (isEmptyPatch(patch)) {
-    setSaveError("Aucune modification à enregistrer.");
-    setSaving(false);
-    return;
-  }
+  console.log("========== MODE MODIFICATION ==========");
+  console.log("ID distribution :", distributionAModifier.id);
+  console.log("PATCH FINAL :", patch);
+  console.log("Nombre de produits envoyés :", patch.produits.length);
+  console.log("Produits envoyés :", patch.produits);
 
   await updateDistribution(distributionAModifier.id, patch);
-
 } else {
   await createDistribution(payload);
 }
