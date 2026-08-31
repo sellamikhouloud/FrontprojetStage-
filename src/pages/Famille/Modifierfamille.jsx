@@ -1,12 +1,12 @@
 
 import { useMemo, useEffect, useState, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import ErrorMessage from "../../components/Forms/ErrorMessage";
 import { diffPatch, isEmptyPatch } from "@/lib/diff";
 import { getFamille, updateFamille, marquerSortie, getVisites, getDistributions, getFamilleZakat } from "@/lib/api/familles";
 import { listVillages } from "@/lib/api/Parametres"; 
-import { listCoordinateurs } from "@/lib/api/coordinateurs";
+import { listUsers } from "@/lib/api/users";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import InfoCard from "../../components/Containers/AfficherContainer";
@@ -274,23 +274,71 @@ const Modifyfamilly = () => {
   enabled: !!id,
 });
 
-  const { data: visitesResponse, isLoading: visitesLoading  , isError: visitesError, } = useQuery({
+   const {
+    data: visitesData,
+    isLoading: visitesLoading,
+    isError: visitesError,
+    fetchNextPage: fetchNextVisitesPage,
+    hasNextPage: hasNextVisitesPage,
+    isFetchingNextPage: isFetchingNextVisitesPage,
+  } = useInfiniteQuery({
     queryKey: ["visites", id],
-    queryFn: () => getVisites(id).then((r) => r.data),
+    queryFn: ({ pageParam = 1 }) =>
+      getVisites(id, { page: pageParam }).then((r) => r.data),
+    getNextPageParam: (lastPage, allPages) => {
+      const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
+      return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
+    },
+    initialPageParam: 1,
     enabled: !!id && openVisites,
   });
- 
-  const { data: distributionsResponse, isLoading: distributionsLoading , isError: distributionsError, } = useQuery({
+
+  const visitesActives = (visitesData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
+  const visitesAnnulees = (visitesData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
+
+  const {
+    data: distributionsData,
+    isLoading: distributionsLoading,
+    isError: distributionsError,
+    fetchNextPage: fetchNextDistributionsPage,
+    hasNextPage: hasNextDistributionsPage,
+    isFetchingNextPage: isFetchingNextDistributionsPage,
+  } = useInfiniteQuery({
     queryKey: ["distributions", id],
-    queryFn: () => getDistributions(id).then((res) => res.data),
+    queryFn: ({ pageParam = 1 }) =>
+      getDistributions(id, { page: pageParam }).then((r) => r.data),
+    getNextPageParam: (lastPage, allPages) => {
+      const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
+      return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
+    },
+    initialPageParam: 1,
     enabled: !!id && openDistribution,
   });
- 
-  const { data: zakatResponse, isLoading: zakatLoading } = useQuery({
+
+  const distributionsActives = (distributionsData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
+  const distributionsAnnulees = (distributionsData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
+
+  const {
+    data: zakatData,
+    isLoading: zakatLoading,
+    isError: zakatError,
+    fetchNextPage: fetchNextZakatPage,
+    hasNextPage: hasNextZakatPage,
+    isFetchingNextPage: isFetchingNextZakatPage,
+  } = useInfiniteQuery({
     queryKey: ["zakat", id],
-    queryFn: () => getFamilleZakat(id).then((res) => res.data),
+    queryFn: ({ pageParam = 1 }) =>
+      getFamilleZakat(id, { page: pageParam }).then((r) => r.data),
+    getNextPageParam: (lastPage, allPages) => {
+      const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
+      return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
+    },
+    initialPageParam: 1,
     enabled: !!id && openZakat,
   });
+
+  const zakatActives = (zakatData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
+  const zakatAnnulees = (zakatData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
  
 
     const {
@@ -309,34 +357,87 @@ const villageOptions = (villagesData || []).map((village) => ({
   label: village.nom,
 }));
 
+
+const [searchCoordinateur, setSearchCoordinateur] = useState("");
+
 const {
   data: coordinateursResponse,
   isLoading: coordinateursLoading,
-  isError: coordinateursError,
-} = useQuery({
-  queryKey: ["coordinateurs"],
-  queryFn: () => listCoordinateurs().then((res) => res.data),
+  isError: coordinateursIsError,
+  fetchNextPage: fetchNextCoordinateursPage,
+  hasNextPage: hasNextCoordinateursPage,
+  isFetchingNextPage: isFetchingNextCoordinateursPage,
+} = useInfiniteQuery({
+  queryKey: ["coordinateurs", "infinite", searchCoordinateur],
+
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam, is_active: true };
+
+    const trimmedSearch = searchCoordinateur.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    const response = await listUsers(params);
+    return response.data;
+  },
+
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+  initialPageParam: 1,
+  keepPreviousData: true,
+  enabled: !isCoordinator,
 });
 
-const coordinateursData = Array.isArray(coordinateursResponse)
-  ? coordinateursResponse
-  : coordinateursResponse?.results ?? [];
+const coordinateursData = (coordinateursResponse?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
+
 const coordinateurs = coordinateursData
-  .filter((coordinateur) => coordinateur.is_active)
-  .map((coordinateur) => ({
-    id: coordinateur.id,
-    nom: coordinateur.nom,
-    prenom: coordinateur.prenom,
-    name: `${coordinateur.nom} ${coordinateur.prenom}`,
-    code: String(coordinateur.id),
-    village: coordinateur.village?.nom ?? "",
-    familles: coordinateur.nb_familles ?? 0,
-    status: coordinateur.is_active ? "Actif" : "Inactif",
-    username: coordinateur.username ?? "/",
-    creePar: coordinateur.created_by
-      ? `${coordinateur.created_by.nom ?? ""} ${coordinateur.created_by.prenom ?? ""}`.trim()
+  .filter((c) => c.is_active && (c.role === "coordinator" || c.role === "chef_coordinator"))
+  .map((c) => ({
+    id: c.id,
+    nom: c.nom,
+    prenom: c.prenom,
+    name: `${c.nom} ${c.prenom}`,
+    code: String(c.id),
+    village: c.village?.nom ?? "",
+    familles: c.nb_familles ?? 0,
+    status: c.is_active ? "Actif" : "Inactif",
+    username: c.username ?? "/",
+    creePar: c.created_by
+      ? `${c.created_by.nom ?? ""} ${c.created_by.prenom ?? ""}`.trim()
       : "/",
   }));
+
+const coordinateursObserverTarget = useRef(null);
+
+useEffect(() => {
+  if (!coordinateursObserverTarget.current || !openCoordinateur) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextCoordinateursPage &&
+        !isFetchingNextCoordinateursPage
+      ) {
+        fetchNextCoordinateursPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(coordinateursObserverTarget.current);
+
+  return () => observer.disconnect();
+}, [
+  openCoordinateur,
+  hasNextCoordinateursPage,
+  isFetchingNextCoordinateursPage,
+  fetchNextCoordinateursPage,
+]);
   
     const baseline = useMemo(
     () => (famille ? extractEditableFields(famille) : null),
@@ -762,26 +863,36 @@ const makeHandler = (fields) => (index, value) => {
 <PopupDistributionfamille
   open={openDistribution}
   onClose={() => setOpenDistribution(false)}
-  Distribution={distributionsResponse}  
+  Distribution={{ actives: distributionsActives, annulees: distributionsAnnulees }}
   famille={famille}
   isLoading={distributionsLoading}
+  fetchNextPage={fetchNextDistributionsPage}
+  hasNextPage={hasNextDistributionsPage}
+  isFetchingNextPage={isFetchingNextDistributionsPage}
 />
 
 <PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
-  zakats={zakatResponse}   
+  zakats={{ actives: zakatActives, annulees: zakatAnnulees }}
   famille={famille}
   isLoading={zakatLoading}
+  fetchNextPage={fetchNextZakatPage}
+  hasNextPage={hasNextZakatPage}
+  isFetchingNextPage={isFetchingNextZakatPage}
 />
 
-     <Popupvisites
+<Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
-  Visites={visitesResponse}   
+  Visites={{ actives: visitesActives, annulees: visitesAnnulees }}
   famille={famille}
   isLoading={visitesLoading}
+  fetchNextPage={fetchNextVisitesPage}
+  hasNextPage={hasNextVisitesPage}
+  isFetchingNextPage={isFetchingNextVisitesPage}
 />
+
 <PopupFinSuivi
   open={openFinSuivi}
   onClose={() => setOpenFinSuivi(false)}
@@ -1046,11 +1157,16 @@ const makeHandler = (fields) => (index, value) => {
           </div>
         )}
 
-       <PopupListeCoordinateurs
+      <PopupListeCoordinateurs
   open={openCoordinateur}
   onClose={() => setOpenCoordinateur(false)}
   coordinateurs={coordinateurs}
   loading={coordinateursLoading}
+  isError={coordinateursIsError}
+  search={searchCoordinateur}
+  onSearchChange={setSearchCoordinateur}
+  observerTarget={coordinateursObserverTarget}
+  isFetchingNextPage={isFetchingNextCoordinateursPage}
   onSelectCoordinateur={(coordinateur) => {
     setForm((prev) => ({
       ...prev,
