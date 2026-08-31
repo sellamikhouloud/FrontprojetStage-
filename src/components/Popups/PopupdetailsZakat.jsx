@@ -298,13 +298,13 @@ const modeRemise =
 },
 
                   {
-                    label: "Enregistrée par",
+                      label: "Créé par",
                     value:
                       zakat.cree_par?.nom || "-",
                   },
 
                   {
-                    label: "Date d'enregistrement",
+                    label: "Date de creation ",
                     value: dateCreation,
                   },
 
