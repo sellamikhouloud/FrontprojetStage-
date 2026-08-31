@@ -202,7 +202,7 @@ const isFutureDate = (date) => {
 };
 
 const STATUT_BEBE = {
-  normale: { text: "Bébé normal", type: "mereNormal" },
+  normale: {  text: "Nourrisson normal", type: "mereNormal" },
   mam: { text: "MAM nourrisson", type: "mam" },
   mas: { text: "MAS nourrisson", type: "mas" },
 };
