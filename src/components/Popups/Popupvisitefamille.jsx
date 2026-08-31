@@ -19,6 +19,7 @@ const Popupvisites = ({
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
+    refetchVisites,
 }) => {
   const queryClient = useQueryClient();
 
@@ -147,11 +148,16 @@ const Popupvisites = ({
               }}
               visite={selectedVisite}
               famille={famille}
-              onSave={(updatedVisite) => {
-                setSelectedVisite((prev) => ({ ...prev, ...updatedVisite }));
-                setOpenModifier(false);
-                setOpenDetail(true);
-              }}
+          onSave={async (updatedVisite) => {
+ 
+
+  setOpenModifier(false);
+
+  await refetchVisites();
+
+
+  setOpenDetail(true);
+}}
             />
 
             {/* Header */}
