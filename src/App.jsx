@@ -32,6 +32,7 @@ import { AuthProvider, useAuth } from "./components/Providers/AuthProvider";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { FamilyFormProvider } from "./context/FamilyFormContext";
 import NotificationWatcher from "./components/NotificationWatcher";
+import OfflineSync from "./components/OfflineSync";
 
 
 function AppRoutes() {
@@ -40,6 +41,7 @@ function AppRoutes() {
   return (
     <>
     <NotificationWatcher />
+    <OfflineSync />
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
