@@ -110,8 +110,14 @@ const PopupDistribution = ({
             </h2>
 
             {/* Liste */}
-            <div className="space-y-4">
-              {items.map((item, index) => (
+            <div
+              className={`space-y-4 ${
+                items.length >= 4
+                  ? "lg:max-h-[250px] overflow-y-auto scrollbar-hide"
+                  : ""
+              }`}
+            >              
+            {items.map((item, index) => (
                 <div
                   key={index}
                   className="
