@@ -642,7 +642,7 @@ useEffect(() => {
     },
     {
       key: "enregistre_par",
-        label: "Créé par",
+      label: "Créé par",
       value: famille?.audit?.cree_par
         ? `${famille.audit.cree_par.prenom} ${famille.audit.cree_par.nom}`
         : "/",
