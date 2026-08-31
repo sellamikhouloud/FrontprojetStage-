@@ -318,24 +318,28 @@ const Modifyfamilly = () => {
   const distributionsActives = (distributionsData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
   const distributionsAnnulees = (distributionsData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
 
-  const {
-    data: zakatData,
-    isLoading: zakatLoading,
-    isError: zakatError,
-    fetchNextPage: fetchNextZakatPage,
-    hasNextPage: hasNextZakatPage,
-    isFetchingNextPage: isFetchingNextZakatPage,
-  } = useInfiniteQuery({
-    queryKey: ["zakat", id],
-    queryFn: ({ pageParam = 1 }) =>
-      getFamilleZakat(id, { page: pageParam }).then((r) => r.data),
-    getNextPageParam: (lastPage, allPages) => {
-      const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
-      return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
-    },
-    initialPageParam: 1,
-    enabled: !!id && openZakat,
-  });
+const {
+  data: zakatData,
+  isLoading: zakatLoading,
+  isError: zakatError,
+  fetchNextPage: fetchNextZakatPage,
+  hasNextPage: hasNextZakatPage,
+  isFetchingNextPage: isFetchingNextZakatPage,
+  refetch: refetchZakat,
+} = useInfiniteQuery({
+  queryKey: ["zakat", id],
+  queryFn: ({ pageParam = 1 }) =>
+    getFamilleZakat(id, { page: pageParam }).then((r) => r.data),
+  getNextPageParam: (lastPage, allPages) => {
+    const hasMore =
+      Boolean(lastPage?.actives?.next) ||
+      Boolean(lastPage?.annulees?.next);
+
+    return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
+  },
+  initialPageParam: 1,
+  enabled: !!id && openZakat,
+});
 
   const zakatActives = (zakatData?.pages ?? []).flatMap((p) => p?.actives?.results ?? []);
   const zakatAnnulees = (zakatData?.pages ?? []).flatMap((p) => p?.annulees?.results ?? []);
@@ -937,12 +941,16 @@ const makeHandler = (fields) => (index, value) => {
 <PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
-  zakats={{ actives: zakatActives, annulees: zakatAnnulees }}
+  zakats={{
+    actives: zakatActives,
+    annulees: zakatAnnulees,
+  }}
   famille={famille}
   isLoading={zakatLoading}
   fetchNextPage={fetchNextZakatPage}
   hasNextPage={hasNextZakatPage}
   isFetchingNextPage={isFetchingNextZakatPage}
+  refetchZakat={refetchZakat}
 />
 
 <Popupvisites
