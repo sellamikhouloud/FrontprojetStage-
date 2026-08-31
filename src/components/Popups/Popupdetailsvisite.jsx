@@ -38,13 +38,13 @@ const PopupDetailVisite = ({
     },
     { label: "Visite n°", value: visite.numero_visite ?? "-" },
     {
-      label: "Enregistrée par",
+      label: "Créé par",
       value: visite.audit?.cree_par
         ? `${visite.audit.cree_par.nom} ${visite.audit.cree_par.prenom}`
         : "-",
     },
     {
-      label: "Date d'enregistrement",
+      label: "Date de creation",
       value: visite.audit?.date_creation
         ? new Date(visite.audit.date_creation).toLocaleDateString("fr-FR")
         : "-",
