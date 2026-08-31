@@ -160,6 +160,12 @@ const isMobile = window.innerWidth < 768;
 
 
   const nourrisson = [
+
+
+     {
+    label: "Prénom",
+    value: famille?.nourrisson?.prenom || "/",
+  },
   {
    label: "Date de naissance",
   value: famille?.nourrisson?.date_naissance
@@ -474,26 +480,28 @@ return (
 />
 )}
       {/* Contenu */}
-      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
+    <main className="flex-1 overflow-y-auto px-5 pt-4 md:pt-0 pb-8 lg:p-10 bg-white">
      <PageHeader
   leftTitle="Revenir"
   showRight={false}
   onBack={handleBack} 
 />
 
-     <NavigationHeader
-  title="Fiche famille"
-  type="edit"
-  actionTitle="Modifier la fiche famille"
-  onAction={() =>
-    navigate(`/famille/${id}/modifier`, {
-      state: {
-        from: location.state?.from,
-        draft: location.state?.draft,
-      },
-    })
-  }
-/>
+   <div className="mt-4">
+  <NavigationHeader
+    title="Fiche famille"
+    type="edit"
+    actionTitle="Modifier la fiche famille"
+    onAction={() =>
+      navigate(`/famille/${id}/modifier`, {
+        state: {
+          from: location.state?.from,
+          draft: location.state?.draft,
+        },
+      })
+    }
+  />
+</div>
 
         {/* ==================== HAUT ==================== */}
 
