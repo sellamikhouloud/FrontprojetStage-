@@ -323,7 +323,7 @@ const statut =
   
 const STATUT_BEBE = {
   normale: {
-    text: "Bébé normal",
+    text: "Nourrisson normal",
     type: "mereNormal",
   },
   mam: {
