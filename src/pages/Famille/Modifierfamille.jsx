@@ -660,6 +660,13 @@ useEffect(() => {
   ];
 
   const nourrisson = [
+
+     {
+    key: "nourrisson_prenom",
+    label: "Prénom",
+    value: famille?.nourrisson?.prenom || "/",
+    readOnly: true,
+  },
     {
       key: "nourrisson_date_naissance",
       label: "Date de naissance",
@@ -925,13 +932,13 @@ const makeHandler = (fields) => (index, value) => {
         />
       )}
 
-      <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
+     <main className="flex-1 overflow-y-auto px-5 pt-4 md:pt-0 pb-8 lg:p-10 bg-white">
         <PageHeader
           leftTitle="Revenir"
           showRight={false}
           onBack={() => window.history.back()}
         />
-
+ <div className="mt-2">
           <NavigationHeader
           title="Fiche famille"
           type="save"
@@ -939,7 +946,7 @@ const makeHandler = (fields) => (index, value) => {
           onAction={handleSave}
           disabled={nothingChanged || saveMut.isPending}
         />
-
+</div>
        <BackendErrorMessage message={errorMessage} className="mb-4" />
 
         <div className="grid grid-cols-1 xl:grid-cols-[520px_minmax(0,1fr)] gap-6 xl:gap-10 mb-8">
