@@ -53,7 +53,6 @@ const {
   enabled: !!id,
 });
 
-
 const {
   data: visitesData,
   isLoading: visitesLoading,
@@ -61,6 +60,7 @@ const {
   fetchNextPage: fetchNextVisitesPage,
   hasNextPage: hasNextVisitesPage,
   isFetchingNextPage: isFetchingNextVisitesPage,
+  refetch: refetchVisites,
 } = useInfiniteQuery({
   queryKey: ["visites", id],
   queryFn: ({ pageParam = 1 }) =>
@@ -509,12 +509,16 @@ return (
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
-  Visites={{ actives: visitesActives, annulees: visitesAnnulees }}
+  Visites={{
+    actives: visitesActives,
+    annulees: visitesAnnulees
+  }}
   famille={famille}
   isLoading={visitesLoading}
   fetchNextPage={fetchNextVisitesPage}
   hasNextPage={hasNextVisitesPage}
   isFetchingNextPage={isFetchingNextVisitesPage}
+  refetchVisites={refetchVisites}
 />
 <PopupFinSuivi
   open={openFinSuivi}
