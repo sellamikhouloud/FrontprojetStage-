@@ -9,6 +9,8 @@ import { Plus, Check, X } from "lucide-react";
 import EditStockPopup from "./EditStockPopup";
 import SelectInput from "../Containers/ChoiceContainer";
 
+import Spinner from "../Spinner";
+
 import {
   CreateProduit,
   listProduits,
@@ -17,7 +19,14 @@ import {
   updateProduit,
 } from "../../lib/api/stock";
 
-const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
+const StockPopup = ({
+  onClose,
+  initialProducts = [],
+  onSaveProducts,
+  observerTarget,
+  isFetchingNextPage,
+}) => {
+
   // =========================================================
   // STATES
   // =========================================================
@@ -1883,10 +1892,6 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
     });
   };
 
-  // =========================================================
-  // RENDER
-  // =========================================================
-
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 bg-[#9A9A9A]/60 flex items-start sm:items-center justify-center overflow-y-auto">
@@ -2252,6 +2257,21 @@ const StockPopup = ({ onClose, initialProducts = [], onSaveProducts }) => {
                     productError
                   }
                 </p>
+              )}
+
+              {/* INFINITE SCROLL */}
+
+              {products.length > 0 && (
+                <div
+                  ref={observerTarget}
+                  className="h-1"
+                />
+              )}
+
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Spinner />
+                </div>
               )}
           </div>
 

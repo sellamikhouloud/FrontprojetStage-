@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
+import Spinner from "../Spinner";
 
 const PopupDistribution = ({
   title = "Distributions ce mois",
   items = [],
   onClose,
+  observerTarget,
+  isFetchingNextPage,
 }) => {
   const [open, setOpen] = useState(true);
 
@@ -116,8 +119,8 @@ const PopupDistribution = ({
                   ? "lg:max-h-[250px] overflow-y-auto scrollbar-hide"
                   : ""
               }`}
-            >              
-            {items.map((item, index) => (
+            >
+              {items.map((item, index) => (
                 <div
                   key={index}
                   className="
@@ -141,10 +144,8 @@ const PopupDistribution = ({
                     <span
                       className="
                         text-[#4E9F8A]
-
                         text-[22px]
                         sm:text-[24px]
-
                         font-bold
                         leading-none
                       "
@@ -164,8 +165,19 @@ const PopupDistribution = ({
                   </div>
                 </div>
               ))}
-            </div>
 
+              {/* Observer pour charger la page suivante */}
+              {items.length > 0 && (
+                <div ref={observerTarget} className="h-1" />
+              )}
+
+              {/* Chargement de la page suivante */}
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Spinner />
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
       )}
