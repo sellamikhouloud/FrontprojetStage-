@@ -217,7 +217,7 @@ const PopupZakatFamille = ({
   // récupérer l'ordre directement depuis le backend
   const result = await refetchZakat();
 
-  console.log("🔄 Données récupérées du backend :", result.data);
+  
 }}
       />
     </AnimatePresence>
