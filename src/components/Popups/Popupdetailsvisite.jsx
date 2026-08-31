@@ -44,7 +44,7 @@ const PopupDetailVisite = ({
         : "-",
     },
     {
-      label: "Date de creation",
+      label: "Date de création",
       value: visite.audit?.date_creation
         ? new Date(visite.audit.date_creation).toLocaleDateString("fr-FR")
         : "-",
