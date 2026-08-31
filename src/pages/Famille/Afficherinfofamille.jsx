@@ -582,7 +582,7 @@ return (
             {/* Nom */}
           <div className="flex items-center justify-between">
   <h2 className="text-[26px] font-bold text-[#202124]">
-  {famille?.mere?.prenom} {famille?.mere?.nom}
+  {famille?.mere?.nom} {famille?.mere?.prenom}
 </h2>
 
 
