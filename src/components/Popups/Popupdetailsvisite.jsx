@@ -76,7 +76,7 @@ const PopupDetailVisite = ({
 
     visite?.statut_nutritionnel === "normale" && {
       type: "mere",
-      text: "Bébé normal",
+      text: "Nourrisson normal",
     },
 
     visite?.statut_nutritionnel_mere === "normale" && {
