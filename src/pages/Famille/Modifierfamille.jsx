@@ -217,8 +217,9 @@ const STATUT_MERE = {
     type: "risque",
   },
 
+
   malnutrition: {
-    text: "Malnutrition",
+    text: "Mère malnutrie ",
     type: "mas",
   },
 };
