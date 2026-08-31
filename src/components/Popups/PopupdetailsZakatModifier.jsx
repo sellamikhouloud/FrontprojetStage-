@@ -340,13 +340,13 @@ const PopupModifierZakat = ({
 },
 
     {
-      label: "Enregistrée par",
+        label: "Créé par",
       value: zakat.cree_par?.nom || "-",
       editable: false,
     },
 
     {
-      label: "Date d'enregistrement",
+      label: "Date de creation ",
       value: zakat.date_creation
         ? new Date(
             zakat.date_creation
