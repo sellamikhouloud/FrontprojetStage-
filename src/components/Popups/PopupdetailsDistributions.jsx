@@ -172,7 +172,7 @@ const PopupDetailDistribution = ({
                         : "-",
                   },
                   {
-                    label: "Date de creation ",
+                    label: "Date de création",
                     value: distribution.audit?.date_creation
                       ? new Date(
                           distribution.audit.date_creation
