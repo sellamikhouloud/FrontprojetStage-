@@ -261,7 +261,7 @@ const PopupDetailVisiteModifier = ({
     },
     {
       key: "enregistre_par",
-      label: "Enregistrée par",
+      label: "Creé par",
       value: visite.audit?.cree_par
         ? `${visite.audit.cree_par.nom} ${visite.audit.cree_par.prenom}`
         : "-",
@@ -269,7 +269,7 @@ const PopupDetailVisiteModifier = ({
     },
     {
       key: "date_enregistrement",
-      label: "Date d'enregistrement",
+      label: "Date de creation",
       value: dateEnregistrement,
       editable: false,
     },
@@ -299,51 +299,6 @@ const PopupDetailVisiteModifier = ({
     }
   };
 
-  const statutBadges = [
-    visite?.statut_nutritionnel === "mam" && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
-    visite?.statut_nutritionnel === "mas" && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
-    visite?.statut_nutritionnel === "normale" && {
-      type: "mere",
-      text: "Bébé normal",
-    },
-    visite?.statut_nutritionnel_mere === "normale" && {
-      type: "mere",
-      text: "Mère normale",
-    },
-    visite?.statut_nutritionnel_mere === "a_risque" && {
-      type: "risque",
-      text: "Mère à risque",
-    },
-    visite?.statut_nutritionnel_mere === "malnutrition" && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
-  ].filter(Boolean);
-
-  const StatutCalculeBlock = () => (
-    <div className="w-full rounded-[20px] border border-[#E6ECEA] bg-[#F8FBFC] px-[15px] py-3 flex flex-col">
-      <h3 className="text-[18px] font-semibold text-center text-[#202124] mb-3">
-        Statut calculé
-      </h3>
-
-      <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3">
-        {statutBadges.map((badge, index) => (
-          <StatusBadge
-            key={`${badge.type}-${index}`}
-            type={badge.type}
-            text={badge.text}
-            className="h-[44px] sm:h-[50px] flex-1 sm:flex-none min-w-0 sm:min-w-[190px] rounded-[18px] text-[14px] sm:text-[16px] font-semibold px-4 sm:px-6"
-          />
-        ))}
-      </div>
-    </div>
-  );
 
   const SaveButtonBlock = () => (
     <div className="w-full">
@@ -452,7 +407,7 @@ const PopupDetailVisiteModifier = ({
             </div>
 
             <div className="space-y-3">
-              <StatutCalculeBlock />
+            
 
             <ModifierMesure
   title="Mesure mère"
@@ -532,7 +487,7 @@ const PopupDetailVisiteModifier = ({
               }
             />
 
-            <StatutCalculeBlock />
+         
 
             <ModifierMesure
               title="Mesure nourrisson"
