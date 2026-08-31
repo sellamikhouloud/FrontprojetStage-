@@ -53,7 +53,6 @@ const {
   enabled: !!id,
 });
 
-
 const {
   data: visitesData,
   isLoading: visitesLoading,
@@ -61,6 +60,7 @@ const {
   fetchNextPage: fetchNextVisitesPage,
   hasNextPage: hasNextVisitesPage,
   isFetchingNextPage: isFetchingNextVisitesPage,
+  refetch: refetchVisites,
 } = useInfiniteQuery({
   queryKey: ["visites", id],
   queryFn: ({ pageParam = 1 }) =>
@@ -105,12 +105,16 @@ const {
   fetchNextPage: fetchNextZakatPage,
   hasNextPage: hasNextZakatPage,
   isFetchingNextPage: isFetchingNextZakatPage,
+  refetch: refetchZakat,
 } = useInfiniteQuery({
   queryKey: ["zakat", id],
   queryFn: ({ pageParam = 1 }) =>
     getFamilleZakat(id, { page: pageParam }).then((r) => r.data),
   getNextPageParam: (lastPage, allPages) => {
-    const hasMore = Boolean(lastPage?.actives?.next) || Boolean(lastPage?.annulees?.next);
+    const hasMore =
+      Boolean(lastPage?.actives?.next) ||
+      Boolean(lastPage?.annulees?.next);
+
     return hasMore ? (allPages?.length ?? 0) + 1 : undefined;
   },
   initialPageParam: 1,
@@ -490,23 +494,31 @@ return (
 <PopupZakatFamille
   open={openZakat}
   onClose={() => setOpenZakat(false)}
-  zakats={{ actives: zakatActives, annulees: zakatAnnulees }}
+  zakats={{
+    actives: zakatActives,
+    annulees: zakatAnnulees,
+  }}
   famille={famille}
   isLoading={zakatLoading}
   fetchNextPage={fetchNextZakatPage}
   hasNextPage={hasNextZakatPage}
   isFetchingNextPage={isFetchingNextZakatPage}
+  refetchZakat={refetchZakat}
 />
 
 <Popupvisites
   open={openVisites}
   onClose={() => setOpenVisites(false)}
-  Visites={{ actives: visitesActives, annulees: visitesAnnulees }}
+  Visites={{
+    actives: visitesActives,
+    annulees: visitesAnnulees
+  }}
   famille={famille}
   isLoading={visitesLoading}
   fetchNextPage={fetchNextVisitesPage}
   hasNextPage={hasNextVisitesPage}
   isFetchingNextPage={isFetchingNextVisitesPage}
+  refetchVisites={refetchVisites}
 />
 <PopupFinSuivi
   open={openFinSuivi}

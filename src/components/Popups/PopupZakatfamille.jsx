@@ -19,6 +19,7 @@ const PopupZakatFamille = ({
   fetchNextPage,
   hasNextPage,
   isFetchingNextPage,
+   refetchZakat,
 }) => {
   const [selectedZakat, setSelectedZakat] = useState(null);
   const [openDetail, setOpenDetail] = useState(false);
@@ -197,16 +198,27 @@ const PopupZakatFamille = ({
           setOpenModifier(false);
           setOpenDetail(true);
         }}
-        onSave={(updatedZakat) => {
-          setLocalActives((prev) =>
-            prev.map((item) =>
-              item.id === updatedZakat.id ? { ...item, ...updatedZakat } : item
-            )
-          );
-          setSelectedZakat((prev) => ({ ...prev, ...updatedZakat }));
-          setOpenModifier(false);
-          setOpenDetail(true);
-        }}
+      onSave={async (updatedZakat) => {
+  
+
+  // 1. Mettre à jour le détail immédiatement
+  setSelectedZakat((prev) => ({
+    ...prev,
+    ...updatedZakat,
+  }));
+
+  // 2. Fermer le formulaire de modification
+  setOpenModifier(false);
+
+  // 3. Revenir au détail
+  setOpenDetail(true);
+
+  // 4. IMPORTANT :
+  // récupérer l'ordre directement depuis le backend
+  const result = await refetchZakat();
+
+  
+}}
       />
     </AnimatePresence>
   );

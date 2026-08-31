@@ -159,6 +159,7 @@ const adminData = {
               <div className="flex items-center gap-4">
                 <button
                   type="button"
+                     onClick={() => navigate("/notifications")}
                   aria-label="Notifications"
                   className="
                     w-9
