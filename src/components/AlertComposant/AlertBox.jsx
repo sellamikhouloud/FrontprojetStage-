@@ -1,6 +1,7 @@
 import icon from "../../assets/Icon.svg";
 import Warning from "../../assets/warning.svg";
 import Calendar from "../../assets/BlackCalendar.svg";
+import localisation from "../../assets/Blacklocation.svg";
 
 const variants = {
   success: {
@@ -51,6 +52,7 @@ const AlertBox = ({
   title,
   titleColor = "text-black",
   date,
+  villageName,
   message,
   children,
 }) => {
@@ -90,22 +92,44 @@ const AlertBox = ({
           )}
 
           {/* INFO TITLE */}
-          {title && !style.iconWithTitle && (
-            <>
-              <h3 className={`font-bold ${titleColor}`}>{title}</h3>
-              {variant === "info" && date && (
-                <div className="flex items-center gap-2 mt-2 mb-3">
-                  <img src={Calendar} alt="" className="w-4 h-4" />
-                  <span className="text-[13px] font-medium text-black">
-                    {date}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
+{title && !style.iconWithTitle && (
+  <>
+    <h3 className={`font-bold ${titleColor}`}>{title}</h3>
+
+    {variant === "info" && date && (
+      <div className="flex items-center gap-5">
+        <div className="flex items-center gap-2 mt-2">
+          <img src={Calendar} alt="" className="w-4 h-4" />
+          <span className="text-[13px] font-medium text-black">
+            {date}
+          </span>
+        </div>
+
+        {villageName && (
+          <div className="flex items-center gap-2 mt-2">
+            <img
+              src={localisation}
+              alt=""
+              className="w-4 h-4"
+            />
+            <span
+              className="
+                text-[12px]
+                lg:text-[14px]
+                font-semibold
+              "
+            >
+              {villageName}
+            </span>
+          </div>
+        )}
+      </div>
+    )}
+  </>
+)}
 
           
-         {/* CONTENT */}
+{/* CONTENT */}
 {!title && style.icon ? (
   <div className="flex items-center gap-4">
     <img
@@ -113,7 +137,6 @@ const AlertBox = ({
       alt=""
       className="w-5 h-5 shrink-0"
     />
-
     <div
       className={`
         flex-1
