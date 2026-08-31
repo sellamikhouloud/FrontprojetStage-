@@ -25,11 +25,15 @@ const PopupDistributionfamille = ({
   const [openDetail, setOpenDetail] = useState(false);
   const [statusFilter, setStatusFilter] = useState("active");
 
-  const distributionsActives = Distribution?.actives ?? [];
-  const distributionsAnnulees = Distribution?.annulees ?? [];
+  const [localActives, setLocalActives] = useState(
+    Distribution?.actives ?? []
+  );
+  const [localAnnulees, setLocalAnnulees] = useState(
+    Distribution?.annulees ?? []
+  );
 
   const distributionsBrutes =
-    statusFilter === "active" ? distributionsActives : distributionsAnnulees;
+    statusFilter === "active" ? localActives : localAnnulees;
 
   const distributionsTriees = useMemo(() => {
     return distributionsBrutes.map((item, index) => ({
@@ -41,6 +45,11 @@ const PopupDistributionfamille = ({
   }, [distributionsBrutes, statusFilter]);
 
   const observerTarget = useRef(null);
+
+  useEffect(() => {
+    setLocalActives(Distribution?.actives ?? []);
+    setLocalAnnulees(Distribution?.annulees ?? []);
+  }, [Distribution]);
 
   useEffect(() => {
     if (!observerTarget.current || !open) return;
@@ -103,14 +112,27 @@ const PopupDistributionfamille = ({
 
   const handleAnnulerDistribution = async (distribution) => {
     try {
-      await annulerDistribution(distribution.id);
+      const response = await annulerDistribution(distribution.id);
 
+      const updatedDistribution = response?.data ?? response;
+
+      setLocalActives((prev) =>
+        prev.filter((item) => item.id !== distribution.id)
+      );
+
+      setLocalAnnulees((prev) => [
+        ...prev,
+        {
+          ...distribution,
+          ...updatedDistribution,
+          annulee: true,
+        },
+      ]);
 
       setOpenDetail(false);
       setSelectedDistribution(null);
 
-
-      onDistributionAnnulee?.(distribution);
+      onDistributionAnnulee?.(updatedDistribution);
     } catch (error) {
       console.error(
         "Erreur lors de l'annulation de la distribution :",
@@ -321,3 +343,4 @@ const PopupDistributionfamille = ({
 };
 
 export default PopupDistributionfamille;
+
