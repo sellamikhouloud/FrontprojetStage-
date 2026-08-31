@@ -31,12 +31,13 @@ import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 function extractEditableFields(famille) {
   return {
     date_entree: famille?.date_entree ?? null,
-
+    nourrisson_prenom: famille?.nourrisson?.prenom ?? "",
     nourrisson_date_naissance: famille?.nourrisson?.date_naissance ?? null,
     nourrisson_sexe: famille?.nourrisson?.sexe ?? "",
     nourrisson_poids_naissance: famille?.nourrisson?.poids_naissance ?? "",
     nourrisson_taille_naissance: famille?.nourrisson?.taille_naissance ?? "",
-
+    mere_nom: famille?.mere?.nom ?? "", 
+    mere_prenom: famille?.mere?.prenom ?? "",
     mere_village_id: famille?.mere?.village?.id ?? famille?.mere?.village ?? null,
     mere_telephone: famille?.mere?.telephone ?? "",
     mere_date_naissance: famille?.mere?.date_naissance ?? null,
@@ -83,7 +84,16 @@ function buildFamillePayload(patch) {
          case "coordinateur_id":
         payload.coordinateur = value;
         break;
+  case "nourrisson_prenom":
+        nourrisson.prenom = value;
+        break;
 
+      case "mere_nom":
+        mere.nom = value;
+        break;
+      case "mere_prenom":
+        mere.prenom = value;
+        break;
       case "mere_village_id":
         mere.village = value;
         break;
@@ -253,7 +263,7 @@ const Modifyfamilly = () => {
   const [openFinSuivi, setOpenFinSuivi] = useState(false);
   const [openSuccess, setOpenSuccess] = useState(false);
   const [openCoordinateur, setOpenCoordinateur] = useState(false);
-
+const [editingNom, setEditingNom] = useState(false);  
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState(null);
 
@@ -528,8 +538,10 @@ useEffect(() => {
 
     return updateFamille(id, finalPayload).then((r) => r.data);
   },
- onSuccess: (updated) => {
- 
+onSuccess: (updated) => {
+  // Récupérer les données précédentes en cache pour ne rien perdre
+  const previousFamille = queryClient.getQueryData(["famille", id]);
+
   const villageId =
     typeof updated?.mere?.village === "object"
       ? updated.mere.village?.id
@@ -539,7 +551,6 @@ useEffect(() => {
     (opt) => String(opt.value) === String(villageId)
   );
 
- 
   const coordinateurId =
     typeof updated?.coordinateur === "object"
       ? updated.coordinateur?.id
@@ -551,7 +562,8 @@ useEffect(() => {
   );
 
   const fixedUpdated = {
-    ...updated,
+    ...previousFamille, 
+    ...updated,          
 
     coordinateur: coordinateurMatch
       ? {
@@ -559,23 +571,26 @@ useEffect(() => {
           nom: coordinateurMatch.nom,
           prenom: coordinateurMatch.prenom,
         }
-      : updated?.coordinateur,
+      : updated?.coordinateur ?? previousFamille?.coordinateur,
 
     mere: {
+      ...previousFamille?.mere, 
       ...updated?.mere,
       village: villageMatch
         ? {
             id: villageMatch.value,
             nom: villageMatch.label,
           }
-        : updated?.mere?.village,
+        : updated?.mere?.village ?? previousFamille?.mere?.village,
+    },
+
+    nourrisson: {
+      ...previousFamille?.nourrisson, 
+      ...updated?.nourrisson,
     },
   };
 
-  console.log("Coordinateur sélectionné :", coordinateurMatch);
-  console.log("Famille finale :", fixedUpdated);
-
-   // Mettre à jour le formulaire
+  // Mettre à jour le formulaire
   setForm(extractEditableFields(fixedUpdated));
 
   // Mettre à jour l'aperçu photo avec la version confirmée par le backend
@@ -584,14 +599,9 @@ useEffect(() => {
   setPhotoRemoved(false);
 
   // Mettre à jour React Query
-  queryClient.setQueryData(
-    ["famille", id],
-    fixedUpdated
-  );
+  queryClient.setQueryData(["famille", id], fixedUpdated);
 
-  queryClient.invalidateQueries({
-    queryKey: ["familles"],
-  });
+  queryClient.invalidateQueries({ queryKey: ["familles"] });
 
   setErrors({});
   setErrorMessage(null);
@@ -666,12 +676,11 @@ useEffect(() => {
 
   const nourrisson = [
 
-     {
+    {
     key: "nourrisson_prenom",
     label: "Prénom",
-    value: famille?.nourrisson?.prenom || "/",
-    readOnly: true,
-  },
+    value: form.nourrisson_prenom,
+},
     {
       key: "nourrisson_date_naissance",
       label: "Date de naissance",
@@ -708,6 +717,8 @@ useEffect(() => {
   ];
 
   const mere = [
+
+    
   
 {
   key: "mere_village_id",
@@ -1094,14 +1105,59 @@ const makeHandler = (fields) => (index, value) => {
           </div>
 
           <div className="min-h-[331px] flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-[26px] font-bold text-[#202124]">
-                {famille?.mere?.nom} {famille?.mere?.prenom}
-              </h2>
-              <span className="text-[#67A7A3] text-[18px] font-semibold">
-                {famille?.id}
-              </span>
-            </div>
+         <div className="flex items-center justify-between gap-3">
+  {editingNom ? (
+    <div
+      className="flex items-center gap-2 flex-1 min-w-0"
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) {
+          setEditingNom(false);
+        }
+      }}
+    >
+      <input
+        type="text"
+        autoFocus
+        value={form.mere_nom}
+        onChange={(e) =>
+          setForm((prev) => ({ ...prev, mere_nom: e.target.value }))
+        }
+        placeholder="Nom"
+        className="
+          text-[26px] font-bold text-[#202124]
+          bg-transparent outline-none
+          border-b border-[#67A7A3]
+          w-[45%] min-w-0
+        "
+      />
+      <input
+        type="text"
+        value={form.mere_prenom}
+        onChange={(e) =>
+          setForm((prev) => ({ ...prev, mere_prenom: e.target.value }))
+        }
+        placeholder="Prénom"
+        className="
+          text-[26px] font-bold text-[#202124]
+          bg-transparent outline-none
+          border-b border-[#67A7A3]
+          w-[45%] min-w-0
+        "
+      />
+    </div>
+  ) : (
+    <h2
+      onClick={() => setEditingNom(true)}
+      className="text-[26px] font-bold text-[#202124] cursor-pointer truncate hover:opacity-80"
+      title="Cliquer pour modifier"
+    >
+      {form.mere_nom} {form.mere_prenom}
+    </h2>
+  )}
+  <span className="text-[#67A7A3] text-[18px] font-semibold whitespace-nowrap">
+    {famille?.id}
+  </span>
+</div>
 
           
             <div className="flex flex-col gap-2">
