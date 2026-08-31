@@ -269,7 +269,7 @@ const PopupDetailVisiteModifier = ({
     },
     {
       key: "date_enregistrement",
-      label: "Date de creation",
+      label: "Date de création",
       value: dateEnregistrement,
       editable: false,
     },
