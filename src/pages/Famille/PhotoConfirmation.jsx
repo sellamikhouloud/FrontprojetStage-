@@ -410,23 +410,25 @@ const {
   keepPreviousData: true,
   enabled: isAdmin,
 });
-
 const coordinateursData = (coordinateursResponse?.pages ?? []).flatMap((page) =>
   Array.isArray(page) ? page : page?.results ?? []
 );
 
 const coordinateurs = coordinateursData
-  .filter((c) => c.role === "coordinator" || c.role === "chef_coordinator")
+  .filter((c) => c.is_active && (c.role === "coordinator" || c.role === "chef_coordinator"))
   .map((c) => ({
     id: c.id,
-    name: `${c.prenom} ${c.nom}`,
+    nom: c.nom,
+    prenom: c.prenom,
+    name: `${c.nom} ${c.prenom}`,
     code: String(c.id),
-    village: c.village?.nom || "",
-    familles: c.nb_familles,
+    village: c.village?.nom ?? "",
+    familles: c.nb_familles ?? 0,
     status: c.is_active ? "Actif" : "Inactif",
-    username: c.username || "/",
-    creePar: c.created_by ? `${c.created_by.nom} ${c.created_by.prenom}` : "/",
-    isChef: c.role === "chef_coordinator",
+    username: c.username ?? "/",
+    creePar: c.created_by
+      ? `${c.created_by.nom ?? ""} ${c.created_by.prenom ?? ""}`.trim()
+      : "/",
   }));
 
 const coordinateursObserverTarget = useRef(null);
