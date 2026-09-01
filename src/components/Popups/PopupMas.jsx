@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
 import quitter from "../../assets/quitter.svg";
 import CardPopup from "../Cards/Card2";
-
-import { getFamille } from "@/lib/api/familles";
+import { listFamilles } from "@/lib/api/familles";
 
 const PopupMas = ({
   open,
@@ -14,13 +12,54 @@ const PopupMas = ({
   const [familles, setFamilles] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // =========================================================
+  // GET ALL FAMILLES - HANDLE DRF PAGINATION
+  // =========================================================
+
+  const fetchAllFamilles = async () => {
+    let allFamilles = [];
+    let page = 1;
+
+    while (true) {
+      const response = await listFamilles({ page });
+      const data = response?.data;
+
+      const pageFamilles = Array.isArray(data?.results)
+        ? data.results
+        : Array.isArray(data)
+        ? data
+        : [];
+
+      allFamilles = [
+        ...allFamilles,
+        ...pageFamilles,
+      ];
+
+      // DRF pagination
+      if (!data?.next) {
+        break;
+      }
+
+      page += 1;
+    }
+
+    return allFamilles;
+  };
+
+  // =========================================================
+  // LOAD MAS FAMILLES
+  // =========================================================
+
   useEffect(() => {
     if (!open) {
       setFamilles([]);
       return;
     }
 
-    if (!Array.isArray(familleMas) || familleMas.length === 0) {
+    if (
+      !Array.isArray(familleMas) ||
+      familleMas.length === 0
+    ) {
       setFamilles([]);
       return;
     }
@@ -29,12 +68,10 @@ const PopupMas = ({
       setLoading(true);
 
       try {
-        /**
-         * Le dashboard peut contenir plusieurs alertes
-         * pour la même famille.
-         *
-         * On récupère uniquement les IDs uniques.
-         */
+        // =====================================================
+        // GET UNIQUE FAMILY IDS FROM ALERTS
+        // =====================================================
+
         const uniqueIds = [
           ...new Set(
             familleMas
@@ -43,26 +80,21 @@ const PopupMas = ({
           ),
         ];
 
-        const responses = await Promise.all(
-          uniqueIds.map(async (id) => {
-            try {
-              const response = await getFamille(id);
+        // =====================================================
+        // GET ALL FAMILLES FROM ALL PAGES
+        // =====================================================
 
-              return response.data;
-            } catch (error) {
-              console.error(
-                `Erreur lors du chargement de la famille ${id}:`,
-                error
-              );
+        const allFamilles = await fetchAllFamilles();
 
-              return null;
-            }
-          })
+        // =====================================================
+        // KEEP ONLY FAMILLES PRESENT IN MAS ALERTS
+        // =====================================================
+
+        const masFamilles = allFamilles.filter((famille) =>
+          uniqueIds.includes(famille.id)
         );
 
-        setFamilles(
-          responses.filter(Boolean)
-        );
+        setFamilles(masFamilles);
       } catch (error) {
         console.error(
           "Erreur lors du chargement des familles MAS:",
@@ -78,17 +110,18 @@ const PopupMas = ({
     loadFamilles();
   }, [open, familleMas]);
 
-  /**
-   * Transforme une famille API en props
-   * utilisables par CardPopup.
-   */
+  // =========================================================
+  // FORMAT FAMILLE FOR CARD
+  // =========================================================
+
   const formatFamilleForCard = (famille) => {
     const mere = famille?.mere || {};
     const nourrisson = famille?.nourrisson || {};
 
-    /**
-     * Sexe
-     */
+    // =======================================================
+    // SEXE
+    // =======================================================
+
     let sexe = "-";
 
     if (nourrisson.sexe === "M") {
@@ -97,9 +130,10 @@ const PopupMas = ({
       sexe = "Fille";
     }
 
-    /**
-     * Village
-     */
+    // =======================================================
+    // VILLAGE
+    // =======================================================
+
     let region = "-";
 
     if (
@@ -111,9 +145,10 @@ const PopupMas = ({
       region = String(mere.village);
     }
 
-    /**
-     * Nom complet de la mère
-     */
+    // =======================================================
+    // NOM COMPLET MERE
+    // =======================================================
+
     const nomMere = [
       mere.nom,
       mere.prenom,
@@ -121,14 +156,13 @@ const PopupMas = ({
       .filter(Boolean)
       .join(" ");
 
-    /**
-     * Badges
-     */
+    // =======================================================
+    // BADGES
+    // =======================================================
+
     const badges = [];
 
-    /**
-     * MAS bébé
-     */
+    // MAS bébé
     if (
       famille.statut_nutritionnel_bebe === "mas"
     ) {
@@ -138,9 +172,7 @@ const PopupMas = ({
       });
     }
 
-    /**
-     * Statut nutritionnel mère
-     */
+    // Statut nutritionnel mère
     if (famille.statut_nutritionnel_mere) {
       badges.push({
         type: famille.statut_nutritionnel_mere,
@@ -150,22 +182,13 @@ const PopupMas = ({
 
     return {
       id: famille.id,
-
       sexe,
-
       mere: nomMere || "-",
-
-      enfant:
-        nourrisson.prenom || "-",
-
+      enfant: nourrisson.prenom || "-",
       region,
-
       naissance:
         nourrisson.date_naissance || "-",
-
-      code:
-        famille.id || "-",
-
+      code: famille.id || "-",
       badges,
     };
   };
@@ -223,9 +246,8 @@ const PopupMas = ({
               sm:shadow-2xl
             "
           >
-            {/* =========================
-                Header
-                ========================= */}
+            {/* Header */}
+
             <div className="px-5 sm:px-6 pt-5 pb-3">
               <button
                 onClick={onClose}
@@ -245,7 +267,6 @@ const PopupMas = ({
                   alt="Fermer"
                   className="w-5 h-5"
                 />
-
                 Fermer
               </button>
 
@@ -263,9 +284,8 @@ const PopupMas = ({
               </h2>
             </div>
 
-            {/* =========================
-                Liste
-                ========================= */}
+            {/* Liste */}
+
             <div
               className="
                 px-5
@@ -293,9 +313,7 @@ const PopupMas = ({
               ) : familles.length > 0 ? (
                 familles.map((famille) => {
                   const cardData =
-                    formatFamilleForCard(
-                      famille
-                    );
+                    formatFamilleForCard(famille);
 
                   return (
                     <CardPopup
