@@ -317,7 +317,7 @@ const extractErrorMessage = (error) => {
   } catch (error) {
     if (!error.response) {
       try {
-        await enqueue("/api/zakat/", payload); 
+        await enqueue("/api/zakat/aides/", payload);
         setOfflinePending(true);
         setShowSuccessPopup(true);
       } catch (queueError) {

@@ -37,6 +37,7 @@ import { useLocation } from "react-router-dom";
 
 import { listFamilles } from "@/lib/api/familles";
 import { createDistribution, getPreCreationDistribution, updateDistribution } from "@/lib/api/distributions";
+import { enqueue } from "@/lib/offlineQueue";
 
 
 
@@ -96,6 +97,7 @@ const DEFAULT_STOCK_ICON = Sucre; //  si le nom n'est pas mappé
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
+  const [offlinePending, setOfflinePending] = useState(false); 
 
   const location = useLocation();
   const draft = location.state?.draft;
@@ -291,6 +293,7 @@ useEffect(() => {
 
   setSaving(true);
   setSaveError(null);
+  setOfflinePending(false);
 
   const produitsPayload = products.map((p) => ({
     produit: p.id,
@@ -392,17 +395,32 @@ useEffect(() => {
 }
 
 setShowSuccessPopup(true);
-    } catch (error) {
-    console.error(
-      isEditMode
-        ? " Erreur lors de la modification de la distribution :"
-        : " Erreur lors de la création de la distribution :",
-      error.response?.data || error.message
-    );
-    setSaveError(extractErrorMessage(error));
-  } finally {
+   } catch (error) {
+  // Offline queueing only applies to brand-new distributions (CREATE) —
+  // edits stay online-only, per scope.
+  if (!isEditMode && !error.response) {
+    try {
+      await enqueue("/api/distributions/", payload);
+      setOfflinePending(true);
+      setShowSuccessPopup(true);
+    } catch (queueError) {
+      console.error("❌ Impossible de mettre la distribution en attente hors ligne :", queueError);
+      setSaveError("Impossible d'enregistrer la distribution, même hors ligne. Veuillez réessayer.");
+    }
     setSaving(false);
+    return;
   }
+
+  console.error(
+    isEditMode
+      ? " Erreur lors de la modification de la distribution :"
+      : " Erreur lors de la création de la distribution :",
+    error.response?.data || error.message
+  );
+  setSaveError(extractErrorMessage(error));
+} finally {
+  setSaving(false);
+}
 };
 
   const handleLaitTypeChange = (option) => {
@@ -946,26 +964,30 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
  
 </div>
 
-        {showSuccessPopup && (
-          <Popup
-            title={
-              isEditMode
-                ? "Distribution modifiée avec succès"
-                : "Distribution enregistrée avec succès"
-            }
-            image={SuccessImage}
-            primaryButtonText="Voir la fiche famille"
-            secondaryButtonText="Revenir à l'accueil"
-            onPrimaryClick={() => {
-              setShowSuccessPopup(false);
-              navigate(`/famille/${selectedFamille?.id}`);
-            }}
-            onSecondaryClick={() => {
-              setShowSuccessPopup(false);
-              navigate("/dashboard");
-            }}
-          />
-        )}
+       {showSuccessPopup && (
+  <Popup
+    title={
+      offlinePending
+        ? "Distribution enregistrée hors ligne — sera synchronisée"
+        : isEditMode
+        ? "Distribution modifiée avec succès"
+        : "Distribution enregistrée avec succès"
+    }
+    image={offlinePending ? null : SuccessImage}
+    primaryButtonText="Voir la fiche famille"
+    secondaryButtonText="Revenir à l'accueil"
+    onPrimaryClick={() => {
+      setShowSuccessPopup(false);
+      setOfflinePending(false);
+      navigate(`/famille/${selectedFamille?.id}`);
+    }}
+    onSecondaryClick={() => {
+      setShowSuccessPopup(false);
+      setOfflinePending(false);
+      navigate("/dashboard");
+    }}
+  />
+)}
         </div>
        
         </div>
