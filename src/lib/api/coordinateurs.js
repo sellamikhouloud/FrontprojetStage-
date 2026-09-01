@@ -10,7 +10,8 @@ export const activateCoordinateur = (id) => api.post(`/api/users/${id}/activate/
 
 export const deactivateCoordinateur = (id) => api.post(`/api/users/${id}/deactivate/`);
 
-export const exportUsers = () =>
+export const exportUsers = (params) =>
   api.get("/api/users/export/", {
+    params,
     responseType: "blob",
   });
