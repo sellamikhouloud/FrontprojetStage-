@@ -8,7 +8,6 @@ import { Plus, Check, X } from "lucide-react";
 
 import EditStockPopup from "./EditStockPopup";
 import SelectInput from "../Containers/ChoiceContainer";
-
 import Spinner from "../Spinner";
 
 import {
@@ -20,11 +19,11 @@ import {
 } from "../../lib/api/stock";
 
 const StockPopup = ({
-  onClose,
   initialProducts = [],
+  onClose,
   onSaveProducts,
   observerTarget,
-  isFetchingNextPage,
+  isFetchingNextPage = false,
 }) => {
 
   // =========================================================
@@ -415,6 +414,13 @@ const StockPopup = ({
     const type = getProductType(product);
     const name = getProductName(product);
     const grammage = getProductGrammage(product);
+
+  console.log("FORMAT PRODUCT:", {
+    original: product,
+    name,
+    type,
+    grammage,
+  });
 
     return {
       id: getProductId(product),
@@ -2090,20 +2096,11 @@ const StockPopup = ({
 
                         <span className="text-[15px] font-medium flex-1 min-w-0 truncate">
                           {product.title}
-
-                          {isMilkProduct(
-                            product
-                          ) &&
-                            product.grammage_boite !==
-                              null &&
-                            product.grammage_boite !==
-                              undefined && (
-                              <span className="ml-1 text-gray-500 text-[13px]">
-                                (
-                                {
-                                  product.grammage_boite
-                                }
-                                g)
+                          {isMilkProduct(product) &&
+                            product.grammage_boite !== null &&
+                            product.grammage_boite !== undefined && (
+                              <span className="ml-1 text-[12px] text-[#4E9F8A]">
+                                 ({product.grammage_boite} g)
                               </span>
                             )}
                         </span>

@@ -2,6 +2,7 @@ export default function StockCard({
   nom,
   quantity,
   unite,
+  grammage,
   statut,
   showStatusColor = true,
   onClick,
@@ -29,10 +30,18 @@ export default function StockCard({
         backgroundColor: isEnAttente ? "rgba(250, 207, 133, 0.5)" : "#F8FBFC",
       }}
     >
-      {/* Nom */}
-      <p className="text-[18px] font-medium text-black text-center leading-none">
-        {nom}
-      </p>
+{/* Nom */}
+<p className="text-[18px] font-medium text-black text-center leading-none">
+  {nom}
+
+  {grammage !== null &&
+    grammage !== undefined &&
+    grammage !== "" && (
+      <span className="ml-1 text-[12px] text-[#4E9F8A]">
+        ({grammage} g)
+      </span>
+    )}
+</p>
 
       {/* Quantité */}
       <div className="flex items-end gap-1 leading-none">
