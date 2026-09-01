@@ -190,8 +190,7 @@ const ConsulterPhoto = ({
             date={photo?.date || ""}
             message={photo?.description || ""}
             padding="p-4"
-              villageName={photo?.villageName}
-
+            villageName={photo?.villageName}
           />
 
           {/* ================= ADMIN ONLY ================= */}

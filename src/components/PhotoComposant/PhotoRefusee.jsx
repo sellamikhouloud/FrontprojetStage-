@@ -119,6 +119,7 @@ const PhotoRefusee = ({
           date={photo?.date || ""}
           message={photo?.description || ""}
           padding="p-4"
+          villageName={photo?.villageName}
         />
 
         {/* Coordinateur */}
