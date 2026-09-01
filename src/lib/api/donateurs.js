@@ -15,8 +15,11 @@ export const importDonateurs = (file) => {
   return api.post("/api/donateurs/import/", fd);
 };
 
-export const exportDonateurs = () =>
-  api.get("/api/donateurs/export/", { responseType: "blob" });
+export const exportDonateurs = (params) =>
+  api.get("/api/donateurs/export/", {
+    params,
+    responseType: "blob",
+  });
 
 export const exportImportRapportPdf = (payload) =>
   api.post("/api/donateurs/import/rapport-pdf/", payload, {
