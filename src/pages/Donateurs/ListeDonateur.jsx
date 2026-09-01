@@ -113,32 +113,46 @@ export default function ListeDonateur() {
     }
   };
 
-  const handleExport = async () => {
-    try {
-      const response = await exportDonateurs();
+ const handleExport = async () => {
+  try {
+    const params = {};
 
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "Liste-donateurs.xlsx";
-
-      document.body.appendChild(link);
-      link.click();
-
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(
-        "Erreur lors de l'export de la liste des donateurs :",
-        error
-      );
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
     }
-  };
+
+    if (statusFilter === "active") {
+      params.is_active = true;
+    } else if (statusFilter === "inactive") {
+      params.is_active = false;
+    }
+
+    const response = await exportDonateurs(params);
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "Liste-donateurs.xlsx";
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'export de la liste des donateurs :",
+      error
+    );
+  }
+};
+
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
