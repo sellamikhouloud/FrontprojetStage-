@@ -40,16 +40,41 @@ const [selectedSexe, setSelectedSexe] = useState("");
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
 
+
 const handleExport = async () => {
   try {
-    const response = await exportFamilles();
+    const params = {};
 
-    const blob = new Blob(
-      [response.data],
-      {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      }
-    );
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    if (appliedFilters.village) {
+      params.village = appliedFilters.village;
+    }
+
+    if (appliedFilters.statut) {
+      params.statut = appliedFilters.statut;
+    }
+
+    if (appliedFilters.mois_entree) {
+      params.mois_entree = appliedFilters.mois_entree;
+    }
+
+    if (appliedFilters.sexe) {
+      params.sexe = appliedFilters.sexe;
+    }
+
+    if (appliedFilters.statut_zakat) {
+      params.statut_zakat = appliedFilters.statut_zakat;
+    }
+
+    const response = await exportFamilles(params);
+
+    const blob = new Blob([response.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
 
     const url = window.URL.createObjectURL(blob);
 
