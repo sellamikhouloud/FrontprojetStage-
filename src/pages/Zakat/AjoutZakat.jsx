@@ -30,6 +30,7 @@ import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles } from "@/lib/api/familles";
 import { getTauxDeChange } from "@/lib/api/parametres";
 import { getSoldeActuel , createAideZakat , getDerniereZakatFamille,} from "@/lib/api/zakat";
+import { enqueue } from "@/lib/offlineQueue";
 
 
 
@@ -153,6 +154,7 @@ export default function AjoutZakat() {
   
   const [backendFieldErrors, setBackendFieldErrors] = useState({});
   const [backendGeneralError, setBackendGeneralError] = useState(null);
+  const [offlinePending, setOfflinePending] = useState(false);
 
   const location = useLocation();
   const draft = location.state?.draft;
@@ -165,6 +167,7 @@ export default function AjoutZakat() {
 
   const [montant, setMontant] = useState(draft?.montant || "");
   const [modePaiement, setModePaiement] = useState(draft?.modePaiement || null);
+
 
   const { user } = useAuth();
   const role = user?.role ?? null;
@@ -295,6 +298,7 @@ const extractErrorMessage = (error) => {
   setSaving(true);
   setBackendFieldErrors({});
   setBackendGeneralError(null);
+  setOfflinePending(false);
 
   const payload = {
     famille: selectedFamille?.code,
@@ -311,17 +315,31 @@ const extractErrorMessage = (error) => {
     await createAideZakat(payload);
     setShowSuccessPopup(true);
   } catch (error) {
-  console.error(
-    "❌ Erreur lors de la création de la zakat :",
-    error.response?.data || error.message
-  );
+    if (!error.response) {
+      try {
+        await enqueue("/api/zakat/", payload); 
+        setOfflinePending(true);
+        setShowSuccessPopup(true);
+      } catch (queueError) {
+        console.error("❌ Impossible de mettre la zakat en attente hors ligne :", queueError);
+        setBackendGeneralError(
+          "Impossible d'enregistrer la zakat, même hors ligne. Veuillez réessayer."
+        );
+      }
+      setSaving(false);
+      return;
+    }
 
-  const { fieldErrors, generalMessage } = parseBackendErrors(
-    error.response?.data,
-    error.response?.status
-  );
+    console.error(
+      "❌ Erreur lors de la création de la zakat :",
+      error.response?.data || error.message
+    );
 
-    
+    const { fieldErrors, generalMessage } = parseBackendErrors(
+      error.response?.data,
+      error.response?.status
+    );
+
     const mappedFieldErrors = {};
     Object.entries(fieldErrors).forEach(([backendField, message]) => {
       const localKey = FIELD_KEY_MAP[backendField] || backendField;
@@ -329,7 +347,9 @@ const extractErrorMessage = (error) => {
     });
 
     setBackendFieldErrors(mappedFieldErrors);
-    setBackendGeneralError(generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la zakat."));
+    setBackendGeneralError(
+      generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la zakat.")
+    );
   } finally {
     setSaving(false);
   }
@@ -967,21 +987,27 @@ useEffect(() => {
         </div>
 
         {showSuccessPopup && (
-          <Popup
-            title="Zakat enregistrée avec succès"
-            image={SuccessImage}
-            primaryButtonText="Voir la fiche famille"
-            secondaryButtonText="Revenir à l'accueil"
-            onPrimaryClick={() => {
-            setShowSuccessPopup(false);
-            navigate(`/famille/${selectedFamille?.id}`);
-            }}
-            onSecondaryClick={() => {
-            setShowSuccessPopup(false);
-            navigate(isAdmin ? "/dashboard" : "/dashboard-coor");
-            }}
-          />
-        )}
+  <Popup
+    title={
+      offlinePending
+        ? "Zakat enregistrée hors ligne — sera synchronisée"
+        : "Zakat enregistrée avec succès"
+    }
+    image={offlinePending ? null : SuccessImage}
+    primaryButtonText="Voir la fiche famille"
+    secondaryButtonText="Revenir à l'accueil"
+    onPrimaryClick={() => {
+      setShowSuccessPopup(false);
+      setOfflinePending(false);
+      navigate(`/famille/${selectedFamille?.id}`);
+    }}
+    onSecondaryClick={() => {
+      setShowSuccessPopup(false);
+      setOfflinePending(false);
+      navigate(isAdmin ? "/dashboard" : "/dashboard-coor");
+    }}
+  />
+)}
          </div>
           </div>
 
