@@ -4,7 +4,7 @@ const StatusBadge = ({
   type = "mere",
   text,
   className = "",
-  pill = false, 
+  pill = false,
 }) => {
   const styles = {
     mam: { border: "#F59E0B", background: "#FFFFFF", text: "#F59E0B" },
@@ -15,12 +15,13 @@ const StatusBadge = ({
     risque: { border: "#EF4444", background: "#FFFFFF", text: "#EF4444" },
     mereNormal: { border: "#22C55E", background: "#DDF5E5", text: "#22C55E" },
     retard: { border: "#F59E0B", background: "#F59E0B", text: "#FFFFFF" },
-
- 
+    malnutrition: { border: "#EF4444", background: "#FAC1C1B2", text: "#EF4444" },
     chef: { border: "#D3EDEB", background: "#D3EDEB", text: "#4E9F8A" },
   };
 
+
   const current = styles[type] || styles.mere;
+  const displayText = text || labels[type] || "";
 
   return (
     <div
@@ -29,18 +30,16 @@ const StatusBadge = ({
         items-center
         justify-center
         gap-1 sm:gap-2
-
-        ${pill ? "h-auto min-h-[28px] sm:min-h-[30px] px-3 sm:px-4 rounded-full" : "h-auto min-h-[34px] sm:min-h-[36px] px-3 sm:px-4 rounded-[8px]"}
-
+        ${
+          pill
+            ? "h-auto min-h-[28px] sm:min-h-[30px] px-3 sm:px-4 rounded-full"
+            : "h-auto min-h-[34px] sm:min-h-[36px] px-3 sm:px-4 rounded-[8px]"
+        }
         border
-
         text-[13px]
         sm:text-[14px]
-
         ${pill ? "font-bold" : "font-medium"}
-
         whitespace-nowrap
-
         ${className}
       `}
       style={{
@@ -57,7 +56,7 @@ const StatusBadge = ({
         />
       )}
 
-      <span>{text}</span>
+      <span>{displayText}</span>
     </div>
   );
 };
