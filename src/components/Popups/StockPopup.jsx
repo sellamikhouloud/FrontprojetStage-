@@ -24,6 +24,8 @@ const StockPopup = ({
   onSaveProducts,
   observerTarget,
   isFetchingNextPage = false,
+  canManageStock = false,
+  onStockUpdated,
 }) => {
 
   // =========================================================
@@ -1360,15 +1362,15 @@ const StockPopup = ({
           }
         );
 
-      setProducts(
-        updatedProducts
-      );
+setProducts(updatedProducts);
+saveToDistributionPage(updatedProducts);
 
-      saveToDistributionPage(
-        updatedProducts
-      );
+// Refresh the products from the backend
+if (onStockUpdated) {
+  await onStockUpdated();
+}
 
-      setPendingIndex(null);
+setPendingIndex(null);
       setIncrementValue("");
       setBackupProducts([]);
       setProductError("");
@@ -2153,86 +2155,48 @@ const StockPopup = ({
 
                           {/* INCREMENT */}
 
-                          {pendingIndex !==
-                          index ? (
-                            <button
-                              onClick={() =>
-                                handleIncrement(
-                                  index
-                                )
-                              }
-                              disabled={
-                                isAddingStock ||
-                                isEditingProduct
-                              }
-                              className="w-7 h-7 rounded-[8px] bg-[#8CCDC0] hover:bg-[#74C3B2] disabled:opacity-50 flex items-center justify-center"
-                            >
-                              <Plus
-                                size={15}
-                                color="white"
-                              />
-                            </button>
-                          ) : (
-                            <>
-                              <button
-                                onClick={
-                                  handleConfirm
-                                }
-                                disabled={
-                                  isAddingStock
-                                }
-                                className="w-7 h-7 rounded-[8px] bg-[#4E9F8A] hover:bg-[#418978] disabled:opacity-50 flex items-center justify-center"
-                              >
-                                <Check
-                                  size={
-                                    15
-                                  }
-                                  color="white"
-                                />
-                              </button>
+{canManageStock && (
+  pendingIndex !== index ? (
+    <button
+      onClick={() => handleIncrement(index)}
+      disabled={isAddingStock || isEditingProduct}
+      className="w-7 h-7 rounded-[8px] bg-[#8CCDC0] hover:bg-[#74C3B2] disabled:opacity-50 flex items-center justify-center"
+    >
+      <Plus size={15} color="white" />
+    </button>
+  ) : (
+    <>
+      <button
+        onClick={handleConfirm}
+        disabled={isAddingStock}
+        className="w-7 h-7 rounded-[8px] bg-[#4E9F8A] hover:bg-[#418978] disabled:opacity-50 flex items-center justify-center"
+      >
+        <Check size={15} color="white" />
+      </button>
 
-                              <input
-                                type="text"
-                                inputMode="numeric"
-                                pattern="[0-9]*"
-                                autoFocus
-                                disabled={
-                                  isAddingStock
-                                }
-                                value={
-                                  incrementValue
-                                }
-                                onChange={(
-                                  e
-                                ) =>
-                                  setIncrementValue(
-                                    e.target.value.replace(
-                                      /\D/g,
-                                      ""
-                                    )
-                                  )
-                                }
-                                className="w-14 h-7 rounded-[8px] border border-[#84D6D0] text-center text-[13px] outline-none focus:border-[#4E9F8A]"
-                              />
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        autoFocus
+        disabled={isAddingStock}
+        value={incrementValue}
+        onChange={(e) =>
+          setIncrementValue(e.target.value.replace(/\D/g, ""))
+        }
+        className="w-14 h-7 rounded-[8px] border border-[#84D6D0] text-center text-[13px] outline-none focus:border-[#4E9F8A]"
+      />
 
-                              <button
-                                onClick={
-                                  handleCancel
-                                }
-                                disabled={
-                                  isAddingStock
-                                }
-                                className="w-7 h-7 rounded-[8px] bg-[#EF4444] hover:bg-[#dc2626] disabled:opacity-50 flex items-center justify-center"
-                              >
-                                <X
-                                  size={
-                                    15
-                                  }
-                                  color="white"
-                                />
-                              </button>
-                            </>
-                          )}
+      <button
+        onClick={handleCancel}
+        disabled={isAddingStock}
+        className="w-7 h-7 rounded-[8px] bg-[#EF4444] hover:bg-[#dc2626] disabled:opacity-50 flex items-center justify-center"
+      >
+        <X size={15} color="white" />
+      </button>
+    </>
+  )
+)}
                         </div>
                       )}
                     </div>
@@ -2559,19 +2523,17 @@ const StockPopup = ({
                 EDIT THRESHOLDS
             ================================================= */}
 
-            <div className="mt-4">
-              <Button
-                title="Modifier les seuils d'alertes nutritionnelles"
-                variant="modifier"
-                icon={Edit}
-                noWrapperPadding
-                onClick={() =>
-                  setShowEditPopup(
-                    true
-                  )
-                }
-              />
-            </div>
+            {canManageStock && (
+              <div className="mt-4">
+                <Button
+                  title="Modifier les seuils d'alertes nutritionnelles"
+                  variant="modifier"
+                  icon={Edit}
+                  noWrapperPadding
+                  onClick={() => setShowEditPopup(true)}
+                />
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

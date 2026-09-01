@@ -720,6 +720,8 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
             onClose={() => setShowStockPopup(false)}
             initialProducts={products}
             onSaveProducts={setProducts}
+            canManageStock={canManageStock}
+            onStockUpdated={refetchProduits}
           />
         )}
 
