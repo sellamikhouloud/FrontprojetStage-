@@ -503,16 +503,16 @@ const handleExportZakat = async () => {
 )}
 
 
-      <NavigationHeader
+    <NavigationHeader
   title="Liste des Zakat"
-  {...(user?.role === "admin" && {
+  {...(isAdmin && {
     type: "share",
     actionTitle: "Exporter la liste des Zakat",
     onAction: handleExportZakat,
+    secondType: "add",
+    secondActionTitle: "Ajouter une zakat",
+    onSecondAction: () => navigate("/ajout-zakat"),
   })}
-  secondType="add"
-  secondActionTitle="Ajouter une zakat"
-  onSecondAction={() => navigate("/ajout-zakat")}
 />
           <div className="my-6">
             <SearchBar
