@@ -141,6 +141,14 @@ const Galerie = ({ role = "coordinator" }) => {
   const [loadingBilan, setLoadingBilan] = useState(false);
 
   /*
+   * PAGINATION
+   */
+
+const [pageSize, setPageSize] = useState(null);
+const [totalItems, setTotalItems] = useState(0);
+const [currentPage, setCurrentPage] = useState(1);
+
+  /*
    * ============================================================
    * LOAD VILLAGES
    * ============================================================
@@ -173,32 +181,62 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    */
 
-  const fetchPhotos = async (villagesList = villages) => {
-    try {
-      setLoading(true);
+const fetchPhotos = async (villagesList = villages, page = currentPage) => {
+  try {
+    setLoading(true);
+    setError("");
 
-      setError("");
+    const response = await listPhotos({ page });
 
-      const response = await listPhotos();
+    const data = response.data;
 
-      const results = response.data?.results || [];
+    const results = Array.isArray(data)
+      ? data
+      : data?.results || [];
 
-      const mappedPhotos = results.map((photo) =>
-        mapPhotoFromApi(photo, villagesList)
-      );
+    const mappedPhotos = results.map((photo) =>
+      mapPhotoFromApi(photo, villagesList)
+    );
 
-      setPhotos(mappedPhotos);
-    } catch (err) {
-      console.error(
-        "Erreur lors du chargement des photos :",
-        err
-      );
+    setPhotos(mappedPhotos);
 
-      setError("Impossible de charger les photos.");
-    } finally {
-      setLoading(false);
+    if (data?.count !== undefined) {
+      setTotalItems(data.count);
     }
-  };
+
+    // Only use a full page to determine the page size
+    if (data?.results?.length && !pageSize) {
+      setPageSize(data.results.length);
+    }
+  } catch (err) {
+    console.error("Erreur lors du chargement des photos :", err);
+    setError("Impossible de charger les photos.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+const totalPages = pageSize
+  ? Math.ceil(totalItems / pageSize)
+  : 1;
+
+    const handleNextPage = async () => {
+      if (currentPage >= totalPages) return;
+
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+
+      await fetchPhotos(villages, nextPage);
+    };
+
+    const handlePreviousPage = async () => {
+      if (currentPage <= 1) return;
+
+      const previousPage = currentPage - 1;
+      setCurrentPage(previousPage);
+
+      await fetchPhotos(villages, previousPage);
+    };
 
   /*
    * ============================================================
@@ -366,51 +404,195 @@ const Galerie = ({ role = "coordinator" }) => {
    * Only admin uses bilan selection.
    */
 
-  const fetchBilanCandidates = async () => {
-    if (!isAdmin) {
-      return;
-    }
+const fetchAllPhotosForBilan = async () => {
+  try {
+    let allPhotos = [];
+    let page = 1;
+    let hasNextPage = true;
 
-    try {
-      setLoadingBilan(true);
+    while (hasNextPage) {
+      const response = await listPhotos({ page });
 
-      setError("");
+      const data = response.data;
 
-      const response = await getBilanCandidates();
+      const results = Array.isArray(data)
+        ? data
+        : data?.results || [];
 
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data?.results || [];
-
-      const mapped = data.map((photo) =>
+      const mappedPhotos = results.map((photo) =>
         mapPhotoFromApi(photo, villages)
       );
 
-      setBilanCandidates(mapped);
+      allPhotos = [...allPhotos, ...mappedPhotos];
 
       /*
-       * Pre-check photos already included in
-       * the current month's bilan.
+       * If the API is paginated and provides "next",
+       * continue until there are no more pages.
        */
-
-      const alreadyIncluded = mapped
-        .filter((photo) => photo.includedInReport)
-        .map((photo) => photo.id);
-
-      setSelectedPhotos(alreadyIncluded);
-    } catch (err) {
-      console.error(
-        "Erreur lors du chargement des candidats au bilan :",
-        err
-      );
-
-      setError(
-        "Impossible de charger les candidats au bilan."
-      );
-    } finally {
-      setLoadingBilan(false);
+      if (data?.next) {
+        page += 1;
+      } else {
+        hasNextPage = false;
+      }
     }
-  };
+
+    return allPhotos;
+  } catch (err) {
+    console.error(
+      "Erreur lors du chargement de toutes les photos pour le bilan :",
+      err
+    );
+
+    return [];
+  }
+};
+
+const fetchBilanCandidates = async () => {
+  if (!isAdmin) {
+    return;
+  }
+
+  try {
+    setLoadingBilan(true);
+    setError("");
+
+    console.log(
+      "FETCH BILAN déclenché | isAdmin:",
+      isAdmin,
+      "| role:",
+      role
+    );
+
+    /*
+     * Load all photos from all pages.
+     */
+    const allPhotos = await fetchAllPhotosForBilan();
+
+    console.log(
+      "ALL PHOTOS FROM ALL PAGES:",
+      allPhotos
+    );
+
+    /*
+     * Keep ONLY validated photos From the current  Month
+     */
+    
+      const now = new Date();
+
+      const currentMonth = now.getMonth();
+      const currentYear = now.getFullYear();
+
+      const validatedFallback = allPhotos.filter((photo) => {
+        if (photo.status !== "validated") {
+          return false;
+        }
+
+        if (!photo.date) {
+          return false;
+        }
+
+        const photoDate = new Date(photo.date);
+
+        return (
+          photoDate.getMonth() === currentMonth &&
+          photoDate.getFullYear() === currentYear
+        );
+      });
+
+    console.log(
+      "ALL VALIDATED PHOTOS:",
+      validatedFallback
+    );
+
+    /*
+     * Try the bilan endpoint too.
+     */
+    const response = await getBilanCandidates();
+
+    console.log("BILAN RESPONSE:", response?.data);
+
+    const payload = response?.data;
+
+    const data = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.results)
+      ? payload.results
+      : Array.isArray(payload?.photos)
+      ? payload.photos
+      : Array.isArray(payload?.data)
+      ? payload.data
+      : Array.isArray(payload?.data?.results)
+      ? payload.data.results
+      : Array.isArray(payload?.data?.photos)
+      ? payload.data.photos
+      : [];
+
+    const mapped = data.map((photo) =>
+      mapPhotoFromApi(photo, villages)
+    );
+
+    /*
+     * Only validated photos from the API.
+     */
+    const validatedFromApi = mapped.filter(
+      (photo) => photo.status === "validated"
+    );
+
+    /*
+     * If the bilan endpoint returns candidates,
+     * use them.
+     *
+     * Otherwise, use ALL validated photos
+     * from ALL gallery pages.
+     */
+    const candidates =
+      validatedFromApi.length > 0
+        ? validatedFromApi
+        : validatedFallback;
+
+    console.log(
+      "FINAL BILAN CANDIDATES:",
+      candidates
+    );
+
+    setBilanCandidates(candidates);
+
+    const alreadyIncluded = candidates
+      .filter((photo) => photo.includedInReport)
+      .map((photo) => photo.id);
+
+    setSelectedPhotos(alreadyIncluded);
+  } catch (err) {
+    console.error(
+      "Erreur lors du chargement des candidats au bilan :",
+      err
+    );
+
+    /*
+     * Even if getBilanCandidates fails,
+     * load all photos from all pages.
+     */
+    const allPhotos = await fetchAllPhotosForBilan();
+
+    const validatedFallback = allPhotos.filter(
+      (photo) => photo.status === "validated"
+    );
+
+    setBilanCandidates(validatedFallback);
+
+    const alreadyIncluded = validatedFallback
+      .filter((photo) => photo.includedInReport)
+      .map((photo) => photo.id);
+
+    setSelectedPhotos(alreadyIncluded);
+
+    setError(
+      "Impossible de charger les candidats au bilan."
+    );
+  } finally {
+    setLoadingBilan(false);
+  }
+};
 
   /*
    * ============================================================
@@ -418,11 +600,11 @@ const Galerie = ({ role = "coordinator" }) => {
    * ============================================================
    */
 
-  const handleStartSelection = async () => {
-    await fetchBilanCandidates();
+const handleStartSelection = async () => {
+  setSelectionMode(true);
 
-    setSelectionMode(true);
-  };
+  await fetchBilanCandidates();
+};
 
   /*
    * ============================================================
@@ -497,7 +679,21 @@ const Galerie = ({ role = "coordinator" }) => {
 
 const handleSaveSelection = async () => {
   try {
-    await saveBilanSelection(selectedPhotos);
+    setError("");
+
+    console.log(
+      "SAVING BILAN SELECTION:",
+      selectedPhotos
+    );
+
+    const response = await saveBilanSelection(
+      selectedPhotos
+    );
+
+    console.log(
+      "BILAN SELECTION SAVED:",
+      response?.data
+    );
 
     setSelectionMode(false);
     setBilanCandidates([]);
@@ -506,11 +702,23 @@ const handleSaveSelection = async () => {
     await fetchPhotos();
   } catch (err) {
     console.error(
-      "Erreur lors de la sauvegarde du bilan :",
+      "ERREUR COMPLETE SAVE BILAN:",
       err
     );
 
+    console.error(
+      "RESPONSE DATA:",
+      err?.response?.data
+    );
+
+    console.error(
+      "RESPONSE STATUS:",
+      err?.response?.status
+    );
+
     setError(
+      err?.response?.data?.detail ||
+      err?.response?.data?.message ||
       "Impossible de sauvegarder la sélection."
     );
   }
@@ -532,9 +740,15 @@ const handleSaveSelection = async () => {
 
       const response = await getBilanCandidates();
 
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data?.results || [];
+const payload = response.data;
+
+const data = Array.isArray(payload)
+  ? payload
+  : Array.isArray(payload?.results)
+  ? payload.results
+  : Array.isArray(payload?.photos)
+  ? payload.photos
+  : [];
 
       const currentlyIncludedIds = data
         .filter((p) => p.inclus_bilan)
@@ -763,6 +977,29 @@ const handleSaveSelection = async () => {
               selectedPhotos={selectedPhotos}
               setSelectedPhotos={setSelectedPhotos}
             />
+
+            {/* PAGINATION */}
+          {!selectionMode && (
+            <div className="flex items-center justify-center gap-20 py-6">
+              <Button
+                title="Précédent"
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={handlePreviousPage}
+              />
+
+              <span className="text-sm font-medium">
+                Page {currentPage} / {totalPages}
+              </span>
+
+              <Button
+                title="Suivant"
+                variant="filter"
+                disabled={currentPage >= totalPages}
+                onClick={handleNextPage}
+              />
+            </div>
+          )}
 
             {/* SELECTION BUTTON */}
 
@@ -1023,7 +1260,7 @@ const handleSaveSelection = async () => {
 
           <div className="hidden lg:flex fixed inset-0 z-50 bg-white">
             <PendingPhotosPage
-              photos={pendingPhotos}
+              role={role}
               onBack={() =>
                 setShowPendingPhotosPage(false)
               }

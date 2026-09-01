@@ -1,19 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PendingReviewCard from "../../components/Galerie/PendingReviewCard";
 import PendingPhotosHeader from "../../components/Galerie/PendingHeader";
 import PopupPhoto from "../../components/Popups/PopupPhoto";
 import AjouterPhoto from "../../components/PhotoComposant/AjouterPhoto";
+import Button from "../../components/Button/Button";
+
+import {
+  listPhotos,
+  listVillages,
+} from "@/lib/api/galerie";
 
 const PendingPhotosPage = ({
-  photos = [],
   role = "admin",
   onBack = () => {},
   onApprove = () => {},
   onRefuse = () => {},
   onAddPhoto = () => {},
 }) => {
+
+  const mapPhotoFromApi = (photo, villagesList = []) => ({
+  id: photo.id,
+
+  title: photo.titre || "",
+
+  description: photo.legende || "",
+
+  village: photo.village,
+
+  villageName:
+    villagesList.find(
+      (v) => String(v.id) === String(photo.village)
+    )?.nom || "",
+
+  date: photo.date_prise || "",
+
+  image: photo.image || "",
+
+  status:
+    photo.statut === "en_attente"
+      ? "pending"
+      : photo.statut === "validee"
+      ? "validated"
+      : photo.statut === "rejetee"
+      ? "refused"
+      : photo.statut,
+
+  motifRefus: photo.motif_refus || "",
+
+  coordinator: photo.cree_par?.nom || "",
+
+  includedInReport: photo.inclus_bilan || false,
+});
+
   /* ================= POPUPS ================= */
 
   const [showPopupPhoto, setShowPopupPhoto] = useState(false);
@@ -21,6 +61,14 @@ const PendingPhotosPage = ({
 
   // Preview URL used only for display
   const [selectedImage, setSelectedImage] = useState(null);
+  
+  const [pendingPhotos, setPendingPhotos] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [villages, setVillages] = useState([]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(null);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Real File object required for FormData
   const [selectedImageFile, setSelectedImageFile] = useState(null);
@@ -38,6 +86,99 @@ const PendingPhotosPage = ({
     // Create preview URL
     setSelectedImage(URL.createObjectURL(file));
   };
+
+  /* ================= LOAD PENDING PHOTOS ================= */
+
+const fetchPendingPhotos = async (
+  page = currentPage,
+  villagesList = villages
+) => {
+  try {
+    setLoading(true);
+
+    const response = await listPhotos({
+      page,
+      statut: "en_attente",
+    });
+
+    const data = response.data;
+
+    const results = Array.isArray(data)
+      ? data
+      : data?.results || [];
+
+    const mappedPhotos = results.map((photo) =>
+      mapPhotoFromApi(photo, villagesList)
+    );
+
+    setPendingPhotos(mappedPhotos);
+
+    if (data?.count !== undefined) {
+      setTotalItems(data.count);
+    }
+
+    if (data?.results?.length && !pageSize) {
+      setPageSize(data.results.length);
+    }
+  } catch (err) {
+    console.error(
+      "Erreur lors du chargement des photos en attente :",
+      err
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+  /* ================= PAGINATION ================= */
+
+const totalPages = pageSize
+  ? Math.ceil(totalItems / pageSize)
+  : 1;
+
+const handleNextPage = async () => {
+  if (currentPage >= totalPages) return;
+
+  const nextPage = currentPage + 1;
+
+  setCurrentPage(nextPage);
+
+  await fetchPendingPhotos(nextPage);
+};
+
+const handlePreviousPage = async () => {
+  if (currentPage <= 1) return;
+
+  const previousPage = currentPage - 1;
+
+  setCurrentPage(previousPage);
+
+  await fetchPendingPhotos(previousPage);
+};
+
+useEffect(() => {
+  const init = async () => {
+    try {
+      const response = await listVillages();
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
+
+      setVillages(data);
+
+      await fetchPendingPhotos(1, data);
+    } catch (err) {
+      console.error(
+        "Erreur lors du chargement des villages :",
+        err
+      );
+
+      await fetchPendingPhotos(1, []);
+    }
+  };
+
+  init();
+}, []);
 
   /* ================= ADD PHOTO ================= */
 
@@ -74,7 +215,7 @@ const PendingPhotosPage = ({
         {/* ================= HEADER ================= */}
 
         <PendingPhotosHeader
-          photosEnAttente={photos.length}
+          photosEnAttente={totalItems}
           onBack={onBack}
           onAdd={() => setShowPopupPhoto(true)}
         />
@@ -82,7 +223,7 @@ const PendingPhotosPage = ({
         {/* ================= LIST ================= */}
 
         <div className="flex-1 min-w-0 w-full overflow-y-auto overflow-x-hidden px-8 py-8">
-          {photos.length === 0 ? (
+          {pendingPhotos.length === 0 ? (
             <div className="h-full w-full flex items-center justify-center">
               <p className="text-[18px] text-[#9CA3AF]">
                 Aucune photo en attente.
@@ -90,7 +231,7 @@ const PendingPhotosPage = ({
             </div>
           ) : (
             <div className="w-full flex flex-col gap-6">
-              {photos.map((photo) => (
+              {pendingPhotos.map((photo) => (
                 <PendingReviewCard
                   key={photo.id}
                   photo={photo}
@@ -98,6 +239,28 @@ const PendingPhotosPage = ({
                   onRefuse={(reason) => onRefuse(photo.id, reason)}
                 />
               ))}
+            </div>
+          )}
+          
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-20 py-6">
+              <Button
+                title="Précédent"
+                variant="outline"
+                disabled={currentPage === 1 || loading}
+                onClick={handlePreviousPage}
+              />
+
+              <span className="text-sm font-medium">
+                Page {currentPage} / {totalPages}
+              </span>
+
+              <Button
+                title="Suivant"
+                variant="filter"
+                disabled={currentPage >= totalPages || loading}
+                onClick={handleNextPage}
+              />
             </div>
           )}
         </div>
