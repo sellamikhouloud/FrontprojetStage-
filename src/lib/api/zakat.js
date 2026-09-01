@@ -22,6 +22,10 @@ export const getDerniereZakatFamille = (params) => api.get("/api/zakat/aides/der
 
 export const getZakatDashboard = () => api.get("/api/zakat/dashboard/");
 
-export const exportAidesZakat = () => api.get("/api/zakat/aides/export", { responseType: "blob", });
+export const exportAidesZakat = (params) =>
+  api.get("/api/zakat/aides/export/", {
+    params,
+    responseType: "blob",
+  });
 
 export const updateVersementSolde = (id, data) => api.patch(`/api/zakat/versements-solde/${id}/`, data);
