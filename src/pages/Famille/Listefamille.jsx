@@ -17,7 +17,6 @@ import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import FilterTag from "../../components/Filter/FilterTag";
 import { useNavigate } from "react-router-dom";
 
-
 export default function FamiliesPage() {
     const { user, ready } = useAuth();
   const [search, setSearch] = useState("");
