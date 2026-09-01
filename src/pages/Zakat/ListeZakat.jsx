@@ -305,9 +305,25 @@ const handleDeleteZakat = async (zakat) => {
   }
 };
 
+
 const handleExportZakat = async () => {
   try {
-    const response = await exportAidesZakat();
+    const params = {};
+
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    if (appliedFilters.causePrincipale) {
+      params.cause_principale = appliedFilters.causePrincipale;
+    }
+
+    if (appliedFilters.dateVersement) {
+      params.date_versement = formatDateJJMMAAAA(appliedFilters.dateVersement);
+    }
+
+    const response = await exportAidesZakat(params);
 
     const blob = new Blob([response.data], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
