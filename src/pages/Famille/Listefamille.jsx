@@ -154,31 +154,31 @@ const {
   queryKey: ["villages"],
   networkMode: "always",
 
-  queryFn: async () => {
-    // OFFLINE
-    if (!navigator.onLine) {
-      const cached = loadCache("villages");
-
-      if (cached?.data) {
-        console.log("📦 Villages chargés depuis le cache");
-        return cached.data;
-      }
-
-      throw new Error(
-        "Aucune liste de villages disponible hors ligne."
-      );
-    }
-
-    // ONLINE
+ queryFn: async () => {
+  try {
+    // Always try the real network request first — navigator.onLine
+    // isn't reliable enough to decide this up front (it can report
+    // "online" even when requests are actually failing).
     const response = await listVillages();
 
     console.log("🌐 Villages chargés depuis le serveur");
 
-    // Save successful response
     saveCache("villages", response.data);
 
     return response.data;
-  },
+  } catch (error) {
+    // Network request failed for any reason — fall back to the last
+    // known good copy in localStorage.
+    const cached = loadCache("villages");
+
+    if (cached?.data) {
+      console.log("📦 Villages chargés depuis le cache (fallback)");
+      return cached.data;
+    }
+
+    throw error;
+  }
+},
 });
 
 const villages = villagesData?.results ?? villagesData ?? [];
@@ -200,52 +200,36 @@ const {
   hasNextPage,
   isFetchingNextPage,
 } = useInfiniteQuery({
-  queryKey: ["familles", search, appliedFilters],
+ queryFn: async ({ pageParam = 1 }) => {
+  const params = { page: pageParam };
 
-  queryFn: async ({ pageParam = 1 }) => {
-    const params = { page: pageParam };
+  const trimmedSearch = search.trim();
 
-    const trimmedSearch = search.trim();
+  if (trimmedSearch) {
+    params.search = trimmedSearch;
+  }
 
-    if (trimmedSearch) {
-      params.search = trimmedSearch;
-    }
+  if (appliedFilters.village) {
+    params.village = appliedFilters.village;
+  }
 
-    if (appliedFilters.village) {
-      params.village = appliedFilters.village;
-    }
+  if (appliedFilters.statut) {
+    params.statut = appliedFilters.statut;
+  }
 
-    if (appliedFilters.statut) {
-      params.statut = appliedFilters.statut;
-    }
+  if (appliedFilters.mois_entree) {
+    params.mois_entree = appliedFilters.mois_entree;
+  }
 
-    if (appliedFilters.mois_entree) {
-      params.mois_entree = appliedFilters.mois_entree;
-    }
+  if (appliedFilters.sexe) {
+    params.sexe = appliedFilters.sexe;
+  }
 
-    if (appliedFilters.sexe) {
-      params.sexe = appliedFilters.sexe;
-    }
+  if (appliedFilters.statut_zakat) {
+    params.statut_zakat = appliedFilters.statut_zakat;
+  }
 
-    if (appliedFilters.statut_zakat) {
-      params.statut_zakat = appliedFilters.statut_zakat;
-    }
-
-    // OFFLINE
-    if (!navigator.onLine) {
-      const cached = loadCache("familles");
-
-      if (cached?.data) {
-        console.log("📦 Familles chargées depuis le cache");
-        return cached.data;
-      }
-
-      throw new Error(
-        "Aucune liste de familles disponible hors ligne."
-      );
-    }
-
-    // ONLINE
+  try {
     const response = await listFamilles(params);
 
     console.log("🌐 Familles chargées depuis le serveur");
@@ -254,7 +238,17 @@ const {
     saveCache("familles", response.data);
 
     return response.data;
-  },
+  } catch (error) {
+    const cached = loadCache("familles");
+
+    if (cached?.data) {
+      console.log("📦 Familles chargées depuis le cache (fallback)");
+      return cached.data;
+    }
+
+    throw error;
+  }
+},
 
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? allPages.length + 1 : undefined,
