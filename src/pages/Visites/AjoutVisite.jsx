@@ -4,8 +4,7 @@ import Card from "../../components/Cards/Card";
 import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
-import { useState, useEffect, useRef } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import AlertBox from "../../components/AlertComposant/AlertBox";
 import MesureInput from "../../components/Containers/MesureInput";
 import TextArea from "../../components/Containers/Textarea";
@@ -24,10 +23,10 @@ import PopupListeFamilles from "../../components/Popups/PopupListeFamilles";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
 import { listFamilles } from "@/lib/api/familles";
-
-
+import { enqueue } from "@/lib/offlineQueue";
 import { createVisite, getPreCreationVisite } from "../../lib/api/visites";
 
 const KNOWN_FIELDS = [
@@ -304,6 +303,7 @@ export default function AjoutVisite() {
 const [saving, setSaving] = useState(false);
 const [backendFieldErrors, setBackendFieldErrors] = useState({});
 const [backendGeneralError, setBackendGeneralError] = useState(null);
+const [offlinePending, setOfflinePending] = useState(false);
 
   // Convertit une date (Date ou string) en format "YYYY-MM-DD"
   const formatDate = (d) => {
@@ -315,87 +315,97 @@ const [backendGeneralError, setBackendGeneralError] = useState(null);
 
 
 
-  const handleSave = async () => {
-    if (!validateForm()) return;
+ const handleSave = async () => {
+  if (!validateForm()) return;
 
-    setSaving(true);
-    
-    setBackendFieldErrors({});
-    setBackendGeneralError(null);
-   
+  setSaving(true);
+  setBackendFieldErrors({});
+  setBackendGeneralError(null);
+  setOfflinePending(false);
 
-    // "mois" (dropdown) -> numéro 1-12 pour le champ "month" attendu par l'API
-    const monthIndex = MOIS_OPTIONS.findIndex((m) => m.value === mois) + 1;
-    const monthNumber = monthIndex > 0 ? monthIndex : null;
+  const monthIndex = MOIS_OPTIONS.findIndex((m) => m.value === mois) + 1;
+  const monthNumber = monthIndex > 0 ? monthIndex : null;
 
-    const payload = {
-      famille: selectedFamille?.code, // ex: "GDK-2026-008"
-      date_visite: formatDate(date),
-      cycle: numeroCycle ? Number(numeroCycle) : null,
-
-      poids_bebe: Number(poidsNourrisson),
-      taille_bebe: Number(tailleNourrisson),
-      muac_bebe: Number(muacNourrisson),
-
-      poids_mere: Number(poidsMere),
-      taille_mere: Number(tailleMere),
-      muac_mere: Number(muacMere),
-
-      observations_cliniques_bebe: observationsNourrisson,
-      observations_cliniques_mere: observationsMere,
-      evaluation_famille: evaluationVisuelle,
-
-      // positionNourrisson === true  -> "Debout"
-      // positionNourrisson === false -> "Couché" => mesure_couchee = true
-      mesure_couchee: positionNourrisson === false,
-
-      month: monthNumber,
-      hemoglobine: hemoglobine || null,
-    };
-
-   try {
-  const response = await createVisite(payload);
-
-  console.log("✅ Réponse backend complète :", JSON.stringify(response.data, null, 2));
-
-  const data = response.data;
-
-  setResultatVisite({
-    zScores: {
-      pa: data?.score_z_pa,
-      ta: data?.score_z_ta,
-      pt: data?.score_z_pt,
-    },
-    statutNourrisson: STATUT_BEBE_MAP[data?.statut_bebe] ?? null,
-    statutMere: STATUT_MERE_MAP[data?.statut_mere] ?? null,
-  });
-
-  setShowSuccessPopup(true);
-} catch (error) {
-  console.error(
-    "❌ Erreur lors de la création de la visite :",
-    error.response?.data || error.message
-  );
-
-  const { fieldErrors, generalMessage } = parseBackendErrors(
-    error.response?.data,
-    error.response?.status
-  );
-
-  const mappedFieldErrors = {};
-  Object.entries(fieldErrors).forEach(([backendField, message]) => {
-    const localKey = FIELD_KEY_MAP[backendField] || backendField;
-    mappedFieldErrors[localKey] = message;
-  });
-
-  setBackendFieldErrors(mappedFieldErrors);
-  setBackendGeneralError(
-    generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la visite.")
-  );
-} finally {
-  setSaving(false);
-}
+  const payload = {
+    famille: selectedFamille?.code,
+    date_visite: formatDate(date),
+    cycle: numeroCycle ? Number(numeroCycle) : null,
+    poids_bebe: Number(poidsNourrisson),
+    taille_bebe: Number(tailleNourrisson),
+    muac_bebe: Number(muacNourrisson),
+    poids_mere: Number(poidsMere),
+    taille_mere: Number(tailleMere),
+    muac_mere: Number(muacMere),
+    observations_cliniques_bebe: observationsNourrisson,
+    observations_cliniques_mere: observationsMere,
+    evaluation_famille: evaluationVisuelle,
+    mesure_couchee: positionNourrisson === false,
+    month: monthNumber,
+    hemoglobine: hemoglobine || null,
   };
+
+  try {
+    const response = await createVisite(payload);
+
+    console.log("✅ Réponse backend complète :", JSON.stringify(response.data, null, 2));
+
+    const data = response.data;
+
+    setResultatVisite({
+      zScores: {
+        pa: data?.score_z_pa,
+        ta: data?.score_z_ta,
+        pt: data?.score_z_pt,
+      },
+      statutNourrisson: STATUT_BEBE_MAP[data?.statut_bebe] ?? null,
+      statutMere: STATUT_MERE_MAP[data?.statut_mere] ?? null,
+    });
+
+    setShowSuccessPopup(true);
+  } catch (error) {
+    // No response at all = the request never reached the server, i.e.
+    // we're offline. Queue it instead of surfacing an error.
+    if (!error.response) {
+      try {
+       await enqueue("/api/visites/", payload);
+        setResultatVisite(null); // no z-scores yet, backend hasn't computed them
+        setOfflinePending(true);
+        setShowSuccessPopup(true);
+      } catch (queueError) {
+        console.error("❌ Impossible de mettre la visite en attente hors ligne :", queueError);
+        setBackendGeneralError(
+          "Impossible d'enregistrer la visite, même hors ligne. Veuillez réessayer."
+        );
+      }
+      setSaving(false);
+      return;
+    }
+
+    // Server responded with an error — unchanged from before.
+    console.error(
+      "❌ Erreur lors de la création de la visite :",
+      error.response?.data || error.message
+    );
+
+    const { fieldErrors, generalMessage } = parseBackendErrors(
+      error.response?.data,
+      error.response?.status
+    );
+
+    const mappedFieldErrors = {};
+    Object.entries(fieldErrors).forEach(([backendField, message]) => {
+      const localKey = FIELD_KEY_MAP[backendField] || backendField;
+      mappedFieldErrors[localKey] = message;
+    });
+
+    setBackendFieldErrors(mappedFieldErrors);
+    setBackendGeneralError(
+      generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la visite.")
+    );
+  } finally {
+    setSaving(false);
+  }
+};
 
   // --- Handlers qui nettoient l'erreur au fur et à mesure ---
   const handleMoisChange = (value) => {
@@ -445,66 +455,21 @@ const [backendGeneralError, setBackendGeneralError] = useState(null);
   const navigate = useNavigate();
 
   const [openFamilles, setOpenFamilles] = useState(false);
-const [openOptions, setOpenOptions] = useState(false);
-const [searchFamille, setSearchFamille] = useState("");
+  const [openOptions, setOpenOptions] = useState(false);
 
-const {
-  data: famillesResponse,
-  isLoading: famillesLoading,
-  isError: famillesError,
-  refetch: refetchFamilles,
-  fetchNextPage: fetchNextFamillesPage,
-  hasNextPage: hasNextFamillesPage,
-  isFetchingNextPage: isFetchingNextFamillesPage,
-} = useInfiniteQuery({
-  queryKey: ["familles-popup", "infinite", searchFamille],
+  // --- Récupération des vraies familles depuis l'API ---
+  const {
+    data: famillesData,
+    isLoading: famillesLoading,
+    isError: famillesError,
+    refetch: refetchFamilles,
+  } = useQuery({
+    queryKey: ["familles-popup"],
+    queryFn: () => listFamilles().then((r) => r.data),
+    enabled: openFamilles, 
+  });
 
-  queryFn: async ({ pageParam = 1 }) => {
-    const params = { page: pageParam };
-
-    const trimmedSearch = searchFamille.trim();
-    if (trimmedSearch) {
-      params.search = trimmedSearch;
-    }
-
-    const response = await listFamilles(params);
-    return response.data;
-  },
-
-  getNextPageParam: (lastPage, allPages) =>
-    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
-
-  initialPageParam: 1,
-  keepPreviousData: true,
-  enabled: openFamilles,
-});
-
-const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
-  Array.isArray(page) ? page : page?.results ?? []
-);
-
-const famillesObserverTarget = useRef(null);
-
-useEffect(() => {
-  if (!famillesObserverTarget.current || !openFamilles) return;
-
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (
-        entries[0].isIntersecting &&
-        hasNextFamillesPage &&
-        !isFetchingNextFamillesPage
-      ) {
-        fetchNextFamillesPage();
-      }
-    },
-    { threshold: 1 }
-  );
-
-  observer.observe(famillesObserverTarget.current);
-
-  return () => observer.disconnect();
-}, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
+  const famillesBrutes = famillesData?.results ?? famillesData ?? [];
 
   // Mapping vers le format attendu par le popup / les cartes
   // (même logique que dans la page "Liste des familles")
@@ -1167,25 +1132,31 @@ useEffect(() => {
         
         </div>
 
-        {showSuccessPopup && (
-          <Popup
-            title="Visite enregistrée avec succès"
-            image={SuccessImage}
-            extraContent={successExtraContent}
-            primaryButtonText="Ajouter une distribution"
-            secondaryButtonText="Revenir à l'accueil"
-            onPrimaryClick={() => {
-              setShowSuccessPopup(false);
-              setResultatVisite(null);
-              navigate("/ajout-distribution");
-            }}
-            onSecondaryClick={() => {
-              setShowSuccessPopup(false);
-              setResultatVisite(null);
-              navigate("/dashboard");
-            }}
-          />
-        )}
+   {showSuccessPopup && (
+  <Popup
+    title={
+      offlinePending
+        ? "Visite enregistrée hors ligne — sera synchronisée"
+        : "Visite enregistrée avec succès"
+    }
+    image={offlinePending ? null : SuccessImage}
+    extraContent={successExtraContent}
+    primaryButtonText="Ajouter une distribution"
+    secondaryButtonText="Revenir à l'accueil"
+    onPrimaryClick={() => {
+      setShowSuccessPopup(false);
+      setResultatVisite(null);
+      setOfflinePending(false);
+      navigate("/ajout-distribution");
+    }}
+    onSecondaryClick={() => {
+      setShowSuccessPopup(false);
+      setResultatVisite(null);
+      setOfflinePending(false);
+      navigate("/dashboard");
+    }}
+  />
+)}
         </div>
 
         </div>
@@ -1204,17 +1175,13 @@ useEffect(() => {
       />
     </main>
 
-  <PopupListeFamilles
+    <PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
   familles={listeDesFamilles}
   loading={famillesLoading}
-  isError={famillesError}
+  error={famillesError}
   onRetry={refetchFamilles}
-  search={searchFamille}
-  onSearchChange={setSearchFamille}
-  observerTarget={famillesObserverTarget}
-  isFetchingNextPage={isFetchingNextFamillesPage}
   onSelectFamille={(famille) => {
     setSelectedFamille(famille);
     setOpenFamilles(false);
