@@ -88,9 +88,28 @@ export default function ListeCoordinateur() {
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-  const handleExport = async () => {
+const handleExport = async () => {
   try {
-    const response = await exportUsers();
+    const params = {};
+
+    const trimmedSearch = search.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    if (statusFilter === "active") {
+      params.is_active = true;
+    }
+
+    if (statusFilter === "inactive") {
+      params.is_active = false;
+    }
+
+    if (role !== "all") {
+      params.role = role;
+    }
+
+    const response = await exportUsers(params);
 
     const blob = new Blob([response.data], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
