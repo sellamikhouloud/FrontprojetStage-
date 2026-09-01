@@ -592,11 +592,15 @@ const exchangeRateValue =
   const coordinatorCard = (
     <CoordinatorCard
       title="Coordinateurs"
-      manageText="Gerer les coordinateurs"
-      coordinatorCount={coordinatorCount}
+      manageText="Gérer les utilisateurs"
+      coordinatorCount={
+        dashboardData?.coordinateurs?.nb_coordinateur ?? 0
+      }
       coordinatorLabel="Coordinateurs"
-      lastConnection={lastConnection}
-      lastConnectionLabel="Dernière connexion"
+      chefCoordinatorCount={
+        dashboardData?.coordinateurs?.nb_chef_coordinateur ?? 0
+      }
+      chefCoordinatorLabel="Chefs coordinateurs"
       valueColor="#69B89C"
       onClick={() =>
         navigate("/liste-coordinateurs")

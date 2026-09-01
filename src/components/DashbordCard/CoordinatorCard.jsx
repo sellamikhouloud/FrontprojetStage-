@@ -6,8 +6,8 @@ const CoordinatorCard = ({
   manageText,
   coordinatorCount,
   coordinatorLabel,
-  lastConnection,
-  lastConnectionLabel,
+  chefCoordinatorCount,
+  chefCoordinatorLabel,
   Color = "#4E9F8A",
   onClick,
 }) => {
@@ -115,8 +115,8 @@ const CoordinatorCard = ({
         />
 
         <CardStatistic
-          value={lastConnection}
-          label={lastConnectionLabel}
+          value={chefCoordinatorCount}
+          label={chefCoordinatorLabel}
           Color={Color}
         />
       </div>
