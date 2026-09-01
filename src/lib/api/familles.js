@@ -20,8 +20,10 @@ export const getDistributions = (id, params) => api.get(`/api/familles/${id}/dis
 
 export const getFamilleZakat = (id, params) => api.get(`/api/familles/${id}/zakat/`, { params });
 
-export const exportFamilles = () =>
+export const exportFamilles = (params) =>
   api.get("/api/familles/export/", {
+    params,
     responseType: "blob",
   });
+
 
