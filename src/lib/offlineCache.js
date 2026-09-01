@@ -1,0 +1,28 @@
+const PREFIX = "nutrigest:cache:";
+
+export function saveCache(key, data) {
+  try {
+    localStorage.setItem(
+      PREFIX + key,
+      JSON.stringify({
+        data,
+        savedAt: Date.now(),
+      })
+    );
+  } catch (error) {
+    console.warn("Impossible de sauvegarder le cache:", error);
+  }
+}
+
+export function loadCache(key) {
+  try {
+    const raw = localStorage.getItem(PREFIX + key);
+
+    if (!raw) return null;
+
+    return JSON.parse(raw);
+  } catch (error) {
+    console.warn("Impossible de lire le cache:", error);
+    return null;
+  }
+}

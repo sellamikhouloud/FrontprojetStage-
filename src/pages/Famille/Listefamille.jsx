@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles , exportFamilles } from "@/lib/api/familles";
+import { saveCache, loadCache } from '@/lib/offlineCache';
 import { listVillages } from "@/lib/api/Parametres";
 import Spinner from "../../components/Spinner";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -145,17 +146,44 @@ const [filters, setFilters] = useState({
   statut_zakat: "",
   statutZakatLabel: "",
 });
+const {
+  data: villagesData,
+  isLoading: villagesLoading,
+  isError: villagesError,
+} = useQuery({
+  queryKey: ["villages"],
+  networkMode: "always",
 
- const {
-    data: villagesData,
-    isLoading: villagesLoading,
-    isError: villagesError,
-  } = useQuery({
-    queryKey: ["villages"],
-    queryFn: () => listVillages().then((r) => r.data),
-  });
- 
-  const villages = villagesData?.results ?? villagesData ?? [];
+  queryFn: async () => {
+    // OFFLINE
+    if (!navigator.onLine) {
+      const cached = loadCache("villages");
+
+      if (cached?.data) {
+        console.log("📦 Villages chargés depuis le cache");
+        return cached.data;
+      }
+
+      throw new Error(
+        "Aucune liste de villages disponible hors ligne."
+      );
+    }
+
+    // ONLINE
+    const response = await listVillages();
+
+    console.log("🌐 Villages chargés depuis le serveur");
+
+    // Save successful response
+    saveCache("villages", response.data);
+
+    return response.data;
+  },
+});
+
+const villages = villagesData?.results ?? villagesData ?? [];
+
+
 
 const villageOptions = villages.map((village) => ({
   label: village.nom,
@@ -203,7 +231,28 @@ const {
       params.statut_zakat = appliedFilters.statut_zakat;
     }
 
+    // OFFLINE
+    if (!navigator.onLine) {
+      const cached = loadCache("familles");
+
+      if (cached?.data) {
+        console.log("📦 Familles chargées depuis le cache");
+        return cached.data;
+      }
+
+      throw new Error(
+        "Aucune liste de familles disponible hors ligne."
+      );
+    }
+
+    // ONLINE
     const response = await listFamilles(params);
+
+    console.log("🌐 Familles chargées depuis le serveur");
+
+    // Save the successful response
+    saveCache("familles", response.data);
+
     return response.data;
   },
 
@@ -211,14 +260,15 @@ const {
     lastPage?.next ? allPages.length + 1 : undefined,
 
   initialPageParam: 1,
-  keepPreviousData: true,
+
+  networkMode: "always",
+
   retry: 1,
 });
 
 const familles = (data?.pages ?? []).flatMap((page) =>
   Array.isArray(page) ? page : page?.results ?? []
 );
-
 const observerTarget = useRef(null);
 
 useEffect(() => {
