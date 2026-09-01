@@ -200,7 +200,7 @@ const {
   hasNextPage,
   isFetchingNextPage,
 } = useInfiniteQuery({
- queryFn: async ({ pageParam = 1 }) => {
+queryFn: async ({ pageParam = 1 }) => {
   const params = { page: pageParam };
 
   const trimmedSearch = search.trim();
@@ -232,17 +232,24 @@ const {
   try {
     const response = await listFamilles(params);
 
-    console.log("🌐 Familles chargées depuis le serveur");
+    console.log(
+      `🌐 Familles page ${pageParam} chargée depuis le serveur`
+    );
 
-    // Save the successful response
-    saveCache("familles", response.data);
+    // Cache THIS page
+    saveCache(`familles-page-${pageParam}`, response.data);
 
     return response.data;
+
   } catch (error) {
-    const cached = loadCache("familles");
+    // Offline → load THIS page from cache
+    const cached = loadCache(`familles-page-${pageParam}`);
 
     if (cached?.data) {
-      console.log("📦 Familles chargées depuis le cache (fallback)");
+      console.log(
+        `📦 Familles page ${pageParam} chargée depuis le cache`
+      );
+
       return cached.data;
     }
 
