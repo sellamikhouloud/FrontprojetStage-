@@ -421,11 +421,11 @@ const adminData = {
             "
           >
             <div className="w-full">
-              <p className="text-white font-bold text-[18px] mb-3">
+              <p className="text-white font-bold text-[21px] mb-10">
                 Navigation
               </p>
 
-              <nav className="flex flex-col gap-3">
+              <nav className="flex flex-col gap-10">
                 {navigation.map((item, index) => (
                   <div
                     key={index}
@@ -440,11 +440,11 @@ const adminData = {
 
                 {actions.length > 0 && (
                   <>
-                    <p className="text-white font-bold text-[18px] mt-4 mb-2">
+                    <p className="text-white font-bold text-[21px] mt-4 mb-2">
                       Action rapide
                     </p>
 
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-10">
                       {actions.map((item, index) => (
                         <div
                           key={index}

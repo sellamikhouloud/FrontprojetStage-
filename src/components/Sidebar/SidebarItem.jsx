@@ -6,7 +6,9 @@ export default function SidebarItem({
   onMouseEnter,
 }) {
   return (
-    <NavLink to={item.path}>
+    <NavLink 
+      to={item.path}
+    >
       {({ isActive }) => (
         <button
           onMouseEnter={onMouseEnter}
@@ -16,14 +18,14 @@ export default function SidebarItem({
             transition-all
             duration-200
             hover:scale-105
-            ${expanded ? "justify-start gap-2 xl:gap-3" : "justify-center"}
+            ${expanded ? "justify-start gap-4 xl:gap-3" : "justify-center"}
           `}
         >
           <img
             src={isActive ? item.activeIcon : item.icon}
             alt={item.label}
             className="
-              w-5 h-5
+              w-6.5 h-6.5
               lg:w-5 lg:h-5
               xl:w-4.5 xl:h-4.5
             "
@@ -35,7 +37,7 @@ export default function SidebarItem({
                 whitespace-nowrap
                 text-white
                 font-semibold
-                text-[13px]
+                text-[18px]
                 lg:text-[15px]
                 xl:text-[13px]
               "
