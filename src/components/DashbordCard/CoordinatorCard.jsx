@@ -4,13 +4,24 @@ import CardStatistic from "./CardStatistic";
 const CoordinatorCard = ({
   title,
   manageText,
+
   coordinatorCount,
   coordinatorLabel,
+
+  // Admin
   chefCoordinatorCount,
   chefCoordinatorLabel,
+
+  // Chef Coordinateur
+  lastConnection,
+  lastConnectionLabel,
+
   Color = "#4E9F8A",
   onClick,
 }) => {
+  const isChefCoordinator =
+    lastConnection !== undefined;
+
   return (
     <button
       onClick={onClick}
@@ -108,17 +119,34 @@ const CoordinatorCard = ({
           max-md:border-[#BCCAC14D]
         "
       >
+        {/* Number of Coordinateurs */}
         <CardStatistic
           value={coordinatorCount}
           label={coordinatorLabel}
           Color={Color}
         />
 
-        <CardStatistic
-          value={chefCoordinatorCount}
-          label={chefCoordinatorLabel}
-          Color={Color}
-        />
+        {/* =================================================
+            ADMIN
+            ================================================= */}
+        {!isChefCoordinator && (
+          <CardStatistic
+            value={chefCoordinatorCount}
+            label={chefCoordinatorLabel}
+            Color={Color}
+          />
+        )}
+
+        {/* =================================================
+            CHEF COORDINATEUR
+            ================================================= */}
+        {isChefCoordinator && (
+          <CardStatistic
+            value={lastConnection}
+            label={lastConnectionLabel}
+            Color={Color}
+          />
+        )}
       </div>
     </button>
   );

@@ -25,6 +25,7 @@ import RapportAnnuel from "./pages/Rapports/RapportAnnuel";
 import Parametres from "./pages/Account/Parametres";
 import PageProfilCoordinateur from "./pages/Account/Pageprofilcoordinateur";
 import CoordinatorDashboard from "./pages/Dashbord/CoordinatorDashboard";
+import ChefCoordinatorDashboard from "./pages/Dashbord/ChefCoordinatorDashboard";
 import ListeVisites from "./pages/Visites/Listevisites";
 import NotificationsPage from "./pages/Notifications/Notifications";
 import HistoriqueNotificationsPage from "./pages/Notifications/Notificationshistorique";
@@ -45,6 +46,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
+
+      {/* ADMIN DASHBOARD */}
       <Route
         path="/dashboard"
         element={
@@ -53,6 +56,18 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+
+        {/* CHEF COORDINATEUR DASHBOARD */}
+        <Route
+          path="/dashboardChef"
+          element={
+            <ProtectedRoute allowedRoles={["chef_coordinator"]}>
+              <ChefCoordinatorDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+      {/* COORDINATEUR DASHBOARD */}
       <Route
         path="/dashboardCoor"
         element={

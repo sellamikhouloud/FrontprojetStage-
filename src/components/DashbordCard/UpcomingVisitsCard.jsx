@@ -8,6 +8,7 @@ import { getFamille } from "@/lib/api/familles";
 const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
 export default function UpcomingVisits() {
+  
   const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
 

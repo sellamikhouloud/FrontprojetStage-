@@ -601,10 +601,8 @@ const exchangeRateValue =
         dashboardData?.coordinateurs?.nb_chef_coordinateur ?? 0
       }
       chefCoordinatorLabel="Chefs coordinateurs"
-      valueColor="#69B89C"
-      onClick={() =>
-        navigate("/liste-coordinateurs")
-      }
+      Color="#69B89C"
+      onClick={() => navigate("/liste-coordinateurs")}
     />
   );
 

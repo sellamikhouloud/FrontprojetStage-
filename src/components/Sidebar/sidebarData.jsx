@@ -106,7 +106,7 @@ export const sidebarConfig = {
         icon: home,
         activeIcon: homeWhite,
         label: "Accueil",
-        path: "/dashboard",
+        path: "/dashboardChef",
       },
       {
         icon: famille,
