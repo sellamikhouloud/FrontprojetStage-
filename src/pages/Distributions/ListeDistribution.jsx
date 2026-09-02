@@ -266,8 +266,14 @@ useEffect(() => {
             : null,
 
           enregistrePar: p.audit?.cree_par
-            ? `${p.audit.cree_par.nom ?? ""} ${
-                p.audit.cree_par.prenom ?? ""
+            ? `${p.audit.cree_par.prenom ?? ""} ${
+                p.audit.cree_par.nom ?? ""
+              }`.trim()
+            : null,
+
+          modifiePar: p.audit?.modifie_par
+            ? `${p.audit.modifie_par.prenom ?? ""} ${
+                p.audit.modifie_par.nom ?? ""
               }`.trim()
             : null,
         };
@@ -721,6 +727,7 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
             initialProducts={products}
             onSaveProducts={setProducts}
             canManageStock={canManageStock}
+            currentUserId={user?.id}
             onStockUpdated={refetchProduits}
           />
         )}
