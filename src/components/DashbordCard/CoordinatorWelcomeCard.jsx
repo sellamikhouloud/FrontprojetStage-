@@ -1,4 +1,4 @@
-import Modify from "../../assets/Edit 1.svg";
+import Modify from "../../assets/Edit 2.svg";
 
 const CoordinatorWelcomeCard = ({
   greeting = "Bonjour",
@@ -12,7 +12,7 @@ const CoordinatorWelcomeCard = ({
         hidden
         md:flex
         w-full
-        bg-[#F8FBFC]
+        bg-[#89BFB1]
         rounded-[20px]
         px-[22px]
         py-[18px]
@@ -24,6 +24,7 @@ const CoordinatorWelcomeCard = ({
       <h2
         className="
           text-[22px]
+          text-white
           font-medium
         "
       >

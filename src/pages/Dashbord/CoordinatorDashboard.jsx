@@ -695,7 +695,7 @@ const exchangeRate =
             className="
               hidden
               w-full
-              items-start
+              items-stretch
               gap-[18px]
               lg:grid
               lg:grid-cols-[1.15fr_1fr]
@@ -828,12 +828,14 @@ const exchangeRate =
 
               {/* UPCOMING VISITS */}
 
-              <UpcomingVisitsCard
-                visits={upcomingVisits}
-                onClick={() =>
-                  navigate("/liste-visite")
-                }
-              />
+              <div className="flex min-h-0 flex-1">
+                <UpcomingVisitsCard
+                  visits={upcomingVisits}
+                  onClick={() =>
+                    navigate("/liste-visite")
+                  }
+                />
+              </div>
             </div>
           </div>
 
