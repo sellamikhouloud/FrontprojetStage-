@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { useQuery } from "@tanstack/react-query";
 
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 import { getDashboard } from "@/lib/api/dashboard";
 

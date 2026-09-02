@@ -363,7 +363,7 @@ const RapportBilan = () => {
                 ) : terrainPhotos.length > 0 ? (
                   <div className="space-y-6">
                     {terrainPhotos.map((photo) => (
-                      <div key={photo.id} className="mx-auto w-[85%]">
+                      <div key={photo.id} className="mx-auto w-[70%]">
                         <img
                           src={photo.image}
                           alt={photo.titre || `Photo terrain ${photo.id}`}
