@@ -21,7 +21,7 @@ import RetardIcon from "../../assets/retard.svg";
 import Spinner from "../../components/Spinner";
 
 import { getDashboard } from "../../lib/api/dashboard";
-import { useAuth } from "../../components/providers/AuthProvider";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 const CoordinatorDashboard = () => {
   const navigate = useNavigate();
