@@ -47,6 +47,27 @@ const FamilyStatusCard = ({
           >
             {title}
           </h2>
+
+          {/* Voir liste des familles */}
+          <button
+            type="button"
+            onClick={onClick}
+            className="
+              flex
+              items-center
+              gap-[10px]
+              text-[#5E6064]
+              text-[18px]
+              font-medium
+              hover:text-[#69B89C]
+              transition-colors
+              cursor-pointer
+              max-md:text-[13px]
+              max-md:gap-[5px]
+            "
+          >
+            Voir la liste des familles
+          </button>
         </div>
 
         {/* Statistics */}
@@ -74,17 +95,44 @@ const FamilyStatusCard = ({
           MOBILE
       ====================================================== */}
       <div className="md:hidden w-full">
-        {/* Mobile title - OUTSIDE the card */}
-        <h2
+        {/* Mobile title */}
+        <div
           className="
-            text-[16px]
-            font-semibold
-            leading-[18px]
-            mb-[5px]
+            flex
+            justify-between
+            items-center
+            max-md:mb-[7px]
           "
         >
-          {title}
-        </h2>
+          <h2
+            className="
+              text-[16px]
+              font-semibold
+              leading-[18px]
+            "
+          >
+            {title}
+          </h2>
+
+          {/* Voir liste des familles */}
+          <button
+            type="button"
+            onClick={onClick}
+            className="
+              flex
+              items-center
+              gap-[5px]
+              text-[#5E6064]
+              text-[13px]
+              font-medium
+              hover:text-[#69B89C]
+              transition-colors
+              cursor-pointer
+            "
+          >
+            Voir la liste des familles
+          </button>
+        </div>
 
         {/* Mobile Statistics Card */}
         <button

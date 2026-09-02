@@ -1,28 +1,41 @@
 import { useEffect, useState } from "react";
+
 import { useNavigate } from "react-router-dom";
 
 import Sidebar from "../../components/Sidebar/Sidebar";
+
 import CoordinatorWelcomeCard from "../../components/DashbordCard/CoordinatorWelcomeCard";
 
 import AlertBanner from "../../components/AlertComposant/AlertBanner";
+
 import FamilyStatusCard from "../../components/DashbordCard/FamilyStatusCard";
+
 import VisitsCard from "../../components/DashbordCard/VisitsCard";
+
 import NutritionCard from "../../components/DashbordCard/NutritionCard";
+
 import DistributionCard from "../../components/DashbordCard/DistributionCard";
+
 import ZakatCard from "../../components/DashbordCard/ZakatCard";
+
 import UpcomingVisitsCard from "../../components/DashbordCard/UpcomingVisitsCard";
+
 import CoordinatorCard from "../../components/DashbordCard/CoordinatorCard";
 
 import PopupRetard from "../../components/Popups/Popupvisiteretard";
+
 import PopupMas from "../../components/Popups/PopupMas";
+
 import PopupDistribution from "../../components/Popups/Popupdistributions";
 
 import AttentionIcon from "../../assets/Attention.svg";
+
 import RetardIcon from "../../assets/retard.svg";
 
 import Spinner from "../../components/Spinner";
 
 import { getDashboard } from "../../lib/api/dashboard";
+
 import { useAuth } from "../../components/providers/AuthProvider";
 
 const ChefCoordinatorDashboard = () => {
@@ -69,7 +82,12 @@ const ChefCoordinatorDashboard = () => {
         const response = await getDashboard();
 
         console.log(
-          "Chef Coordinator dashboard response :",
+          "CHEF COORDINATOR ZAKAT:",
+          response.data?.zakat
+        );
+
+        console.log(
+          "CHEF COORDINATOR FULL DASHBOARD:",
           response.data
         );
 
@@ -103,7 +121,7 @@ const ChefCoordinatorDashboard = () => {
   if (!ready) {
     return (
       <div className="flex h-screen overflow-hidden bg-white">
-        <Sidebar role="coordinator" user={user} />
+        <Sidebar role="chef_coordinator" user={user} />
 
         <main className="flex-1 flex items-center justify-center bg-white">
           <Spinner />
@@ -115,7 +133,7 @@ const ChefCoordinatorDashboard = () => {
   if (!user) {
     return (
       <div className="flex h-screen overflow-hidden bg-white">
-        <Sidebar role="coordinator" user={user} />
+        <Sidebar role="chef_coordinator" user={user} />
 
         <main className="flex-1 flex items-center justify-center bg-white px-5">
           <div className="text-center">
@@ -152,7 +170,7 @@ const ChefCoordinatorDashboard = () => {
   if (loading) {
     return (
       <div className="flex h-screen overflow-hidden bg-white">
-        <Sidebar role="coordinator" user={user} />
+        <Sidebar role="chef_coordinator" user={user} />
 
         <main className="flex-1 flex items-center justify-center bg-white">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -170,7 +188,7 @@ const ChefCoordinatorDashboard = () => {
   if (error || !dashboardData) {
     return (
       <div className="flex h-screen overflow-hidden bg-white">
-        <Sidebar role="coordinator" user={user} />
+        <Sidebar role="chef_coordinator" user={user} />
 
         <main className="flex-1 flex items-center justify-center bg-white px-5">
           <div className="flex max-w-md flex-col items-center gap-4 text-center">
@@ -405,30 +423,29 @@ const ChefCoordinatorDashboard = () => {
     );
 
   // =====================================================
-  // ZAKAT - COORDINATOR VERSION
+  // ZAKAT
+  // SAME LOGIC AS COORDINATOR
   // =====================================================
 
+  const zakatTitle = "Zakat";
+
   const remainingBalanceMRU =
-    zakat?.montant_total_verse_ce_mois !==
-    undefined
+    zakat?.montant_total_verse_ce_mois !== undefined
       ? `${zakat.montant_total_verse_ce_mois} MRU`
       : "0.00 MRU";
 
   const remainingBalanceEUR =
-    zakat?.montant_total_verse_ce_mois_eur !==
-    undefined
+    zakat?.montant_total_verse_ce_mois_eur !== undefined
       ? `${zakat.montant_total_verse_ce_mois_eur} EUR`
       : "";
 
   const monthlyDistributedMRU =
-    zakat?.montant_total_verse_ce_mois !==
-    undefined
+    zakat?.montant_total_verse_ce_mois !== undefined
       ? `${zakat.montant_total_verse_ce_mois} MRU`
       : "0.00 MRU";
 
   const monthlyDistributedEUR =
-    zakat?.montant_total_verse_ce_mois_eur !==
-    undefined
+    zakat?.montant_total_verse_ce_mois_eur !== undefined
       ? `${zakat.montant_total_verse_ce_mois_eur} EUR`
       : "";
 
@@ -776,7 +793,7 @@ const ChefCoordinatorDashboard = () => {
 
             <ZakatCard
               variant="coordinator"
-              title="Zakat"
+              title={zakatTitle}
               remainingBalanceMRU={
                 remainingBalanceMRU
               }
@@ -793,25 +810,30 @@ const ChefCoordinatorDashboard = () => {
                 beneficiaryFamilies
               }
               exchangeRate={exchangeRate}
+              onClick={() =>
+                navigate("/zakat")
+              }
             />
 
             {/* COORDINATORS */}
 
             <CoordinatorCard
-            title="Coordinateurs"
-            manageText="Gérer les utilisateurs"
-            coordinatorCount={
+              title="Coordinateurs"
+              manageText="Gérer les utilisateurs"
+              coordinatorCount={
                 coordinatorCount
-            }
-            coordinatorLabel="Coordinateurs"
-            lastConnection={
+              }
+              coordinatorLabel="Coordinateurs"
+              lastConnection={
                 lastConnection
-            }
-            lastConnectionLabel="Dernière connexion"
-            Color="#69B89C"
-            onClick={() =>
-                navigate("/liste-coordinateurs")
-            }
+              }
+              lastConnectionLabel="Dernière connexion"
+              Color="#69B89C"
+              onClick={() =>
+                navigate(
+                  "/liste-coordinateurs"
+                )
+              }
             />
           </div>
 
@@ -897,7 +919,7 @@ const ChefCoordinatorDashboard = () => {
 
               <ZakatCard
                 variant="coordinator"
-                title="Zakat"
+                title={zakatTitle}
                 remainingBalanceMRU={
                   remainingBalanceMRU
                 }
@@ -914,6 +936,9 @@ const ChefCoordinatorDashboard = () => {
                   beneficiaryFamilies
                 }
                 exchangeRate={exchangeRate}
+                onClick={() =>
+                  navigate("/zakat")
+                }
               />
 
               {/* COORDINATORS */}

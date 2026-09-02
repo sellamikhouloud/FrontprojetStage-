@@ -574,6 +574,11 @@ const exchangeRateValue =
       monthlyDistributedEUR={monthlyDistributedEUR}
       beneficiaryFamilies={beneficiaryFamilies}
       exchangeRate={exchangeRate}
+      onClick={() =>
+        navigate(
+          "/zakat"
+          )
+      }
     />
   );
 

@@ -11,37 +11,58 @@ const ZakatCard = ({
   exchangeRate,
   onClick,
 }) => {
+  const isCoordinator = variant === "coordinator";
+  const isAdmin = variant === "admin";
+
   return (
     <div className="w-full">
+      {/* =====================================================
+          MOBILE TITLE + VOIR LISTE
+      ===================================================== */}
 
-      {/* Mobile title */}
-      <h2
-        className="
-          hidden
-          max-md:block
-          text-[16px]
-          leading-[20px]
-          font-semibold
-          text-[#171D1A]
-          mb-[8px]
-        "
-      >
-        {title}
-      </h2>
+      <div className="md:hidden flex justify-between items-center mb-[7px]">
+        <h2 className="text-[16px] leading-[18px] font-semibold text-[#171D1A]">
+          {title}
+        </h2>
 
-      <button
-        onClick={onClick}
+        {(isCoordinator || isAdmin) && (
+          <button
+            type="button"
+            onClick={onClick}
+            className="
+              flex
+              items-center
+              gap-[5px]
+              text-[#5E6064]
+              text-[13px]
+              font-medium
+              hover:text-[#69B89C]
+              transition-colors
+              cursor-pointer
+            "
+          >
+            Voir liste des aides zakats
+          </button>
+        )}
+      </div>
+
+      {/* =====================================================
+          MAIN CARD
+      ===================================================== */}
+
+      <div
         className={`
           w-full
           text-left
           ${
-            variant === "coordinator"
+            isCoordinator
               ? `
                 rounded-none
                 border-0
                 bg-transparent
                 p-0
                 shadow-none
+
                 md:rounded-[24px]
                 md:border
                 md:border-[#DDE7EE]
@@ -56,6 +77,7 @@ const ZakatCard = ({
                 bg-[#F8FAFC]
                 p-6
                 shadow-sm
+
                 max-md:rounded-[12px]
                 max-md:border
                 max-md:border-[#DDE7EE]
@@ -66,53 +88,67 @@ const ZakatCard = ({
           }
         `}
       >
+        {/* =====================================================
+            DESKTOP HEADER
+        ===================================================== */}
 
-        {/* Header */}
         <div
           className={`
-            flex
+            hidden
+            md:flex
             items-center
             justify-between
-            ${
-              variant === "coordinator"
-                ? "mb-[8px] md:mb-5"
-                : "mb-5 max-md:hidden"
-            }
+            ${isCoordinator ? "mb-0" : "mb-5"}
           `}
         >
-
-          {/* Desktop title */}
-          <h2
-            className={`
-              font-semibold
-              text-[#171D1A]
-              ${
-                variant === "coordinator"
-                  ? "hidden md:block text-[24px] leading-[28px]"
-                  : "text-[24px] leading-[28px]"
-              }
-            `}
-          >
+          <h2 className="text-[24px] leading-[28px] font-semibold text-[#171D1A]">
             {title}
           </h2>
 
-          {/* Coordinator DESKTOP */}
-          {variant === "coordinator" && (
-            <div className="hidden text-right md:block">
-              <span className="text-[28px] font-bold text-[#346A5C]">
+          {(isCoordinator || isAdmin) && (
+            <button
+              type="button"
+              onClick={onClick}
+              className="
+                flex
+                items-center
+                text-[#5E6064]
+                text-[18px]
+                font-medium
+                hover:text-[#69B89C]
+                transition-colors
+                cursor-pointer
+              "
+            >
+              Voir liste des aides zakats
+            </button>
+          )}
+        </div>
+
+        {/* =====================================================
+            COORDINATOR DESKTOP
+        ===================================================== */}
+
+        {isCoordinator && (
+          <div className="hidden md:flex justify-end">
+            <div className="text-right">
+              <span className="text-[34px] font-bold text-[#346A5C]">
                 {remainingBalanceMRU}
               </span>
 
-              <span className="text-[22px] font-bold text-[#346A5C]">
+              <span className="text-[28px] font-bold text-[#346A5C]">
                 {" / "}
                 {remainingBalanceEUR}
               </span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Coordinator MOBILE */}
-        {variant === "coordinator" && (
+        {/* =====================================================
+            COORDINATOR MOBILE
+        ===================================================== */}
+
+        {isCoordinator && (
           <div className="block md:hidden">
             <div
               className="
@@ -128,14 +164,7 @@ const ZakatCard = ({
                 justify-center
               "
             >
-              <span
-                className="
-                  text-[13px]
-                  font-medium
-                  leading-[16px]
-                  text-[#171D1A]
-                "
-              >
+              <span className="text-[13px] font-medium leading-[16px] text-[#171D1A]">
                 Total amount
               </span>
 
@@ -153,10 +182,12 @@ const ZakatCard = ({
           </div>
         )}
 
-        {/* Admin Content */}
-        {variant === "admin" && (
-          <div className="flex flex-col gap-[16px]">
+        {/* =====================================================
+            ADMIN CONTENT
+        ===================================================== */}
 
+        {isAdmin && (
+          <div className="flex flex-col gap-[16px]">
             <ZakatInfoRow
               label="Solde restant"
               value={
@@ -200,7 +231,7 @@ const ZakatCard = ({
             />
           </div>
         )}
-      </button>
+      </div>
     </div>
   );
 };

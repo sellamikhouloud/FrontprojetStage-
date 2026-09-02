@@ -49,30 +49,42 @@ const DistributionCard = ({
               onViewAllClick?.();
             }}
             className="
+              flex
+              items-center
+              gap-[10px]
+              text-[#5E6064]
               text-[18px]
               font-medium
-              text-[#535353]
               hover:text-[#69B89C]
               transition-colors
+              cursor-pointer
+              max-md:text-[13px]
+              max-md:gap-[5px]
             "
           >
             {viewAllText}
           </button>
         </div>
 
-        {/* Products */}
-        <div className="flex items-center">
-          {displayedProducts.map((product, index) => (
-            <DistributionItem
-              key={product.id}
-              name={product.name}
-              quantity={product.quantity}
-              unit={product.unit}
-              dividerColor={dividerColor}
-              showDivider={index !== displayedProducts.length - 1}
-            />
-          ))}
-        </div>
+        {/* Products / Empty state */}
+        {displayedProducts.length === 0 ? (
+          <div className="text-center">
+            Aucune distribution ce mois-ci
+          </div>
+        ) : (
+          <div className="flex items-center">
+            {displayedProducts.map((product, index) => (
+              <DistributionItem
+                key={product.id}
+                name={product.name}
+                quantity={product.quantity}
+                unit={product.unit}
+                dividerColor={dividerColor}
+                showDivider={index !== displayedProducts.length - 1}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* =====================================================
@@ -122,83 +134,89 @@ const DistributionCard = ({
             px-[10px]
           "
         >
-          <div className="flex items-stretch h-full">
-            {displayedProducts.map((product, index) => (
-              <div
-                key={product.id}
-                className="
-                  flex-1
-                  flex
-                  flex-col
-                  gap-[10px]
-                  items-center
-                  justify-center
-                  min-w-0
-                  relative
-                "
-              >
-                {/* Separator */}
-                {index !== 0 && (
-                  <span
-                    className="
-                      absolute
-                      left-0
-                      top-1/2
-                      -translate-y-1/2
-                      w-[2px]
-                      h-[42px]
-                      rounded-[15px]
-                      bg-[#4E9F8A]
-                    "
-                  />
-                )}
-
-                {/* Product name */}
-                <span
-                  className="
-                    text-[14px]
-                    leading-[12px]
-                    font-medium
-                    whitespace-nowrap
-                  "
-                >
-                  {product.name}
-                </span>
-
-                {/* Quantity + unit */}
+          {displayedProducts.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-[12px] text-[#535353]">
+              Aucune distribution ce mois-ci
+            </div>
+          ) : (
+            <div className="flex items-stretch h-full">
+              {displayedProducts.map((product, index) => (
                 <div
+                  key={product.id}
                   className="
+                    flex-1
                     flex
-                    items-baseline
+                    flex-col
+                    gap-[10px]
+                    items-center
                     justify-center
-                    gap-[2px]
-                    mt-[1px]
+                    min-w-0
+                    relative
                   "
                 >
-                  <span
-                    className="
-                      text-[20px]
-                      leading-[18px]
-                      font-bold
-                      text-[#4E9F8A]
-                    "
-                  >
-                    {product.quantity}
-                  </span>
+                  {/* Separator */}
+                  {index !== 0 && (
+                    <span
+                      className="
+                        absolute
+                        left-0
+                        top-1/2
+                        -translate-y-1/2
+                        w-[2px]
+                        h-[42px]
+                        rounded-[15px]
+                        bg-[#4E9F8A]
+                      "
+                    />
+                  )}
 
+                  {/* Product name */}
                   <span
                     className="
-                      text-[12px]
-                      leading-[10px]
+                      text-[14px]
+                      leading-[12px]
+                      font-medium
                       whitespace-nowrap
                     "
                   >
-                    {product.unit}
+                    {product.name}
                   </span>
+
+                  {/* Quantity + unit */}
+                  <div
+                    className="
+                      flex
+                      items-baseline
+                      justify-center
+                      gap-[2px]
+                      mt-[1px]
+                    "
+                  >
+                    <span
+                      className="
+                        text-[20px]
+                        leading-[18px]
+                        font-bold
+                        text-[#4E9F8A]
+                      "
+                    >
+                      {product.quantity}
+                    </span>
+
+                    <span
+                      className="
+                        text-[12px]
+                        leading-[10px]
+                        whitespace-nowrap
+                      "
+                    >
+                      {product.unit}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>

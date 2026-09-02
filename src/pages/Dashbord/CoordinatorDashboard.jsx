@@ -678,6 +678,12 @@ const exchangeRate =
                 beneficiaryFamilies
               }
               exchangeRate={exchangeRate}
+
+              onClick={() =>
+                  navigate(
+                    "/zakat"
+                  )
+                }
             />
           </div>
 
@@ -778,6 +784,12 @@ const exchangeRate =
                   beneficiaryFamilies
                 }
                 exchangeRate={exchangeRate}
+
+                onClick={() =>
+                  navigate(
+                    "/zakat"
+                  )
+                }
               />
             </div>
 

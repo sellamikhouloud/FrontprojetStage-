@@ -52,28 +52,48 @@ const VisitsCard = ({
       onClick={onClick}
     >
       {/* Header */}
-      <div
-        className="
-          flex
-          justify-between
-          items-center
+      {/* Header */}
+<div
+  className="
+    flex
+    justify-between
+    items-center
+    max-md:mb-[7px]
+  "
+>
+  <h2
+    className="
+      text-[24px]
+      font-semibold
+      leading-[20px]
+      max-md:text-[16px]
+      max-md:leading-[20px]
+    "
+  >
+    {title}
+  </h2>
 
-          max-md:mb-[7px]
-        "
-      >
-        <h2
-          className="
-            text-[24px]
-            font-semibold
-            leading-[20px]
-
-            max-md:text-[16px]
-            max-md:leading-[20px]
-          "
-        >
-          {title}
-        </h2>
-      </div>
+  {/* Voir liste des visites */}
+  <button
+    type="button"
+    onClick={onClick}
+    className="
+      flex
+      items-center
+      gap-[10px]
+      text-[#5E6064]
+      text-[18px]
+      font-medium
+      hover:text-[#69B89C]
+      transition-colors
+      cursor-pointer
+      max-md:text-[13px]
+      max-md:gap-[5px]
+    "
+  >
+    Voir liste des visites
+  </button>
+</div>
 
       {/* ========================= */}
       {/* MOBILE STATISTICS          */}
