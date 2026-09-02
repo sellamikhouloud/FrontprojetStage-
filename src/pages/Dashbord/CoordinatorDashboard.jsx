@@ -485,18 +485,20 @@ const exchangeRate =
               ALERTS TITLE
           ================================================= */}
 
-          <h3
-            className="
-              mt-2
-              mb-1
-              w-full
-              text-[20px]
-              font-bold
-              leading-[20px]
-            "
-          >
-            Alertes prioritaires
-          </h3>
+          {activeAlerts.length > 0 && (
+            <h3
+              className="
+                mt-2
+                mb-1
+                w-full
+                text-[20px]
+                font-bold
+                leading-[20px]
+              "
+            >
+              Alertes prioritaires
+            </h3>
+          )}
 
           {/* =================================================
               ALERTS

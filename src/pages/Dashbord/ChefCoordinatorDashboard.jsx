@@ -635,18 +635,20 @@ const lastConnectionUsername =
               ALERTS TITLE
           ================================================= */}
 
-          <h3
-            className="
-              mt-2
-              mb-1
-              w-full
-              text-[20px]
-              font-bold
-              leading-[20px]
-            "
-          >
-            Alertes prioritaires
-          </h3>
+          {alerts.length > 0 && (
+            <h3
+              className="
+                mt-2
+                mb-1
+                w-full
+                text-[20px]
+                font-bold
+                leading-[20px]
+              "
+            >
+              Alertes prioritaires
+            </h3>
+          )}
 
           {/* =================================================
               ALERTS
