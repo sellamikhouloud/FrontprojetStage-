@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useAuth } from "../../components/Providers/AuthProvider";
-import { listFamilles , exportFamilles } from "@/lib/api/familles";
+import { listFamilles , exportFamilles , getFamille} from "@/lib/api/familles";
 import { listVillages } from "@/lib/api/Parametres";
 import Spinner from "../../components/Spinner";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -39,7 +39,9 @@ const [selectedSexe, setSelectedSexe] = useState("");
  const [isFilterOpen, setIsFilterOpen] = useState(false);
 const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 const navigate = useNavigate();
-
+const [familleParCode, setFamilleParCode] = useState(null);
+const [codeError, setCodeError] = useState("");
+const [isSearchingByCode, setIsSearchingByCode] = useState(false); 
 
 const handleExport = async () => {
   try {
@@ -219,6 +221,9 @@ const familles = (data?.pages ?? []).flatMap((page) =>
   Array.isArray(page) ? page : page?.results ?? []
 );
 
+const displayedFamilles = familleParCode ? [familleParCode] : familles;
+const isCodeSearchMode = Boolean(familleParCode) || Boolean(codeError);
+
 const observerTarget = useRef(null);
 
 useEffect(() => {
@@ -238,7 +243,43 @@ useEffect(() => {
   return () => observer.disconnect();
 }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+const rechercherParCode = async (code) => {
+  try {
+    setIsSearchingByCode(true); // ← ajouté
+    setCodeError("");
+    const response = await getFamille(code);
+    setFamilleParCode(response.data);
+  } catch (error) {
+    console.error("Erreur recherche famille par code :", error);
+    setFamilleParCode(null);
+    setCodeError("Aucune famille trouvée avec ce code.");
+  } finally {
+    setIsSearchingByCode(false); // ← ajouté
+  }
+};
 
+useEffect(() => {
+  const value = debouncedSearch.trim();
+
+  if (/^GDK-\d{4}-\d+$/i.test(value)) {
+    rechercherParCode(value);
+  } else {
+    // on n'est plus sur un code valide → on repasse en mode liste normale
+    setFamilleParCode(null);
+    setCodeError("");
+  }
+}, [debouncedSearch]);
+
+const handleSearchKeyDown = (e) => {
+  if (e.key !== "Enter") return;
+
+  const value = search.trim();
+  if (!value) return;
+
+  if (/^GDK-\d{4}-\d+$/i.test(value)) {
+    rechercherParCode(value);
+  }
+};
 
 
 const filtersContent = (
@@ -442,13 +483,18 @@ if  (isFilterOpen && isMobile)  {
       />
 
       <div className="mt-6">
-        <SearchBar
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onFilterClick={() => {}}
-          maxWidth="max-w-full"
-              placeholder="Rechercher par informations de la famille"
-        />
+       <SearchBar
+  value={search}
+  onChange={(e) => {
+    setSearch(e.target.value);
+    setCodeError("");
+    setFamilleParCode(null);
+  }}
+  onKeyDown={handleSearchKeyDown}
+  onFilterClick={() => {}}
+  maxWidth="max-w-full"
+  placeholder="Rechercher par informations de la famille"
+/>
       </div>
 
 {(appliedFilters.village ||
@@ -491,15 +537,18 @@ if  (isFilterOpen && isMobile)  {
 )}
 
           <div className="my-6">
-            <SearchBar
+         <SearchBar
   value={search}
-   onChange={(e) => {
+  onChange={(e) => {
     setSearch(e.target.value);
     setIsFilterOpen(false);
+    setCodeError("");
+    setFamilleParCode(null);
   }}
+  onKeyDown={handleSearchKeyDown}
   onFilterClick={() => setIsFilterOpen((prev) => !prev)}
   maxWidth="max-w-full"
- placeholder="Rechercher par informations de la famille"
+  placeholder="Rechercher par informations de la famille"
 />
 {(appliedFilters.village ||
   appliedFilters.statut ||
@@ -511,29 +560,28 @@ if  (isFilterOpen && isMobile)  {
 
           </div>
 
-         
-
-         {isError && (
-  <div className="text-center text-red-500 py-6">
-    <p>Impossible de charger les familles.</p>
-
-    <button
-      onClick={() => refetch()}
-      className="mt-2 underline"
-    >
-      Réessayer
-    </button>
-  </div>
-)}
-
-
-{isLoading && (
+     {isSearchingByCode && (
   <div className="flex justify-center items-center py-10 md:py-20">
     <Spinner />
   </div>
 )}
 
-{isError && (
+{isError && !isCodeSearchMode && !isSearchingByCode && (
+  <div className="text-center text-red-500 py-6">
+    <p>Impossible de charger les familles.</p>
+    <button onClick={() => refetch()} className="mt-2 underline">
+      Réessayer
+    </button>
+  </div>
+)}
+
+{isLoading && !isCodeSearchMode && !isSearchingByCode && (
+  <div className="flex justify-center items-center py-10 md:py-20">
+    <Spinner />
+  </div>
+)}
+
+{isError && !isCodeSearchMode && !isSearchingByCode && (
   <div className="flex justify-center py-10 md:py-20">
     <p className="text-red-500">
       {error?.response?.data?.detail ||
@@ -542,25 +590,33 @@ if  (isFilterOpen && isMobile)  {
   </div>
 )}
 
-       {!isLoading &&
-          !isError &&
-          familles.length === 0 && (
+{codeError && !isSearchingByCode && (
+  <div className="flex justify-center py-6">
+    <p className="text-red-500">{codeError}</p>
+  </div>
+)}
+
+{!isSearchingByCode &&
+  ((!isLoading && !isError) || isCodeSearchMode) &&
+  displayedFamilles.length === 0 &&
+  !codeError && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
       alt="Aucun résultat"
       className="w-56 sm:w-72 md:w-96 h-auto"
     />
-
-    
   </div>
 )}
 
-          {!isLoading && !isError && familles.length > 0 && (
-          <div className="flex gap-6">
-           <div className="flex-1 space-y-4">
+{!isSearchingByCode &&
+  ((!isLoading && !isError) || isCodeSearchMode) &&
+  displayedFamilles.length > 0 && (
+  <div className="flex gap-6">
+  
+   <div className="flex-1 space-y-4">
   <div className="w-full flex-1 space-y-3">
-    { familles.map((famille) => (
+    { displayedFamilles.map((famille) => (
       <div key={famille.id}>
         {/* Desktop */}
        <div
@@ -710,9 +766,9 @@ if  (isFilterOpen && isMobile)  {
           </div>
     ))}
 
-    <div ref={observerTarget} className="h-1" />
+       {!isCodeSearchMode && <div ref={observerTarget} className="h-1" />}
 
-    {isFetchingNextPage && (
+    {isFetchingNextPage && !isCodeSearchMode && (
       <div className="flex justify-center py-4">
         <Spinner />
       </div>
@@ -732,4 +788,3 @@ if  (isFilterOpen && isMobile)  {
     
   );
 }
-
