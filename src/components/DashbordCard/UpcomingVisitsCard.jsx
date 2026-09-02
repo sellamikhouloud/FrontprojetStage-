@@ -2,22 +2,22 @@ import { useEffect, useMemo, useState } from "react";
 
 import { MapPin } from "lucide-react";
 
-import { getDashboard } from "@/lib/api/dashboard";
 import { getFamille } from "@/lib/api/familles";
 
 const dayNames = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
-export default function UpcomingVisits() {
-  
+export default function UpcomingVisits({ visits: upcomingVisits = [] }) {
+  // Visites transformées avec les informations de la famille
   const [visits, setVisits] = useState([]);
+
   const [loading, setLoading] = useState(true);
 
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const [selectedDate, setSelectedDate] = useState(today);
 
   /*
    * ---------------------------------------------------------
-   * Récupération des visites à venir
+   * Récupération des informations des familles
    * ---------------------------------------------------------
    */
   useEffect(() => {
@@ -25,13 +25,13 @@ export default function UpcomingVisits() {
       try {
         setLoading(true);
 
-        const dashboardResponse = await getDashboard();
-
-        const upcoming =
-          dashboardResponse?.data?.visites_a_venir || [];
+        console.log(
+          "VISITES À VENIR DU BACKEND :",
+          upcomingVisits
+        );
 
         const detailedVisits = await Promise.all(
-          upcoming.map(async (visit, index) => {
+          upcomingVisits.map(async (visit, index) => {
             try {
               const familleResponse = await getFamille(
                 visit.famille
@@ -73,6 +73,11 @@ export default function UpcomingVisits() {
         );
 
         setVisits(detailedVisits);
+
+        console.log(
+          "VISITES TRANSFORMÉES :",
+          detailedVisits
+        );
       } catch (error) {
         console.error(
           "Erreur lors du chargement des visites à venir :",
@@ -86,7 +91,7 @@ export default function UpcomingVisits() {
     };
 
     loadUpcomingVisits();
-  }, []);
+  }, [upcomingVisits]);
 
   /*
    * ---------------------------------------------------------
@@ -110,10 +115,12 @@ export default function UpcomingVisits() {
 
     date.setHours(0, 0, 0, 0);
 
-    date.setDate(today.getDate() - today.getDay());
+    date.setDate(
+      today.getDate() - today.getDay()
+    );
 
     return date;
-  }, []);
+  }, [today]);
 
   /*
    * ---------------------------------------------------------
@@ -124,7 +131,9 @@ export default function UpcomingVisits() {
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date(startOfWeek);
 
-      date.setDate(startOfWeek.getDate() + index);
+      date.setDate(
+        startOfWeek.getDate() + index
+      );
 
       return {
         date,
@@ -142,12 +151,13 @@ export default function UpcomingVisits() {
   const formatDate = (date) => {
     const year = date.getFullYear();
 
-    const month = String(date.getMonth() + 1).padStart(
-      2,
-      "0"
-    );
+    const month = String(
+      date.getMonth() + 1
+    ).padStart(2, "0");
 
-    const day = String(date.getDate()).padStart(2, "0");
+    const day = String(
+      date.getDate()
+    ).padStart(2, "0");
 
     return `${year}-${month}-${day}`;
   };
@@ -158,7 +168,8 @@ export default function UpcomingVisits() {
    * ---------------------------------------------------------
    */
   const selectedVisits = visits.filter(
-    (visit) => visit.date === formatDate(selectedDate)
+    (visit) =>
+      visit.date === formatDate(selectedDate)
   );
 
   return (
@@ -178,6 +189,7 @@ export default function UpcomingVisits() {
       {/* =====================================================
           HEADER
       ====================================================== */}
+
       <div
         className="
           mb-6
@@ -222,6 +234,7 @@ export default function UpcomingVisits() {
       {/* =====================================================
           WEEK
       ====================================================== */}
+
       <div
         className="
           mb-6
@@ -244,7 +257,9 @@ export default function UpcomingVisits() {
             <button
               key={item.date.toISOString()}
               type="button"
-              onClick={() => setSelectedDate(item.date)}
+              onClick={() =>
+                setSelectedDate(item.date)
+              }
               className={`
                 flex
                 h-[86px]
@@ -260,7 +275,6 @@ export default function UpcomingVisits() {
                 border
                 transition-all
                 duration-200
-
                 ${
                   selected
                     ? "border-[#4E9F8A]"
@@ -294,7 +308,6 @@ export default function UpcomingVisits() {
                   text-[16px]
                   max-md:text-[11px]
                   font-bold
-
                   ${
                     selected
                       ? "bg-[#4E9F8A] text-white"
@@ -312,6 +325,7 @@ export default function UpcomingVisits() {
       {/* =====================================================
           VISITS
       ====================================================== */}
+
       <div
         className="
           space-y-4
@@ -358,6 +372,7 @@ export default function UpcomingVisits() {
               "
             >
               {/* Family information */}
+
               <div className="min-w-0 flex-1">
                 <h3
                   className="
@@ -373,6 +388,7 @@ export default function UpcomingVisits() {
                 </h3>
 
                 {/* Village */}
+
                 <div
                   className="
                     mt-2
@@ -403,6 +419,7 @@ export default function UpcomingVisits() {
               </div>
 
               {/* Family code */}
+
               <span
                 className="
                   self-start
