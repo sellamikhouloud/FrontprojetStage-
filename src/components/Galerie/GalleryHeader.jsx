@@ -157,70 +157,68 @@ const GalleryHeader = ({
 
         {/* Right buttons */}
 
-        {role === "coordinator" ? (
-          <button
-            onClick={onAdd}
-            className="
-              w-12
-              h-12
-              lg:w-[52px]
-              lg:h-[52px]
-              rounded-full
-              bg-[#4E9F8A]
-              flex
-              items-center
-              justify-center
-              shadow-md
-              transition
-              hover:bg-[#458F7B]
-              active:scale-95
-            "
-          >
-            <img
-              src={addIcon}
-              alt="Ajouter"
-              className="w-6 h-6"
-            />
-          </button>
-        ) : (
-          <div className="flex items-center gap-4">
+ {role === "admin" ? (
+  <div className="flex items-center gap-4">
+    <div className="flex-1">
+      <Button
+        title="Sélectionner pour le bilan"
+        variant="primary"
+        noWrapperPadding
+        onClick={onSelection}
+      />
+    </div>
 
-            <div className="flex-1">
-              <Button
-                title="Sélectionner pour le bilan"
-                variant="primary"
-                noWrapperPadding
-                onClick={onSelection}
-              />
-            </div>
-
-            <button
-              onClick={onAdd}
-              className="
-                aspect-square
-                h-12
-                lg:h-[52px]
-                rounded-full
-                bg-[#4E9F8A]
-                flex
-                items-center
-                justify-center
-                shadow-md
-                transition
-                hover:bg-[#458F7B]
-                active:scale-95
-                shrink-0
-              "
-            >
-              <img
-                src={addIcon}
-                alt="Ajouter"
-                className="w-6 h-6"
-              />
-            </button>
-
-          </div>
-        )}
+    <button
+      onClick={onAdd}
+      className="
+        aspect-square
+        h-12
+        lg:h-[52px]
+        rounded-full
+        bg-[#4E9F8A]
+        flex
+        items-center
+        justify-center
+        shadow-md
+        transition
+        hover:bg-[#458F7B]
+        active:scale-95
+        shrink-0
+      "
+    >
+      <img
+        src={addIcon}
+        alt="Ajouter"
+        className="w-6 h-6"
+      />
+    </button>
+  </div>
+) : (
+  <button
+    onClick={onAdd}
+    className="
+      w-12
+      h-12
+      lg:w-[52px]
+      lg:h-[52px]
+      rounded-full
+      bg-[#4E9F8A]
+      flex
+      items-center
+      justify-center
+      shadow-md
+      transition
+      hover:bg-[#458F7B]
+      active:scale-95
+    "
+  >
+    <img
+      src={addIcon}
+      alt="Ajouter"
+      className="w-6 h-6"
+    />
+  </button>
+)}
       </div>
 
       {/* Alert */}

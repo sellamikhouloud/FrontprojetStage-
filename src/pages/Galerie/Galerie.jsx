@@ -148,6 +148,10 @@ const [pageSize, setPageSize] = useState(null);
 const [totalItems, setTotalItems] = useState(0);
 const [currentPage, setCurrentPage] = useState(1);
 
+const totalPages = pageSize
+  ? Math.ceil(totalItems / pageSize)
+  : 1;
+
   /*
    * ============================================================
    * LOAD VILLAGES
@@ -181,12 +185,33 @@ const [currentPage, setCurrentPage] = useState(1);
    * ============================================================
    */
 
-const fetchPhotos = async (villagesList = villages, page = currentPage) => {
+const fetchPhotos = async (
+  villagesList = villages,
+  page = currentPage,
+  filter = selectedFilter,
+  search = searchValue
+) => {
   try {
     setLoading(true);
     setError("");
 
-    const response = await listPhotos({ page });
+    const params = { page };
+
+    if (filter === "validated") {
+      params.statut = "validee";
+    } else if (filter === "pending") {
+      params.statut = "en_attente";
+    } else if (filter === "refused") {
+      params.statut = "rejetee";
+    }
+
+    const trimmedSearch = search.trim();
+
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
+    const response = await listPhotos(params);
 
     const data = response.data;
 
@@ -204,7 +229,7 @@ const fetchPhotos = async (villagesList = villages, page = currentPage) => {
       setTotalItems(data.count);
     }
 
-    // Only use a full page to determine the page size
+    // KEEP YOUR EXISTING PAGE SIZE
     if (data?.results?.length && !pageSize) {
       setPageSize(data.results.length);
     }
@@ -216,27 +241,35 @@ const fetchPhotos = async (villagesList = villages, page = currentPage) => {
   }
 };
 
-const totalPages = pageSize
-  ? Math.ceil(totalItems / pageSize)
-  : 1;
+useEffect(() => {
+  if (loading) return;
 
-    const handleNextPage = async () => {
-      if (currentPage >= totalPages) return;
+  setCurrentPage(1);
 
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
+  fetchPhotos(
+    villages,
+    1,
+    selectedFilter,
+    searchValue
+  );
+}, [selectedFilter]);
 
-      await fetchPhotos(villages, nextPage);
-    };
+useEffect(() => {
+  if (loading) return;
 
-    const handlePreviousPage = async () => {
-      if (currentPage <= 1) return;
+  const timeout = setTimeout(() => {
+    setCurrentPage(1);
 
-      const previousPage = currentPage - 1;
-      setCurrentPage(previousPage);
+    fetchPhotos(
+      villages,
+      1,
+      selectedFilter,
+      searchValue
+    );
+  }, 300);
 
-      await fetchPhotos(villages, previousPage);
-    };
+  return () => clearTimeout(timeout);
+}, [searchValue]);
 
   /*
    * ============================================================
@@ -269,17 +302,24 @@ const totalPages = pageSize
    * ============================================================
    */
 
-  useEffect(() => {
-    const init = async () => {
-      const villagesList = await fetchVillages();
+useEffect(() => {
+  const init = async () => {
+    const villagesList = await fetchVillages();
 
-      await fetchPhotos(villagesList);
-    };
+    await fetchPhotos(
+      villagesList,
+      1,
+      selectedFilter,
+      searchValue
+    );
+  };
 
-    init();
+  init();
 
+  if (isAdmin) {
     fetchPendingCount();
-  }, []);
+  }
+}, [role]);
 
   /*
    * ============================================================
@@ -626,50 +666,9 @@ const handleStartSelection = async () => {
    * ============================================================
    */
 
-  const filteredPhotos = (
-    selectionMode ? bilanCandidates : photos
-  )
-    .filter((photo) => {
-      const search = searchValue
-        .toLowerCase()
-        .trim();
-
-      if (!search) {
-        return true;
-      }
-
-      return (
-        photo.title
-          ?.toLowerCase()
-          .includes(search) ||
-        photo.villageName
-          ?.toLowerCase()
-          .includes(search)
-      );
-    })
-    .filter((photo) => {
-      if (selectionMode) {
-        return true;
-      }
-
-      if (selectedFilter === "all") {
-        return true;
-      }
-
-      if (selectedFilter === "validated") {
-        return photo.status === "validated";
-      }
-
-      if (selectedFilter === "pending") {
-        return photo.status === "pending";
-      }
-
-      if (selectedFilter === "refused") {
-        return photo.status === "refused";
-      }
-
-      return true;
-    });
+const filteredPhotos = selectionMode
+  ? bilanCandidates
+  : photos;
 
   /*
    * ============================================================
@@ -892,6 +891,36 @@ const data = Array.isArray(payload)
     }
   };
 
+const handleNextPage = async () => {
+  if (currentPage >= totalPages) return;
+
+  const nextPage = currentPage + 1;
+
+  setCurrentPage(nextPage);
+
+  await fetchPhotos(
+    villages,
+    nextPage,
+    selectedFilter,
+    searchValue
+  );
+};
+
+const handlePreviousPage = async () => {
+  if (currentPage <= 1) return;
+
+  const previousPage = currentPage - 1;
+
+  setCurrentPage(previousPage);
+
+  await fetchPhotos(
+    villages,
+    previousPage,
+    selectedFilter,
+    searchValue
+  );
+};
+
   /*
    * ============================================================
    * LOADING
@@ -934,20 +963,20 @@ const data = Array.isArray(payload)
         <main className="flex-1 flex flex-col h-screen overflow-hidden pt-[45px] lg:pt-0">
           {/* HEADER */}
 
-          <GalleryHeader
-            role={role}
-            selectionMode={selectionMode}
-            onAdd={() => setShowPopupPhoto(true)}
-            onSelection={handleStartSelection}
-            onCancelSelection={handleCancelSelection}
-            searchValue={searchValue}
-            setSearchValue={setSearchValue}
-            photosEnAttente={pendingCount}
-            photosSelectionnees={selectedPhotos.length}
-            onAlertClick={() =>
-              setShowPendingPhotosPage(true)
-            }
-          />
+        <GalleryHeader
+          role={role}
+          selectionMode={selectionMode}
+          onAdd={() => setShowPopupPhoto(true)}
+          onSelection={isAdmin ? handleStartSelection : undefined}
+          onCancelSelection={handleCancelSelection}
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+          photosEnAttente={pendingCount}
+          photosSelectionnees={selectedPhotos.length}
+          onAlertClick={() =>
+            setShowPendingPhotosPage(true)
+          }
+        />
 
           {/* ERROR */}
 
@@ -979,7 +1008,7 @@ const data = Array.isArray(payload)
             />
 
             {/* PAGINATION */}
-          {!selectionMode && (
+          {!selectionMode && totalPages > 1 && (
             <div className="flex items-center justify-center gap-20 py-6">
               <Button
                 title="Précédent"
