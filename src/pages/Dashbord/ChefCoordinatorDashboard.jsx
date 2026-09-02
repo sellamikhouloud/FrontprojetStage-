@@ -466,18 +466,26 @@ const ChefCoordinatorDashboard = () => {
   const coordinatorCount =
     coordinateurs?.nb_coordinateur || 0;
 
-  const lastConnection =
-    coordinateurs?.derniere_connexion?.last_login
-      ? new Date(
-          coordinateurs.derniere_connexion.last_login
-        ).toLocaleString("fr-FR", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      : "Aucune connexion";
+const lastConnectionData =
+  coordinateurs?.derniere_connexion || {};
+
+const lastConnection =
+  lastConnectionData?.last_login
+    ? new Date(
+        lastConnectionData.last_login
+      ).toLocaleString("fr-FR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "Aucune connexion";
+
+const lastConnectionUsername =
+  lastConnectionData?.username ||
+  lastConnectionData?.user?.username ||
+  "Utilisateur inconnu";
 
   // =====================================================
   // POPUP MAS
@@ -827,6 +835,7 @@ const ChefCoordinatorDashboard = () => {
               lastConnection={
                 lastConnection
               }
+              lastConnectionUsername={lastConnectionUsername}
               lastConnectionLabel="Dernière connexion"
               Color="#69B89C"
               onClick={() =>
@@ -953,6 +962,7 @@ const ChefCoordinatorDashboard = () => {
                 lastConnection={
                   lastConnection
                 }
+                lastConnectionUsername={lastConnectionUsername}
                 lastConnectionLabel="Dernière connexion"
                 onClick={() =>
                   navigate(
@@ -1002,14 +1012,15 @@ const ChefCoordinatorDashboard = () => {
 
               {/* UPCOMING VISITS */}
 
-<div className="flex min-h-0 flex-1">
-  <UpcomingVisitsCard
-    visits={upcomingVisits}
-    onClick={() =>
-      navigate("/liste-visite")
-    }
-  />
-</div>
+              <div className="flex min-h-0 flex-1">
+                <UpcomingVisitsCard
+                  visits={upcomingVisits}
+                  onClick={() =>
+                    navigate("/liste-visite")
+                  }
+                />
+              </div>
+              
             </div>
           </div>
 

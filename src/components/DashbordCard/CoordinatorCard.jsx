@@ -14,6 +14,7 @@ const CoordinatorCard = ({
 
   // Chef Coordinateur
   lastConnection,
+  lastConnectionUsername,
   lastConnectionLabel,
 
   Color = "#4E9F8A",
@@ -125,7 +126,7 @@ const CoordinatorCard = ({
           label={coordinatorLabel}
           Color={Color}
         />
-
+        
         {/* =================================================
             ADMIN
             ================================================= */}
@@ -140,13 +141,23 @@ const CoordinatorCard = ({
         {/* =================================================
             CHEF COORDINATEUR
             ================================================= */}
-        {isChefCoordinator && (
-          <CardStatistic
-            value={lastConnection}
-            label={lastConnectionLabel}
-            Color={Color}
-          />
-        )}
+          {isChefCoordinator && (
+            <CardStatistic
+              value={
+                <div className="flex flex-col items-center">
+                  <span className="text-[18px] font-medium max-md:text-[12px] font-bold">
+                    {lastConnectionUsername || "Utilisateur inconnu"}
+                  </span>
+
+                  <span className="text-[18px] font-medium max-md:text-[12px]">
+                    {lastConnection}
+                  </span>
+                </div>
+              }
+              label={lastConnectionLabel}
+              Color={Color}
+            />
+          )}
       </div>
     </button>
   );
