@@ -9,7 +9,7 @@ const DistributionCard = ({
   onViewAllClick,
 }) => {
   // Only display the first 5 distributions
-  const displayedProducts = products.slice(0, 5);
+  const displayedProducts = products.slice(0, 3);
 
   return (
     <>
@@ -110,11 +110,12 @@ const DistributionCard = ({
               onViewAllClick?.();
             }}
             className="
-              text-[12px]
-              font-normal
-              leading-[14px]
-              text-[#535353]
-            "
+              text-[#5E6064]
+              text-[13px]
+              font-medium
+              hover:text-[#69B89C]
+              transition-colors
+              cursor-pointer"
           >
             {viewAllText}
           </button>
