@@ -222,7 +222,8 @@ const familles = (data?.pages ?? []).flatMap((page) =>
 );
 
 const displayedFamilles = familleParCode ? [familleParCode] : familles;
-const isCodeSearchMode = Boolean(familleParCode) || Boolean(codeError);
+const isCodeSearchMode = Boolean(familleParCode) ;
+
 
 const observerTarget = useRef(null);
 
@@ -560,7 +561,7 @@ if  (isFilterOpen && isMobile)  {
 
           </div>
 
-     {isSearchingByCode && (
+    {isSearchingByCode && familles.length === 0 && (
   <div className="flex justify-center items-center py-10 md:py-20">
     <Spinner />
   </div>
@@ -590,16 +591,10 @@ if  (isFilterOpen && isMobile)  {
   </div>
 )}
 
-{codeError && !isSearchingByCode && (
-  <div className="flex justify-center py-6">
-    <p className="text-red-500">{codeError}</p>
-  </div>
-)}
 
-{!isSearchingByCode &&
-  ((!isLoading && !isError) || isCodeSearchMode) &&
-  displayedFamilles.length === 0 &&
-  !codeError && (
+{(!isSearchingByCode || familles.length > 0) &&
+  ((!isLoading && !isError) || isCodeSearchMode || codeError) &&
+  displayedFamilles.length === 0 && (
   <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
     <img
       src={NoResultImage}
@@ -609,9 +604,10 @@ if  (isFilterOpen && isMobile)  {
   </div>
 )}
 
-{!isSearchingByCode &&
+{(!isSearchingByCode || familles.length > 0) &&
   ((!isLoading && !isError) || isCodeSearchMode) &&
   displayedFamilles.length > 0 && (
+ 
   <div className="flex gap-6">
   
    <div className="flex-1 space-y-4">
