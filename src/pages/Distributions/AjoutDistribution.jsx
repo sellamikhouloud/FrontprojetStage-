@@ -35,7 +35,7 @@ import { useLocation } from "react-router-dom";
 
 
 
-import { listFamilles } from "@/lib/api/familles";
+import { listFamilles , getFamille } from "@/lib/api/familles";
 import {
   createDistribution,
   updateDistribution,
@@ -115,6 +115,8 @@ export default function AjoutDistribution() {
   const { user, ready } = useAuth();
   const role = user?.role ?? null;
   const isAdmin = role === "admin" || role === "chef_coordinator";
+  
+ 
 
  const iconByNom = {
   "Céréales": Cereales,
@@ -623,6 +625,16 @@ setShowSuccessPopup(true);
   const [openFamilles, setOpenFamilles] = useState(false);
 const [openOptions, setOpenOptions] = useState(false);
 const [searchFamille, setSearchFamille] = useState("");
+const [debouncedSearchFamille, setDebouncedSearchFamille] = useState(""); 
+const [familleParCode, setFamilleParCode] = useState(null); 
+const [isSearchingByCode, setIsSearchingByCode] = useState(false); 
+
+useEffect(() => { 
+  const timer = setTimeout(() => {
+    setDebouncedSearchFamille(searchFamille);
+  }, 300);
+  return () => clearTimeout(timer);
+}, [searchFamille]);
 
 const {
   data: famillesResponse,
@@ -636,7 +648,7 @@ const {
   queryKey: ["familles-popup", "infinite", searchFamille],
 
   queryFn: async ({ pageParam = 1 }) => {
-  const params = { page: pageParam };
+  const params = { page: pageParam , statut: "active" };
 
   const trimmedSearch = searchFamille.trim();
   if (trimmedSearch) {
@@ -697,8 +709,7 @@ useEffect(() => {
 }, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
 
 
-
-const listeDesFamilles = famillesBrutes.map((famille) => ({
+const mapFamilleToPopupItem = (famille) => ({
   id: famille.id,
   enfant: famille.nourrisson?.prenom,
   mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
@@ -712,38 +723,41 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
   naissance: famille.nourrisson?.date_naissance,
   code: famille.id,
   badges: [
-    famille?.statut_nutritionnel_bebe === "mam" && {
-      type: "mam",
-      text: "MAM nourrisson",
-    },
-    famille?.statut_nutritionnel_bebe === "mas" && {
-      type: "mas",
-      text: "MAS nourrisson",
-    },
-    famille?.statut_nutritionnel_bebe === "normale" && {
-      type: "mere",
-      text: "Bébé normal",
-    },
-    famille?.statut_nutritionnel_mere === "normale" && {
-      type: "mere",
-      text: "Mère normale",
-    },
-    famille?.statut_nutritionnel_mere === "a_risque" && {
-      type: "risque",
-      text: "Mère à risque",
-    },
-    famille?.statut_nutritionnel_mere === "malnutrition" && {
-      type: "mas",
-      text: "Mère malnutrie",
-    },
-    famille.est_visite_en_retard && {
-      type: "retard",
-      text: "Visite en retard",
-    },
+    famille?.statut_nutritionnel_bebe === "mam" && { type: "mam", text: "MAM nourrisson" },
+    famille?.statut_nutritionnel_bebe === "mas" && { type: "mas", text: "MAS nourrisson" },
+    famille?.statut_nutritionnel_bebe === "normale" && { type: "mere", text: "Nourrisson normal" },
+    famille?.statut_nutritionnel_mere === "normale" && { type: "mere", text: "Mère normale" },
+    famille?.statut_nutritionnel_mere === "a_risque" && { type: "risque", text: "Mère à risque" },
+    famille?.statut_nutritionnel_mere === "malnutrition" && { type: "mas", text: "Mère malnutrie" },
+    famille.est_visite_en_retard && { type: "retard", text: "Visite en retard" },
   ].filter(Boolean),
-}));
+});
 
- 
+const listeDesFamilles = famillesBrutes.map(mapFamilleToPopupItem);
+
+ const rechercherParCode = async (code) => {
+  try {
+    setIsSearchingByCode(true);
+    const response = await getFamille(code);
+    setFamilleParCode(mapFamilleToPopupItem(response.data));
+  } catch (error) {
+    console.error("Erreur recherche famille par code :", error);
+    setFamilleParCode(null);
+  } finally {
+    setIsSearchingByCode(false);
+  }
+};
+useEffect(() => {
+  const value = debouncedSearchFamille.trim();
+
+  if (/^GDK-\d{4}-\d+$/i.test(value)) {
+    rechercherParCode(value);
+  } else {
+    setFamilleParCode(null);
+  }
+}, [debouncedSearchFamille]);
+
+const displayedFamillesPopup = familleParCode ? [familleParCode] : listeDesFamilles;
 
   // En mode modification, on ne peut plus changer de famille — seulement la consulter
   const familyOptions = isEditMode
@@ -1147,11 +1161,11 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
         />
       </main>
 
-    <PopupListeFamilles
+  <PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
-  familles={listeDesFamilles}
-  loading={famillesLoading}
+  familles={displayedFamillesPopup} // ← changé
+  loading={famillesLoading || (isSearchingByCode && listeDesFamilles.length === 0)} // ← changé
   isError={famillesError}
   onRetry={refetchFamilles}
   search={searchFamille}
