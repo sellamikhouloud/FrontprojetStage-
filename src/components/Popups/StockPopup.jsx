@@ -2115,6 +2115,26 @@ const StockPopup = ({
         };
 
         // ===================================================
+        // ADD CREATED PRODUCT TO LOCAL STATE
+        // ===================================================
+
+        const updatedProducts = [
+          ...products,
+          formattedProduct,
+        ];
+
+        setProducts(updatedProducts);
+
+        saveToDistributionPage(
+          updatedProducts
+        );
+
+        // Refresh products from backend
+        if (onStockUpdated) {
+          await onStockUpdated();
+        }
+
+        // ===================================================
         // RESET
         // ===================================================
 
