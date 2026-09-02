@@ -153,6 +153,9 @@ const handleExport = async () => {
 ) : (
   <NavigationHeader
     title="Liste des coordinateurs"
+     secondType="add"
+    secondActionTitle="Ajouter un coordinateur"
+    onSecondAction={() => navigate("/ajout-coordinateur")}
   />
 )}
 
