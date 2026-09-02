@@ -5,6 +5,7 @@ const SearchBar = ({
   placeholder = "Entrer un nom ou un identifiant",
   value,
   onChange,
+   onKeyDown,
   onFilterClick,
   showFilter = true,
 
@@ -31,6 +32,7 @@ const SearchBar = ({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
+            onKeyDown={onKeyDown}
           className={`
             w-full
             ${height}
