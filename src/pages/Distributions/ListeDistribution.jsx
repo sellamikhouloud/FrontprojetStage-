@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -194,9 +194,11 @@ const {
   initialPageParam: 1,
 });
 
-const produitsData = (produitsResponse?.pages ?? []).flatMap((page) =>
-  Array.isArray(page) ? page : page?.results ?? []
-);
+const produitsData = useMemo(() => {
+  return (produitsResponse?.pages ?? []).flatMap((page) =>
+    Array.isArray(page) ? page : page?.results ?? []
+  );
+}, [produitsResponse]);
 
 const produitsObserverTarget = useRef(null);
 
@@ -229,57 +231,66 @@ const [products, setProducts] = useState([]);
 
 
 useEffect(() => {
-  if (produitsData.length) {
-    setProducts(
-      produitsData.map((p) => {
-        const estEnAttente = !p.validee;
-        const doitAfficherStockInitial =
-          estEnAttente && canManageStock;
+  const mappedProducts = produitsData.map((p) => {
+    const estEnAttente = !p.validee;
 
-        return {
-          id: p.id,
-          nom: p.nom,
+    const doitAfficherStockInitial =
+      estEnAttente && canManageStock;
 
-          // Keep these two values for StockPopup
-          type_produit: p.type_produit,
-          grammage_boite: p.grammage_boite,
+    return {
+      id: p.id,
+      nom: p.nom,
 
-          quantity: Number(
-            doitAfficherStockInitial
-              ? p.stock_initial
-              : p.stock_courant
-          ),
+      type_produit: p.type_produit,
+      grammage_boite: p.grammage_boite,
 
-          unite:
-            p.unite === "boite"
-              ? "boîtes"
-              : p.unite === "kg"
-              ? "Kg"
-              : p.unite,
+      quantity: Number(
+        doitAfficherStockInitial
+          ? p.stock_initial
+          : p.stock_courant
+      ),
 
-          threshold: Number(p.alerte_seuil),
+      unite:
+        p.unite === "boite"
+          ? "boîtes"
+          : p.unite === "kg"
+          ? "Kg"
+          : p.unite,
 
-          statut: p.validee ? "valide" : "en_attente",
+      threshold: Number(p.alerte_seuil),
 
-          date: p.audit?.date_creation
-            ? new Date(p.audit.date_creation).toLocaleDateString("fr-FR")
-            : null,
+      statut: p.validee
+        ? "valide"
+        : "en_attente",
 
-          enregistrePar: p.audit?.cree_par
-            ? `${p.audit.cree_par.prenom ?? ""} ${
-                p.audit.cree_par.nom ?? ""
-              }`.trim()
-            : null,
+      date: p.audit?.date_creation
+        ? new Date(
+            p.audit.date_creation
+          ).toLocaleDateString("fr-FR")
+        : null,
 
-          modifiePar: p.audit?.modifie_par
-            ? `${p.audit.modifie_par.prenom ?? ""} ${
-                p.audit.modifie_par.nom ?? ""
-              }`.trim()
-            : null,
-        };
-      })
-    );
-  }
+      enregistrePar: p.audit?.cree_par
+        ? `${p.audit.cree_par.prenom ?? ""} ${
+            p.audit.cree_par.nom ?? ""
+          }`.trim()
+        : null,
+
+      modifiePar: p.audit?.modifie_par
+        ? `${p.audit.modifie_par.prenom ?? ""} ${
+            p.audit.modifie_par.nom ?? ""
+          }`.trim()
+        : null,
+    };
+  });
+
+  setProducts((previousProducts) => {
+    const previous = JSON.stringify(previousProducts);
+    const next = JSON.stringify(mappedProducts);
+
+    return previous === next
+      ? previousProducts
+      : mappedProducts;
+  });
 }, [produitsData, canManageStock]);
  
 
