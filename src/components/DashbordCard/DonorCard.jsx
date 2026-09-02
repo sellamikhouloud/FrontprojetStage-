@@ -44,21 +44,46 @@ const DonorCard = ({
       "
     >
       {/* Header */}
-      <h2
-        className="
-          text-[24px]
-          font-semibold
-          leading-[28px]
-          text-[#171D1A]
-          mb-[10px]
+<div
+  className="
+    flex
+    justify-between
+    items-center
+    mb-[10px]
+    max-md:mb-[7px]
+  "
+>
+  <h2
+    className="
+      text-[24px]
+      font-semibold
+      leading-[28px]
+      text-[#171D1A]
+      max-md:text-[16px]
+      max-md:leading-[20px]
+    "
+  >
+    {title}
+  </h2>
 
-          max-md:text-[16px]
-          max-md:leading-[20px]
-          max-md:mb-[7px]
-        "
-      >
-        {title}
-      </h2>
+  <button
+    type="button"
+    onClick={onClick}
+    className="
+      flex
+      items-center
+      text-[#5E6064]
+      text-[18px]
+      font-medium
+      hover:text-[#69B89C]
+      transition-colors
+      cursor-pointer
+      max-md:text-[13px]
+    "
+  >
+    Voir la liste des donateurs
+  </button>
+</div>
 
       {/* Statistics */}
       <div
