@@ -36,8 +36,14 @@ import { useLocation } from "react-router-dom";
 
 
 import { listFamilles } from "@/lib/api/familles";
-import { createDistribution, getPreCreationDistribution, updateDistribution } from "@/lib/api/distributions";
-import { enqueue } from "@/lib/offlineQueue";
+import {
+  createDistribution,
+  updateDistribution,
+  getPreCreationProduits,
+  getPreCreationDate,
+} from "@/lib/api/distributions";
+import { saveDraft } from "@/lib/offlineDrafts";
+import { saveCache, loadCache } from "@/lib/offlineCache";
 
 
 
@@ -75,6 +81,35 @@ const detectLaitTypeValue = (nomProduitLait = "") => {
   if (nom.includes("2eme") || nom.includes("2ème") || nom.includes("2 eme")) return "2eme_age";
   return null;
 };
+
+// Approximates the backend's search, client-side, against the family list
+// already cached by the dashboard prefetch — used only when offline and
+// the real search can't run.
+function filterCachedFamilles(cachedData, searchTerm) {
+  const list = Array.isArray(cachedData) ? cachedData : cachedData?.results ?? [];
+
+  if (!searchTerm) return cachedData;
+
+  const term = searchTerm.trim().toLowerCase();
+  if (!term) return cachedData;
+
+  const filtered = list.filter((f) => {
+    const haystack = [
+      f?.mere?.nom,
+      f?.mere?.prenom,
+      f?.nourrisson?.prenom,
+      String(f?.id ?? ""),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(term);
+  });
+
+  return Array.isArray(cachedData)
+    ? filtered
+    : { ...cachedData, results: filtered, next: null };
+}
 
 export default function AjoutDistribution() {
   const { user, ready } = useAuth();
@@ -128,6 +163,7 @@ const produitLaitSource = isEditMode
       ...p,
       icon: p.icon || DEFAULT_ICON,
     }));
+   
 
   const [selectedFamille, setSelectedFamille] = useState(source?.selectedFamille || null);
 
@@ -177,20 +213,65 @@ const [boxes, setBoxes] = useState(() => {
   return source?.boxes ?? 0;
 });
 
-  // Pré-création : donne le détail des grammages dispo (avec nb_boites) par type de lait
-  const {
-  data: preCreationData,
-  isFetching: preCreationLoading,
-  isError: preCreationError,
+  // ---------------------------------------------------------------------
+  // Pré-création — désormais DEUX endpoints séparés :
+  //
+  // 1) Produits + lait : ne dépend PAS de la famille. On le charge dès le
+  //    montage de la page (enabled reste true), et on met le résultat en
+  //    cache localStorage — exactement le pattern "last known good copy"
+  //    utilisé pour les villages/familles. Ça veut dire que le stock est
+  //    déjà connu (ou dispo depuis le cache) même avant que l'utilisateur
+  //    ait choisi une famille, et même hors ligne si un chargement en
+  //    ligne a eu lieu avant.
+  //
+  // 2) Date de dernière distribution : dépend de la famille (paramètre
+  //    ?famille=CODE), donc reste gated par selectedFamille?.code comme
+  //    avant. Pas de cache offline ici — c'est une info secondaire, pas
+  //    bloquante pour remplir le formulaire.
+  // ---------------------------------------------------------------------
+
+   const PRODUITS_CACHE_KEY = "stock-produits";
+
+ 
+
+const {
+  data: produitsData,
+  isFetching: produitsLoading,
+  isError: produitsError,
 } = useQuery({
-  queryKey: ["distribution-pre-creation", selectedFamille?.code],
-  queryFn: () => getPreCreationDistribution(selectedFamille.code).then((r) => r.data),
-  enabled: !!selectedFamille?.code,
+  queryKey: ["distribution-pre-creation-produits"],
+  queryFn: async () => {
+    try {
+      const response = await getPreCreationProduits();
+      console.log("🌐 Stock distribution chargé depuis le serveur");
+      // No saveCache here on purpose — the dashboard prefetch already
+      // keeps "stock-produits" warm on every login. Writing here too
+      // would just duplicate that, with no real benefit.
+      return response.data;
+    } catch (error) {
+      const cached = loadCache(PRODUITS_CACHE_KEY);
+      if (cached?.data) {
+        console.log("📦 Stock distribution chargé depuis le cache (fallback)");
+        return cached.data;
+      }
+      throw error;
+    }
+  },
+  networkMode: "always",
+  retry: 1,
 });
+  const {
+    data: dateData,
+    isFetching: dateLoading,
+  } = useQuery({
+    queryKey: ["distribution-pre-creation-date", selectedFamille?.code],
+    queryFn: () => getPreCreationDate(selectedFamille.code).then((r) => r.data),
+    enabled: !!selectedFamille?.code,
+  });
 
 
 
-const stockProducts = (preCreationData?.produits || [])
+const stockProducts = (produitsData?.produits || [])
   .filter((p) => !p.nom?.toLowerCase().includes("lait"))
   .map((p) => ({
     id: p.id,
@@ -202,7 +283,7 @@ const stockProducts = (preCreationData?.produits || [])
 
 
   // Grammages disponibles pour le type de lait actuellement sélectionné
-  const laitOptions = preCreationData?.lait?.[laitType] || [];
+  const laitOptions = produitsData?.lait?.[laitType] || [];
 
   // laitOptions arrive de façon asynchrone (query liée à selectedFamille) :
 // dès qu'il est dispo, on retrouve l'option qui correspond au produit lait
@@ -400,11 +481,14 @@ setShowSuccessPopup(true);
   // edits stay online-only, per scope.
   if (!isEditMode && !error.response) {
     try {
-      await enqueue("/api/distributions/", payload);
+      // Saved as a draft, not auto-queued: nothing syncs on its own.
+      // The coordinator reviews it from "Brouillons hors ligne" and
+      // explicitly clicks "ajouter" once back online.
+      await saveDraft("distribution", payload);
       setOfflinePending(true);
       setShowSuccessPopup(true);
-    } catch (queueError) {
-      console.error("❌ Impossible de mettre la distribution en attente hors ligne :", queueError);
+    } catch (draftError) {
+      console.error("❌ Impossible d'enregistrer le brouillon de distribution :", draftError);
       setSaveError("Impossible d'enregistrer la distribution, même hors ligne. Veuillez réessayer.");
     }
     setSaving(false);
@@ -439,10 +523,6 @@ setShowSuccessPopup(true);
   };
 
   const handleOpenLaitPopup = () => {
-    if (!selectedFamille) {
-      setErrors((prev) => ({ ...prev, famille: true }));
-      return;
-    }
     if (!laitType) {
       setErrors((prev) => ({ ...prev, laitType: true }));
       return;
@@ -501,6 +581,44 @@ setShowSuccessPopup(true);
       return newValue;
     });
   };
+ const handleManualFamilleSubmit = (code) => {
+  const cached = loadCache("familles-popup");
+  const cachedList = cached?.data?.results ?? cached?.data ?? [];
+  const match = cachedList.find((f) => String(f.id) === code);
+
+  if (match) {
+    setSelectedFamille({
+      id: match.id,
+      code: match.id,
+      enfant: match.nourrisson?.prenom,
+      mere: `${match.mere?.nom ?? ""} ${match.mere?.prenom ?? ""}`,
+      sexe:
+        match?.nourrisson?.sexe === "M"
+          ? "Fils"
+          : match?.nourrisson?.sexe === "F"
+          ? "Fille"
+          : "-",
+      region: match.mere?.village?.nom ?? "-",
+      naissance: match.nourrisson?.date_naissance,
+      badges: [],
+    });
+  } else {
+    // Not in cache — accepted anyway, coordinator typed it from memory.
+    // Backend validates for real once this draft syncs.
+    setSelectedFamille({
+      id: code,
+      code,
+      enfant: undefined,
+      mere: undefined,
+      sexe: "-",
+      region: "-",
+      naissance: undefined,
+      badges: [{ type: "retard", text: "Code saisi manuellement — non vérifié" }],
+    });
+  }
+
+  setErrors((prev) => ({ ...prev, famille: false }));
+};
 
   const [openFamilles, setOpenFamilles] = useState(false);
 const [openOptions, setOpenOptions] = useState(false);
@@ -518,17 +636,31 @@ const {
   queryKey: ["familles-popup", "infinite", searchFamille],
 
   queryFn: async ({ pageParam = 1 }) => {
-    const params = { page: pageParam };
+  const params = { page: pageParam };
 
-    const trimmedSearch = searchFamille.trim();
-    if (trimmedSearch) {
-      params.search = trimmedSearch;
-    }
+  const trimmedSearch = searchFamille.trim();
+  if (trimmedSearch) {
+    params.search = trimmedSearch;
+  }
 
+  try {
     const response = await listFamilles(params);
+    // No saveCache here — same reasoning as the family list page: this
+    // popup's own fetch may be filtered, and we don't want a filtered
+    // result silently overwriting the general cache the dashboard warms.
     return response.data;
-  },
-
+  } catch (error) {
+    if (pageParam === 1) {
+      const cached = loadCache("familles-popup");
+      if (cached?.data) {
+        console.log("📦 Familles (popup) chargées depuis le cache (fallback)");
+        return filterCachedFamilles(cached.data, trimmedSearch);
+      }
+    }
+    // No cache, or a page beyond what we have — nothing more to offer offline.
+    throw error;
+  }
+},
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
 
@@ -737,18 +869,31 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
 
        
 
-        {!selectedFamille && (
-          <div className="flex flex-col gap-2 mt-2">
-            <SelectorWithAction
-              label="Choisir la famille concerne"
-              description="Cliquer pour rechercher la famille concerne par la distribution"
-              onAction={handleSearch}
-            />
-            <ErrorMessage
-              message={errors.famille ? "Veuillez sélectionner une famille" : null}
-            />
-          </div>
-        )}
+      {!selectedFamille && (
+  <div className="flex flex-col gap-2 mt-2">
+    <SelectorWithAction
+      label="Choisir la famille concernée"
+      description="Cliquer pour rechercher la famille concernée par la distribution"
+      onAction={handleSearch}
+      manualEntryLabel="Entrer le code famille directement"
+      manualEntryPlaceholder="Ex : GDK-2026-059"
+      onManualSubmit={handleManualFamilleSubmit}
+      manualEntryError={
+        errors.famille
+          ? "Veuillez sélectionner une famille"
+          : null
+      }
+    />
+
+    <ErrorMessage
+      message={
+        errors.famille
+          ? "Veuillez sélectionner une famille"
+          : null
+      }
+    />
+  </div>
+)}
 
         {/* Family Card */}
         {selectedFamille && (
@@ -761,6 +906,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
               >
                 <CardPopup
                   enfant={selectedFamille.enfant}
+                  mere={selectedFamille.mere}
                   sexe={selectedFamille.sexe}
                   region={selectedFamille.region}
                   naissance={selectedFamille.naissance}
@@ -817,10 +963,10 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
              <InfoHeader
   title="Dernière distribution"
   value={
-    preCreationLoading
+    dateLoading
       ? "Chargement..."
-      : preCreationData?.date_derniere_distribution
-        ? preCreationData.date_derniere_distribution
+      : dateData?.derniere_distribution
+        ? dateData.derniere_distribution
             .split("-")
             .reverse()
             .join("/")
@@ -882,7 +1028,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
               type={laitType}
               onTypeChange={handleLaitTypeChange}
               options={laitOptions}
-              optionsLoading={preCreationLoading}
+              optionsLoading={produitsLoading}
               selectedOption={selectedLaitOption}
               onSelectOption={handleSelectLaitOption}
               showPopup={showLaitPopup}
@@ -891,9 +1037,9 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
               boxes={boxes}
               onIncrement={handleIncrementBoxes}
               onDecrement={handleDecrementBoxes}
-              errors={errors}
-              hasFamille={!!selectedFamille}
-              onRequireFamille={() => setErrors((prev) => ({ ...prev, famille: true }))}
+              errors={{ ...errors, famille: false }}
+              hasFamille={true}
+              onRequireFamille={() => {}}
             />
 
             {/* Temporary confirmation */}
@@ -912,24 +1058,18 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
             <ColisAlimentaire
     products={products}
    onAddProduct={() => {
-  if (!selectedFamille) {
-    setErrors((prev) => ({ ...prev, famille: true }));
-    return;
-  }
-  if (!preCreationLoading) setShowStockPopup(true);
+  if (!produitsLoading) setShowStockPopup(true);
 }}
     onUpdateQuantity={handleUpdateQuantity}
     onRemoveProduct={handleRemoveProduct}
     errors={errors.produits}
   />
-  {preCreationError && (
+  {produitsError && (
   <p className="text-red-500 text-sm mt-1">Impossible de charger le stock disponible.</p>
 )}
              <ErrorMessage
     message={
-      errors.famille
-        ? "Veuillez d'abord choisir une famille"
-        : errors.distribution
+      errors.distribution
         ? "Veuillez ajouter au moins un colis alimentaire ou du lait infantile"
         : null
     }
@@ -968,7 +1108,7 @@ const listeDesFamilles = famillesBrutes.map((famille) => ({
   <Popup
     title={
       offlinePending
-        ? "Distribution enregistrée hors ligne — sera synchronisée"
+        ? "Distribution enregistrée en brouillon hors ligne — à valider depuis « Brouillons hors ligne »"
         : isEditMode
         ? "Distribution modifiée avec succès"
         : "Distribution enregistrée avec succès"

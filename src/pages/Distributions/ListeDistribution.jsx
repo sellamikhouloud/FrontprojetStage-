@@ -506,7 +506,7 @@ const historiqueMouvements = mapHistorique(historiqueData);
         <NavigationHeader
           title="Stock de produit"
           type="add"
-          actionTitle="ajuster le stock "
+          actionTitle={canManageStock ? "ajuster le stock" : "ajouter un produit"}
           onAction={() => setShowStockPopup(true)}
         />
 
