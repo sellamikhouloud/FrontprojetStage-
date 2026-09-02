@@ -1062,159 +1062,91 @@ const StockPopup = ({
   // SAVE THRESHOLDS
   // =========================================================
 
-  const handleSaveThresholds = async (
-    updatedThresholds
-  ) => {
-    if (
-      !Array.isArray(
-        updatedThresholds
-      ) ||
-      updatedThresholds.length === 0
-    ) {
-      return;
-    }
+const handleSaveThresholds = async (updatedThresholds) => {
+  if (!Array.isArray(updatedThresholds) || updatedThresholds.length === 0) {
+    return;
+  }
 
-    setIsSavingThresholds(true);
-    setProductError("");
+  setIsSavingThresholds(true);
+  setProductError("");
 
-    try {
-      const updatedProducts =
-        [...products];
+  try {
+    const updatedProducts = [...products];
 
-      for (
-        const editedProduct of
-        updatedThresholds
-      ) {
-        const editedId =
-          getProductId(
-            editedProduct
-          );
+    for (const editedProduct of updatedThresholds) {
+      const editedId = editedProduct.id;
 
-        if (
-          editedId === null ||
-          editedId === undefined
-        ) {
-          continue;
-        }
-
-        const newThreshold =
-          Number(
-            editedProduct.threshold ??
-              editedProduct.alerte_seuil
-          );
-
-        if (
-          Number.isNaN(
-            newThreshold
-          ) ||
-          newThreshold < 0
-        ) {
-          throw new Error(
-            `Seuil invalide pour le produit ${getProductName(
-              editedProduct
-            )}`
-          );
-        }
-
-        const currentProduct =
-          products.find(
-            (product) =>
-              String(
-                product.id
-              ) ===
-              String(
-                editedId
-              )
-          );
-
-        if (!currentProduct) {
-          continue;
-        }
-
-        if (
-          Number(
-            currentProduct.threshold
-          ) !==
-          newThreshold
-        ) {
-          const payload = {
-            alerte_seuil:
-              newThreshold,
-          };
-
-          const response =
-            await modifierSeuil(
-              editedId,
-              payload
-            );
-
-          const backendProduct =
-            response?.data;
-
-          const productIndex =
-            updatedProducts.findIndex(
-              (product) =>
-                String(
-                  product.id
-                ) ===
-                String(
-                  editedId
-                )
-            );
-
-          if (
-            productIndex !== -1
-          ) {
-            updatedProducts[
-              productIndex
-            ] = {
-              ...updatedProducts[
-                productIndex
-              ],
-
-              threshold:
-                formatQuantity(
-                  backendProduct?.alerte_seuil ??
-                    newThreshold
-                ),
-
-              /*
-               * Preserve grammage.
-               */
-              grammage_boite:
-                updatedProducts[
-                  productIndex
-                ].grammage_boite,
-            };
-          }
-        }
+      if (editedId === null || editedId === undefined) {
+        continue;
       }
 
-      setProducts(
-        updatedProducts
+      const newThreshold = Number(editedProduct.threshold);
+
+      if (Number.isNaN(newThreshold) || newThreshold < 0) {
+        throw new Error(
+          `Seuil invalide pour le produit ${editedProduct.title}`
+        );
+      }
+
+      const currentProduct = products.find(
+        (product) => String(product.id) === String(editedId)
       );
 
-      saveToDistributionPage(
-        updatedProducts
-      );
+      if (!currentProduct) {
+        continue;
+      }
 
-      setShowEditPopup(false);
-    } catch (error) {
-      console.error(
-        "Erreur modification seuil :",
-        error
-      );
+      // Seulement si la valeur a changé
+      if (Number(currentProduct.threshold) !== newThreshold) {
+        console.log("Modification seuil :", {
+          id: editedId,
+          ancien: currentProduct.threshold,
+          nouveau: newThreshold,
+        });
 
-      setProductError(
-        getBackendErrorMessage(
-          error,
-          "Impossible de modifier le seuil."
-        )
-      );
-    } finally {
-      setIsSavingThresholds(false);
+        const response = await modifierSeuil(editedId, {
+          alerte_seuil: newThreshold,
+        });
+
+        console.log("Réponse API seuil :", response.data);
+
+        const productIndex = updatedProducts.findIndex(
+          (product) => String(product.id) === String(editedId)
+        );
+
+        if (productIndex !== -1) {
+          updatedProducts[productIndex] = {
+            ...updatedProducts[productIndex],
+            threshold: Number(
+              response?.data?.alerte_seuil ?? newThreshold
+            ),
+          };
+        }
+      }
     }
-  };
+
+    setProducts(updatedProducts);
+    saveToDistributionPage(updatedProducts);
+
+    setShowEditPopup(false);
+
+    if (onStockUpdated) {
+      await onStockUpdated();
+    }
+  } catch (error) {
+    console.error("Erreur modification seuil :", error);
+    console.error("Réponse backend :", error?.response?.data);
+
+    setProductError(
+      getBackendErrorMessage(
+        error,
+        "Impossible de modifier le seuil."
+      )
+    );
+  } finally {
+    setIsSavingThresholds(false);
+  }
+};
 
   // =========================================================
   // START INCREMENT

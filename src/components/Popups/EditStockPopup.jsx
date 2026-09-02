@@ -14,35 +14,27 @@ const EditStockPopup = ({
 }) => {
   const [thresholds, setThresholds] = useState([]);
 
-  // INITIALIZE
-  useEffect(() => {
-    if (!Array.isArray(initialProducts)) {
-      setThresholds([]);
-      return;
-    }
+useEffect(() => {
+  if (!open) return;
 
-    const formattedThresholds = initialProducts.map((product) => ({
-      id: product.id,
+  if (!Array.isArray(initialProducts)) {
+    setThresholds([]);
+    return;
+  }
 
-      title:
-        product.title ??
-        product.nom ??
-        "",
+  const formattedThresholds = initialProducts.map((product) => ({
+    id: product.id,
+    title: product.title ?? product.nom ?? "",
+    unit: product.unit ?? product.unite ?? "",
+    threshold:
+      product.threshold ??
+      product.alerte_seuil ??
+      product.seuil ??
+      1,
+  }));
 
-      unit:
-        product.unit ??
-        product.unite ??
-        "",
-
-      threshold:
-        product.threshold ??
-        product.alerte_seuil ??
-        product.seuil ??
-        1,
-    }));
-
-    setThresholds(formattedThresholds);
-  }, [initialProducts]);
+  setThresholds(formattedThresholds);
+}, [open]);
 
   // CHANGE THRESHOLD
   const handleChange = (index, value) => {
@@ -247,7 +239,6 @@ const EditStockPopup = ({
                           value={
                             product.threshold
                           }
-                          disabled={isSaving}
                           onChange={(e) =>
                             handleChange(
                               index,
