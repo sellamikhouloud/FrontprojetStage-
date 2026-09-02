@@ -81,7 +81,7 @@ const Login = () => {
     if (user?.role === "admin") {
   navigate("/dashboard");
 } else if (user?.role === "chef_coordinator") {
-  navigate("/dashboard");
+  navigate("/dashboardChef");
 } else if (user?.role === "coordinator") {
   navigate("/dashboardCoor");
 } else {
