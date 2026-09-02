@@ -26,3 +26,16 @@ export function loadCache(key) {
     return null;
   }
 }
+
+// Wipes every cached reference entry (families, stock, villages, etc.)
+// on logout. Offline drafts (IndexedDB) are NOT touched here — those are
+// the coordinator's actual unsynced work and must survive logout.
+export function clearAllCache() {
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith(PREFIX))
+      .forEach((key) => localStorage.removeItem(key));
+  } catch (error) {
+    console.warn("Impossible de vider le cache:", error);
+  }
+}
