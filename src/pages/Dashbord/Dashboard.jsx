@@ -820,7 +820,7 @@ const exchangeRateValue =
         products={lowStockProducts}
         onGoToStock={() => {
           setShowBas(false);
-          navigate("/stock");
+          navigate("/liste-distributions");
         }}
       />
     </div>

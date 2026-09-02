@@ -28,6 +28,8 @@ import PopupMas from "../../components/Popups/PopupMas";
 
 import PopupDistribution from "../../components/Popups/Popupdistributions";
 
+import PopupStockBas from "../../components/Popups/PopupStockBas";
+
 import AttentionIcon from "../../assets/Attention.svg";
 
 import RetardIcon from "../../assets/retard.svg";
@@ -58,6 +60,7 @@ const ChefCoordinatorDashboard = () => {
   const [showHistorique, setShowHistorique] = useState(false);
   const [showRetard, setShowRetard] = useState(false);
   const [showMas, setShowMas] = useState(false);
+  const [showBas, setShowBas] = useState(false);
 
   // =====================================================
   // FETCH DASHBOARD
@@ -554,7 +557,7 @@ const lastConnectionUsername =
     switch (alert.id) {
       case 1:
         if (stockAlerts.length > 0) {
-          navigate("/stock");
+          setShowBas(true);
         }
         break;
 
@@ -1061,6 +1064,18 @@ const lastConnectionUsername =
             }
             familleMas={familleMas}
           />
+
+      <PopupStockBas
+        isOpen={showBas}
+        onClose={() =>
+          setShowBas(false)
+        }
+        products={lowStockProducts}
+        onGoToStock={() => {
+          setShowBas(false);
+          navigate("/liste-distributions");
+        }}
+      />
         </div>
       </main>
     </div>
