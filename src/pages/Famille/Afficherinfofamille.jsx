@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
-import { getFamille } from "@/lib/api/familles";
+import { getFamille  } from "@/lib/api/familles";
 import { marquerSortie} from "@/lib/api/familles";
 import {getVisites} from "@/lib/api/familles";
 import { getDistributions } from "@/lib/api/familles";
@@ -27,6 +27,7 @@ import TailleAgeChart from "../../components/OMSGraphs/TailleAgeChart";
 import PoidsTailleChart from "../../components/OMSGraphs/PoidsTailleChart";
 import MuacAgeChart from "../../components/OMSGraphs/MuacAgeChart";
 import Spinner from "../../components/Spinner";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 
 const FamilyProfile = () => {
@@ -34,6 +35,7 @@ const FamilyProfile = () => {
     const navigate = useNavigate();
 const { id } = useParams();
  const queryClient = useQueryClient();
+   const { user } = useAuth(); 
 
 const [openDistribution, setOpenDistribution] = useState(false);
 const [openVisites, setOpenVisites] = useState(false);
@@ -152,6 +154,8 @@ if (isError) {
     </div>
   );
 }
+const isSuperviseParMoi =
+  user?.role !== "coordinator" || famille?.coordinateur?.id === user?.id;
 
 const STATUT_MATRIMONIAL_LABELS = {
   mariee: "Mariée",
@@ -559,20 +563,24 @@ return (
   onBack={handleBack} 
 />
 
-   <div className="mt-4">
-  <NavigationHeader
-    title="Fiche famille"
-    type="edit"
-    actionTitle="Modifier la fiche famille"
-    onAction={() =>
-      navigate(`/famille/${id}/modifier`, {
-        state: {
-          from: location.state?.from,
-          draft: location.state?.draft,
-        },
-      })
-    }
-  />
+  <div className="mt-4">
+  {isSuperviseParMoi ? (
+    <NavigationHeader
+      title="Fiche famille"
+      type="edit"
+      actionTitle="Modifier la fiche famille"
+      onAction={() =>
+        navigate(`/famille/${id}/modifier`, {
+          state: {
+            from: location.state?.from,
+            draft: location.state?.draft,
+          },
+        })
+      }
+    />
+  ) : (
+    <NavigationHeader title="Fiche famille" />
+  )}
 </div>
 
         {/* ==================== HAUT ==================== */}
