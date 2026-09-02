@@ -125,8 +125,9 @@ const CoordinatorCard = ({
           value={coordinatorCount}
           label={coordinatorLabel}
           Color={Color}
+          className={isChefCoordinator ? "mt-8" : ""}
         />
-        
+
         {/* =================================================
             ADMIN
             ================================================= */}

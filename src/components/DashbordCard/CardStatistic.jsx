@@ -3,10 +3,11 @@ const CardStatistic = ({
   label,
   Color = "#4E9F8A",
   align = "center",
+  className = "",
 }) => {
   return (
     <div
-      className={`flex flex-col items-${align} justify-center gap-[16px] flex-1 max-md:gap-[3px]`}
+      className={`flex flex-col items-${align} justify-center gap-[16px] flex-1 max-md:gap-[3px] ${className}`}
     >
       <span
         className="
