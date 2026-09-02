@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles , exportFamilles } from "@/lib/api/familles";
-import { saveCache, loadCache } from '@/lib/offlineCache';
 import { listVillages } from "@/lib/api/Parametres";
 import Spinner from "../../components/Spinner";
 import Sidebar from "../../components/Sidebar/Sidebar";
@@ -16,6 +15,7 @@ import NoResultImage from "../../assets/no result picture.svg";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
 import FilterTag from "../../components/Filter/FilterTag";
 import { useNavigate } from "react-router-dom";
+
 
 export default function FamiliesPage() {
     const { user, ready } = useAuth();
@@ -145,44 +145,17 @@ const [filters, setFilters] = useState({
   statut_zakat: "",
   statutZakatLabel: "",
 });
-const {
-  data: villagesData,
-  isLoading: villagesLoading,
-  isError: villagesError,
-} = useQuery({
-  queryKey: ["villages"],
-  networkMode: "always",
 
- queryFn: async () => {
-  try {
-    // Always try the real network request first — navigator.onLine
-    // isn't reliable enough to decide this up front (it can report
-    // "online" even when requests are actually failing).
-    const response = await listVillages();
-
-    console.log("🌐 Villages chargés depuis le serveur");
-
-    saveCache("villages", response.data);
-
-    return response.data;
-  } catch (error) {
-    // Network request failed for any reason — fall back to the last
-    // known good copy in localStorage.
-    const cached = loadCache("villages");
-
-    if (cached?.data) {
-      console.log("📦 Villages chargés depuis le cache (fallback)");
-      return cached.data;
-    }
-
-    throw error;
-  }
-},
-});
-
-const villages = villagesData?.results ?? villagesData ?? [];
-
-
+ const {
+    data: villagesData,
+    isLoading: villagesLoading,
+    isError: villagesError,
+  } = useQuery({
+    queryKey: ["villages"],
+    queryFn: () => listVillages().then((r) => r.data),
+  });
+ 
+  const villages = villagesData?.results ?? villagesData ?? [];
 
 const villageOptions = villages.map((village) => ({
   label: village.nom,
@@ -199,76 +172,53 @@ const {
   hasNextPage,
   isFetchingNextPage,
 } = useInfiniteQuery({
-queryFn: async ({ pageParam = 1 }) => {
-  const params = { page: pageParam };
+  queryKey: ["familles", search, appliedFilters],
 
-  const trimmedSearch = search.trim();
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam };
 
-  if (trimmedSearch) {
-    params.search = trimmedSearch;
-  }
+    const trimmedSearch = search.trim();
 
-  if (appliedFilters.village) {
-    params.village = appliedFilters.village;
-  }
-
-  if (appliedFilters.statut) {
-    params.statut = appliedFilters.statut;
-  }
-
-  if (appliedFilters.mois_entree) {
-    params.mois_entree = appliedFilters.mois_entree;
-  }
-
-  if (appliedFilters.sexe) {
-    params.sexe = appliedFilters.sexe;
-  }
-
-  if (appliedFilters.statut_zakat) {
-    params.statut_zakat = appliedFilters.statut_zakat;
-  }
-
-  try {
-    const response = await listFamilles(params);
-
-    console.log(
-      `🌐 Familles page ${pageParam} chargée depuis le serveur`
-    );
-
-    // Cache THIS page
-    saveCache(`familles-page-${pageParam}`, response.data);
-
-    return response.data;
-
-  } catch (error) {
-    // Offline → load THIS page from cache
-    const cached = loadCache(`familles-page-${pageParam}`);
-
-    if (cached?.data) {
-      console.log(
-        `📦 Familles page ${pageParam} chargée depuis le cache`
-      );
-
-      return cached.data;
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
     }
 
-    throw error;
-  }
-},
+    if (appliedFilters.village) {
+      params.village = appliedFilters.village;
+    }
+
+    if (appliedFilters.statut) {
+      params.statut = appliedFilters.statut;
+    }
+
+    if (appliedFilters.mois_entree) {
+      params.mois_entree = appliedFilters.mois_entree;
+    }
+
+    if (appliedFilters.sexe) {
+      params.sexe = appliedFilters.sexe;
+    }
+
+    if (appliedFilters.statut_zakat) {
+      params.statut_zakat = appliedFilters.statut_zakat;
+    }
+
+    const response = await listFamilles(params);
+    return response.data;
+  },
 
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? allPages.length + 1 : undefined,
 
   initialPageParam: 1,
-
-  networkMode: "always",
-
+  keepPreviousData: true,
   retry: 1,
 });
 
 const familles = (data?.pages ?? []).flatMap((page) =>
   Array.isArray(page) ? page : page?.results ?? []
 );
+
 const observerTarget = useRef(null);
 
 useEffect(() => {
