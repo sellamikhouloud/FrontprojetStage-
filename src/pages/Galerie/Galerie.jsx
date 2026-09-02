@@ -187,7 +187,7 @@ const totalPages = pageSize
 
 const fetchPhotos = async (
   villagesList = villages,
-  page = currentPage,
+  page = 1,
   filter = selectedFilter,
   search = searchValue
 ) => {
@@ -212,7 +212,6 @@ const fetchPhotos = async (
     }
 
     const response = await listPhotos(params);
-
     const data = response.data;
 
     const results = Array.isArray(data)
@@ -225,14 +224,21 @@ const fetchPhotos = async (
 
     setPhotos(mappedPhotos);
 
+    /*
+     * IMPORTANT:
+     * Keep the backend total count.
+     */
     if (data?.count !== undefined) {
       setTotalItems(data.count);
     }
 
-    // KEEP YOUR EXISTING PAGE SIZE
-    if (data?.results?.length && !pageSize) {
-      setPageSize(data.results.length);
+    /*
+     * Determine the page size from the first page only.
+     */
+    if (page === 1 && results.length > 0) {
+      setPageSize(results.length);
     }
+
   } catch (err) {
     console.error("Erreur lors du chargement des photos :", err);
     setError("Impossible de charger les photos.");
@@ -374,21 +380,25 @@ useEffect(() => {
    * ============================================================
    */
 
-  const handleSavePhoto = (updatedPhoto) => {
-    setPhotos((prev) =>
-      prev.map((photo) =>
-        photo.id === updatedPhoto.id
-          ? updatedPhoto
-          : photo
-      )
-    );
+  const handleSavePhoto = async (updatedPhoto) => {
+  setPhotos((prev) =>
+    prev.map((photo) =>
+      photo.id === updatedPhoto.id
+        ? updatedPhoto
+        : photo
+    )
+  );
 
-    setSelectedPhoto(updatedPhoto);
+  setSelectedPhoto(updatedPhoto);
+  setShowModifier(false);
 
-    setShowModifier(false);
-
-    fetchPhotos();
-  };
+  await fetchPhotos(
+    villages,
+    currentPage,
+    selectedFilter,
+    searchValue
+  );
+};
 
   /*
    * ============================================================
@@ -396,18 +406,22 @@ useEffect(() => {
    * ============================================================
    */
 
-  const handleAddPhoto = (newPhoto) => {
-    setShowAjouterPhoto(false);
+  const handleAddPhoto = async (newPhoto) => {
+  setShowAjouterPhoto(false);
+  setSelectedImage(null);
+  setSelectedImageFile(null);
 
-    setSelectedImage(null);
+  setCurrentPage(1);
 
-    setSelectedImageFile(null);
+  await fetchPhotos(
+    villages,
+    1,
+    selectedFilter,
+    searchValue
+  );
 
-    fetchPhotos();
-
-    fetchPendingCount();
-  };
-
+  await fetchPendingCount();
+};
   /*
    * ============================================================
    * IMAGE SELECTED
