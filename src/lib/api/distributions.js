@@ -12,5 +12,13 @@ export const exportDistributions = (params) => api.get("/api/distributions/expor
 
 export const annulerDistribution = (id) => api.post(`/api/distributions/${id}/annuler/`);
 
-export const getPreCreationDistribution = (familleCode) => api.get("/api/distributions/pre-creation/", { params: { famille: familleCode } });
+export function getPreCreationProduits() {
+  return api.get("/api/distributions/pre-creation-produits/");
+}
+
+export function getPreCreationDate(familleCode) {
+  return api.get("/api/distributions/pre-creation-date/", {
+    params: { famille: familleCode },
+  });
+}
 
