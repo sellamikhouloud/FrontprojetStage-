@@ -117,3 +117,12 @@
     appearance: textfield;
   }
 }
+/* Hide the browser's native password reveal button */
+input[type="password"]::-webkit-reveal-button {
+  display: none;
+}
+
+/* Hide the native password reveal button in Microsoft Edge */
+input[type="password"]::-ms-reveal {
+  display: none;
+}
