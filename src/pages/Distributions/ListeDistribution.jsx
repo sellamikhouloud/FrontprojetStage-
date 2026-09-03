@@ -18,7 +18,7 @@ import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
 import { useNavigate , useLocation } from "react-router-dom";
 import { listProduits, validerProduit, getHistoriqueProduit } from "@/lib/api/stock";
-import { listDistributions , exportDistributions, annulerDistribution } from "@/lib/api/distributions";
+import { listDistributions , exportDistributions, annulerDistribution ,getDistribution } from "@/lib/api/distributions";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
 
@@ -181,6 +181,24 @@ useEffect(() => {
 
   return () => observer.disconnect();
 }, [hasNextDistributionsPage, isFetchingNextDistributionsPage, fetchNextDistributionsPage]);
+
+useEffect(() => {
+    const restoreId = location.state?.restoreDistributionId;
+
+    if (restoreId) {
+      getDistribution(restoreId)
+        .then((res) => {
+          setSelectedDistribution(res.data || res);
+          setIsPopupOpen(true);
+        })
+        .catch((err) => {
+          console.error("Erreur lors de la récupération de la distribution :", err);
+        });
+
+      // Effacer l'état pour éviter de rouvrir la modale au rechargement de la page
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
 
 const {
   data: produitsResponse,
@@ -784,5 +802,7 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     </div>
   );
 }
+
+
 
 
