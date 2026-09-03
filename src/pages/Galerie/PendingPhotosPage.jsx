@@ -244,23 +244,31 @@ useEffect(() => {
           
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-20 py-6">
-              <Button
-                title="Précédent"
-                variant="outline"
-                disabled={currentPage === 1 || loading}
-                onClick={handlePreviousPage}
-              />
+              <span
+                onClick={currentPage > 1 ? handlePreviousPage : undefined}
+                className={`text-sm font-medium ${
+                  currentPage > 1
+                    ? "cursor-pointer text-black hover:text-[#69B89C]"
+                    : "text-gray-300 cursor-not-allowed"
+                }`}
+              >
+                Précédent
+              </span>
 
               <span className="text-sm font-medium">
                 Page {currentPage} / {totalPages}
               </span>
 
-              <Button
-                title="Suivant"
-                variant="filter"
-                disabled={currentPage >= totalPages || loading}
-                onClick={handleNextPage}
-              />
+              <span
+                onClick={currentPage < totalPages ? handleNextPage : undefined}
+                className={`text-sm font-medium ${
+                  currentPage < totalPages
+                    ? "cursor-pointer text-black hover:text-[#69B89C]"
+                    : "text-gray-300 cursor-not-allowed"
+                }`}
+              >
+                Suivant
+              </span>
             </div>
           )}
         </div>

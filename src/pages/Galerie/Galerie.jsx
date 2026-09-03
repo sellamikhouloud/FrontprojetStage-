@@ -1012,35 +1012,61 @@ const handlePreviousPage = async () => {
           {/* GALLERY */}
 
           <div className="flex-1 overflow-y-auto">
-            <GalleryGrid
-              photos={filteredPhotos}
-              selectedFilter={selectedFilter}
-              onPhotoClick={handlePhotoClick}
-              selectionMode={selectionMode}
-              selectedPhotos={selectedPhotos}
-              setSelectedPhotos={setSelectedPhotos}
-            />
+            {filteredPhotos.length === 0 ? (
+              <div className="flex flex-1 items-center justify-center py-20 px-5">
+                <p className="text-center text-gray-500 text-base">
+                  {selectionMode
+                    ? "Aucune photo disponible pour le bilan."
+                    : selectedFilter === "all"
+                    ? "Aucune photo disponible."
+                    : selectedFilter === "validated"
+                    ? "Aucune photo validée."
+                    : selectedFilter === "pending"
+                    ? "Aucune photo en attente."
+                    : selectedFilter === "refused"
+                    ? "Aucune photo refusée."
+                    : "Aucune photo disponible."}
+                </p>
+              </div>
+            ) : (
+              <GalleryGrid
+                photos={filteredPhotos}
+                selectedFilter={selectedFilter}
+                onPhotoClick={handlePhotoClick}
+                selectionMode={selectionMode}
+                selectedPhotos={selectedPhotos}
+                setSelectedPhotos={setSelectedPhotos}
+              />
+            )}
 
             {/* PAGINATION */}
           {!selectionMode && totalPages > 1 && (
             <div className="flex items-center justify-center gap-20 py-6">
-              <Button
-                title="Précédent"
-                variant="outline"
-                disabled={currentPage === 1}
-                onClick={handlePreviousPage}
-              />
+              <span
+                onClick={currentPage > 1 ? handlePreviousPage : undefined}
+                className={`text-sm font-medium ${
+                  currentPage > 1
+                    ? "cursor-pointer text-black hover:text-[#69B89C]"
+                    : "text-gray-300 cursor-not-allowed"
+                }`}
+              >
+                Précédent
+              </span>
 
               <span className="text-sm font-medium">
                 Page {currentPage} / {totalPages}
               </span>
 
-              <Button
-                title="Suivant"
-                variant="filter"
-                disabled={currentPage >= totalPages}
-                onClick={handleNextPage}
-              />
+              <span
+                onClick={currentPage < totalPages ? handleNextPage : undefined}
+                className={`text-sm font-medium ${
+                  currentPage < totalPages
+                    ? "cursor-pointer text-black hover:text-[#69B89C]"
+                    : "text-gray-300 cursor-not-allowed"
+                }`}
+              >
+                Suivant
+              </span>
             </div>
           )}
 
