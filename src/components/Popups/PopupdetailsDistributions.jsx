@@ -40,21 +40,31 @@ const { user } = useAuth();
   const isAnnulee = Boolean(distribution.annulee);
 
 // ==================== PERMISSIONS ====================
+// ==================== PERMISSIONS ====================
 
 const isAdmin = user?.role === "admin";
 const isCoordinateur = user?.role === "coordinator";
 
-const coordinateurId =
-  famille?.coordinateur &&
-  typeof famille.coordinateur === "object"
-    ? famille.coordinateur.id
-    : famille?.coordinateur;
+const coordinateurNom =
+  famille?.coordinateur?.nom?.trim().toLowerCase() || "";
+
+const coordinateurPrenom =
+  famille?.coordinateur?.prenom?.trim().toLowerCase() || "";
+
+const userNom =
+  user?.nom?.trim().toLowerCase() || "";
+
+const userPrenom =
+  user?.prenom?.trim().toLowerCase() || "";
 
 const isCoordinateurAssigne =
-  String(coordinateurId) === String(user?.id);
+  isCoordinateur &&
+  coordinateurNom === userNom &&
+  coordinateurPrenom === userPrenom;
 
 const isSuperviseParMoi =
   !isCoordinateur || isCoordinateurAssigne;
+
 
 // Depuis l'historique d'une famille :
 // → vérifier que le coordinateur supervise la famille
