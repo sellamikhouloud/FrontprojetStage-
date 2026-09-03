@@ -16,6 +16,7 @@ import { searchMere, createFamille } from "../../lib/api/familles";
 import { listUsers } from "../../lib/api/users";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage.jsx";
+import { saveDraft } from "@/lib/offlineDrafts";
 
 
 
@@ -139,6 +140,10 @@ useEffect(() => {
 
  const [saving, setSaving] = useState(false);
  const [saveError, setSaveError] = useState(null);
+ // Comme dans AjoutVisite : passe à true uniquement quand la création a
+ // été enregistrée en brouillon local faute de connexion (aucune réponse
+ // du serveur), et non à cause d'une vraie erreur backend.
+ const [offlinePending, setOfflinePending] = useState(false);
 
 const handleSave = async () => {
   const newErrors = {};
@@ -153,6 +158,7 @@ const handleSave = async () => {
 
   setSaving(true);
   setSaveError(null);
+  setOfflinePending(false);
 
   try {
     const nourrissons = formData.nourrissons?.length
@@ -356,6 +362,50 @@ console.log(
     resetFamilyForm();
 
  } catch (error) {
+  // Pas de réponse du tout = la requête n'a jamais atteint le serveur,
+  // donc on est hors ligne. On enregistre un brouillon consultable au
+  // lieu d'afficher une erreur — rien n'est synchronisé automatiquement.
+  // Le coordinateur doit ouvrir "Brouillons hors ligne" et cliquer sur
+  // « Ajouter » une fois de retour en ligne. Même principe que AjoutVisite.
+  if (!error.response) {
+    try {
+     const nourrissonsDraft = formData.nourrissons?.length
+  ? formData.nourrissons
+  : [formData.nourrisson];
+
+const { photo, ...mereSansPhoto } = formData.mere || {};
+
+await saveDraft(
+  "famille",
+  {
+    mere: mereSansPhoto,
+    nourrissons: nourrissonsDraft,
+   
+    nourrissonClientIds: nourrissonsDraft.map(() => crypto.randomUUID()),
+    date_entree: formData.date_entree,
+    statut: formData.statut,
+    date_sortie: formData.date_sortie,
+    motif_sortie: formData.motif_sortie,
+    coordinateur: formData.coordinateur,
+  },
+  photo instanceof File ? { photo } : undefined
+);
+
+      setCreatedFamilleId(null);
+      setOfflinePending(true);
+      setShowPopup(true);
+      resetFamilyForm();
+    } catch (draftError) {
+      console.error("❌ Impossible d'enregistrer le brouillon de famille :", draftError);
+      setSaveError(
+        "Impossible d'enregistrer la famille, même hors ligne. Veuillez réessayer."
+      );
+    }
+    setSaving(false);
+    return;
+  }
+
+  // Le serveur a répondu avec une erreur — inchangé.
   console.error(
     "❌ Erreur lors de la création :",
     error.response?.data || error.message
@@ -381,6 +431,11 @@ const isAdmin = role === "admin" || role === "chef_coordinator";
 
 const [searchCoordinateur, setSearchCoordinateur] = useState("");
 
+// Liste des coordinateurs : volontairement 100% réseau, sans repli sur un
+// cache local (contrairement à la liste des familles dans AjoutVisite).
+// Pas de saveCache/loadCache ici — si hors ligne, la liste échoue tout
+// simplement (coordinateursIsError) et l'utilisateur peut réessayer plus
+// tard ; on ne veut pas qu'un coordinateur choisisse dans une liste périmée.
 const {
   data: coordinateursResponse,
   isLoading: coordinateursLoading,
@@ -798,13 +853,32 @@ useEffect(() => {
 
 {showPopup && (
   <Popup
-    title="Enregistrer avec succès"
-    image={successImage}
-    id={createdFamilleId}
-    primaryButtonText="Voir la fiche de la famille"
+    title={
+      offlinePending
+        ? "Famille enregistrée en brouillon hors ligne — à valider depuis « Brouillons hors ligne »"
+        : "Enregistrer avec succès"
+    }
+    image={offlinePending ? null : successImage}
+    id={offlinePending ? null : createdFamilleId}
+    primaryButtonText={
+      offlinePending ? "Voir les brouillons hors ligne" : "Voir la fiche de la famille"
+    }
     secondaryButtonText="Revenir à l'accueil"
-    onPrimaryClick={() => navigate(`/famille/${createdFamilleId}`)}
-    onSecondaryClick={() => navigate("/dashboard")}
+    onPrimaryClick={() => {
+      setShowPopup(false);
+      if (offlinePending) {
+        
+        navigate("/brouillons-hors-ligne");
+      } else {
+        navigate(`/famille/${createdFamilleId}`);
+      }
+      setOfflinePending(false);
+    }}
+    onSecondaryClick={() => {
+      setShowPopup(false);
+      setOfflinePending(false);
+      navigate("/dashboard");
+    }}
   />
 )}
 <PopupListeCoordinateurs
