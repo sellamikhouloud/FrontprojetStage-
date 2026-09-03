@@ -1,4 +1,5 @@
 import StatusBadge from "./StatusBadge";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 
 const GalleryCard = ({
@@ -12,6 +13,39 @@ const GalleryCard = ({
   setSelectedPhotos,
 }) => {
   const isSelected = selectedPhotos.includes(photoId);
+  const [isDarkImage, setIsDarkImage] = useState(true);
+
+useEffect(() => {
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.src = image;
+
+  img.onload = () => {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+canvas.width = 100;
+canvas.height = 100;
+
+ctx.drawImage(img, 0, 0, 100, 100);
+
+// Only analyze the bottom 40% of the image
+const data = ctx.getImageData(0, 60, 100, 40).data;
+
+let brightness = 0;
+
+for (let i = 0; i < data.length; i += 4) {
+  brightness +=
+    0.299 * data[i] +
+    0.587 * data[i + 1] +
+    0.114 * data[i + 2];
+}
+
+const averageBrightness = brightness / (data.length / 4);
+
+setIsDarkImage(averageBrightness < 128);
+  };
+}, [image]);
   const handleClick = () => {
     if (selectionMode){
       // Only validated photos can be selected
@@ -117,7 +151,7 @@ const GalleryCard = ({
 
       {/* Title */}
       <p
-        className="
+        className={`
           absolute
           bottom-2
           left-2
@@ -125,14 +159,14 @@ const GalleryCard = ({
           lg:bottom-5
           lg:left-5
           lg:right-5
-          text-white
+          ${isDarkImage ? "text-white" : "text-black"}
           text-[14px]
           lg:text-[18px]
           font-medium
           lg:font-semibold
           leading-[18px]
           lg:leading-[20px]
-        "
+        `}
       >
         {title}
       </p>
