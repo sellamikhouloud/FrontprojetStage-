@@ -364,17 +364,30 @@ const RapportAnnuel = () => {
               <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-           {/* Ancienne version à supprimer */}
-<div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
+         <div className="mt-6 flex flex-col gap-1 w-full">
+  {/* Aperçu mobile / tablette */}
   <div className="min-[1000px]:hidden">
     <Button
-      title="Prévoir le rapport"
-      variant="telecharger"
-      onClick={() => setShowPreview(true)}
-      noPadding
-    />
+                  title="Prévoir le rapport"
+                  variant="telecharger"
+                  onClick={() => setShowPreview(true)}
+                  noPadding
+                />
   </div>
 
+  
+  {/* 1. Afficher "Confirmer et valider" uniquement si le rapport existe et n'est pas encore validé */}
+{!isLoading && rapport && !rapport.est_valide && (
+  <Button
+    title="Confirmer et valider"
+    variant="primary"
+    noPadding
+    onClick={handleValidation}
+    disabled={isValidating}
+  />
+)}
+
+  {/* 2. Télécharger PDF en dessous */}
   <Button
     title="Télécharger PDF"
     icon={Download}
@@ -384,18 +397,8 @@ const RapportAnnuel = () => {
     onClick={handleDownloadPdf}
     disabled={isLoading || !rapport}
   />
-
-  {!isLoading && rapport && !rapport.est_valide && (
-    <Button
-      title="Confirmer et valider"
-      variant="primary"
-      noPadding
-      onClick={handleValidation}
-      disabled={isValidating}
-    />
-  )}
 </div>
- </div>
+</div>
         </div>
       </main>
 
