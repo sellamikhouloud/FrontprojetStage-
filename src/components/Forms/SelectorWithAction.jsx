@@ -5,14 +5,12 @@ const SelectorWithAction = ({
   description,
   actionLabel = "Rechercher",
   onAction,
-  // Optional: lets the user type a value directly instead of searching —
-  // e.g. entering a family code by hand when offline and search can't run.
-  // Fully optional: omit these props and the component behaves exactly
-  // as before.
-  manualEntryLabel, // e.g. "Entrer le code famille directement"
+  // Optional: lets the user type a value directly instead of searching 
+ 
+  manualEntryLabel,
   manualEntryPlaceholder = "Ex : GDK-2026-059",
-  onManualSubmit, // (value: string) => void
-  manualEntryError, // string | null — shown under the input if set
+  onManualSubmit, 
+  manualEntryError, 
 }) => {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [manualValue, setManualValue] = useState("");
