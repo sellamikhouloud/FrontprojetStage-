@@ -259,18 +259,23 @@ const [products, setProducts] = useState([]);
 
 
 useEffect(() => {
-  const mappedProducts = produitsData.map((p) => {
-    const estEnAttente = !p.validee;
+const mappedProducts = produitsData.map((p) => {
+  const estEnAttente = !p.validee;
+  const doitAfficherStockInitial =
+    estEnAttente && canManageStock;
 
-    const doitAfficherStockInitial =
-      estEnAttente && canManageStock;
+  const nomProduit =
+    p.type_produit === "lait"
+      ? p.nom
+          .replace(/\s*\d+\s*g\b/i, "")
+          .trim()
+          .replace(/Lait 1er age/gi, "Lait 1er âge")
+          .replace(/Lait 2eme age/gi, "Lait 2ème âge")
+      : p.nom;
 
-    return {
-      id: p.id,
-      nom:
-        p.type_produit === "lait"
-          ? p.nom.replace(/\s*\d+\s*g\b/i, "").trim()
-          : p.nom,
+  return {
+    id: p.id,
+    nom: nomProduit,
 
       type_produit: p.type_produit,
       grammage_boite: p.grammage_boite,
