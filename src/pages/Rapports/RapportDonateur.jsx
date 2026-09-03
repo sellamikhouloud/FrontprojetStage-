@@ -472,7 +472,7 @@ const RapportBilan = () => {
 
               {!isLoading && rapport && !rapport.est_valide && (
                 <Button
-                  title="Confirmer et envoyer"
+                  title="Confirmer et Valider"
                   variant="primary"
                   noPadding
                   onClick={handleValidation}
