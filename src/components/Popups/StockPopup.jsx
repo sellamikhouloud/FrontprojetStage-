@@ -286,18 +286,35 @@ const StockPopup = ({
   // GET PRODUCT NAME
   // =========================================================
 
-  const getProductName = (product) => {
-    if (!product) {
-      return "";
-    }
+const getProductName = (product) => {
+  if (!product) {
+    return "";
+  }
 
-    return (
-      product.nom ??
-      product.title ??
-      product.produit?.nom ??
-      ""
-    );
-  };
+  const name =
+    product.nom ??
+    product.title ??
+    product.produit?.nom ??
+    "";
+
+  const type =
+    product.type_produit ??
+    product.produit?.type_produit;
+
+  const grammage =
+    product.grammage_boite ??
+    product.produit?.grammage_boite;
+
+  if (type === "lait" && grammage !== null && grammage !== undefined) {
+    const suffix = ` ${grammage}g`;
+
+    if (name.endsWith(suffix)) {
+      return name.slice(0, -suffix.length).trim();
+    }
+  }
+
+  return name;
+};
 
   // =========================================================
   // GET PRODUCT TYPE
@@ -840,30 +857,18 @@ const StockPopup = ({
             ) === normalizedName
         );
 
-      if (
-        payload.type_produit ===
-        "lait"
-      ) {
-        matchingProducts =
-          matchingProducts.filter(
-            (product) =>
-              product?.type_produit ===
-                "lait" &&
-              Number(
-                product?.grammage_boite
-              ) ===
-                Number(
-                  payload.grammage_boite
-                )
-          );
-      } else {
-        matchingProducts =
-          matchingProducts.filter(
-            (product) =>
-              product?.type_produit ===
-              "aliment"
-          );
-      }
+if (payload.type_produit === "lait") {
+  matchingProducts = matchingProducts.filter(
+    (product) =>
+      product?.type_produit === "lait" &&
+      Number(product?.grammage_boite) ===
+        Number(payload.grammage_boite)
+  );
+} else {
+  matchingProducts = matchingProducts.filter(
+    (product) => product?.type_produit === "aliment"
+  );
+}
 
       let foundProduct =
         matchingProducts[0];
@@ -1113,35 +1118,24 @@ const StockPopup = ({
       // DUPLICATE
       // =====================================================
 
-      const alreadyExists =
-        products.some(
-          (item) => {
-            if (
-              String(item.id) ===
-              String(
-                editingProductId
-              )
-            ) {
-              return false;
-            }
 
-            return (
-              normalizeText(
-                item.title
-              ) ===
-              normalizeText(
-                newName
-              )
-            );
-          }
-        );
+const alreadyExists = products.some((product) => {
+  const sameName =
+    normalizeText(product.title) === normalizeText(title);
 
-      if (alreadyExists) {
-        setProductError(
-          "Ce produit existe déjà."
-        );
-        return;
-      }
+  if (!sameName) {
+    return false;
+  }
+
+  if (isMilk) {
+    return (
+      product.type_produit === "lait" &&
+      Number(product.grammage_boite) === Number(grammage)
+    );
+  }
+
+  return true;
+});
 
       setProductError("");
       setIsEditingProduct(true);
@@ -1942,37 +1936,18 @@ const StockPopup = ({
         // CREATE PAYLOAD
         // ===================================================
 
-        const payload = {
-          nom: title,
+const backendProductName = isMilk
+  ? `${title} ${grammage}g`
+  : title;
 
-          type_produit:
-            isMilk
-              ? "lait"
-              : "aliment",
-
-          /*
-           * Milk -> boite
-           * Aliment -> exact backend unit
-           */
-          unite: isMilk
-            ? "boite"
-            : getBackendUnit(
-                newProduct.unit
-              ),
-
-          stock_courant:
-            String(
-              quantity
-            ),
-
-          alerte_seuil:
-            "1",
-
-          grammage_boite:
-            isMilk
-              ? grammage
-              : null,
-        };
+const payload = {
+  nom: backendProductName,
+  type_produit: isMilk ? "lait" : "aliment",
+  unite: isMilk ? "boite" : getBackendUnit(newProduct.unit),
+  stock_courant: String(quantity),
+  alerte_seuil: "1",
+  grammage_boite: isMilk ? grammage : null,
+};
 
         console.log(
           "CRÉATION PRODUIT",
