@@ -90,32 +90,38 @@ const code =
   const dateModification = formatDate(zakat.date_modification);
  
   const familleData = famille || zakat?.famille_info;
+// ==================== PERMISSIONS ====================
 
+const isAdmin = user?.role === "admin";
 const isCoordinateur = user?.role === "coordinator";
 
-// Récupérer le coordinateur de la famille
-const coordinateur =
-  familleData?.coordinateur ??
-  familleData?.coordinateur_id ??
-  zakat?.famille_info?.coordinateur ??
-  zakat?.famille_info?.coordinateur_id ??
-  null;
+const coordinateurNom =
+  familleData?.coordinateur?.nom?.trim().toLowerCase() ||
+  zakat?.famille_info?.coordinateur?.nom?.trim().toLowerCase() ||
+  "";
 
-const coordinateurId =
-  typeof coordinateur === "object"
-    ? coordinateur?.id
-    : coordinateur;
+const coordinateurPrenom =
+  familleData?.coordinateur?.prenom?.trim().toLowerCase() ||
+  zakat?.famille_info?.coordinateur?.prenom?.trim().toLowerCase() ||
+  "";
 
-// Vérifier si le coordinateur connecté est celui de la famille
+const userNom =
+  user?.nom?.trim().toLowerCase() || "";
+
+const userPrenom =
+  user?.prenom?.trim().toLowerCase() || "";
+
 const isCoordinateurAssigne =
   isCoordinateur &&
-  coordinateurId != null &&
-  String(coordinateurId) === String(user?.id);
+  coordinateurNom === userNom &&
+  coordinateurPrenom === userPrenom;
 
-// Permissions
+const isSuperviseParMoi =
+  !isCoordinateur || isCoordinateurAssigne;
+
 const canEditOrDelete = fromFamilyHistory
   ? !zakat.est_annule &&
-    (!isCoordinateur || isCoordinateurAssigne)
+    (isAdmin || isSuperviseParMoi)
   : !zakat.est_annule;
 
   const modeRemiseLabels = {
@@ -439,3 +445,4 @@ const canEditOrDelete = fromFamilyHistory
 };
 
 export default PopupDetailZakat;
+
