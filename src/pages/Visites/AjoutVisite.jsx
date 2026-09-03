@@ -26,8 +26,9 @@ import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
 import { listFamilles } from "@/lib/api/familles";
-import { enqueue } from "@/lib/offlineQueue";
+import { saveDraft } from "@/lib/offlineDrafts";
 import { createVisite, getPreCreationVisite } from "../../lib/api/visites";
+import { saveCache, loadCache } from "@/lib/offlineCache";
 
 const KNOWN_FIELDS = [
   "famille",
@@ -285,7 +286,7 @@ export default function AjoutVisite() {
       famille: !selectedFamille,
       date: isFutureDate(date),
       mois: !mois,
-      numeroCycle: !numeroCycle,
+      
       poidsNourrisson: !poidsNourrisson,
       tailleNourrisson: !tailleNourrisson,
       muacNourrisson: !muacNourrisson,
@@ -364,15 +365,17 @@ const [offlinePending, setOfflinePending] = useState(false);
     setShowSuccessPopup(true);
   } catch (error) {
     // No response at all = the request never reached the server, i.e.
-    // we're offline. Queue it instead of surfacing an error.
+    // we're offline. Save it as a reviewable draft instead — nothing
+    // auto-syncs. The coordinator has to open "Brouillons hors ligne"
+    // and explicitly click "Ajouter" once back online.
     if (!error.response) {
       try {
-       await enqueue("/api/visites/", payload);
+        await saveDraft("visite", payload);
         setResultatVisite(null); // no z-scores yet, backend hasn't computed them
         setOfflinePending(true);
         setShowSuccessPopup(true);
-      } catch (queueError) {
-        console.error("❌ Impossible de mettre la visite en attente hors ligne :", queueError);
+      } catch (draftError) {
+        console.error("❌ Impossible d'enregistrer le brouillon de visite :", draftError);
         setBackendGeneralError(
           "Impossible d'enregistrer la visite, même hors ligne. Veuillez réessayer."
         );
@@ -456,18 +459,42 @@ const [offlinePending, setOfflinePending] = useState(false);
 
   const [openFamilles, setOpenFamilles] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
+  
+
+
+ const FAMILLES_CACHE_KEY = "familles-popup";
 
   // --- Récupération des vraies familles depuis l'API ---
-  const {
-    data: famillesData,
-    isLoading: famillesLoading,
-    isError: famillesError,
-    refetch: refetchFamilles,
-  } = useQuery({
-    queryKey: ["familles-popup"],
-    queryFn: () => listFamilles().then((r) => r.data),
-    enabled: openFamilles, 
-  });
+  // Même famille de logique que le stock/villages : on tente le réseau
+  // d'abord, et si ça échoue (hors ligne), on retombe sur la dernière
+  // copie connue en cache plutôt que d'afficher une liste vide.
+
+
+const {
+  data: famillesData,
+  isLoading: famillesLoading,
+  isError: famillesError,
+  refetch: refetchFamilles,
+} = useQuery({
+  queryKey: ["familles-popup"],
+  queryFn: async () => {
+    try {
+      const response = await listFamilles();
+      // No saveCache here — the dashboard prefetch already keeps
+      // "familles-popup" warm on login.
+      return response.data;
+    } catch (error) {
+      const cached = loadCache(FAMILLES_CACHE_KEY);
+      if (cached?.data) {
+        return cached.data;
+      }
+      throw error;
+    }
+  },
+  enabled: openFamilles,
+  networkMode: "always",
+  retry: 1,
+});
 
   const famillesBrutes = famillesData?.results ?? famillesData ?? [];
 
@@ -592,6 +619,52 @@ const [offlinePending, setOfflinePending] = useState(false);
    
   }, [preCreationData]);
 
+  const [manualFamilleError, setManualFamilleError] = useState(null);
+
+const handleManualFamilleCode = (code) => {
+  setManualFamilleError(null);
+
+  const cached = loadCache(FAMILLES_CACHE_KEY);
+  const cachedList = cached?.data?.results ?? cached?.data ?? [];
+  const match = cachedList.find(
+    (f) => String(f.id) === code
+  );
+
+  if (match) {
+    setSelectedFamille({
+      id: match.id,
+      code: match.id,
+      enfant: match.nourrisson?.prenom,
+      mere: `${match.mere?.nom ?? ""} ${match.mere?.prenom ?? ""}`,
+      sexe:
+        match?.nourrisson?.sexe === "M"
+          ? "Fils"
+          : match?.nourrisson?.sexe === "F"
+          ? "Fille"
+          : "-",
+      region: match.mere?.village?.nom ?? "-",
+      naissance: match.nourrisson?.date_naissance,
+      badges: [],
+    });
+  } else {
+    // Not in the local cache — still accepted. The coordinator typed it
+    // from memory or a printed list; the backend validates it for real
+    // once this draft gets synced from "Brouillons hors ligne".
+    setSelectedFamille({
+      id: code,
+      code,
+      enfant: undefined,
+      mere: undefined,
+      sexe: "-",
+      region: "-",
+      naissance: undefined,
+      badges: [{ type: "retard", text: "Code saisi manuellement — non vérifié" }],
+    });
+  }
+
+  setErrors((prev) => ({ ...prev, famille: false }));
+};
+
   return (
   <div className="flex h-screen bg-white overflow-hidden">
 
@@ -666,11 +739,15 @@ const [offlinePending, setOfflinePending] = useState(false);
 
         {!selectedFamille && (
           <div className="flex flex-col gap-2">
-            <SelectorWithAction
-              label="Choisir la famille concerne"
-              description="Cliquer pour rechercher la famille concerne par la distribution"
-              onAction={handleSearch}
-            />
+           <SelectorWithAction
+  label="Choisir la famille concerne"
+  description="Cliquer pour rechercher la famille concerne par la distribution"
+  onAction={handleSearch}
+  manualEntryLabel="Entrer le code famille directement"
+  manualEntryPlaceholder="Ex : GDK-2026-059"
+  onManualSubmit={handleManualFamilleCode}
+  manualEntryError={manualFamilleError}
+/>
            
             <ErrorMessage
   message={
@@ -1132,22 +1209,32 @@ const [offlinePending, setOfflinePending] = useState(false);
         
         </div>
 
-   {showSuccessPopup && (
+{showSuccessPopup && (
   <Popup
     title={
       offlinePending
-        ? "Visite enregistrée hors ligne — sera synchronisée"
+        ? "Visite enregistrée en brouillon hors ligne — à valider depuis « Brouillons hors ligne »"
         : "Visite enregistrée avec succès"
     }
     image={offlinePending ? null : SuccessImage}
     extraContent={successExtraContent}
-    primaryButtonText="Ajouter une distribution"
+    primaryButtonText={
+      offlinePending
+        ? "Voir les brouillons hors ligne"
+        : "Ajouter une distribution"
+    }
     secondaryButtonText="Revenir à l'accueil"
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
       setResultatVisite(null);
+
+      if (offlinePending) {
+        navigate("/brouillons-hors-ligne");
+      } else {
+        navigate("/ajout-distribution");
+      }
+
       setOfflinePending(false);
-      navigate("/ajout-distribution");
     }}
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
