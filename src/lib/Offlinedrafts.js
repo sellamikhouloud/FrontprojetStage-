@@ -20,9 +20,18 @@ function dbPromise() {
 }
 
 function makeClientId() {
-  // Stable id kept on the draft AND sent to the backend, so a retried
-  // or double-tapped submit is deduplicated server-side.
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  // Backend validates this as a real UUID (confirmed via the
+  // "Doit être un UUID valide." error on /api/zakat/aides/), so it can't
+  // just be any unique string — it has to be UUID-shaped.
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  // Fallback UUID v4 generator for older browsers without crypto.randomUUID.
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }
 
 // type: 'famille' | 'visite' | 'distribution' | 'aide_zakat'
