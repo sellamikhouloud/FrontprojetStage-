@@ -89,7 +89,6 @@ const RapportBilan = () => {
     handleMonthChange(getCurrentMonthValue());
   }, []);
 
-  
   useEffect(() => {
     const photoIds = rapport?.photos ?? [];
 
@@ -140,7 +139,6 @@ const RapportBilan = () => {
     setIsValidating(true);
 
     try {
-     
       await validerRapport(rapport.id, narrativeMessage);
       setRapport((prev) =>
         prev ? { ...prev, est_valide: true, message: narrativeMessage } : prev
@@ -178,20 +176,24 @@ const RapportBilan = () => {
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar role="admin" />
 
-      <main className="flex-1 h-screen overflow-hidden px-5 pt-18 md:pt-0 pb-8 lg:p-10">
-        <div className={`${showPreview ? "hidden" : "block"} xl:block`}>
+      <main className="flex-1 h-screen overflow-hidden px-4 md:px-6 min-[1000px]:px-8 pt-16 min-[1000px]:pt-6 pb-6 flex flex-col">
+        {/* Navigation et Onglets */}
+        <div className={`${showPreview ? "hidden" : "block"} min-[1000px]:block flex-shrink-0`}>
           <NavigationHeader title="Rapports" />
         </div>
 
-        <div className={`mt-6 ${showPreview ? "hidden" : "block"} xl:block`}>
+        <div className={`mt-4 min-[1000px]:mt-6 ${showPreview ? "hidden" : "block"} min-[1000px]:block flex-shrink-0`}>
           <ReportTabs />
         </div>
 
-        <div className="mt-8 flex flex-col xl:flex-row items-start gap-8 h-[calc(100%-120px)]">
+        {/* Conteneur Principal */}
+        <div className="mt-4 min-[1000px]:mt-6 flex flex-col min-[1000px]:flex-row items-start gap-6 min-[1000px]:gap-8 flex-1 min-h-0 overflow-hidden">
+          
+          {/* Section Aperçu du rapport */}
           <div
             className={`
               ${showPreview ? "flex" : "hidden"}
-              xl:flex
+              min-[1000px]:flex
               flex-1
               h-full
               w-full
@@ -204,13 +206,12 @@ const RapportBilan = () => {
             <button
               type="button"
               onClick={() => setShowPreview(false)}
-              className="flex items-center gap-2 text-[#202124] font-medium xl:hidden"
+              className="flex items-center gap-2 text-[#202124] font-medium min-[1000px]:hidden"
             >
               <X size={18} />
               Revenir
             </button>
 
-         
             <div
               className="
                 rounded-[15px]
@@ -222,7 +223,7 @@ const RapportBilan = () => {
                 gap-8
               "
             >
-              <div className="mt-4">
+              <div className="mt-2">
                 <HeaderRapport
                   selectedMonth={selectedMonth}
                   title="Bilan donateurs"
@@ -262,7 +263,7 @@ const RapportBilan = () => {
 
                   <div className="flex flex-col items-center">
                     <div className="w-full max-w-[720px]">
-                      <h2 className="text-[18px] font-semibold text-[#202124] mb-3">
+                      <h2 className="text-[16px] min-[1000px]:text-[18px] font-semibold text-[#202124] mb-3">
                         États des familles
                       </h2>
 
@@ -309,7 +310,7 @@ const RapportBilan = () => {
 
                   <div className="flex justify-center">
                     <div className="w-full max-w-[720px]">
-                      <h2 className="text-[18px] font-semibold text-[#202124] mb-4">
+                      <h2 className="text-[16px] min-[1000px]:text-[18px] font-semibold text-[#202124] mb-4">
                         Distributions ce mois
                       </h2>
 
@@ -338,7 +339,6 @@ const RapportBilan = () => {
               )}
             </div>
 
-        
             {status === STATUS.SUCCESS && rapport && (
               <div
                 className="
@@ -380,24 +380,26 @@ const RapportBilan = () => {
                 ) : (
                   <p className="text-center text-[#818181] py-6">
                     Sélectionnez les photos depuis la galerie,
-               Les photos seront affichées après la validation du rapport.
+                    Les photos seront affichées après la validation du rapport.
                   </p>
                 )}
               </div>
             )}
           </div>
 
+          {/* Section Contrôles / Formulaire à droite */}
           <div
             className={`
               ${showPreview ? "hidden" : "flex"}
-              xl:flex
+              min-[1000px]:flex
               w-full
               h-full
+              min-[1000px]:w-[340px]
               xl:w-[420px]
               2xl:w-[540px]
-              xl:min-w-[380px]
-              2xl:min-w-[540px]
+              min-[1000px]:min-w-[320px]
               flex-col
+              min-[1000px]:pt-2
               overflow-y-auto
               scrollbar-hide
             `}
@@ -414,7 +416,7 @@ const RapportBilan = () => {
                   text-center
                   px-3
                   py-2.5
-                  text-xs sm:text-sm md:text-base
+                  text-xs sm:text-sm min-[1000px]:text-base
                   leading-snug
                   font-semibold
                   break-words
@@ -433,7 +435,7 @@ const RapportBilan = () => {
             )}
 
             {rapport && !rapport.est_valide && (
-              <div className="mt-8">
+              <div className="mt-6 sm:mt-8">
                 <TextArea
                   label="Message narratif"
                   value={narrativeMessage}
@@ -448,8 +450,8 @@ const RapportBilan = () => {
               <MonthPicker onChange={handleMonthChange} />
             </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
-              <div className="xl:hidden">
+            <div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
+              <div className="min-[1000px]:hidden">
                 <Button
                   title="Prévoir le rapport"
                   variant="telecharger"
