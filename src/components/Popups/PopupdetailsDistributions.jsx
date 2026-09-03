@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
+import { useNavigate } from "react-router-dom";
 import Card from "../Cards/Card";
 import InfoCard from "../Containers/AfficherContainer";
 import Button from "../Button/Button";
@@ -20,8 +20,21 @@ const PopupDetailDistribution = ({
   onDelete,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
-
+const navigate = useNavigate();
   if (!open || !distribution) return null;
+
+
+  const handleGoToFamille = () => {
+    const familleId = famille?.id || distribution?.famille?.id;
+    if (!familleId) return;
+
+    navigate(`/famille/${familleId}`, {
+      state: {
+        restoreDistributionId: distribution.id,
+        fromPage: "/liste-distributions", // Ajustez selon le chemin exact de votre route
+      },
+    });
+  };
 
   const isAnnulee = Boolean(distribution.annulee);
 
@@ -123,6 +136,7 @@ const PopupDetailDistribution = ({
           </div>
 
           {/* Carte famille */}
+          <div onClick={handleGoToFamille} className="cursor-pointer hover:opacity-95 transition">
           <Card
             mere={`${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`.trim()}
   enfant={famille?.nourrisson?.prenom ?? "-"}
@@ -140,7 +154,7 @@ const PopupDetailDistribution = ({
             code={famille?.id ?? "-"}
             badges={[]}
           />
-
+</div>
           {/* Contenu */}
           <div className="grid grid-cols-1 sm:grid-cols-[62%_36%] gap-3 mt-4">
             {/* COLONNE GAUCHE */}
