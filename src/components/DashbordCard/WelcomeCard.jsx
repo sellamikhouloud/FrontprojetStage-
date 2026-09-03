@@ -19,6 +19,7 @@ const WelcomeCard = ({
         flex
         justify-between
         items-start
+        md:mt-4 lg:mt-0
       "
     >
       {/* Left */}
