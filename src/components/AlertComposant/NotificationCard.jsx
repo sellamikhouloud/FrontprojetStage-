@@ -1,3 +1,4 @@
+
 import arrow from "../../assets/right-arrow.png";
 import retardIcon from "../../assets/retard.svg";
 import retard2Icon from "../../assets/retard2.svg";
@@ -72,6 +73,8 @@ const NotificationCard = ({
   message,
   onClick,
   showArrow = true,
+  dateResolution,
+  resoluePar,
 }) => {
   const config = TYPE_CONFIG[type] || DEFAULT_CONFIG;
 
@@ -203,8 +206,9 @@ const NotificationCard = ({
         </p>
       </div>
 
-      {/* Flèche */}
-      {showArrow && (
+      {/* Partie droite */}
+      {showArrow ? (
+        /* Flèche pour les notifications normales */
         <div
           className="
             flex
@@ -223,9 +227,52 @@ const NotificationCard = ({
             "
           />
         </div>
+      ) : (
+        /* Informations de résolution pour l'historique */
+        <div
+          className="
+            flex
+            flex-col
+            items-end
+            justify-center
+            flex-shrink-0
+            min-w-[120px]
+            sm:min-w-[150px]
+            text-right
+            gap-0.5
+          "
+        >
+          {dateResolution && (
+           <p
+  className="
+    text-[14px]
+    font-medium
+    text-black
+    whitespace-nowrap
+  "
+>
+              Résolue le : {dateResolution}
+            </p>
+          )}
+
+          {resoluePar && (
+            <p
+              className="
+                text-[14px]
+                sm:text-[12px]
+                font-medium
+                text-black
+                whitespace-nowrap
+              "
+            >
+              Résolue par : {resoluePar}
+            </p>
+          )}
+        </div>
       )}
     </button>
   );
 };
 
 export default NotificationCard;
+
