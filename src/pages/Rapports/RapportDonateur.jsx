@@ -450,36 +450,39 @@ const RapportBilan = () => {
               <MonthPicker onChange={handleMonthChange} />
             </div>
 
-            <div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
-              <div className="min-[1000px]:hidden">
-                <Button
-                  title="Prévoir le rapport"
-                  variant="telecharger"
-                  onClick={() => setShowPreview(true)}
-                  noPadding
-                />
-              </div>
+           <div className="mt-6 flex flex-col gap-3 w-full">
+  {/* 1. Aperçu (Afficheur Mobile/Tablette uniquement) */}
+  <div className="min-[1000px]:hidden">
+    <Button
+      title="Aperçu du rapport"
+      variant="telecharger"
+      onClick={() => setShowPreview(true)}
+      noPadding
+    />
+  </div>
 
-              <Button
-                title="Télécharger PDF"
-                icon={Download}
-                iconPosition="left"
-                variant="telecharger"
-                noPadding
-                onClick={handleDownloadPdf}
-                disabled={isLoading || !rapport}
-              />
+  {/* 2. Bouton "Confirmer et valider" (En premier s'il est affiché) */}
+  {!isLoading && rapport && !rapport.est_valide && (
+    <Button
+      title="Confirmer et valider"
+      variant="primary"
+      noPadding
+      onClick={handleValidation}
+      disabled={isValidating}
+    />
+  )}
 
-              {!isLoading && rapport && !rapport.est_valide && (
-                <Button
-                  title="Confirmer et Valider"
-                  variant="primary"
-                  noPadding
-                  onClick={handleValidation}
-                  disabled={isValidating}
-                />
-              )}
-            </div>
+  {/* 3. Bouton "Télécharger PDF" (Toujours sous le bouton de confirmation) */}
+  <Button
+    title="Télécharger PDF"
+    icon={Download}
+    iconPosition="left"
+    variant="telecharger"
+    noPadding
+    onClick={handleDownloadPdf}
+    disabled={isLoading || !rapport}
+  />
+</div>
           </div>
         </div>
       </main>
