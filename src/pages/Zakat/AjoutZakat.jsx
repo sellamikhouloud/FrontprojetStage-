@@ -171,7 +171,7 @@ export default function AjoutZakat() {
 
   const { user } = useAuth();
   const role = user?.role ?? null;
-  const isAdmin = role === "admin" || role === "chef_coordinator";
+  const isAdmin = role === "admin";
 
   // Taux de change — récupéré une seule fois à l'ouverture du formulaire
 const { data: tauxData, isLoading: tauxLoading } = useQuery({
@@ -1004,7 +1004,13 @@ useEffect(() => {
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
       setOfflinePending(false);
-      navigate(isAdmin ? "/dashboard" : "/dashboard-coor");
+      navigate(
+        role === "chef_coordinator"
+          ? "/dashboardChef"
+          : role === "coordinator"
+          ? "/dashboardCoor"
+          : "/dashboard"
+      );    
     }}
   />
 )}
