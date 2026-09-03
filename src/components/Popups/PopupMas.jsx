@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 import CardPopup from "../Cards/Card2";
+import { useNavigate } from "react-router-dom";
 import { listFamilles } from "@/lib/api/familles";
 
 const PopupMas = ({
@@ -11,6 +12,7 @@ const PopupMas = ({
 }) => {
   const [familles, setFamilles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // =========================================================
   // GET ALL FAMILLES - HANDLE DRF PAGINATION
@@ -326,10 +328,8 @@ const PopupMas = ({
                       code={cardData.code}
                       badges={cardData.badges}
                       onClick={() => {
-                        console.log(
-                          "Famille MAS sélectionnée:",
-                          famille
-                        );
+                        onClose();
+                        navigate(`/famille/${famille.id}`);
                       }}
                     />
                   );
