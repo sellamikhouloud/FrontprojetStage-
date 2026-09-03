@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
@@ -57,7 +57,7 @@ export default function ListeVisites() {
   const isAdmin = user?.role === "admin";
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-
+   const location = useLocation();
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -68,6 +68,21 @@ export default function ListeVisites() {
   const [selectedVisite, setSelectedVisite] = useState(null);
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.restoreVisiteId) {
+      const restoreId = location.state.restoreVisiteId;
+      getVisite(restoreId)
+        .then((res) => {
+          setSelectedVisite(res.data);
+          setShowDetailPopup(true);
+        })
+        .catch((err) => console.error("Erreur lors de la récupération de la visite:", err));
+
+      // Nettoyer l'état pour éviter de réouvrir la pop-up au rechargement manuellement
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -384,4 +399,5 @@ export default function ListeVisites() {
     </div>
   );
 }
+
 
