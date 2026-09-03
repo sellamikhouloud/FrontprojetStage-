@@ -450,8 +450,8 @@ const RapportBilan = () => {
               <MonthPicker onChange={handleMonthChange} />
             </div>
 
-           <div className="mt-6 flex flex-col gap-3 w-full">
-  {/* 1. Aperçu (Afficheur Mobile/Tablette uniquement) */}
+         <div className="mt-6 flex flex-col gap-1 w-full">
+  {/* 1. Aperçu du rapport (Mobile/Tablette uniquement) */}
   <div className="min-[1000px]:hidden">
     <Button
       title="Aperçu du rapport"
@@ -461,7 +461,7 @@ const RapportBilan = () => {
     />
   </div>
 
-  {/* 2. Bouton "Confirmer et valider" (En premier s'il est affiché) */}
+  {/* 2. "Confirmer et valider" (Au-dessus, s'affiche si non validé) */}
   {!isLoading && rapport && !rapport.est_valide && (
     <Button
       title="Confirmer et valider"
@@ -472,7 +472,7 @@ const RapportBilan = () => {
     />
   )}
 
-  {/* 3. Bouton "Télécharger PDF" (Toujours sous le bouton de confirmation) */}
+  {/* 3. "Télécharger PDF" (En bas) */}
   <Button
     title="Télécharger PDF"
     icon={Download}
