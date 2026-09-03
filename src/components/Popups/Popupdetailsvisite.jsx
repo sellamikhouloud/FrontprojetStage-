@@ -12,6 +12,7 @@ import DeleteIcon from "../../assets/Delete.svg";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
 import ZScoreBox from "../Containers/ZScoreBox";
+import { useAuth } from "../Providers/AuthProvider"; 
 
 const PopupDetailVisite = ({
   open,
@@ -24,10 +25,19 @@ const PopupDetailVisite = ({
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth(); // 2. Récupération de l'utilisateur connecté
 
   if (!open || !visite) return null;
 
   const isAnnulee = visite?.annule === true;
+
+  // 3. Vérification des permissions
+  // L'utilisateur peut modifier/annuler s'il n'est pas un coordinateur (ex: Admin)
+  // OU si l'ID du coordinateur connecté correspond à celui de la famille
+  const isCoordinateur = user?.role === "coordinator";
+  const isCoordinateurAssigne =
+    String(famille?.coordinateur?.id) === String(user?.id);
+  const isSuperviseParMoi = !isCoordinateur || isCoordinateurAssigne;
 
   // Redirection vers la fiche famille avec retour vers /liste-visite
   const handleGoToFamille = () => {
@@ -36,7 +46,6 @@ const PopupDetailVisite = ({
       state: {
         restoreVisiteId: visite.id,
         fromPage: "/liste-visite",
-         // Mis à jour avec /liste-visite
       },
     });
   };
@@ -121,7 +130,9 @@ const PopupDetailVisite = ({
   );
 
   const ActionButtons = ({ className }) => {
-    if (isAnnulee) return null;
+    // 4. Masquer si la visite est annulée OU si la famille n'est pas supervisée par ce coordinateur
+    if (isAnnulee || !isSuperviseParMoi) return null;
+
     return (
       <div className={className}>
         <Button
@@ -164,7 +175,9 @@ const PopupDetailVisite = ({
               title="Confirmer l'annulation"
               image={SuccessImage}
               description="Êtes-vous sûr de vouloir Annuler cette visite ? Cette action est irréversible."
-              primaryButtonText={isDeleting ? "Annulation..." : "Annuler la visite"}
+              primaryButtonText={
+                isDeleting ? "Annulation..." : "Annuler la visite"
+              }
               secondaryButtonText="Annuler"
               primaryButtonVariant="danger"
               onPrimaryClick={handleConfirmDelete}
@@ -198,9 +211,14 @@ const PopupDetailVisite = ({
           </div>
 
           {/* Carte famille cliquable */}
-          <div onClick={handleGoToFamille} className="cursor-pointer hover:opacity-95 transition">
+          <div
+            onClick={handleGoToFamille}
+            className="cursor-pointer hover:opacity-95 transition"
+          >
             <Card
-              mere={`${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`}
+              mere={`${famille?.mere?.nom ?? ""} ${
+                famille?.mere?.prenom ?? ""
+              }`}
               enfant={famille?.nourrisson?.prenom}
               sexe={
                 famille?.nourrisson?.sexe === "M"
