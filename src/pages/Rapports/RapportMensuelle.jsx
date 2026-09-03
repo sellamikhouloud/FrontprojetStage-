@@ -380,18 +380,19 @@ const RapportMensuel = () => {
             </button>
 
          {/* Nouvelle version : verticalité forcée sur tous les écrans */}
-<div className="mt-6 flex flex-col gap-3 w-full">
+<div className="mt-6 flex flex-col gap-1 w-full">
   {/* Bouton d'aperçu pour mobile/tablette uniquement */}
-  <div className="min-[1000px]:hidden">
+  <div className="min-[1000px]:hidden w-full">
     <Button
-      title="Prévoir le rapport"
+      title="Aperçu du rapport"
       variant="telecharger"
       onClick={() => setShowPreview(true)}
       noPadding
+      className="w-full"
     />
   </div>
 
-  {/* 1. Confirmer et valider (s'affiche au-dessus s'il est disponible) */}
+  {/* 1. Confirmer et valider (Au-dessus) */}
   {!isLoading && rapport && !rapport.est_valide && (
     <Button
       title="Confirmer et valider"
@@ -399,10 +400,11 @@ const RapportMensuel = () => {
       noPadding
       onClick={handleValidation}
       disabled={isValidating}
+      className="w-full"
     />
   )}
 
-  {/* 2. Télécharger PDF (s'affiche toujours en dessous) */}
+  {/* 2. Télécharger PDF (En dessous) */}
   <Button
     title="Télécharger PDF"
     icon={Download}
@@ -411,6 +413,7 @@ const RapportMensuel = () => {
     noPadding
     onClick={handleDownloadPdf}
     disabled={isLoading || !rapport}
+    className="w-full"
   />
 </div>
           </div>
