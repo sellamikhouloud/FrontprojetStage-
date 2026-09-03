@@ -5,7 +5,7 @@ import AfficherMesure from "../Containers/AfficherMesure";
 import Button from "../Button/Button";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useNavigate } from "react-router-dom"; // Add useNavigate
+import { useNavigate } from "react-router-dom";
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
 import DeleteIcon from "../../assets/Delete.svg";
@@ -29,13 +29,13 @@ const PopupDetailVisite = ({
 
   const isAnnulee = visite?.annule === true;
 
-  // Redirection vers la fiche famille en conservant l'ID de la visite
+  // Redirection vers la fiche famille avec retour vers /liste-visite
   const handleGoToFamille = () => {
     if (!famille?.id) return;
     navigate(`/famille/${famille.id}`, {
       state: {
-        fromVisiteId: visite.id,
-        fromPage: "/visites",
+        restoreVisiteId: visite.id,
+        fromPage: "/liste-visite", // Mis à jour avec /liste-visite
       },
     });
   };
