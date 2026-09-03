@@ -372,8 +372,6 @@ useEffect(() => {
     return !hasFieldError && !hasProduitError;
   };
 
-
-
  const handleSave = async () => {
   if (!validateForm()) return;
 
@@ -461,14 +459,13 @@ useEffect(() => {
   return messageGenerique;
 };
 
-
-
-  try {
- if (isEditMode) {
+   try {
+   if (isEditMode) {
   const initialData = initialEditDataRef.current;
 
   if (!initialData) {
     setSaveError("Impossible de vérifier les modifications.");
+    setSaving(false);
     return;
   }
 
@@ -511,34 +508,25 @@ useEffect(() => {
     dateChanged ||
     confirmationChanged;
 
-  console.log("========== VÉRIFICATION MODIFICATION ==========");
-  console.log("Date initiale :", initialDate);
-  console.log("Date actuelle :", currentDate);
-  console.log("Date modifiée :", dateChanged);
-
-  console.log("Confirmation initiale :", initialData.reception_confirmee);
-  console.log("Confirmation actuelle :", payload.reception_confirmee);
-  console.log("Confirmation modifiée :", confirmationChanged);
-
-  console.log("Produits initiaux :", initialProducts);
-  console.log("Produits actuels :", currentProducts);
-  console.log("Produits modifiés :", produitsChanged);
-
-  console.log("Modification détectée :", hasChanges);
-
-  
   if (!hasChanges) {
     setSaveError("Aucune modification à enregistrer.");
+    setSaving(false);
     return;
   }
 
- 
-  await updateDistribution(distributionAModifier.id, {
+  const patch = {
     produits: produitsPayload,
     date_distribution: payload.date_distribution,
     reception_confirmee: payload.reception_confirmee,
-  });
+  };
 
+  console.log("========== MODE MODIFICATION ==========");
+  console.log("ID distribution :", distributionAModifier.id);
+  console.log("PATCH FINAL :", patch);
+  console.log("Nombre de produits envoyés :", patch.produits.length);
+  console.log("Produits envoyés :", patch.produits);
+
+  await updateDistribution(distributionAModifier.id, patch);
 } else {
   await createDistribution(payload);
 }
@@ -874,7 +862,7 @@ const displayedFamillesPopup = familleParCode ? [familleParCode] : listeDesFamil
     });
   };
 
-  const handleOptionSelect = (value) => {
+   const handleOptionSelect = (value) => {
     if (value === "changer") {
       setOpenFamilles(true);
     } else if (value === "voir") {
@@ -896,6 +884,7 @@ const displayedFamillesPopup = familleParCode ? [familleParCode] : listeDesFamil
       });
     }
   };
+
 useEffect(() => {
   if (!isEditMode || !distributionAModifier) return;
 
@@ -1206,7 +1195,7 @@ useEffect(() => {
  
 </div>
 
-       {showSuccessPopup && (
+     {showSuccessPopup && (
   <Popup
     title={
       offlinePending
@@ -1216,12 +1205,22 @@ useEffect(() => {
         : "Distribution enregistrée avec succès"
     }
     image={offlinePending ? null : SuccessImage}
-    primaryButtonText="Voir la fiche famille"
+    primaryButtonText={
+      offlinePending
+        ? "Voir les brouillons hors ligne"
+        : "Voir la fiche famille"
+    }
     secondaryButtonText="Revenir à l'accueil"
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
+
+      if (offlinePending) {
+        navigate("/brouillons-hors-ligne");
+      } else {
+        navigate(`/famille/${selectedFamille?.id}`);
+      }
+
       setOfflinePending(false);
-      navigate(`/famille/${selectedFamille?.id}`);
     }}
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
