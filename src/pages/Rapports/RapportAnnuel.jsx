@@ -47,18 +47,6 @@ const RapportAnnuel = () => {
 
   const requestIdRef = useRef(0);
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
-useEffect(() => {
-  const handleResize = () => {
-    setIsMobile(window.innerWidth < 768);
-  };
-
-  window.addEventListener("resize", handleResize);
-
-  return () => window.removeEventListener("resize", handleResize);
-}, []);
-
   const handleYearChange = async (value) => {
     setSelectedYear(value.year);
     setRapport(null);
@@ -91,12 +79,11 @@ useEffect(() => {
     data: emailsData,
     isLoading: emailsLoading,
     isError: emailsError,
-    refetch: refetchEmails,
   } = useQuery({
     queryKey: ["emails-rapport", "annuel"],
     queryFn: () =>
       getEmailsRapport({ type_rapport: "annuel" }).then((r) => r.data),
-    enabled: showEmailsListReadOnly, // ne fetch qu'à l'ouverture du popup
+    enabled: showEmailsListReadOnly,
   });
 
   const emailsBruts = emailsData?.results ?? emailsData ?? [];
@@ -161,277 +148,168 @@ useEffect(() => {
     }
   };
 
-  // =========================================================
-  // PAGE DÉDIÉE MOBILE : preview du rapport (page à part,
-  // même principe que le filtre dans FamiliesPage)
-  // =========================================================
-  if (isMobile && showPreview) {
-    return (
-      <div className="min-h-screen bg-white p-6">
-        <button
-          type="button"
-          onClick={() => setShowPreview(false)}
-          className="flex items-center gap-2 text-[#202124] font-medium mb-4"
-        >
-          <X size={18} />
-          Revenir
-        </button>
-
-        <div className="mt-4">
-          <HeaderRapport selectedYear={selectedYear} title="Rapport Annuel" />
-        </div>
-
-        {isLoading && (
-          <div className="flex justify-center items-center py-10">
-            <Spinner />
-          </div>
-        )}
-
-        {status === STATUS.ERROR && (
-          <p className="text-center text-red-500 mt-6">
-            Une erreur est survenue lors du chargement du rapport.
-          </p>
-        )}
-
-        {status === STATUS.SUCCESS && !rapport && (
-          <p className="text-center text-[#818181] mt-6">
-            Aucun rapport disponible pour l'année {selectedYear}.
-          </p>
-        )}
-
-        {status === STATUS.SUCCESS && rapport && (
-          <div className="rounded-[15px] bg-[#F8FBFC] p-4 mt-4 flex flex-col gap-8">
-            <div className="mt-4 flex flex-col items-center">
-              <div className="w-full max-w-[720px]">
-                <h2 className="text-[18px] font-semibold text-[#202124] mb-3">
-                  États des familles en fin d'année {selectedYear}
-                </h2>
-
-                <div className="flex w-full gap-3">
-                  <StatusCard
-                    value={rapport.donnees.familles.nb_actives ?? 0}
-                    label="Actives"
-                    type="active"
-                  />
-                  <StatusCard
-                    value={rapport.donnees.familles.nb_alertees ?? 0}
-                    label="Alertées"
-                    type="alert"
-                  />
-                  <StatusCard
-                    value={rapport.donnees.familles.nb_sortie ?? 0}
-                    label="Sorties"
-                    type="sortie"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <div className="w-full max-w-[720px]">
-                <ReportVisitsNutrition
-                  realised={rapport.donnees.visites.nb_realisees ?? 0}
-                  planned={rapport.donnees.visites.nb_prevus ?? 0}
-                  compliance={
-                    rapport.donnees.visites.nb_prevus
-                      ? Math.round(
-                          (rapport.donnees.visites.nb_realisees /
-                            rapport.donnees.visites.nb_prevus) *
-                            100
-                        )
-                      : 0
-                  }
-                  normal={getPourcentage("normal")}
-                  mam={getPourcentage("mam")}
-                  mas={getPourcentage("mas")}
-                />
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-center">
-              <div className="w-full max-w-[720px]">
-                <h2 className="text-[18px] font-semibold text-[#202124] mb-4">
-                  Distributions année {selectedYear}
-                </h2>
-
-                <div className="space-y-3">
-                  {products.map((item, index) => (
-                    <DistributionItem
-                      key={index}
-                      product={item.product}
-                      quantity={item.quantity}
-                      unit={item.unit}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-center">
-              <CardZakatSummary
-                montant={`${(
-                  rapport.donnees.zakat.montant_total_verse_ce_mois ?? 0
-                ).toLocaleString("fr-FR")} MRU`}
-                familles={rapport.donnees.zakat.nb_familles_ce_mois ?? 0}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // =========================================================
-  // PAGE NORMALE
-  // Desktop (>= xl / 1280px) : rapport + panneau, toujours visibles
-  // Mobile (< xl / 1280px)   : uniquement le panneau + bouton "Prévoir"
-  // =========================================================
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar role="admin" />
 
-      <main className="flex-1 h-screen overflow-hidden px-5 pt-18 md:pt-0 pb-8 lg:p-10">
-        <NavigationHeader title="Rapports" />
+      <main className="flex-1 h-screen overflow-hidden px-4 md:px-6 min-[1000px]:px-8 pt-16 min-[1000px]:pt-6 pb-6 flex flex-col">
+        {/* Navigation et Onglets */}
+        <div className={`${showPreview ? "hidden" : "block"} min-[1000px]:block flex-shrink-0`}>
+          <NavigationHeader title="Rapports" />
+        </div>
 
-        <div className="mt-6">
+        <div className={`mt-4 min-[1000px]:mt-6 ${showPreview ? "hidden" : "block"} min-[1000px]:block flex-shrink-0`}>
           <ReportTabs />
         </div>
 
-        <div className="mt-8 flex flex-col xl:flex-row items-start gap-8 h-[calc(100%-120px)]">
-          {!isMobile && (
-            <div
-              className="
-                flex-1
-                h-full
-                w-full
-                rounded-[15px]
-                bg-[#F8FBFC]
-                p-4
-                md:p-6
-                flex
-                flex-col
-                gap-8
-                overflow-y-auto
-                scrollbar-hide
-              "
+        {/* Conteneur Principal */}
+        <div className="mt-4 min-[1000px]:mt-6 flex flex-col min-[1000px]:flex-row items-start gap-6 min-[1000px]:gap-8 flex-1 min-h-0 overflow-hidden">
+          
+          {/* Section Aperçu du rapport */}
+          <div
+            className={`
+              ${showPreview ? "flex" : "hidden"}
+              min-[1000px]:flex
+              flex-1
+              h-full
+              w-full
+              rounded-[15px]
+              bg-[#F8FBFC]
+              p-4
+              md:p-6
+              flex-col
+              gap-6
+              overflow-y-auto
+              scrollbar-hide
+            `}
+          >
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              className="flex items-center gap-2 text-[#202124] font-medium min-[1000px]:hidden"
             >
-              <div className="mt-4">
-                <HeaderRapport selectedYear={selectedYear} title="Rapport Annuel" />
+              <X size={18} />
+              Revenir
+            </button>
+
+            <div className="mt-2">
+              <HeaderRapport selectedYear={selectedYear} title="Rapport Annuel" />
+            </div>
+
+            {isLoading && (
+              <div className="flex justify-center items-center py-10">
+                <Spinner />
               </div>
+            )}
 
-              {isLoading && (
-                <div className="flex justify-center items-center py-10">
-                  <Spinner />
-                </div>
-              )}
+            {status === STATUS.ERROR && (
+              <p className="text-center text-red-500 mt-6">
+                Une erreur est survenue lors du chargement du rapport.
+              </p>
+            )}
 
-              {status === STATUS.ERROR && (
-                <p className="text-center text-red-500 mt-6">
-                  Une erreur est survenue lors du chargement du rapport.
-                </p>
-              )}
+            {status === STATUS.SUCCESS && !rapport && (
+              <p className="text-center text-[#818181] mt-6">
+                Aucun rapport disponible pour l'année {selectedYear}.
+              </p>
+            )}
 
-              {status === STATUS.SUCCESS && !rapport && (
-                <p className="text-center text-[#818181] mt-6">
-                  Aucun rapport disponible pour l'année {selectedYear}.
-                </p>
-              )}
+            {status === STATUS.SUCCESS && rapport && (
+              <>
+                <div className="mt-2 flex flex-col items-center">
+                  <div className="w-full max-w-[720px]">
+                    <h2 className="text-[16px] min-[1000px]:text-[18px] font-semibold text-[#202124] mb-3">
+                      États des familles en fin d'année {selectedYear}
+                    </h2>
 
-              {status === STATUS.SUCCESS && rapport && (
-                <>
-                  <div className="mt-4 flex flex-col items-center">
-                    <div className="w-full max-w-[720px]">
-                      <h2 className="text-[18px] font-semibold text-[#202124] mb-3">
-                        États des familles en fin d'année {selectedYear}
-                      </h2>
-
-                      <div className="flex w-full gap-3">
-                        <StatusCard
-                          value={rapport.donnees.familles.nb_actives ?? 0}
-                          label="Actives"
-                          type="active"
-                        />
-                        <StatusCard
-                          value={rapport.donnees.familles.nb_alertees ?? 0}
-                          label="Alertées"
-                          type="alert"
-                        />
-                        <StatusCard
-                          value={rapport.donnees.familles.nb_sortie ?? 0}
-                          label="Sorties"
-                          type="sortie"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex justify-center">
-                    <div className="w-full max-w-[720px]">
-                      <ReportVisitsNutrition
-                        realised={rapport.donnees.visites.nb_realisees ?? 0}
-                        planned={rapport.donnees.visites.nb_prevus ?? 0}
-                        compliance={
-                          rapport.donnees.visites.nb_prevus
-                            ? Math.round(
-                                (rapport.donnees.visites.nb_realisees /
-                                  rapport.donnees.visites.nb_prevus) *
-                                  100
-                              )
-                            : 0
-                        }
-                        normal={getPourcentage("normal")}
-                        mam={getPourcentage("mam")}
-                        mas={getPourcentage("mas")}
+                    <div className="flex w-full gap-3">
+                      <StatusCard
+                        value={rapport.donnees.familles.nb_actives ?? 0}
+                        label="Actives"
+                        type="active"
+                      />
+                      <StatusCard
+                        value={rapport.donnees.familles.nb_alertees ?? 0}
+                        label="Alertées"
+                        type="alert"
+                      />
+                      <StatusCard
+                        value={rapport.donnees.familles.nb_sortie ?? 0}
+                        label="Sorties"
+                        type="sortie"
                       />
                     </div>
                   </div>
+                </div>
 
-                  <div className="mt-6 flex justify-center">
-                    <div className="w-full max-w-[720px]">
-                      <h2 className="text-[18px] font-semibold text-[#202124] mb-4">
-                        Distributions année {selectedYear}
-                      </h2>
-
-                      <div className="space-y-3">
-                        {products.map((item, index) => (
-                          <DistributionItem
-                            key={index}
-                            product={item.product}
-                            quantity={item.quantity}
-                            unit={item.unit}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-center">
-                    <CardZakatSummary
-                      montant={`${(
-                        rapport.donnees.zakat.montant_total_verse_ce_mois ?? 0
-                      ).toLocaleString("fr-FR")} MRU`}
-                      familles={rapport.donnees.zakat.nb_familles_ce_mois ?? 0}
+                <div className="mt-4 flex justify-center">
+                  <div className="w-full max-w-[720px]">
+                    <ReportVisitsNutrition
+                      realised={rapport.donnees.visites.nb_realisees ?? 0}
+                      planned={rapport.donnees.visites.nb_prevus ?? 0}
+                      compliance={
+                        rapport.donnees.visites.nb_prevus
+                          ? Math.round(
+                              (rapport.donnees.visites.nb_realisees /
+                                rapport.donnees.visites.nb_prevus) *
+                                100
+                            )
+                          : 0
+                      }
+                      normal={getPourcentage("normal")}
+                      mam={getPourcentage("mam")}
+                      mas={getPourcentage("mas")}
                     />
                   </div>
-                </>
-              )}
-            </div>
-          )}
+                </div>
 
+                <div className="mt-4 flex justify-center">
+                  <div className="w-full max-w-[720px]">
+                    <h2 className="text-[16px] min-[1000px]:text-[18px] font-semibold text-[#202124] mb-4">
+                      Distributions année {selectedYear}
+                    </h2>
+
+                    <div className="space-y-3">
+                      {products.map((item, index) => (
+                        <DistributionItem
+                          key={index}
+                          product={item.product}
+                          quantity={item.quantity}
+                          unit={item.unit}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center">
+                  <CardZakatSummary
+                    montant={`${(
+                      rapport.donnees.zakat.montant_total_verse_ce_mois ?? 0
+                    ).toLocaleString("fr-FR")} MRU`}
+                    familles={rapport.donnees.zakat.nb_familles_ce_mois ?? 0}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Section Contrôles / Formulaire à droite */}
           <div
-            className="
-              flex
+            className={`
+              ${showPreview ? "hidden" : "flex"}
+              min-[1000px]:flex
               w-full
               h-full
+              min-[1000px]:w-[340px]
               xl:w-[420px]
               2xl:w-[540px]
-              xl:min-w-[380px]
-              2xl:min-w-[540px]
+              min-[1000px]:min-w-[320px]
               flex-col
-              xl:pt-7
+              min-[1000px]:pt-2
               overflow-y-auto
               scrollbar-hide
-            "
+            `}
           >
             {isLoading ? (
               <div className="min-h-[44px] sm:min-h-[48px] rounded-[15px] border border-[#EDEDED] bg-[#F3F3F3] animate-pulse w-full" />
@@ -445,7 +323,7 @@ useEffect(() => {
                   text-center
                   px-3
                   py-2.5
-                  text-xs sm:text-sm md:text-base
+                  text-xs sm:text-sm min-[1000px]:text-base
                   leading-snug
                   font-semibold
                   break-words
@@ -473,7 +351,7 @@ useEffect(() => {
               className="
                 mt-4
                 flex items-center gap-1.5
-                text-[14px] sm:text-[12px] md:text-[16px]
+                text-[13px] sm:text-[14px] min-[1000px]:text-[15px]
                 font-semibold
                 text-[#202124]
                 w-fit
@@ -486,15 +364,15 @@ useEffect(() => {
               <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-            <div className="mt-6 flex flex-col sm:flex-row xl:flex-col gap-2 w-full">
-              {isMobile && (
+            <div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
+              <div className="min-[1000px]:hidden">
                 <Button
                   title="Prévoir le rapport"
                   variant="telecharger"
                   onClick={() => setShowPreview(true)}
                   noPadding
                 />
-              )}
+              </div>
 
               <Button
                 title="Télécharger PDF"
