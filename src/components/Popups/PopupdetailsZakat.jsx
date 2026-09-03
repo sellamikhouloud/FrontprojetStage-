@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 import Card from "../Cards/Card";
 import InfoCard from "../Containers/AfficherContainer";
@@ -12,7 +13,6 @@ import DeleteIcon from "../../assets/Delete.svg";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
 
-
 const PopupDetailZakat = ({
   open,
   onClose,
@@ -22,6 +22,7 @@ const PopupDetailZakat = ({
   onDelete,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const navigate = useNavigate();
 
   if (!open || !zakat) return null;
 
@@ -37,18 +38,17 @@ const PopupDetailZakat = ({
     return parsedDate.toLocaleDateString("fr-FR");
   };
 
-
   const causePrincipaleLabels = {
-  veuvage: "Veuvage",
-  urgence: "Situation d'urgence",
-  vulnerabilite: "Vulnérabilité extrême",
-  autre: "Autre",
-};
+    veuvage: "Veuvage",
+    urgence: "Situation d'urgence",
+    vulnerabilite: "Vulnérabilité extrême",
+    autre: "Autre",
+  };
 
-const causePrincipale =
-  causePrincipaleLabels[zakat.cause_principale] ??
-  zakat.cause_principale ??
-  "-";
+  const causePrincipale =
+    causePrincipaleLabels[zakat.cause_principale] ??
+    zakat.cause_principale ??
+    "-";
 
   const enfant = famille?.enfant_prenom || "-";
   const mere = famille?.mere_nom || "-";
@@ -61,51 +61,56 @@ const causePrincipale =
       : "-";
 
   const region = famille?.village || "-";
-  const dateNaissance = formatDate(
-    famille?.enfant_date_naissance
-  );
+  const dateNaissance = formatDate(famille?.enfant_date_naissance);
 
   const code = zakat.famille || "-";
 
   const numeroZakat = zakat.numero_zakat ?? "-";
   const dateVersement = formatDate(zakat.date_versement);
   const dateCreation = formatDate(zakat.date_creation);
-  const dateModification = formatDate(
-    zakat.date_modification
-  );
-
+  const dateModification = formatDate(zakat.date_modification);
 
   const modeRemiseLabels = {
-  espece: "Espèce",
-  transfert_mobile: "Transfert mobile",
-  autre: "Autre",
+    espece: "Espèce",
+    transfert_mobile: "Transfert mobile",
+    autre: "Autre",
+  };
+
+  const modeRemise =
+    modeRemiseLabels[zakat.mode_remise] ?? zakat.mode_remise ?? "-";
+
+  // Redirection vers la fiche famille avec conservation de l'ID de la Zakat
+ const handleFamilyClick = () => {
+  const familleId = zakat.famille_info?.id || zakat.famille;
+  if (familleId) {
+    navigate(`/famille/${familleId}`, {
+      state: {
+        fromPage: location.pathname, // Utilise dynamiquement le chemin actuel
+        restoreZakatId: zakat.id,
+      },
+    });
+  }
 };
 
-const modeRemise =
-  modeRemiseLabels[zakat.mode_remise] ??
-  zakat.mode_remise ??
-  "-";
-  
- const ActionButtons = ({ className }) => (
-  <div className={className}>
-    <Button
-      title="Modifier"
-      variant="modifier"
-      icon={EditIcon}
-      noWrapperPadding
-      onClick={() => onEdit?.(zakat)}
-    />
+  const ActionButtons = ({ className }) => (
+    <div className={className}>
+      <Button
+        title="Modifier"
+        variant="modifier"
+        icon={EditIcon}
+        noWrapperPadding
+        onClick={() => onEdit?.(zakat)}
+      />
 
-    <Button
-      title=" Annuler"
-      variant="supprimer"
-      icon={DeleteIcon}
-      noWrapperPadding
-      onClick={() => setShowDeletePopup(true)}
-    />
-  </div>
-);
-
+      <Button
+        title=" Annuler"
+        variant="supprimer"
+        icon={DeleteIcon}
+        noWrapperPadding
+        onClick={() => setShowDeletePopup(true)}
+      />
+    </div>
+  );
 
   return (
     <AnimatePresence>
@@ -128,38 +133,35 @@ const modeRemise =
         "
         onClick={onClose}
       >
-       
-      {showDeletePopup && (
-  <div
-    onClick={(e) => e.stopPropagation()}
-    className="fixed inset-0 z-[100] flex items-center justify-center"
-  >
-    <Popup
-      title="Confirmer l'annulation"
-      image={SuccessImage}
-      description="Êtes-vous sûr de vouloir Annuler ce Zakat ? Cette action est irréversible."
-      primaryButtonText="Annuler Zakat "
-      secondaryButtonText="Annuler"
-      primaryButtonVariant="danger"
-
-      onPrimaryClick={async () => {
-        try {
-          await onDelete?.(zakat);
-          setShowDeletePopup(false);
-        } catch (error) {
-          console.error(
-            "Erreur lors de la suppression du Zakat :",
-            error
-          );
-        }
-      }}
-
-      onSecondaryClick={() => {
-        setShowDeletePopup(false);
-      }}
-    />
-  </div>
-)}
+        {showDeletePopup && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+          >
+            <Popup
+              title="Confirmer l'annulation"
+              image={SuccessImage}
+              description="Êtes-vous sûr de vouloir Annuler ce Zakat ? Cette action est irréversible."
+              primaryButtonText="Annuler Zakat "
+              secondaryButtonText="Annuler"
+              primaryButtonVariant="danger"
+              onPrimaryClick={async () => {
+                try {
+                  await onDelete?.(zakat);
+                  setShowDeletePopup(false);
+                } catch (error) {
+                  console.error(
+                    "Erreur lors de la suppression du Zakat :",
+                    error
+                  );
+                }
+              }}
+              onSecondaryClick={() => {
+                setShowDeletePopup(false);
+              }}
+            />
+          </div>
+        )}
 
         <motion.div
           initial={{
@@ -204,7 +206,6 @@ const modeRemise =
             borderColor: "#4E9F8A",
           }}
         >
-        
           <div className="mb-4">
             <button
               onClick={onClose}
@@ -225,7 +226,6 @@ const modeRemise =
                 alt="Fermer"
                 className="w-5 h-5"
               />
-
               Fermer
             </button>
 
@@ -241,16 +241,18 @@ const modeRemise =
             </h2>
           </div>
 
-        
-          <Card
-            mere={mere}
-            enfant={enfant}
-            sexe={sexe}
-            region={region}
-            naissance={dateNaissance}
-            code={code}
-            badges={[]}
-          />
+          {/* Clic sur la carte famille */}
+          <div onClick={handleFamilyClick} className="cursor-pointer">
+            <Card
+              mere={mere}
+              enfant={enfant}
+              sexe={sexe}
+              region={region}
+              naissance={dateNaissance}
+              code={code}
+              badges={[]}
+            />
+          </div>
 
           <div
             className="
@@ -262,7 +264,6 @@ const modeRemise =
               mt-4
             "
           >
-           
             <div className="space-y-3">
               <InfoCard
                 title="Informations générales"
@@ -271,12 +272,10 @@ const modeRemise =
                     label: "Date",
                     value: dateVersement,
                   },
-
                   {
                     label: "Zakat n°",
                     value: `${numeroZakat}`,
                   },
-
                   {
                     label: "Montant versé",
                     value: (
@@ -291,29 +290,22 @@ const modeRemise =
                       </div>
                     ),
                   },
-
                   {
-  label: "Mode de paiement",
-  value: modeRemise,
-},
-
-                  {
-                      label: "Créé par",
-                    value:
-                      zakat.cree_par?.nom || "-",
+                    label: "Mode de paiement",
+                    value: modeRemise,
                   },
-
+                  {
+                    label: "Créé par",
+                    value: zakat.cree_par?.nom || "-",
+                  },
                   {
                     label: "Date de création",
                     value: dateCreation,
                   },
-
                   {
                     label: "Modifié par",
-                    value:
-                      zakat.modifie_par?.nom || "-",
+                    value: zakat.modifie_par?.nom || "-",
                   },
-
                   {
                     label: "Date de modification",
                     value: dateModification,
@@ -333,7 +325,6 @@ const modeRemise =
                 Motif de sélection
               </h2>
 
-              {/* CAUSE */}
               <div>
                 <p className="text-[#4E9F8A] font-medium mb-2">
                   Cause principale :
@@ -350,11 +341,9 @@ const modeRemise =
                   "
                 >
                   {causePrincipale}
-                
                 </div>
               </div>
 
-              {/* PRECISIONS */}
               <div>
                 <p className="text-[#4E9F8A] font-medium mb-2">
                   Précisions :
@@ -378,17 +367,17 @@ const modeRemise =
                 </div>
               </div>
 
-            {!zakat.est_annule && (
-  <ActionButtons
-    className="
-      mt-6
-      grid
-      grid-cols-1
-      gap-3
-      w-full
-    "
-  />
-)}
+              {!zakat.est_annule && (
+                <ActionButtons
+                  className="
+                    mt-6
+                    grid
+                    grid-cols-1
+                    gap-3
+                    w-full
+                  "
+                />
+              )}
             </div>
           </div>
         </motion.div>
