@@ -34,8 +34,10 @@ const FamilyProfile = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, ready } = useAuth();
 
+
+console.log("USER COMPLET :", user);
   const [openDistribution, setOpenDistribution] = useState(false);
   const [openVisites, setOpenVisites] = useState(false);
   const [openZakat, setOpenZakat] = useState(false);
@@ -51,7 +53,7 @@ const FamilyProfile = () => {
   } = useQuery({
     queryKey: ["famille", id],
     queryFn: () => getFamille(id).then((res) => res.data),
-    enabled: !!id,
+    enabled: !!id && ready,
   });
 
   const {
@@ -148,7 +150,7 @@ const FamilyProfile = () => {
     enabled: !!id,
   });
 
-  if (isLoading) {
+  if (!ready || isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Spinner />
@@ -169,11 +171,38 @@ const FamilyProfile = () => {
   // CORRECTION ICI:
   // Convertit les IDs en String pour éviter les incompatibilités de types (ex: number vs string)
   // Permet aux Superadmins / Admins de tout faire, et vérifie si l'ID du coordinateur correspond.
-  const isCoordinateur = user?.role === "coordinator";
-  const isCoordinateurAssigne =
-    String(famille?.coordinateur?.id) === String(user?.id);
+ const isCoordinateur = user?.role === "coordinator";
 
-  const isSuperviseParMoi = !isCoordinateur || isCoordinateurAssigne;
+const coordinateurNom =
+  famille?.coordinateur?.nom?.trim().toLowerCase() || "";
+
+const coordinateurPrenom =
+  famille?.coordinateur?.prenom?.trim().toLowerCase() || "";
+
+const userNom =
+  user?.nom?.trim().toLowerCase() || "";
+
+const userPrenom =
+  user?.prenom?.trim().toLowerCase() || "";
+
+const isCoordinateurAssigne =
+  isCoordinateur &&
+  coordinateurNom === userNom &&
+  coordinateurPrenom === userPrenom;
+
+const isSuperviseParMoi =
+  !isCoordinateur || isCoordinateurAssigne;
+
+
+  console.log({
+  userRole: user?.role,
+  userId: user?.id,
+  familleId: famille?.id,
+  coordinateur: famille?.coordinateur,
+  coordinateurId: famille?.coordinateur?.id,
+  isCoordinateurAssigne,
+  isSuperviseParMoi,
+});
 
   const STATUT_MATRIMONIAL_LABELS = {
     mariee: "Mariée",
