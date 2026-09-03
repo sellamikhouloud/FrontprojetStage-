@@ -16,7 +16,7 @@ import PopupValidationProduit from "../../components/Popups/PopupValidationProdu
 import PopupHistoriqueProduit from "../../components/Popups/Popuphistoriqueproduit";
 import NoResultImage from "../../assets/no result picture.svg";
 import Spinner from "../../components/Spinner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate , useLocation } from "react-router-dom";
 import { listProduits, validerProduit, getHistoriqueProduit } from "@/lib/api/stock";
 import { listDistributions , exportDistributions, annulerDistribution } from "@/lib/api/distributions";
 import { useAuth } from "../../components/Providers/AuthProvider";
@@ -50,7 +50,17 @@ export default function DistributionPage() {
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [showStockPopup, setShowStockPopup] = useState(false);
+  
   const navigate = useNavigate();
+    const location = useLocation();
+
+     useEffect(() => {
+    if (location.state?.openStockPopup) {
+      setShowStockPopup(true);
+      // on nettoie l'état pour ne pas rouvrir le popup si l'utilisateur navigue en arrière/rafraîchit
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
   const queryClient = useQueryClient();
   const [showValidation, setShowValidation] = useState(false);
   const [produitSelectionne, setProduitSelectionne] = useState(null);
