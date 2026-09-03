@@ -30,8 +30,7 @@ const PopupZakatFamille = ({
   const [localAnnulees, setLocalAnnulees] = useState(zakats?.annulees ?? []);
 
   const queryClient = useQueryClient();
-
-  const selectedFamille = selectedZakat?.famille_info || null;
+const selectedFamille = famille || selectedZakat?.famille_info || null;
 
   useEffect(() => {
     setLocalActives(zakats?.actives ?? []);
@@ -181,7 +180,8 @@ const PopupZakatFamille = ({
         open={openDetail}
         onClose={() => setOpenDetail(false)}
         zakat={selectedZakat}
-        famille={selectedFamille}
+       famille={famille}
+         fromFamilyHistory={true}
         onEdit={() => {
           setOpenDetail(false);
           setOpenModifier(true);
@@ -225,3 +225,4 @@ const PopupZakatFamille = ({
 };
 
 export default PopupZakatFamille;
+

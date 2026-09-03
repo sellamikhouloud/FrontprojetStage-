@@ -5,14 +5,13 @@ import { useNavigate } from "react-router-dom";
 import Card from "../Cards/Card";
 import InfoCard from "../Containers/AfficherContainer";
 import Button from "../Button/Button";
-
+import { useAuth } from "../Providers/AuthProvider";
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
 import DeleteIcon from "../../assets/Delete.svg";
 
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
-
 const PopupDetailZakat = ({
   open,
   onClose,
@@ -20,10 +19,11 @@ const PopupDetailZakat = ({
   famille,
   onEdit,
   onDelete,
+  fromFamilyHistory = false,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const navigate = useNavigate();
-
+ const { user } = useAuth();
   if (!open || !zakat) return null;
 
   const formatDate = (date) => {
@@ -49,26 +49,74 @@ const PopupDetailZakat = ({
     causePrincipaleLabels[zakat.cause_principale] ??
     zakat.cause_principale ??
     "-";
+const enfant =
+  famille?.nourrisson?.prenom ||
+  famille?.enfant_prenom ||
+  "-";
+const mere = [
+  famille?.mere?.nom || famille?.mere_nom,
+  famille?.mere?.prenom || famille?.mere_prenom,
+]
+  .filter(Boolean)
+  .join(" ") || "-";
+const sexe =
+  famille?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : famille?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : famille?.enfant_sexe === "M"
+    ? "Fils"
+    : famille?.enfant_sexe === "F"
+    ? "Fille"
+    : "-";
 
-  const enfant = famille?.enfant_prenom || "-";
-  const mere = famille?.mere_nom || "-";
+const region =
+  famille?.mere?.village?.nom ||
+  famille?.village ||
+  "-";
 
-  const sexe =
-    famille?.enfant_sexe === "M"
-      ? "Fils"
-      : famille?.enfant_sexe === "F"
-      ? "Fille"
-      : "-";
+const dateNaissance = formatDate(
+  famille?.nourrisson?.date_naissance ||
+  famille?.enfant_date_naissance
+);
 
-  const region = famille?.village || "-";
-  const dateNaissance = formatDate(famille?.enfant_date_naissance);
-
-  const code = zakat.famille || "-";
-
+const code =
+  famille?.id ||
+  zakat.famille ||
+  "-";
   const numeroZakat = zakat.numero_zakat ?? "-";
   const dateVersement = formatDate(zakat.date_versement);
   const dateCreation = formatDate(zakat.date_creation);
   const dateModification = formatDate(zakat.date_modification);
+ 
+  const familleData = famille || zakat?.famille_info;
+
+const isCoordinateur = user?.role === "coordinator";
+
+// Récupérer le coordinateur de la famille
+const coordinateur =
+  familleData?.coordinateur ??
+  familleData?.coordinateur_id ??
+  zakat?.famille_info?.coordinateur ??
+  zakat?.famille_info?.coordinateur_id ??
+  null;
+
+const coordinateurId =
+  typeof coordinateur === "object"
+    ? coordinateur?.id
+    : coordinateur;
+
+// Vérifier si le coordinateur connecté est celui de la famille
+const isCoordinateurAssigne =
+  isCoordinateur &&
+  coordinateurId != null &&
+  String(coordinateurId) === String(user?.id);
+
+// Permissions
+const canEditOrDelete = fromFamilyHistory
+  ? !zakat.est_annule &&
+    (!isCoordinateur || isCoordinateurAssigne)
+  : !zakat.est_annule;
 
   const modeRemiseLabels = {
     espece: "Espèce",
@@ -81,11 +129,15 @@ const PopupDetailZakat = ({
 
   // Redirection vers la fiche famille avec conservation de l'ID de la Zakat
  const handleFamilyClick = () => {
-  const familleId = zakat.famille_info?.id || zakat.famille;
+  const familleId =
+    famille?.id ||
+    zakat.famille_info?.id ||
+    zakat.famille;
+
   if (familleId) {
     navigate(`/famille/${familleId}`, {
       state: {
-        fromPage: location.pathname, // Utilise dynamiquement le chemin actuel
+        fromPage: location.pathname,
         restoreZakatId: zakat.id,
       },
     });
@@ -367,17 +419,17 @@ const PopupDetailZakat = ({
                 </div>
               </div>
 
-              {!zakat.est_annule && (
-                <ActionButtons
-                  className="
-                    mt-6
-                    grid
-                    grid-cols-1
-                    gap-3
-                    w-full
-                  "
-                />
-              )}
+             {canEditOrDelete && (
+  <ActionButtons
+    className="
+      mt-6
+      grid
+      grid-cols-1
+      gap-3
+      w-full
+    "
+  />
+)}
             </div>
           </div>
         </motion.div>

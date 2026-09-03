@@ -659,6 +659,7 @@ const handleExportZakat = async () => {
   open={showDetailPopup}
   zakat={selectedZakat}
   famille={selectedZakat?.famille_info}
+    fromFamilyHistory={false}
   onClose={() => setShowDetailPopup(false)}
   onEdit={(zakat) => {
     setShowDetailPopup(false);
