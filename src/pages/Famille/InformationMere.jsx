@@ -1,5 +1,6 @@
-import { useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef, useState } from "react";
 
 import Sidebar from "../../components/Sidebar/Sidebar.jsx";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader.jsx";
@@ -13,10 +14,12 @@ import CounterInput from "../../components/Forms/CounterInput.jsx";
 import ErrorMessage from "../../components/Forms/ErrorMessage.jsx";
 
 import motherbaby from "../../assets/images/motherbaby.png";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useFamilyForm } from "../../context/FamilyFormContext";
 import { searchMere } from "../../lib/api/familles";
 import { listVillages } from "../../lib/api/Parametres";
+import { loadCache } from "@/lib/offlineCache";
+
 
 const isFutureDate = (date) => {
   if (!date) return false;
@@ -36,19 +39,85 @@ export default function InformationMere() {
 
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
-  const { formData, updateMere, updateFamilyData, setNourrissonsCount } = useFamilyForm();
+  const location = useLocation();
+  
+  const {
+  formData,
+  updateMere,
+  updateNourrisson,
+  updateFamilyData,
+  setNourrissonsCount,
+  resetFamilyForm,
+} = useFamilyForm();
 
   const mere = formData.mere;
+  const draftFamille = location.state?.draftFamille;
+const hydratedDraftRef = useRef(false);
 
-  // Liste réelle des villages (même source que FamiliesPage.jsx)
-  const {
-    data: villagesData,
-    isLoading: villagesLoading,
-    isError: villagesError,
-  } = useQuery({
-    queryKey: ["villages"],
-    queryFn: () => listVillages().then((r) => r.data),
+useEffect(() => {
+  if (!draftFamille || hydratedDraftRef.current) return;
+
+  hydratedDraftRef.current = true;
+
+  const payload = draftFamille.payload || {};
+
+  resetFamilyForm();
+
+  // Restaurer les informations de la mère
+  updateMere(payload.mere || {});
+
+  // Restaurer les informations générales de la famille
+  updateFamilyData({
+    date_entree: payload.date_entree ?? null,
+    statut: payload.statut ?? "active",
+    date_sortie: payload.date_sortie ?? null,
+    motif_sortie: payload.motif_sortie ?? null,
+    id_mere: payload.id_mere ?? null,
+    coordinateur: payload.coordinateur ?? null,
   });
+
+  // Restaurer le nombre d'enfants
+  setNourrissonsCount(
+    payload.nourrissons?.length ||
+    payload.mere?.nb_enfants ||
+    1
+  );
+
+  // Restaurer les informations des nourrissons
+  (payload.nourrissons || []).forEach((nourrisson, index) => {
+    updateNourrisson(index, nourrisson);
+  });
+}, [
+  draftFamille,
+  resetFamilyForm,
+  updateMere,
+  updateNourrisson,
+  updateFamilyData,
+  setNourrissonsCount,
+]);
+
+  
+ const {
+  data: villagesData,
+  isLoading: villagesLoading,
+  isError: villagesError,
+} = useQuery({
+  queryKey: ["villages"],
+  networkMode: "always",
+  queryFn: async () => {
+    try {
+      const response = await listVillages();
+      return response.data;
+    } catch (error) {
+      const cached = loadCache("villages");
+      if (cached?.data) {
+        console.log("📦 Villages chargés depuis le cache (fallback)");
+        return cached.data;
+      }
+      throw error;
+    }
+  },
+});
 
   const villages = villagesData?.results ?? villagesData ?? [];
 
@@ -103,10 +172,7 @@ export default function InformationMere() {
       "Veuillez indiquer le nombre d'enfants";
   }
 
-  if (!mere.village) {
-    newErrors.village =
-      "Veuillez choisir le village";
-  }
+  
 
   setErrors(newErrors);
 
@@ -140,15 +206,26 @@ export default function InformationMere() {
 
     navigate("/information-nourrisson");
 
-  } catch (error) {
+   } catch (error) {
+    // Pas de réponse du tout = hors ligne. On ne peut pas vérifier si la
+    // mère existe déjà, mais on ne bloque pas l'utilisateur : on continue
+    // avec id_mere = null. Le flux d'enregistrement (PhotoConfirmation)
+    // retentera la recherche, et à défaut sauvegardera un brouillon.
+    if (!error.response) {
+      console.warn("🔌 Hors ligne : recherche de la mère impossible, on continue sans id_mere.");
+      updateFamilyData({ id_mere: null });
+      setNourrissonsCount(mere.nb_enfants);
+      navigate("/information-nourrisson");
+      return;
+    }
+
+    // Le serveur a répondu avec une erreur — comportement inchangé.
     console.error(
       "Erreur lors de la recherche de la mère :",
       error.response?.data || error
     );
-
     setErrors({
-      global:
-        "Une erreur est survenue, veuillez réessayer.",
+      global: "Une erreur est survenue, veuillez réessayer.",
     });
   }
 };
