@@ -1,5 +1,7 @@
-import { useState } from "react";
+
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { countDrafts } from "@/lib/offlineDrafts";
 import { User } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 import { sidebarConfig } from "./sidebarData";
@@ -14,6 +16,7 @@ import userIcon from "../../assets/user.svg";
 
 const API_BASE_URL = "http://127.0.0.1:8000"; 
 
+
 export const resolvePhotoUrl = (photo) => {
   if (!photo) return null;
   if (photo.startsWith("http://") || photo.startsWith("https://")) {
@@ -21,6 +24,52 @@ export const resolvePhotoUrl = (photo) => {
   }
   return `${API_BASE_URL}${photo}`;
 };
+const DRAFTS_PATH = "/brouillons-hors-ligne";
+
+function DraftsBadge({ count, expanded, onClick }) {
+  if (!count) return null;
+
+  const displayCount = count > 9 ? "9+" : count;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title="Brouillons hors ligne en attente"
+      className={`
+        flex items-center
+        bg-amber-400
+        hover:bg-amber-300
+        transition-colors
+        rounded-full
+        shrink-0
+        ${expanded ? "w-full justify-start gap-2 px-3 py-2" : "w-10 h-10 justify-center"}
+      `}
+    >
+      <span
+        className="
+          flex items-center justify-center
+          min-w-[22px] h-[22px]
+          px-1
+          rounded-full
+          bg-white
+          text-amber-600
+          text-[11px]
+          font-bold
+          leading-none
+        "
+      >
+        {displayCount}
+      </span>
+
+      {expanded && (
+        <span className="text-[13px] font-semibold text-white whitespace-nowrap">
+          Brouillons hors ligne
+        </span>
+      )}
+    </button>
+  );
+}
 
 export default function Sidebar({
   showTopBarIcons = true,
@@ -35,6 +84,33 @@ export default function Sidebar({
   const [expanded, setExpanded] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showProfil, setShowProfil] = useState(false);
+
+    const [draftCount, setDraftCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const refreshDraftCount = () => {
+      countDrafts()
+        .then((count) => {
+          if (!cancelled) setDraftCount(count);
+        })
+        .catch(() => {
+          // IndexedDB unavailable (private mode, etc.) — badge just stays at 0.
+        });
+    };
+
+    refreshDraftCount();
+
+    window.addEventListener("focus", refreshDraftCount);
+    window.addEventListener("nutrigest:drafts-changed", refreshDraftCount);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", refreshDraftCount);
+      window.removeEventListener("nutrigest:drafts-changed", refreshDraftCount);
+    };
+  }, []);
 
   /*
    * chef_coordinator uses the coordinator sidebar configuration.
@@ -324,6 +400,11 @@ const adminData = {
                   onMouseEnter={() => setExpanded(true)}
                 />
               ))}
+              <DraftsBadge
+                count={draftCount}
+                expanded={expanded}
+                onClick={() => navigate(DRAFTS_PATH)}
+              />
 
               {actions.length > 0 && expanded && (
                 <p className="text-white font-bold">
@@ -437,6 +518,14 @@ const adminData = {
                     />
                   </div>
                 ))}
+                 <DraftsBadge
+                  count={draftCount}
+                  expanded={true}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    navigate(DRAFTS_PATH);
+                  }}
+                />
 
                 {actions.length > 0 && (
                   <>
