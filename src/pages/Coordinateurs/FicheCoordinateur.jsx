@@ -358,47 +358,54 @@ const handleSave = async () => {
       }
       setStatutOriginal(statut);
     }
-
- let payload;
+    
+let payload;
 
 if (photoFile) {
   payload = new FormData();
-  payload.append("username", username);
-  payload.append("nom", nom);
-  payload.append("prenom", prenom);
-  payload.append("email", email);
-  payload.append("telephone", telephone);
-  payload.append("village", village);
 
-  if (isAdmin) {
-    payload.append("role", roleCoordinateur);
-  }
+  // Ajouter uniquement les champs qui ont changé
+  Object.entries(patch).forEach(([key, value]) => {
+    payload.append(key, value ?? "");
+  });
+
+  // Password uniquement s'il a été modifié
   if (password.trim()) {
-    payload.append("password", password);
+    payload.append("password", password.trim());
   }
 
+  // Nouvelle photo
   payload.append("photo", photoFile);
+
 } else if (photoRemoved) {
-  payload = { username, nom, prenom, email, telephone, village, photo: null };
 
-  if (isAdmin) {
-    payload.role = roleCoordinateur;
-  }
+  // Uniquement les champs modifiés + suppression de la photo
+  payload = {
+    ...patch,
+    photo: null,
+  };
+
+  // Password uniquement s'il a été modifié
   if (password.trim()) {
-    payload.password = password;
+    payload.password = password.trim();
   }
+
 } else {
-  payload = { username, nom, prenom, email, telephone, village };
 
-  if (isAdmin) {
-    payload.role = roleCoordinateur;
-  }
+  // Uniquement les champs modifiés
+  payload = {
+    ...patch,
+  };
+
+  // Password uniquement s'il a été modifié
   if (password.trim()) {
-    payload.password = password;
+    payload.password = password.trim();
   }
 }
 
 await updateCoordinateur(id, payload);
+
+
 
     // Succès réel uniquement
     setShowBanner(true);
