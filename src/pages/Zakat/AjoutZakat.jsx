@@ -30,7 +30,9 @@ import { useAuth } from "../../components/Providers/AuthProvider";
 import { listFamilles } from "@/lib/api/familles";
 import { getTauxDeChange } from "@/lib/api/parametres";
 import { getSoldeActuel , createAideZakat , getDerniereZakatFamille,} from "@/lib/api/zakat";
-import { enqueue } from "@/lib/offlineQueue";
+
+import { saveCache, loadCache } from "@/lib/offlineCache";
+import { saveDraft } from "@/lib/offlineDrafts";
 
 
 
@@ -145,6 +147,35 @@ function parseBackendErrors(data) {
   return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
 }
 
+// Approximates the backend's search, client-side, against the family list
+// already cached by the dashboard prefetch — used only when offline and
+// the real search can't run.
+function filterCachedFamilles(cachedData, searchTerm) {
+  const list = Array.isArray(cachedData) ? cachedData : cachedData?.results ?? [];
+
+  if (!searchTerm) return cachedData;
+
+  const term = searchTerm.trim().toLowerCase();
+  if (!term) return cachedData;
+
+  const filtered = list.filter((f) => {
+    const haystack = [
+      f?.mere?.nom,
+      f?.mere?.prenom,
+      f?.nourrisson?.prenom,
+      String(f?.id ?? ""),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(term);
+  });
+
+  return Array.isArray(cachedData)
+    ? filtered
+    : { ...cachedData, results: filtered, next: null };
+}
+
 
 
 export default function AjoutZakat() {
@@ -171,7 +202,7 @@ export default function AjoutZakat() {
 
   const { user } = useAuth();
   const role = user?.role ?? null;
-  const isAdmin = role === "admin";
+  const isAdmin = role === "admin" || role === "chef_coordinator";
 
   // Taux de change — récupéré une seule fois à l'ouverture du formulaire
 const { data: tauxData, isLoading: tauxLoading } = useQuery({
@@ -315,20 +346,23 @@ const extractErrorMessage = (error) => {
     await createAideZakat(payload);
     setShowSuccessPopup(true);
   } catch (error) {
-    if (!error.response) {
-      try {
-        await enqueue("/api/zakat/aides/", payload);
-        setOfflinePending(true);
-        setShowSuccessPopup(true);
-      } catch (queueError) {
-        console.error("❌ Impossible de mettre la zakat en attente hors ligne :", queueError);
-        setBackendGeneralError(
-          "Impossible d'enregistrer la zakat, même hors ligne. Veuillez réessayer."
-        );
-      }
-      setSaving(false);
-      return;
-    }
+  if (!error.response) {
+  try {
+    // Saved as a draft, not auto-queued: nothing syncs on its own.
+    // The coordinator reviews it from "Brouillons hors ligne" and
+    // explicitly clicks "ajouter" once back online.
+    await saveDraft("aide_zakat", payload);
+    setOfflinePending(true);
+    setShowSuccessPopup(true);
+  } catch (draftError) {
+    console.error("❌ Impossible d'enregistrer le brouillon de zakat :", draftError);
+    setBackendGeneralError(
+      "Impossible d'enregistrer la zakat, même hors ligne. Veuillez réessayer."
+    );
+  }
+  setSaving(false);
+  return;
+}
 
     console.error(
       "❌ Erreur lors de la création de la zakat :",
@@ -340,15 +374,28 @@ const extractErrorMessage = (error) => {
       error.response?.status
     );
 
-    const mappedFieldErrors = {};
+       const mappedFieldErrors = {};
     Object.entries(fieldErrors).forEach(([backendField, message]) => {
       const localKey = FIELD_KEY_MAP[backendField] || backendField;
       mappedFieldErrors[localKey] = message;
     });
 
+    // The dedicated "famille" ErrorMessage slot only renders when NO family
+    // is selected (see the JSX: `{!selectedFamille && ...}`). But a backend
+    // rejection of the famille reference itself always happens WITH a
+    // family already selected — so that slot is invisible exactly when
+    // it's needed. Surface it via the general error banner too, which is
+    // always rendered below the family card, so it's never console-only.
+    let finalGeneralMessage = generalMessage;
+    if (mappedFieldErrors.famille && selectedFamille) {
+      finalGeneralMessage = finalGeneralMessage
+        ? `${finalGeneralMessage} — ${mappedFieldErrors.famille}`
+        : mappedFieldErrors.famille;
+    }
+
     setBackendFieldErrors(mappedFieldErrors);
     setBackendGeneralError(
-      generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la zakat.")
+      finalGeneralMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la zakat.")
     );
   } finally {
     setSaving(false);
@@ -406,17 +453,31 @@ const {
 } = useInfiniteQuery({
   queryKey: ["familles-popup", "infinite", searchFamille],
 
-  queryFn: async ({ pageParam = 1 }) => {
-    const params = { page: pageParam };
+ queryFn: async ({ pageParam = 1 }) => {
+  const params = { page: pageParam };
 
-    const trimmedSearch = searchFamille.trim();
-    if (trimmedSearch) {
-      params.search = trimmedSearch;
-    }
+  const trimmedSearch = searchFamille.trim();
+  if (trimmedSearch) {
+    params.search = trimmedSearch;
+  }
 
+  try {
     const response = await listFamilles(params);
+    // No saveCache here — the dashboard prefetch already keeps
+    // "familles-popup" warm on login, and a filtered result here
+    // shouldn't silently overwrite that general cache.
     return response.data;
-  },
+  } catch (error) {
+    if (pageParam === 1) {
+      const cached = loadCache("familles-popup");
+      if (cached?.data) {
+        console.log("📦 Familles (popup) chargées depuis le cache (fallback)");
+        return filterCachedFamilles(cached.data, trimmedSearch);
+      }
+    }
+    throw error;
+  }
+},
 
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
@@ -521,6 +582,46 @@ useEffect(() => {
       });
     }
   };
+  const [manualFamilleError, setManualFamilleError] = useState(null);
+
+const handleManualFamilleCode = (code) => {
+  setManualFamilleError(null);
+
+  const cached = loadCache("familles-popup");
+  const cachedList = cached?.data?.results ?? cached?.data ?? [];
+  const match = cachedList.find((f) => String(f.id) === code);
+
+  if (match) {
+    setSelectedFamille({
+      id: match.id,
+      code: match.id,
+      enfant: match.nourrisson?.prenom,
+      mere: `${match.mere?.nom ?? ""} ${match.mere?.prenom ?? ""}`,
+      sexe:
+        match?.nourrisson?.sexe === "M"
+          ? "Fils"
+          : match?.nourrisson?.sexe === "F"
+          ? "Fille"
+          : "-",
+      region: match.mere?.village?.nom ?? "-",
+      naissance: match.nourrisson?.date_naissance,
+      badges: [],
+    });
+  } else {
+    setSelectedFamille({
+      id: code,
+      code,
+      enfant: undefined,
+      mere: undefined,
+      sexe: "-",
+      region: "-",
+      naissance: undefined,
+      badges: [{ type: "retard", text: "Code saisi manuellement — non vérifié" }],
+    });
+  }
+
+  setErrors((prev) => ({ ...prev, famille: false }));
+};
 
   return (
       
@@ -583,11 +684,15 @@ useEffect(() => {
         {!selectedFamille && (
           <>
           <div className="flex flex-col gap-2 mt-2 ">
-            <SelectorWithAction
-              label="Choisir la famille concerne"
-              description="Cliquer pour rechercher la famille concerne par la distribution"
-              onAction={handleSearch}
-            />
+           <SelectorWithAction
+  label="Choisir la famille concerne"
+  description="Cliquer pour rechercher la famille concerne par la distribution"
+  onAction={handleSearch}
+  manualEntryLabel="Entrer le code famille directement"
+  manualEntryPlaceholder="Ex : GDK-2026-059"
+  onManualSubmit={handleManualFamilleCode}
+  manualEntryError={manualFamilleError}
+/>
             <ErrorMessage
   message={
     errors.famille
@@ -986,31 +1091,35 @@ useEffect(() => {
      
         </div>
 
-        {showSuccessPopup && (
+    {showSuccessPopup && (
   <Popup
     title={
       offlinePending
-        ? "Zakat enregistrée hors ligne — sera synchronisée"
+        ? "Zakat enregistrée en brouillon hors ligne — à valider depuis « Brouillons hors ligne »"
         : "Zakat enregistrée avec succès"
     }
     image={offlinePending ? null : SuccessImage}
-    primaryButtonText="Voir la fiche famille"
+    primaryButtonText={
+      offlinePending
+        ? "Voir les brouillons hors ligne"
+        : "Voir la fiche famille"
+    }
     secondaryButtonText="Revenir à l'accueil"
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
+
+      if (offlinePending) {
+        navigate("/brouillons-hors-ligne");
+      } else {
+        navigate(`/famille/${selectedFamille?.id}`);
+      }
+
       setOfflinePending(false);
-      navigate(`/famille/${selectedFamille?.id}`);
     }}
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
       setOfflinePending(false);
-      navigate(
-        role === "chef_coordinator"
-          ? "/dashboardChef"
-          : role === "coordinator"
-          ? "/dashboardCoor"
-          : "/dashboard"
-      );    
+      navigate(isAdmin ? "/dashboard" : "/dashboard-coor");
     }}
   />
 )}

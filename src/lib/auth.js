@@ -6,6 +6,7 @@ import {
 } from "./api/auth";
 
 import { fetchCSRFToken } from "./axios";
+import { clearAllCache } from "./offlineCache";
 
 const AUTH_USER_KEY = "nutrigest:auth:user";
 
@@ -33,8 +34,11 @@ export async function logout() {
   } catch {
     // Ignore logout errors
   } finally {
-    // Always remove the local offline session
+    // Always remove the local offline session and cached reference data —
+    // even if the server-side logout call failed (e.g. offline). Offline
+    // drafts (IndexedDB) are intentionally left alone here.
     localStorage.removeItem(AUTH_USER_KEY);
+    clearAllCache();
   }
 }
 
