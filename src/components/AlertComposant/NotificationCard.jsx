@@ -1,4 +1,3 @@
-
 import arrow from "../../assets/right-arrow.png";
 import retardIcon from "../../assets/retard.svg";
 import retard2Icon from "../../assets/retard2.svg";
@@ -90,11 +89,11 @@ const NotificationCard = ({
       className="
         relative
         w-full
-        min-h-[78px]
         rounded-[16px]
         border
         overflow-hidden
         flex
+        flex-row
         items-center
         justify-between
         gap-3
@@ -103,6 +102,7 @@ const NotificationCard = ({
         py-3
         sm:px-5
         sm:py-3.5
+        sm:min-h-[78px]
         transition-all
         duration-200
         hover:shadow-md
@@ -117,118 +117,64 @@ const NotificationCard = ({
     >
       {/* Barre gauche */}
       <div
-        className="
-          absolute
-          left-0
-          top-0
-          h-full
-          w-[5px]
-        "
-        style={{
-          backgroundColor: config.borderColor,
-        }}
+        className="absolute left-0 top-0 h-full w-[5px]"
+        style={{ backgroundColor: config.borderColor }}
       />
 
-      {/* Icône */}
-      <div
-        className="
-          w-[38px]
-          h-[38px]
-          sm:w-[44px]
-          sm:h-[44px]
-          rounded-full
-          flex
-          items-center
-          justify-center
-          flex-shrink-0
-        "
-        style={{
-          backgroundColor: `${config.borderColor}20`,
-        }}
-      >
-        <img
-          src={config.icon}
-          alt=""
-          className="
-            w-[15px]
-            h-[15px]
-            sm:w-[17px]
-            sm:h-[17px]
-          "
-        />
-      </div>
-
-      {/* Texte */}
-      <div
-        className="
-          flex-1
-          min-w-0
-          flex
-          flex-col
-          items-start
-          gap-1
-        "
-      >
-        {/* Titre */}
-        <h3
-          className="
-            w-full
-            text-[14px]
-            sm:text-[17px]
-            md:text-[18px]
-            font-semibold
-            leading-5
-            sm:leading-6
-            text-[#202124]
-            break-words
-            line-clamp-2
-          "
-        >
-          {title}
-        </h3>
-
-        {/* Message */}
-        <p
-          className="
-            w-full
-            text-[13px]
-            sm:text-[14px]
-            md:text-[15px]
-            font-medium
-            leading-5
-            sm:leading-[22px]
-            text-[#5E6064]
-            line-clamp-2
-            break-words
-          "
-        >
-          {message}
-        </p>
-      </div>
-
-      {/* Partie droite */}
-      {showArrow ? (
-        /* Flèche pour les notifications normales */
+      {/* Icône + Texte */}
+      <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
         <div
           className="
-            flex
-            items-center
+            w-[38px] h-[38px] sm:w-[44px] sm:h-[44px]
+            rounded-full
+            flex items-center justify-center
             flex-shrink-0
-            pr-1
           "
+          style={{ backgroundColor: `${config.borderColor}20` }}
         >
           <img
-            src={arrow}
+            src={config.icon}
             alt=""
-            className="
-              w-4
-              h-4
-              opacity-60
-            "
+            className="w-[15px] h-[15px] sm:w-[17px] sm:h-[17px]"
           />
         </div>
+
+        <div className="flex-1 min-w-0 flex flex-col items-start gap-1">
+          <h3
+            className="
+              w-full
+              text-[14px] sm:text-[17px] md:text-[18px]
+              font-semibold
+              leading-5 sm:leading-6
+              text-[#202124]
+              break-words
+            "
+          >
+            {title}
+          </h3>
+
+          <p
+            className="
+              w-full
+              text-[13px] sm:text-[14px] md:text-[15px]
+              font-medium
+              leading-5 sm:leading-[22px]
+              text-[#5E6064]
+              break-words
+              line-clamp-2
+            "
+          >
+            {message}
+          </p>
+        </div>
+      </div>
+
+      {/* Partie droite (Flèche ou Infos de résolution) */}
+      {showArrow ? (
+        <div className="flex items-center justify-center flex-shrink-0 pl-1">
+          <img src={arrow} alt="" className="w-4 h-4 opacity-60" />
+        </div>
       ) : (
-        /* Informations de résolution pour l'historique */
         <div
           className="
             flex
@@ -236,36 +182,20 @@ const NotificationCard = ({
             items-end
             justify-center
             flex-shrink-0
-            min-w-[120px]
-            sm:min-w-[150px]
             text-right
             gap-0.5
+            pl-2
           "
         >
           {dateResolution && (
-           <p
-  className="
-    text-[14px]
-    font-medium
-    text-black
-    whitespace-nowrap
-  "
->
+            <p className="text-[11px] sm:text-[14px] font-medium text-black break-words">
               Résolue le : {dateResolution}
             </p>
           )}
 
           {resoluePar && (
-            <p
-              className="
-                text-[14px]
-                sm:text-[12px]
-                font-medium
-                text-black
-                whitespace-nowrap
-              "
-            >
-              Résolue par : {resoluePar}
+            <p className="text-[11px] sm:text-[14px] font-medium text-black break-words">
+              Par : {resoluePar}
             </p>
           )}
         </div>
@@ -275,4 +205,3 @@ const NotificationCard = ({
 };
 
 export default NotificationCard;
-
