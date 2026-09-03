@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate , useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import PageHeader from "../../components/Navigation,Pageheader/PageHeader";
@@ -42,8 +42,6 @@ const getBadgeMere = (statut) => {
   }
 };
 
-// Le backend utilise le filtre django-filter par défaut sur date_visite,
-// qui attend le format ISO YYYY-MM-DD (contrairement à Zakat qui utilise JJ/MM/AAAA).
 function formatDateYYYYMMDD(date) {
   if (!date) return undefined;
   const y = date.getFullYear();
@@ -53,11 +51,12 @@ function formatDateYYYYMMDD(date) {
 }
 
 export default function ListeVisites() {
-   const { user } = useAuth();
+  const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
-   const location = useLocation();
+
   const [search, setSearch] = useState("");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -69,17 +68,24 @@ export default function ListeVisites() {
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
 
+  // Restauration de la pop-up si retour depuis la fiche famille
   useEffect(() => {
-    if (location.state?.restoreVisiteId) {
-      const restoreId = location.state.restoreVisiteId;
+    const restoreId =
+      location.state?.restoreVisiteId ||
+      location.state?.restoreId ||
+      location.state?.fromVisiteId;
+
+    if (restoreId) {
       getVisite(restoreId)
         .then((res) => {
           setSelectedVisite(res.data);
           setShowDetailPopup(true);
         })
-        .catch((err) => console.error("Erreur lors de la récupération de la visite:", err));
+        .catch((err) =>
+          console.error("Erreur lors de la récupération de la visite:", err)
+        );
 
-      // Nettoyer l'état pour éviter de réouvrir la pop-up au rechargement manuellement
+      // Nettoyage de l'état de navigation
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -89,6 +95,7 @@ export default function ListeVisites() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
   const {
     data,
     isLoading,
@@ -255,18 +262,16 @@ export default function ListeVisites() {
       <Sidebar />
 
       <main className="flex-1 overflow-y-auto px-5 pt-18 md:pt-0 pb-8 lg:p-10 bg-white">
-      {isAdmin ? (
-  <NavigationHeader
-    title="Liste des visites"
-    secondType="add"
-    secondActionTitle="Ajouter une visite"
-    onSecondAction={() => navigate("/ajout-visite")}
-  />
-) : (
-  <NavigationHeader
-    title="Liste des visites"
-  />
-)}
+        {isAdmin ? (
+          <NavigationHeader
+            title="Liste des visites"
+            secondType="add"
+            secondActionTitle="Ajouter une visite"
+            onSecondAction={() => navigate("/ajout-visite")}
+          />
+        ) : (
+          <NavigationHeader title="Liste des visites" />
+        )}
 
         <div className="my-6">
           <SearchBar
@@ -274,7 +279,7 @@ export default function ListeVisites() {
             onChange={(e) => setSearch(e.target.value)}
             onFilterClick={() => setIsFilterOpen((prev) => !prev)}
             maxWidth="max-w-full"
-             placeholder="Rechercher par informations de la famille"
+            placeholder="Rechercher par informations de la famille"
           />
         </div>
 
@@ -337,7 +342,7 @@ export default function ListeVisites() {
                   />
                 );
               })}
-            <div ref={observerTarget} className="h-1" />
+              <div ref={observerTarget} className="h-1" />
 
               {isFetchingNextPage && (
                 <div className="flex justify-center py-4">
@@ -399,5 +404,4 @@ export default function ListeVisites() {
     </div>
   );
 }
-
 
