@@ -68,28 +68,6 @@ export default function ListeVisites() {
   const [showDetailPopup, setShowDetailPopup] = useState(false);
   const [openModifier, setOpenModifier] = useState(false);
 
-  // Restauration de la pop-up si retour depuis la fiche famille
-  useEffect(() => {
-    const restoreId =
-      location.state?.restoreVisiteId ||
-      location.state?.restoreId ||
-      location.state?.fromVisiteId;
-
-    if (restoreId) {
-      getVisite(restoreId)
-        .then((res) => {
-          setSelectedVisite(res.data);
-          setShowDetailPopup(true);
-        })
-        .catch((err) =>
-          console.error("Erreur lors de la récupération de la visite:", err)
-        );
-
-      // Nettoyage de l'état de navigation
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
@@ -130,6 +108,25 @@ export default function ListeVisites() {
     keepPreviousData: true,
     retry: 1,
   });
+
+  // Détection du retour depuis la page Famille
+  useEffect(() => {
+    const restoreId = location.state?.restoreVisiteId;
+
+    if (restoreId) {
+      getVisite(restoreId)
+        .then((res) => {
+          setSelectedVisite(res.data);
+          setShowDetailPopup(true);
+        })
+        .catch((err) =>
+          console.error("Erreur lors du chargement de la visite :", err)
+        );
+
+      // On nettoie l'état de navigation pour éviter de réouvrir la popup si l'utilisateur rafraîchit la page
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, location.pathname]);
 
   const visites = (data?.pages ?? []).flatMap((page) =>
     Array.isArray(page) ? page : page?.results ?? []
@@ -404,4 +401,3 @@ export default function ListeVisites() {
     </div>
   );
 }
-
