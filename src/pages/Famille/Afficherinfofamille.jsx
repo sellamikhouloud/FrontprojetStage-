@@ -516,6 +516,7 @@ const isSuperviseParMoi =
           restoreVisiteId: location.state?.restoreVisiteId,
           restoreZakatId: location.state?.restoreZakatId,
           restoreDistributionId: location.state?.restoreDistributionId,
+            restoreZakatDraft: location.state?.restoreZakatDraft,
         },
       });
       return;
