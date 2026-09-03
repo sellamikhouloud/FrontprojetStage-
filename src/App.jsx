@@ -34,6 +34,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import { FamilyFormProvider } from "./context/FamilyFormContext";
 import NotificationWatcher from "./components/NotificationWatcher";
 import OfflineSync from "./components/OfflineSync";
+import BrouillonsHorsLigne from "./pages/Brouillonshorsligne";
 
 
 function AppRoutes() {
@@ -230,6 +231,7 @@ function AppRoutes() {
       {/* Parametres */}
       <Route path="/parametres" element={<Parametres />} />
       <Route path="/profile-coor" element={<PageProfilCoordinateur />} />
+      <Route path="/brouillons-hors-ligne" element={<BrouillonsHorsLigne />} />
 
       {/* Notifications */}
  <Route
