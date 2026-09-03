@@ -360,6 +360,7 @@ export default function ListeVisites() {
         open={showDetailPopup}
         visite={selectedVisite}
         famille={selectedVisite ? buildFamilleFromVisite(selectedVisite) : null}
+          fromFamilyHistory={false}
         onClose={() => setShowDetailPopup(false)}
         onEdit={(visite) => {
           setShowDetailPopup(false);
