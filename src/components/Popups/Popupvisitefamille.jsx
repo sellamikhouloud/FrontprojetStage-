@@ -128,18 +128,18 @@ const Popupvisites = ({
               sm:p-6
             "
           >
-            <PopupDetailVisite
-              open={openDetail}
-              onClose={() => setOpenDetail(false)}
-              visite={selectedVisite}
-              famille={famille}
-              onEdit={() => {
-                setOpenDetail(false);
-                setOpenModifier(true);
-              }}
-              onDelete={handleDeleteVisite}
-            />
-
+          <PopupDetailVisite
+  open={openDetail}
+  onClose={() => setOpenDetail(false)}
+  visite={selectedVisite}
+  famille={famille}
+  fromFamilyHistory={true}
+  onEdit={() => {
+    setOpenDetail(false);
+    setOpenModifier(true);
+  }}
+  onDelete={handleDeleteVisite}
+/>
             <PopupDetailVisiteModifier
               open={openModifier}
               onClose={() => {
