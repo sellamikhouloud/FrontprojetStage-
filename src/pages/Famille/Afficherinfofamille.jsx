@@ -475,21 +475,20 @@ const graphs = [
 ];
 
 const handleBack = () => {
-    // Si la page précédente nous a transmis une destination spécifique
-    if (location.state?.fromPage) {
-      navigate(location.state.fromPage, {
-        state: {
-          // Permet de passer un ID à rouvrir sur la page parente si besoin (ex: ID visite, zakat, distribution)
-          restoreId: location.state?.restoreId,
-        },
-      });
-      return;
-    }
+  // Si la page précédente nous a transmis une destination spécifique
+  if (location.state?.fromPage) {
+    navigate(location.state.fromPage, {
+      state: {
+        // Renvoie l'ID de la visite pour réouvrir le pop-up sur /liste-visite
+        restoreVisiteId: location.state?.restoreVisiteId || location.state?.restoreId,
+      },
+    });
+    return;
+  }
 
-    // Sinon, retour standard dans l'historique du navigateur
-    navigate(-1);
-  };
-
+  // Sinon, retour standard dans l'historique
+  navigate(-1);
+};
 return (
   <div className="flex h-screen overflow-hidden bg-white">
 
