@@ -35,7 +35,8 @@ const PopupDetailVisite = ({
     navigate(`/famille/${famille.id}`, {
       state: {
         restoreVisiteId: visite.id,
-        fromPage: "/liste-visite", // Mis à jour avec /liste-visite
+        fromPage: "/liste-visite",
+         // Mis à jour avec /liste-visite
       },
     });
   };
