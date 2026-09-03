@@ -250,7 +250,7 @@ export default function Sidebar({
       {!hideOnMobile && (
         <div
           className="
-            lg:hidden
+            md:hidden
             fixed
             top-0
             left-0
@@ -437,7 +437,7 @@ export default function Sidebar({
             inset-0
             bg-black/30
             z-40
-            lg:hidden
+            md:hidden
           "
         />
       )}
@@ -447,6 +447,7 @@ export default function Sidebar({
       <aside
         onMouseLeave={() => setExpanded(false)}
         className={`
+          sidebar-desktop
           hidden
           md:flex
           self-stretch
@@ -574,7 +575,7 @@ export default function Sidebar({
             flex-col
             transition-transform
             duration-300
-            lg:hidden
+            md:hidden
             ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           `}
         >

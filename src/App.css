@@ -192,3 +192,31 @@ input[type="password"]::-webkit-reveal-button {
 input[type="password"]::-ms-reveal {
   display: none;
 }
+
+@media (max-height: 700px) {
+  .sidebar-container .sidebar-item {
+    gap: 12px;
+  }
+
+  .sidebar-container .sidebar-item-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .sidebar-container .sidebar-item-text {
+    font-size: 15px;
+  }
+
+  .sidebar-container .sidebar-nav {
+    gap: 24px;
+  }
+
+  .sidebar-container .sidebar-actions {
+    gap: 24px;
+  }
+
+  .sidebar-container .sidebar-heading {
+    font-size: 18px;
+  }
+}
+

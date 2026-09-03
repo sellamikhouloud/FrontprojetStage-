@@ -26,6 +26,7 @@ export default function SidebarItem({
             alt={item.label}
             className="
               w-6.5 h-6.5
+              md:max-lg:w-5 md:max-lg:h-5
               lg:w-5 lg:h-5
               xl:w-4.5 xl:h-4.5
             "
@@ -38,6 +39,7 @@ export default function SidebarItem({
                 text-white
                 font-semibold
                 text-[18px]
+                md:max-lg:text-[15px]
                 lg:text-[15px]
                 xl:text-[13px]
               "
