@@ -288,6 +288,7 @@ const PopupDistributionfamille = ({
         }}
         distribution={selectedDistribution}
         famille={famille}
+         fromFamilyHistory={true}
         onDelete={handleAnnulerDistribution}
         onEdit={(distribution) => {
           setOpenDetail(false);
