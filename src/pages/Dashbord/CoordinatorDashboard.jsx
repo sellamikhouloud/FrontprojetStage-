@@ -316,7 +316,7 @@ const CoordinatorDashboard = () => {
 // ZAKAT
 // =====================================================
 
-const zakatTitle = "Zakat";
+const zakatTitle = "Montant total Zakat";
 
 // Coordinator API provides only the amount distributed this month
 const remainingBalanceMRU =

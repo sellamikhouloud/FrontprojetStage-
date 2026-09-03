@@ -430,7 +430,7 @@ const ChefCoordinatorDashboard = () => {
   // SAME LOGIC AS COORDINATOR
   // =====================================================
 
-  const zakatTitle = "Zakat";
+  const zakatTitle = "Montant total Zakat";
 
   const remainingBalanceMRU =
     zakat?.montant_total_verse_ce_mois !== undefined
