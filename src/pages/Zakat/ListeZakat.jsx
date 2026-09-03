@@ -16,7 +16,7 @@ import PopupAlimenterSolde from "../../components/Popups/PopupAlimenterSolde";
 import SoldeCard from "../../components/Cards/SoldeCard";
 import RepartitionAides from "../../components/Cards/RepartitionAides";
 import NoResultImage from "../../assets/no result picture.svg";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Spinner from "../../components/Spinner";
 import PopupHistoriqueVersements from "../../components/Popups/PopupHistoriqueVersements";
 import PopupDetailVersement from "../../components/Popups/PopupDetailVersement";
@@ -38,7 +38,9 @@ export default function ZakatPage() {
   const [openModifierVersement, setOpenModifierVersement] = useState(false);
 
   const navigate = useNavigate();
-  
+  const location = useLocation();
+
+ 
 
 const queryClient = useQueryClient();
  
@@ -139,7 +141,40 @@ const queryClient = useQueryClient();
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+ // Écoute les retours de navigation pour restaurer le pop-up Zakat
+useEffect(() => {
+  const restoreId = location.state?.restoreZakatId;
+  if (!restoreId) return;
 
+  const restorePopup = async () => {
+    // 1. Chercher dans les zakats déjà chargées
+    let targetZakat = zakats.find((z) => String(z.id) === String(restoreId));
+
+    // 2. Si pas trouvée dans la liste courante, récupérer la zakat directement via l'API
+    if (!targetZakat) {
+      try {
+        const response = await listAidesZakat({ id: restoreId });
+        const results = response.data?.results || response.data || [];
+        targetZakat = Array.isArray(results)
+          ? results.find((z) => String(z.id) === String(restoreId))
+          : results;
+      } catch (err) {
+        console.error("Erreur lors de la récupération de la Zakat :", err);
+      }
+    }
+
+    // 3. Ouvrir le pop-up et nettoyer l'historique de navigation
+    if (targetZakat) {
+      setSelectedZakat(targetZakat);
+      setShowDetailPopup(true);
+
+      // Nettoyer l'état sans recharger la page
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  };
+
+  restorePopup();
+}, [location.state, zakats, navigate, location.pathname]);
 
   const {
   data: dashboardData,
