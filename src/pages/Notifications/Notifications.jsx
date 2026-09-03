@@ -105,8 +105,8 @@ const NotificationsPage = () => {
     return;
   }
 
-  if (notification.type === "stock_faible") {
-  navigate("/liste-distributions");
+ if (notification.type === "stock_faible") {
+  navigate("/liste-distributions", { state: { openStockPopup: true } });
   return;
 }
 
