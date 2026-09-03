@@ -209,13 +209,18 @@ export default function FicheDonateur() {
     setSaving(true);
 
     try {
-      await updateDonateur(id, {
-        nom,
-        prenom,
-        email,
-        date_adhesion: formatDate(dateAdhesion),
-        is_active: statut === "Active",
-      });
+
+
+    const payload = {
+     ...patch,
+    };
+
+    // Le statut est géré séparément ici
+    if (statut !== statutOriginal) {
+    payload.is_active = statut === "Active";
+    }
+
+      await updateDonateur(id, payload);
 
       setStatutOriginal(statut);
 
@@ -322,7 +327,7 @@ export default function FicheDonateur() {
             <BackendErrorMessage message="Impossible de charger les informations du donateur." />
           )}
 
-          <BackendErrorMessage message={backendError} className="mt-2" />
+       
 
           {!isLoading && !isError && donateur && (
             <>
@@ -420,6 +425,7 @@ export default function FicheDonateur() {
               />
 
               {showBanner && <SuccessBanner text="Enregistrer avec succès" />}
+                 <BackendErrorMessage message={backendError} className="mt-2" />
 
               <Button
                 title={saving ? "Enregistrement..." : "Sauvegarder les modifications"}
