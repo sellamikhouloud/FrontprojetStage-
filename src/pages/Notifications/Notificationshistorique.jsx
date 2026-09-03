@@ -131,6 +131,20 @@ initialPageParam: 1,
     return message;
   };
 
+    const formatDateResolution = (isoString) => {
+    if (!isoString) return "";
+    const d = new Date(isoString);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  const getResoluePar = (notification) => {
+    if (!notification.resolue_par) return "";
+    return `${notification.resolue_par.nom ?? ""} ${notification.resolue_par.prenom ?? ""}`.trim();
+  };
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <Sidebar hideOnMobile />
@@ -292,16 +306,20 @@ initialPageParam: 1,
           )}
 
           {/* Historique */}
-          {!isLoading &&
+                   {!isLoading &&
             !isError &&
             historique?.length > 0 &&
             historique.map((notification) => (
-              <NotificationCard
-                key={notification.id}
-                type={notification.type}
-                message={getHistoriqueMessage(notification)}
-                showArrow={false}
-              />
+             <NotificationCard
+  key={notification.id}
+  type={notification.type}
+  message={getHistoriqueMessage(notification)}
+  showArrow={false}
+  dateResolution={formatDateResolution(
+    notification.date_resolution
+  )}
+  resoluePar={getResoluePar(notification)}
+/>
             ))}
 
              {!isLoading && !isError && historique?.length > 0 && (
