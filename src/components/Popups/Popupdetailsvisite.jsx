@@ -12,6 +12,7 @@ import DeleteIcon from "../../assets/Delete.svg";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
 import ZScoreBox from "../Containers/ZScoreBox";
+import { useAuth } from "../Providers/AuthProvider";
 
 const PopupDetailVisite = ({
   open,
@@ -20,22 +21,58 @@ const PopupDetailVisite = ({
   famille,
   onEdit,
   onDelete,
+  fromFamilyHistory = false,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   if (!open || !visite) return null;
 
   const isAnnulee = visite?.annule === true;
 
-  // Redirection vers la fiche famille avec retour vers /liste-visite
+  /*
+   * ============================================================
+   * PERMISSIONS
+   * ============================================================
+   *
+   * Depuis l'historique d'une famille :
+   *   - admin : autorisé
+   *   - coordinator : seulement si la famille est supervisée par lui
+   *
+   * Depuis la liste globale :
+   *   - on ne vérifie PAS le coordinateur de la famille
+   *   - les boutons sont disponibles si la visite n'est pas annulée
+   */
+
+  const isAdmin = user?.role === "admin";
+  const isCoordinateur = user?.role === "coordinator";
+
+  const coordinateurId =
+    famille?.coordinateur &&
+    typeof famille.coordinateur === "object"
+      ? famille.coordinateur.id
+      : famille?.coordinateur;
+
+  const isCoordinateurAssigne =
+    String(coordinateurId) === String(user?.id);
+
+  const isSuperviseParMoi =
+    !isCoordinateur || isCoordinateurAssigne;
+
+  const canEditOrDelete = fromFamilyHistory
+    ? !isAnnulee && (isAdmin || isSuperviseParMoi)
+    : !isAnnulee;
+
+  // Redirection vers la fiche famille
   const handleGoToFamille = () => {
     if (!famille?.id) return;
+
     navigate(`/famille/${famille.id}`, {
       state: {
         restoreVisiteId: visite.id,
-        fromPage: "/liste-visite", // Mis à jour avec /liste-visite
+        fromPage: "/liste-visite",
       },
     });
   };
@@ -47,7 +84,10 @@ const PopupDetailVisite = ({
         ? new Date(visite.date_visite).toLocaleDateString("fr-FR")
         : "-",
     },
-    { label: "Visite n°", value: visite.numero_visite ?? "-" },
+    {
+      label: "Visite n°",
+      value: visite.numero_visite ?? "-",
+    },
     {
       label: "Créé par",
       value: visite.audit?.cree_par
@@ -57,7 +97,9 @@ const PopupDetailVisite = ({
     {
       label: "Date de création",
       value: visite.audit?.date_creation
-        ? new Date(visite.audit.date_creation).toLocaleDateString("fr-FR")
+        ? new Date(
+            visite.audit.date_creation
+          ).toLocaleDateString("fr-FR")
         : "-",
     },
     {
@@ -69,7 +111,9 @@ const PopupDetailVisite = ({
     {
       label: "Date de modification",
       value: visite.audit?.date_modification
-        ? new Date(visite.audit.date_modification).toLocaleDateString("fr-FR")
+        ? new Date(
+            visite.audit.date_modification
+          ).toLocaleDateString("fr-FR")
         : "-",
     },
   ];
@@ -79,22 +123,27 @@ const PopupDetailVisite = ({
       type: "mam",
       text: "MAM nourrisson",
     },
+
     visite?.statut_nutritionnel === "mas" && {
       type: "mas",
       text: "MAS nourrisson",
     },
+
     visite?.statut_nutritionnel === "normale" && {
       type: "mere",
       text: "Nourrisson normal",
     },
+
     visite?.statut_nutritionnel_mere === "normale" && {
       type: "mere",
       text: "Mère normale",
     },
+
     visite?.statut_nutritionnel_mere === "a_risque" && {
       type: "risque",
       text: "Mère à risque",
     },
+
     visite?.statut_nutritionnel_mere === "malnutrition" && {
       type: "mas",
       text: "Mère malnutrie",
@@ -106,13 +155,27 @@ const PopupDetailVisite = ({
       <h3 className="text-[18px] font-semibold text-center text-[#202124] mb-3">
         Statut calculé
       </h3>
+
       <div className="flex flex-wrap sm:flex-nowrap justify-center items-center gap-3">
         {statutBadges.map((badge, index) => (
           <StatusBadge
             key={`${badge.type}-${index}`}
             type={badge.type}
             text={badge.text}
-            className="h-[44px] sm:h-[50px] flex-1 sm:flex-none min-w-0 sm:min-w-[190px] rounded-[18px] text-[14px] sm:text-[16px] font-semibold px-4 sm:px-6"
+            className="
+              h-[44px]
+              sm:h-[50px]
+              flex-1
+              sm:flex-none
+              min-w-0
+              sm:min-w-[190px]
+              rounded-[18px]
+              text-[14px]
+              sm:text-[16px]
+              font-semibold
+              px-4
+              sm:px-6
+            "
           />
         ))}
       </div>
@@ -120,7 +183,8 @@ const PopupDetailVisite = ({
   );
 
   const ActionButtons = ({ className }) => {
-    if (isAnnulee) return null;
+    if (!canEditOrDelete) return null;
+
     return (
       <div className={className}>
         <Button
@@ -130,6 +194,7 @@ const PopupDetailVisite = ({
           noWrapperPadding
           onClick={() => onEdit?.(visite)}
         />
+
         <Button
           title="Annuler"
           variant="supprimer"
@@ -154,7 +219,14 @@ const PopupDetailVisite = ({
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-[60] bg-transparent sm:bg-black/40 flex items-start sm:items-center justify-center overflow-y-auto scrollbar-hide"
+        className="
+          fixed inset-0 z-[60]
+          bg-transparent sm:bg-black/40
+          flex items-start sm:items-center
+          justify-center
+          overflow-y-auto
+          scrollbar-hide
+        "
         onClick={onClose}
       >
         {showDeletePopup && (
@@ -163,11 +235,17 @@ const PopupDetailVisite = ({
               title="Confirmer l'annulation"
               image={SuccessImage}
               description="Êtes-vous sûr de vouloir Annuler cette visite ? Cette action est irréversible."
-              primaryButtonText={isDeleting ? "Annulation..." : "Annuler la visite"}
+              primaryButtonText={
+                isDeleting
+                  ? "Annulation..."
+                  : "Annuler la visite"
+              }
               secondaryButtonText="Annuler"
               primaryButtonVariant="danger"
               onPrimaryClick={handleConfirmDelete}
-              onSecondaryClick={() => setShowDeletePopup(false)}
+              onSecondaryClick={() =>
+                setShowDeletePopup(false)
+              }
             />
           </div>
         )}
@@ -178,28 +256,63 @@ const PopupDetailVisite = ({
           exit={{ opacity: 0, scale: 0.96 }}
           transition={{ duration: 0.2 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full min-h-screen sm:min-h-0 sm:w-[952px] sm:max-h-[90vh] overflow-y-auto scrollbar-hide bg-white rounded-none sm:rounded-[20px] border-0 sm:border p-4 sm:p-6"
+          className="
+            w-full
+            min-h-screen
+            sm:min-h-0
+            sm:w-[952px]
+            sm:max-h-[90vh]
+            overflow-y-auto
+            scrollbar-hide
+            bg-white
+            rounded-none
+            sm:rounded-[20px]
+            border-0
+            sm:border
+            p-4
+            sm:p-6
+          "
           style={{ borderColor: "#4E9F8A" }}
         >
           {/* Header */}
           <div className="mb-2">
             <button
               onClick={onClose}
-              className="flex items-center gap-2 text-[17px] text-[#202124] hover:opacity-70 transition"
+              className="
+                flex items-center gap-2
+                text-[17px]
+                text-[#202124]
+                hover:opacity-70
+                transition
+              "
             >
-              <img src={quitter} alt="Fermer" className="w-5 h-5" />
+              <img
+                src={quitter}
+                alt="Fermer"
+                className="w-5 h-5"
+              />
               Fermer
             </button>
 
             <h2 className="mt-2 text-center text-[20px] font-bold">
-              Détail de la visite n°{visite.numero_visite ?? "-"}
+              Détail de la visite n°
+              {visite.numero_visite ?? "-"}
             </h2>
           </div>
 
-          {/* Carte famille cliquable */}
-          <div onClick={handleGoToFamille} className="cursor-pointer hover:opacity-95 transition">
+          {/* Carte famille */}
+          <div
+            onClick={handleGoToFamille}
+            className="
+              cursor-pointer
+              hover:opacity-95
+              transition
+            "
+          >
             <Card
-              mere={`${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`}
+              mere={`${famille?.mere?.nom ?? ""} ${
+                famille?.mere?.prenom ?? ""
+              }`}
               enfant={famille?.nourrisson?.prenom}
               sexe={
                 famille?.nourrisson?.sexe === "M"
@@ -208,8 +321,12 @@ const PopupDetailVisite = ({
                   ? "Fille"
                   : "-"
               }
-              region={famille?.mere?.village?.nom ?? "-"}
-              naissance={famille?.nourrisson?.date_naissance ?? "-"}
+              region={
+                famille?.mere?.village?.nom ?? "-"
+              }
+              naissance={
+                famille?.nourrisson?.date_naissance ?? "-"
+              }
               code={famille?.id ?? "-"}
               badges={[]}
             />
@@ -218,7 +335,11 @@ const PopupDetailVisite = ({
           {/* DESKTOP */}
           <div className="hidden sm:grid sm:grid-cols-2 gap-4 mt-4">
             <div className="space-y-3">
-              <InfoCard title="Informations générales" data={infosGenerales} />
+              <InfoCard
+                title="Informations générales"
+                data={infosGenerales}
+              />
+
               <AfficherMesure
                 title="Mesure nourrisson"
                 type="nourrisson"
@@ -226,20 +347,43 @@ const PopupDetailVisite = ({
                 taille={visite.taille_bebe}
                 muac={visite.muac_bebe}
               />
+
               <div className="flex gap-3">
-                <ZScoreBox label="P/A" value={visite.score_z_pa} />
-                <ZScoreBox label="T/A" value={visite.score_z_ta} />
-                <ZScoreBox label="P/T" value={visite.score_z_pt} />
+                <ZScoreBox
+                  label="P/A"
+                  value={visite.score_z_pa}
+                />
+                <ZScoreBox
+                  label="T/A"
+                  value={visite.score_z_ta}
+                />
+                <ZScoreBox
+                  label="P/T"
+                  value={visite.score_z_pt}
+                />
               </div>
+
               <InfoCard
                 title="Observations cliniques nourrisson"
-                text={visite.observations_cliniques_bebe || "-"}
+                text={
+                  visite.observations_cliniques_bebe || "-"
+                }
               />
-              <ActionButtons className="mt-6 grid grid-cols-2 gap-4 w-full" />
+
+              <ActionButtons
+                className="
+                  mt-6
+                  grid
+                  grid-cols-2
+                  gap-4
+                  w-full
+                "
+              />
             </div>
 
             <div className="space-y-3">
               <StatutCalculeBlock />
+
               <AfficherMesure
                 title="Mesure mère"
                 type="mere"
@@ -248,16 +392,23 @@ const PopupDetailVisite = ({
                 muac={visite.muac_mere}
                 hemoglobine={visite.hemoglobine}
               />
+
               <AfficherMesure
                 title="Informations complémentaires"
                 variant="complement"
                 statutImc={visite.statut_imc}
-                hemoglobineStatut={visite.statut_hemoglobine}
+                hemoglobineStatut={
+                  visite.statut_hemoglobine
+                }
               />
+
               <InfoCard
                 title="Observations cliniques mère"
-                text={visite.observations_cliniques_mere || "-"}
+                text={
+                  visite.observations_cliniques_mere || "-"
+                }
               />
+
               <InfoCard
                 title="Évaluation visuelle de la situation familiale"
                 text={visite.evaluation_famille || "-"}
@@ -267,8 +418,13 @@ const PopupDetailVisite = ({
 
           {/* MOBILE */}
           <div className="flex sm:hidden flex-col gap-4 mt-4">
-            <InfoCard title="Informations générales" data={infosGenerales} />
+            <InfoCard
+              title="Informations générales"
+              data={infosGenerales}
+            />
+
             <StatutCalculeBlock />
+
             <AfficherMesure
               title="Mesure nourrisson"
               type="nourrisson"
@@ -276,15 +432,29 @@ const PopupDetailVisite = ({
               taille={visite.taille_bebe}
               muac={visite.muac_bebe}
             />
+
             <div className="flex gap-3">
-              <ZScoreBox label="P/A" value={visite.score_z_pa} />
-              <ZScoreBox label="T/A" value={visite.score_z_ta} />
-              <ZScoreBox label="P/T" value={visite.score_z_pt} />
+              <ZScoreBox
+                label="P/A"
+                value={visite.score_z_pa}
+              />
+              <ZScoreBox
+                label="T/A"
+                value={visite.score_z_ta}
+              />
+              <ZScoreBox
+                label="P/T"
+                value={visite.score_z_pt}
+              />
             </div>
+
             <InfoCard
               title="Observations cliniques nourrisson"
-              text={visite.observations_cliniques_bebe || "-"}
+              text={
+                visite.observations_cliniques_bebe || "-"
+              }
             />
+
             <AfficherMesure
               title="Mesure mère"
               type="mere"
@@ -293,21 +463,37 @@ const PopupDetailVisite = ({
               muac={visite.muac_mere}
               hemoglobine={visite.hemoglobine}
             />
+
             <AfficherMesure
               title="Informations complémentaires"
               variant="complement"
               statutImc={visite.statut_imc}
-              hemoglobineStatut={visite.statut_hemoglobine}
+              hemoglobineStatut={
+                visite.statut_hemoglobine
+              }
             />
+
             <InfoCard
               title="Observations cliniques mère"
-              text={visite.observations_cliniques_mere || "-"}
+              text={
+                visite.observations_cliniques_mere || "-"
+              }
             />
+
             <InfoCard
               title="Évaluation visuelle de la situation familiale"
               text={visite.evaluation_famille || "-"}
             />
-            <ActionButtons className="mt-2 grid grid-cols-1 gap-3 w-full" />
+
+            <ActionButtons
+              className="
+                mt-2
+                grid
+                grid-cols-1
+                gap-3
+                w-full
+              "
+            />
           </div>
         </motion.div>
       </div>
