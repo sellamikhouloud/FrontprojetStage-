@@ -5,12 +5,11 @@ import Card from "../Cards/Card";
 import InfoCard from "../Containers/AfficherContainer";
 import Button from "../Button/Button";
 import Popup from "./SuccessPopup";
-
+import { useAuth } from "../Providers/AuthProvider";
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
 import DeleteIcon from "../../assets/Delete.svg";
 import SuccessImage from "../../assets/Confirm.svg";
-
 const PopupDetailDistribution = ({
   open,
   onClose,
@@ -18,9 +17,11 @@ const PopupDetailDistribution = ({
   famille,
   onEdit,
   onDelete,
+  fromFamilyHistory = false,
 }) => {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
 const navigate = useNavigate();
+const { user } = useAuth();
   if (!open || !distribution) return null;
 
 
@@ -38,7 +39,32 @@ const navigate = useNavigate();
 
   const isAnnulee = Boolean(distribution.annulee);
 
- 
+// ==================== PERMISSIONS ====================
+
+const isAdmin = user?.role === "admin";
+const isCoordinateur = user?.role === "coordinator";
+
+const coordinateurId =
+  famille?.coordinateur &&
+  typeof famille.coordinateur === "object"
+    ? famille.coordinateur.id
+    : famille?.coordinateur;
+
+const isCoordinateurAssigne =
+  String(coordinateurId) === String(user?.id);
+
+const isSuperviseParMoi =
+  !isCoordinateur || isCoordinateurAssigne;
+
+// Depuis l'historique d'une famille :
+// → vérifier que le coordinateur supervise la famille
+//
+// Depuis la liste globale :
+// → ne pas appliquer cette restriction
+
+const canEditOrDelete = fromFamilyHistory
+  ? !isAnnulee && (isAdmin || isSuperviseParMoi)
+  : !isAnnulee;
   const produitsLait = (distribution.produits || []).filter(
     (item) => item.produit?.type_produit === "lait"
   );
@@ -259,47 +285,47 @@ const navigate = useNavigate();
           </div>
 
           {/* Boutons Modifier / Annuler : masqués si la distribution est déjà annulée */}
-          {!isAnnulee && (
-            <>
-              {/* Desktop */}
-              <div className="hidden sm:grid grid-cols-2 gap-4 mt-6">
-                <Button
-                  title="Modifier"
-                  variant="modifier"
-                  icon={EditIcon}
-                  noWrapperPadding
-                  onClick={() => onEdit?.(distribution)}
-                />
+        {canEditOrDelete && (
+  <>
+    {/* Desktop */}
+    <div className="hidden sm:grid grid-cols-2 gap-4 mt-6">
+      <Button
+        title="Modifier"
+        variant="modifier"
+        icon={EditIcon}
+        noWrapperPadding
+        onClick={() => onEdit?.(distribution)}
+      />
 
-                <Button
-                  title="Annuler"
-                  variant="supprimer"
-                  icon={DeleteIcon}
-                  noWrapperPadding
-                  onClick={() => setShowDeletePopup(true)}
-                />
-              </div>
+      <Button
+        title="Annuler"
+        variant="supprimer"
+        icon={DeleteIcon}
+        noWrapperPadding
+        onClick={() => setShowDeletePopup(true)}
+      />
+    </div>
 
-              {/* Mobile */}
-              <div className="sm:hidden grid grid-cols-1 gap-3 mt-6">
-                <Button
-                  title="Modifier"
-                  variant="modifier"
-                  icon={EditIcon}
-                  noWrapperPadding
-                  onClick={() => onEdit?.(distribution)}
-                />
+    {/* Mobile */}
+    <div className="sm:hidden grid grid-cols-1 gap-3 mt-6">
+      <Button
+        title="Modifier"
+        variant="modifier"
+        icon={EditIcon}
+        noWrapperPadding
+        onClick={() => onEdit?.(distribution)}
+      />
 
-                <Button
-                  title="Annuler"
-                  variant="supprimer"
-                  icon={DeleteIcon}
-                  noWrapperPadding
-                  onClick={() => setShowDeletePopup(true)}
-                />
-              </div>
-            </>
-          )}
+      <Button
+        title="Annuler"
+        variant="supprimer"
+        icon={DeleteIcon}
+        noWrapperPadding
+        onClick={() => setShowDeletePopup(true)}
+      />
+    </div>
+  </>
+)}
         </motion.div>
       </div>
     </AnimatePresence>
