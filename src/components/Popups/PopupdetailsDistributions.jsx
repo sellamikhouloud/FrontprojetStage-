@@ -31,8 +31,16 @@ const PopupDetailDistribution = ({
 
   // 3. Vérification des permissions
   const isCoordinateur = user?.role === "coordinator";
+
+  // coordinateur peut être soit un objet { id, nom, ... }, soit directement un ID brut
+  const coordinateurId =
+    familleData?.coordinateur && typeof familleData.coordinateur === "object"
+      ? familleData.coordinateur.id
+      : familleData?.coordinateur;
+
   const isCoordinateurAssigne =
-    String(familleData?.coordinateur?.id) === String(user?.id);
+    String(coordinateurId) === String(user?.id);
+
   const isSuperviseParMoi = !isCoordinateur || isCoordinateurAssigne;
 
   const isAnnulee = Boolean(distribution.annulee);
