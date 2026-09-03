@@ -152,21 +152,24 @@ const RapportAnnuel = () => {
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar role="admin" />
 
-      <main className="flex-1 h-screen overflow-hidden px-4 md:px-6 lg:px-8 pt-16 lg:pt-6 pb-6 flex flex-col">
-        <div className={`${showPreview ? "hidden" : "block"} lg:block flex-shrink-0`}>
+      <main className="flex-1 h-screen overflow-hidden px-4 md:px-6 min-[1000px]:px-8 pt-16 min-[1000px]:pt-6 pb-6 flex flex-col">
+        {/* Navigation et Onglets */}
+        <div className={`${showPreview ? "hidden" : "block"} min-[1000px]:block flex-shrink-0`}>
           <NavigationHeader title="Rapports" />
         </div>
 
-        <div className={`mt-4 lg:mt-6 ${showPreview ? "hidden" : "block"} lg:block flex-shrink-0`}>
+        <div className={`mt-4 min-[1000px]:mt-6 ${showPreview ? "hidden" : "block"} min-[1000px]:block flex-shrink-0`}>
           <ReportTabs />
         </div>
 
-        <div className="mt-4 lg:mt-6 flex flex-col lg:flex-row items-start gap-6 lg:gap-8 flex-1 min-h-0 overflow-hidden">
-          {/* Zone d'aperçu du rapport */}
+        {/* Conteneur Principal */}
+        <div className="mt-4 min-[1000px]:mt-6 flex flex-col min-[1000px]:flex-row items-start gap-6 min-[1000px]:gap-8 flex-1 min-h-0 overflow-hidden">
+          
+          {/* Section Aperçu du rapport */}
           <div
             className={`
               ${showPreview ? "flex" : "hidden"}
-              lg:flex
+              min-[1000px]:flex
               flex-1
               h-full
               w-full
@@ -183,7 +186,7 @@ const RapportAnnuel = () => {
             <button
               type="button"
               onClick={() => setShowPreview(false)}
-              className="flex items-center gap-2 text-[#202124] font-medium lg:hidden"
+              className="flex items-center gap-2 text-[#202124] font-medium min-[1000px]:hidden"
             >
               <X size={18} />
               Revenir
@@ -215,7 +218,7 @@ const RapportAnnuel = () => {
               <>
                 <div className="mt-2 flex flex-col items-center">
                   <div className="w-full max-w-[720px]">
-                    <h2 className="text-[16px] lg:text-[18px] font-semibold text-[#202124] mb-3">
+                    <h2 className="text-[16px] min-[1000px]:text-[18px] font-semibold text-[#202124] mb-3">
                       États des familles en fin d'année {selectedYear}
                     </h2>
 
@@ -262,7 +265,7 @@ const RapportAnnuel = () => {
 
                 <div className="mt-4 flex justify-center">
                   <div className="w-full max-w-[720px]">
-                    <h2 className="text-[16px] lg:text-[18px] font-semibold text-[#202124] mb-4">
+                    <h2 className="text-[16px] min-[1000px]:text-[18px] font-semibold text-[#202124] mb-4">
                       Distributions année {selectedYear}
                     </h2>
 
@@ -291,19 +294,19 @@ const RapportAnnuel = () => {
             )}
           </div>
 
-          {/* Panneau de configuration de droite */}
+          {/* Section Contrôles / Formulaire à droite */}
           <div
             className={`
               ${showPreview ? "hidden" : "flex"}
-              lg:flex
+              min-[1000px]:flex
               w-full
               h-full
-              lg:w-[360px]
+              min-[1000px]:w-[340px]
               xl:w-[420px]
               2xl:w-[540px]
-              lg:min-w-[340px]
+              min-[1000px]:min-w-[320px]
               flex-col
-              lg:pt-2
+              min-[1000px]:pt-2
               overflow-y-auto
               scrollbar-hide
             `}
@@ -320,7 +323,7 @@ const RapportAnnuel = () => {
                   text-center
                   px-3
                   py-2.5
-                  text-xs sm:text-sm lg:text-base
+                  text-xs sm:text-sm min-[1000px]:text-base
                   leading-snug
                   font-semibold
                   break-words
@@ -348,7 +351,7 @@ const RapportAnnuel = () => {
               className="
                 mt-4
                 flex items-center gap-1.5
-                text-[13px] sm:text-[14px] lg:text-[15px]
+                text-[13px] sm:text-[14px] min-[1000px]:text-[15px]
                 font-semibold
                 text-[#202124]
                 w-fit
@@ -361,8 +364,8 @@ const RapportAnnuel = () => {
               <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-            <div className="mt-6 flex flex-col sm:flex-row lg:flex-col gap-2 w-full">
-              <div className="lg:hidden">
+            <div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
+              <div className="min-[1000px]:hidden">
                 <Button
                   title="Prévoir le rapport"
                   variant="telecharger"
