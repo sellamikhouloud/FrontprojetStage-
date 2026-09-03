@@ -150,7 +150,7 @@ const RapportAnnuel = () => {
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar role="admin" />
+      <Sidebar />
 
       <main className="flex-1 h-screen overflow-hidden px-4 md:px-6 min-[1000px]:px-8 pt-16 min-[1000px]:pt-6 pb-6 flex flex-col">
         {/* Navigation et Onglets */}
@@ -364,37 +364,38 @@ const RapportAnnuel = () => {
               <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-            <div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
-              <div className="min-[1000px]:hidden">
-                <Button
-                  title="Prévoir le rapport"
-                  variant="telecharger"
-                  onClick={() => setShowPreview(true)}
-                  noPadding
-                />
-              </div>
+           {/* Ancienne version à supprimer */}
+<div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
+  <div className="min-[1000px]:hidden">
+    <Button
+      title="Prévoir le rapport"
+      variant="telecharger"
+      onClick={() => setShowPreview(true)}
+      noPadding
+    />
+  </div>
 
-              <Button
-                title="Télécharger PDF"
-                icon={Download}
-                iconPosition="left"
-                variant="telecharger"
-                noPadding
-                onClick={handleDownloadPdf}
-                disabled={isLoading || !rapport}
-              />
+  <Button
+    title="Télécharger PDF"
+    icon={Download}
+    iconPosition="left"
+    variant="telecharger"
+    noPadding
+    onClick={handleDownloadPdf}
+    disabled={isLoading || !rapport}
+  />
 
-              {!isLoading && rapport && !rapport.est_valide && (
-                <Button
-                  title="Confirmer et valider"
-                  variant="primary"
-                  noPadding
-                  onClick={handleValidation}
-                  disabled={isValidating}
-                />
-              )}
-            </div>
-          </div>
+  {!isLoading && rapport && !rapport.est_valide && (
+    <Button
+      title="Confirmer et valider"
+      variant="primary"
+      noPadding
+      onClick={handleValidation}
+      disabled={isValidating}
+    />
+  )}
+</div>
+ </div>
         </div>
       </main>
 
