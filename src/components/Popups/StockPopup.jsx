@@ -493,6 +493,31 @@ const getProductName = (product) => {
     return "";
   };
 
+
+  // =========================================================
+// GET MILK BACKEND PRODUCT NAME
+// =========================================================
+
+const getMilkBackendProductName = (milkType) => {
+  const normalized = normalizeText(milkType);
+
+  if (
+    normalized === "lait 1er age" ||
+    normalized === "1er age"
+  ) {
+    return "Lait 1er age";
+  }
+
+  if (
+    normalized === "lait 2eme age" ||
+    normalized === "2eme age"
+  ) {
+    return "Lait 2eme age";
+  }
+
+  return "";
+};
+
   // =========================================================
   // GET MILK TYPE FROM PRODUCT NAME
   // =========================================================
@@ -1119,9 +1144,18 @@ if (payload.type_produit === "lait") {
       // =====================================================
 
 
-const alreadyExists = products.some((product) => {
+const alreadyExists = products.some((currentProduct) => {
+  // Don't compare the product with itself
+  if (
+    String(currentProduct.id) ===
+    String(editingProductId)
+  ) {
+    return false;
+  }
+
   const sameName =
-    normalizeText(product.title) === normalizeText(title);
+    normalizeText(currentProduct.title) ===
+    normalizeText(newName);
 
   if (!sameName) {
     return false;
@@ -1129,14 +1163,21 @@ const alreadyExists = products.some((product) => {
 
   if (isMilk) {
     return (
-      product.type_produit === "lait" &&
-      Number(product.grammage_boite) === Number(grammage)
+      currentProduct.type_produit === "lait" &&
+      Number(currentProduct.grammage_boite) ===
+        Number(product.grammage_boite)
     );
   }
 
   return true;
 });
 
+if (alreadyExists) {
+  setProductError(
+    "Ce produit existe déjà."
+  );
+  return;
+}
       setProductError("");
       setIsEditingProduct(true);
 
@@ -1152,10 +1193,27 @@ const alreadyExists = products.some((product) => {
          * remains untouched.
          */
 
-        const payload = {
-          nom: newName,
-        };
+        let backendName = newName;
 
+if (isMilk) {
+  backendName =
+    getMilkBackendProductName(
+      editingMilkType
+    );
+
+  if (!backendName) {
+    setProductError(
+      "Type de lait invalide."
+    );
+    return;
+  }
+}
+
+const payload = {
+  nom: isMilk
+    ? backendName
+    : newName,
+};
         console.log(
           "PATCH MODIFICATION PRODUIT"
         );
@@ -1936,8 +1994,12 @@ const alreadyExists = products.some((product) => {
         // CREATE PAYLOAD
         // ===================================================
 
+const backendMilkName = isMilk
+  ? getMilkBackendProductName(newProduct.laitType)
+  : "";
+
 const backendProductName = isMilk
-  ? `${title} ${grammage}g`
+  ? `${backendMilkName} ${grammage}g`
   : title;
 
 const payload = {
@@ -1949,10 +2011,7 @@ const payload = {
   grammage_boite: isMilk ? grammage : null,
 };
 
-        console.log(
-          "CRÉATION PRODUIT",
-          payload
-        );
+   console.log("CRÉATION PRODUIT - PAYLOAD FINAL :", payload);
 
         const response =
           await CreateProduit(
