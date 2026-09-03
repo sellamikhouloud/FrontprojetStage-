@@ -49,17 +49,25 @@ const PopupDetailVisite = ({
   const isAdmin = user?.role === "admin";
   const isCoordinateur = user?.role === "coordinator";
 
-  const coordinateurId =
-    famille?.coordinateur &&
-    typeof famille.coordinateur === "object"
-      ? famille.coordinateur.id
-      : famille?.coordinateur;
+const coordinateurNom =
+  famille?.coordinateur?.nom?.trim().toLowerCase() || "";
 
-  const isCoordinateurAssigne =
-    String(coordinateurId) === String(user?.id);
+const coordinateurPrenom =
+  famille?.coordinateur?.prenom?.trim().toLowerCase() || "";
 
-  const isSuperviseParMoi =
-    !isCoordinateur || isCoordinateurAssigne;
+const userNom =
+  user?.nom?.trim().toLowerCase() || "";
+
+const userPrenom =
+  user?.prenom?.trim().toLowerCase() || "";
+
+const isCoordinateurAssigne =
+  isCoordinateur &&
+  coordinateurNom === userNom &&
+  coordinateurPrenom === userPrenom;
+
+const isSuperviseParMoi =
+  !isCoordinateur || isCoordinateurAssigne;
 
   const canEditOrDelete = fromFamilyHistory
     ? !isAnnulee && (isAdmin || isSuperviseParMoi)
