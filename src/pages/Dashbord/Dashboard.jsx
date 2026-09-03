@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -46,6 +46,7 @@ const Dashboard = () => {
   const [showBas, setShowBas] = useState(false);
   const [showRetard, setShowRetard] = useState(false);
   const [showMas, setShowMas] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   // =========================================================
   // USER INFORMATION
@@ -67,8 +68,33 @@ const Dashboard = () => {
         getNotifications().then((res) => res.data),
       enabled: ready && !!user,
     });
+   
+    useEffect(() => {
+  const results = notifications?.results ?? [];
 
-    const notificationCount = notifications.length;
+  if (results.length === 0) {
+    setNotificationCount(0);
+    return;
+  }
+
+  const lastSeenId = Number(
+    localStorage.getItem("notificationsLastSeenId") || 0
+  );
+
+  // First time: show all notifications
+  if (lastSeenId === 0) {
+    setNotificationCount(notifications?.count ?? results.length);
+    return;
+  }
+
+  // After the user has clicked the bell:
+  // only count notifications created after the last seen one
+  const newNotifications = results.filter(
+    (notification) => notification.id > lastSeenId
+  );
+
+  setNotificationCount(newNotifications.length);
+}, [notifications]);
 
   // =========================================================
   // DASHBOARD API
@@ -654,9 +680,24 @@ const exchangeRateValue =
             userName={userName}
             subtitle={subtitle}
             notificationCount={notificationCount}
-            onNotificationClick={() =>
-              navigate("/notifications")
-            }
+            onNotificationClick={() => {
+              const results = notifications?.results ?? [];
+
+              if (results.length > 0) {
+                const latestId = Math.max(
+                  ...results.map((notification) => notification.id)
+                );
+
+                localStorage.setItem(
+                  "notificationsLastSeenId",
+                  latestId.toString()
+                );
+              }
+
+              setNotificationCount(0);
+
+              navigate("/notifications");
+            }}
             onSettingsClick={() =>
               navigate("/parametres")
             }
