@@ -35,10 +35,11 @@ export default function ProtectedRoute({
       return <Navigate to="/dashboardCoor" replace />;
     }
 
-    if (
-      user?.role === "admin" ||
-      user?.role === "chef_coordinator"
-    ) {
+    if (user?.role === "chef_coordinator") {
+      return <Navigate to="/dashboardChef" replace />;
+    }
+
+    if (user?.role === "admin") {
       return <Navigate to="/dashboard" replace />;
     }
 
