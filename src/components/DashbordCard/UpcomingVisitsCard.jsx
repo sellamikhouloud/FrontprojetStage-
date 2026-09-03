@@ -110,17 +110,13 @@ export default function UpcomingVisits({ visits: upcomingVisits = [] }) {
    * Début de la semaine
    * ---------------------------------------------------------
    */
-  const startOfWeek = useMemo(() => {
-    const date = new Date(today);
+    const startOfWeek = useMemo(() => {
+      const date = new Date(today);
 
-    date.setHours(0, 0, 0, 0);
+      date.setHours(0, 0, 0, 0);
 
-    date.setDate(
-      today.getDate() - today.getDay()
-    );
-
-    return date;
-  }, [today]);
+      return date;
+    }, [today]);
 
   /*
    * ---------------------------------------------------------
@@ -131,13 +127,11 @@ export default function UpcomingVisits({ visits: upcomingVisits = [] }) {
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date(startOfWeek);
 
-      date.setDate(
-        startOfWeek.getDate() + index
-      );
+      date.setDate(startOfWeek.getDate() + index);
 
       return {
         date,
-        day: dayNames[index],
+        day: dayNames[date.getDay()],
         number: date.getDate(),
       };
     });
