@@ -14,6 +14,9 @@ const PhotoRefusee = ({
 }) => {
   const image = photo?.image || testImage;
 
+  const creatorRole = photo?.cree_par?.role_affiche || "Créateur";
+  const creatorName = photo?.cree_par?.nom || "Nom ID";
+
   return (
     <div
       className="
@@ -52,17 +55,30 @@ const PhotoRefusee = ({
 
       {/* ================= IMAGE ================= */}
 
+{/* ================= MOBILE IMAGE ================= */}
+<div className="lg:hidden px-4">
+  <div className="rounded-[24px] overflow-hidden">
+    <ImagePreview
+      image={image}
+      buttonTitle="Refusée"
+      buttonIcon={Refused}
+      buttonVariant="refusee"
+    />
+  </div>
+</div>
+
+{/* ================= DESKTOP IMAGE ================= */}
+      
       <div
         className="
+          hidden
+          lg:block
           order-1
           lg:order-2
-
           w-full
           h-[320px]
-
           lg:flex-1
           lg:h-full
-
           flex-shrink-0
         "
       >
@@ -111,7 +127,7 @@ const PhotoRefusee = ({
         </button>
 
         {/* Informations */}
-
+      <div className="mt-8 lg:mt-0">
         <AlertBox
           variant="info"
           title={photo?.title || ""}
@@ -121,17 +137,17 @@ const PhotoRefusee = ({
           padding="p-4"
           villageName={photo?.villageName}
         />
-
+      </div>
         {/* Coordinateur */}
 
         {role === "admin" && (
           <div className="mt-6">
             <p className="text-[14px] text-[#5E6064]">
-              Coordinateur
+              {creatorRole}
             </p>
 
             <p className="mt-1 text-[16px] font-semibold text-[#202124]">
-              {photo?.coordinator || "Nom ID"}
+              {creatorName}
             </p>
           </div>
         )}

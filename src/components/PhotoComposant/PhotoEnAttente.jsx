@@ -23,6 +23,7 @@ const PhotoEnAttente = ({
   const [reason, setReason] = useState("");
 
   const image = photo?.image || testImage;
+  const creatorRole = photo?.cree_par?.role_affiche || "Créateur";
 
   return (
     <div
@@ -62,17 +63,29 @@ const PhotoEnAttente = ({
 
       {/* ================= IMAGE ================= */}
 
+      {/* ================= MOBILE IMAGE ================= */}
+      <div className="lg:hidden px-4">
+        <div className="rounded-[24px] overflow-hidden">
+          <ImagePreview
+            image={image}
+            buttonTitle="En attente"
+            buttonIcon={Pending}
+            buttonVariant="EnAttente"
+          />
+        </div>
+      </div>
+
+      {/* ================= DESKTOP IMAGE ================= */}
       <div
         className="
+          hidden
+          lg:block
           order-1
           lg:order-2
-
           w-full
           h-[320px]
-
           lg:flex-1
           lg:h-full
-
           flex-shrink-0
         "
       >
@@ -156,11 +169,11 @@ const PhotoEnAttente = ({
                 />
 
               <p className="text-[18px] font-semibold text-[#181C1B]">
-                Coordinateur:
+                {creatorRole}:
               </p>
 
               <p className="text-[18px] text-[#181C1B]">
-                {photo?.coordinator || "nom id"}
+                {photo?.cree_par?.nom || "nom id"}
               </p>
             </div>
 

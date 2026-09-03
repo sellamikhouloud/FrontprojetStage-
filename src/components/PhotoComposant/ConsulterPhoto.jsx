@@ -17,6 +17,9 @@ const ConsulterPhoto = ({
 }) => {
   const image = photo?.image || testImage;
 
+  const creatorRole = photo?.cree_par?.role_affiche || "Créateur";
+  const creatorName = photo?.cree_par?.nom || "Nom ID";
+
   return (
     <div
       className="
@@ -70,7 +73,7 @@ const ConsulterPhoto = ({
         </div>
 
         {/* Information */}
-        <div className="p-4">
+        <div className="px-4 mt-8 lg:mt-0">
           <AlertBox
             variant="info"
             title={photo?.title || ""}
@@ -86,10 +89,10 @@ const ConsulterPhoto = ({
             <>
               <div className="mt-5">
                 <p className="text-[16px] font-medium">
-                  Coordinateur :
+                  {creatorRole} :
                   <span className="font-normal">
                     {" "}
-                    {photo?.coordinator || "Nom ID"}
+                    {creatorName}
                   </span>
                 </p>
               </div>
@@ -143,6 +146,7 @@ const ConsulterPhoto = ({
                   icon={Edit}
                   variant="primary"
                   onClick={onEdit}
+                  noPadding
                 />
               </div>
             </>
@@ -199,10 +203,10 @@ const ConsulterPhoto = ({
             <>
               <div className="mt-6">
                 <p className="text-[18px] font-medium text-[#2E2E2E]">
-                  Coordinateur :
+                  {creatorRole} :
                   <span className="font-normal">
                     {" "}
-                    {photo?.coordinator || "Nom ID"}
+                    {creatorName}
                   </span>
                 </p>
               </div>

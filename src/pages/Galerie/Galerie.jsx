@@ -60,7 +60,8 @@ const mapPhotoFromApi = (photo, villagesList = []) => ({
 
   motifRefus: photo.motif_refus || "",
 
-  coordinator: photo.cree_par?.nom || "",
+  // Keep the complete creator information
+  cree_par: photo.cree_par || null,
 
   includedInReport: photo.inclus_bilan || false,
 });
