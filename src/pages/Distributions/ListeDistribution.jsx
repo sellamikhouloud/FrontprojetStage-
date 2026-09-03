@@ -701,6 +701,7 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
           open={isPopupOpen}
           distribution={selectedDistribution}
           famille={selectedDistribution?.famille}
+          fromFamilyHistory={false}
           onClose={() => {
             setIsPopupOpen(false);
             setSelectedDistribution(null);
@@ -808,7 +809,3 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     </div>
   );
 }
-
-
-
-
