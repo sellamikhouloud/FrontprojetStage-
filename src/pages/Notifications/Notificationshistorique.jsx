@@ -170,73 +170,69 @@ initialPageParam: 1,
           pb-8
         "
       >
-        <div
-          className="
-            w-full
-            flex
-            items-center
-            justify-between
-            gap-4
-          "
-        >
-          <PageHeader
-            leftTitle="Fermer"
-            showRight={false}
-            onBack={() => navigate("/Notifications")}
-          />
+      {/* Conteneur Header + Bouton Exporter */}
+<div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+  <PageHeader
+    leftTitle="Fermer"
+    showRight={false}
+    onBack={() => navigate("/Notifications")}
+  />
 
-          <button
-            type="button"
-            onClick={handleExport}
-            className="
-              flex
-              items-center
-              justify-end
-              gap-1.5
-              sm:gap-2
+  {/* Bouton Exporter */}
+  <button
+    type="button"
+    onClick={handleExport}
+    className="
+      /* STYLES MOBILE : Bouton vert pleine largeur sous 'Fermer' */
+      w-full
+      flex
+      items-center
+      justify-center
+      gap-2
+      rounded-2xl
+      border-2
+      border-[#4E9F8A]
+      bg-[#C4DFD8]
+      px-4
+      py-2.5
+      text-[15px]
+      font-medium
+      text-[#1E1E1E]
+      cursor-pointer
+      transition-all
+      duration-150
+      active:scale-95
 
-              text-[13px]
-              xs:text-[14px]
-              sm:text-[18px]
+      /* STYLES DESKTOP : Format lien aligné à droite */
+      sm:w-auto
+      sm:border-0
+      sm:bg-transparent
+      sm:p-0
+      sm:rounded-none
+      sm:text-[18px]
+      sm:hover:opacity-70
 
-              font-medium
-              text-[#111111]
+      shrink-0
+    "
+  >
+    <span className="leading-tight text-center sm:text-right break-words line-clamp-1 sm:line-clamp-2">
+      Exporter la liste des alertes résolues
+    </span>
 
-              hover:opacity-70
-              transition-opacity
-              duration-200
-
-              cursor-pointer
-
-              min-w-0
-              max-w-[65%]
-              sm:max-w-none
-            "
-          >
-            <span
-              className="
-                leading-5
-                text-right
-                break-words
-                line-clamp-2
-              "
-            >
-              Exporter la liste des alertes résolues
-            </span>
-
-            <img
-              src={Share}
-              alt="Exporter"
-              className="
-                w-5
-                h-5
-                sm:w-6
-                sm:h-6
-                flex-shrink-0
-              "
-            />
-          </button>
-        </div>
+    <img
+      src={Share}
+      alt="Exporter"
+      className="
+        w-4
+        h-4
+        sm:w-6
+        sm:h-6
+        flex-shrink-0
+      "
+    />
+  </button>
+</div>
+ 
 
         <h1
           className="
