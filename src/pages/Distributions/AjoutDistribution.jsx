@@ -143,6 +143,7 @@ const DEFAULT_STOCK_ICON = Sucre; //  si le nom n'est pas mappé
 
   // Mode modification si une distribution existante a été transmise
   const isEditMode = !!distributionAModifier;
+  const initialEditDataRef = useRef(null);
 // En mode édition, mapDistributionToEditData() ne renvoie pas selectedLaitOption
 // (il faut le grammage exact) — on retrouve donc le produit lait brut ici,
 // directement depuis distribution.produits (présent car on spread ...distribution).
@@ -371,6 +372,8 @@ useEffect(() => {
     return !hasFieldError && !hasProduitError;
   };
 
+
+
  const handleSave = async () => {
   if (!validateForm()) return;
 
@@ -458,21 +461,84 @@ useEffect(() => {
   return messageGenerique;
 };
 
+
+
   try {
-   if (isEditMode) {
-  const patch = {
+ if (isEditMode) {
+  const initialData = initialEditDataRef.current;
+
+  if (!initialData) {
+    setSaveError("Impossible de vérifier les modifications.");
+    return;
+  }
+
+  // Produits actuels
+  const currentProducts = produitsPayload
+    .map((p) => ({
+      id: Number(p.produit),
+      quantity: Number(p.quantite),
+    }))
+    .sort((a, b) => a.id - b.id);
+
+  // Produits initiaux
+  const initialProducts = (initialData.produits || [])
+    .map((p) => ({
+      id: Number(p.id),
+      quantity: Number(p.quantity),
+    }))
+    .sort((a, b) => a.id - b.id);
+
+  // Comparaison produits
+  const produitsChanged =
+    JSON.stringify(currentProducts) !==
+    JSON.stringify(initialProducts);
+
+  // Comparaison date
+  const currentDate = String(payload.date_distribution).slice(0, 10);
+  const initialDate = String(
+    initialData.date_distribution || ""
+  ).slice(0, 10);
+
+  const dateChanged = currentDate !== initialDate;
+
+  // Comparaison confirmation
+  const confirmationChanged =
+    Boolean(payload.reception_confirmee) !==
+    Boolean(initialData.reception_confirmee);
+
+  const hasChanges =
+    produitsChanged ||
+    dateChanged ||
+    confirmationChanged;
+
+  console.log("========== VÉRIFICATION MODIFICATION ==========");
+  console.log("Date initiale :", initialDate);
+  console.log("Date actuelle :", currentDate);
+  console.log("Date modifiée :", dateChanged);
+
+  console.log("Confirmation initiale :", initialData.reception_confirmee);
+  console.log("Confirmation actuelle :", payload.reception_confirmee);
+  console.log("Confirmation modifiée :", confirmationChanged);
+
+  console.log("Produits initiaux :", initialProducts);
+  console.log("Produits actuels :", currentProducts);
+  console.log("Produits modifiés :", produitsChanged);
+
+  console.log("Modification détectée :", hasChanges);
+
+  
+  if (!hasChanges) {
+    setSaveError("Aucune modification à enregistrer.");
+    return;
+  }
+
+ 
+  await updateDistribution(distributionAModifier.id, {
     produits: produitsPayload,
     date_distribution: payload.date_distribution,
     reception_confirmee: payload.reception_confirmee,
-  };
+  });
 
-  console.log("========== MODE MODIFICATION ==========");
-  console.log("ID distribution :", distributionAModifier.id);
-  console.log("PATCH FINAL :", patch);
-  console.log("Nombre de produits envoyés :", patch.produits.length);
-  console.log("Produits envoyés :", patch.produits);
-
-  await updateDistribution(distributionAModifier.id, patch);
 } else {
   await createDistribution(payload);
 }
@@ -830,6 +896,28 @@ const displayedFamillesPopup = familleParCode ? [familleParCode] : listeDesFamil
       });
     }
   };
+useEffect(() => {
+  if (!isEditMode || !distributionAModifier) return;
+
+  const initialProducts = (distributionAModifier.produits || [])
+    .map((p) => ({
+      id: Number(p.produit?.id ?? p.produit),
+      quantity: Number(p.quantite ?? 0),
+    }))
+    .sort((a, b) => a.id - b.id);
+
+  initialEditDataRef.current = {
+    date_distribution: distributionAModifier.date_distribution
+      ? String(distributionAModifier.date_distribution).slice(0, 10)
+      : null,
+
+    reception_confirmee: Boolean(
+      distributionAModifier.reception_confirmee
+    ),
+
+    produits: initialProducts,
+  };
+}, [isEditMode, distributionAModifier]);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
