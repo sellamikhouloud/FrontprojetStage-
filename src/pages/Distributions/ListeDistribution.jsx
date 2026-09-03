@@ -267,7 +267,10 @@ useEffect(() => {
 
     return {
       id: p.id,
-      nom: p.nom,
+      nom:
+        p.type_produit === "lait"
+          ? p.nom.replace(/\s*\d+\s*g\b/i, "").trim()
+          : p.nom,
 
       type_produit: p.type_produit,
       grammage_boite: p.grammage_boite,
@@ -519,9 +522,7 @@ const historiqueMouvements = mapHistorique(historiqueData);
       ? String(produitLait.produit.grammage_boite)
       : "";
 
-    const laitType = produitLait?.produit?.nom
-      ? produitLait.produit.nom.replace(/\s*\d+\s*g\b/i, "").trim()
-      : null;
+    const laitType = produitLait?.produit?.nom ?? null;
 
     return { products, laitType, grammage, boxes };
   };
