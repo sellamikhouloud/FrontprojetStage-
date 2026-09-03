@@ -379,36 +379,40 @@ const RapportMensuel = () => {
               <img src={UpRight} alt="" className="w-4 h-4" />
             </button>
 
-            <div className="mt-6 flex flex-col sm:flex-row min-[1000px]:flex-col gap-2 w-full">
-              <div className="min-[1000px]:hidden">
-                <Button
-                  title="Prévoir le rapport"
-                  variant="telecharger"
-                  onClick={() => setShowPreview(true)}
-                  noPadding
-                />
-              </div>
+         {/* Nouvelle version : verticalité forcée sur tous les écrans */}
+<div className="mt-6 flex flex-col gap-3 w-full">
+  {/* Bouton d'aperçu pour mobile/tablette uniquement */}
+  <div className="min-[1000px]:hidden">
+    <Button
+      title="Prévoir le rapport"
+      variant="telecharger"
+      onClick={() => setShowPreview(true)}
+      noPadding
+    />
+  </div>
 
-              <Button
-                title="Télécharger PDF"
-                icon={Download}
-                iconPosition="left"
-                variant="telecharger"
-                noPadding
-                onClick={handleDownloadPdf}
-                disabled={isLoading || !rapport}
-              />
+  {/* 1. Confirmer et valider (s'affiche au-dessus s'il est disponible) */}
+  {!isLoading && rapport && !rapport.est_valide && (
+    <Button
+      title="Confirmer et valider"
+      variant="primary"
+      noPadding
+      onClick={handleValidation}
+      disabled={isValidating}
+    />
+  )}
 
-              {!isLoading && rapport && !rapport.est_valide && (
-                <Button
-                  title="Confirmer et valider"
-                  variant="primary"
-                  noPadding
-                  onClick={handleValidation}
-                  disabled={isValidating}
-                />
-              )}
-            </div>
+  {/* 2. Télécharger PDF (s'affiche toujours en dessous) */}
+  <Button
+    title="Télécharger PDF"
+    icon={Download}
+    iconPosition="left"
+    variant="telecharger"
+    noPadding
+    onClick={handleDownloadPdf}
+    disabled={isLoading || !rapport}
+  />
+</div>
           </div>
         </div>
       </main>
