@@ -13,6 +13,7 @@ import PopupProfilAdmin from "../Popups/PopupProfilAdmin";
 import RoleGate from "../auth/RoleGate";
 import { useAuth } from "../Providers/AuthProvider";
 import userIcon from "../../assets/user.svg";
+import { getNotifications } from "@/lib/api/Notifications";
 
 const API_BASE_URL = "http://127.0.0.1:8000"; 
 
@@ -85,7 +86,16 @@ export default function Sidebar({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showProfil, setShowProfil] = useState(false);
 
-    const [draftCount, setDraftCount] = useState(0);
+  const [draftCount, setDraftCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+    const isAdmin = role === "admin";
+
+  /*
+   * Both coordinator and chef_coordinator are coordinator-type users.
+   */
+  const isCoordinator =
+    role === "coordinator" || role === "chef_coordinator";
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +122,58 @@ export default function Sidebar({
     };
   }, []);
 
+
+  useEffect(() => {
+  if (!ready || !user || !isAdmin) return;
+
+  let cancelled = false;
+
+  const refreshNotifications = async () => {
+    try {
+      const res = await getNotifications();
+      const data = res.data;
+
+      const results = data?.results ?? [];
+
+      if (results.length === 0) {
+        if (!cancelled) setNotificationCount(0);
+        return;
+      }
+
+      const storageKey = `notificationsLastSeenId_${user.id}`;
+      const lastSeenId = Number(
+        localStorage.getItem(storageKey) || 0
+      );
+
+      if (lastSeenId === 0) {
+        if (!cancelled) {
+          setNotificationCount(data?.count ?? results.length);
+        }
+        return;
+      }
+
+      const newNotifications = results.filter(
+        (notification) => notification.id > lastSeenId
+      );
+
+      if (!cancelled) {
+        setNotificationCount(newNotifications.length);
+      }
+    } catch (error) {
+      console.error("Erreur récupération notifications :", error);
+    }
+  };
+
+  refreshNotifications();
+
+  const interval = setInterval(refreshNotifications, 10000);
+
+  return () => {
+    cancelled = true;
+    clearInterval(interval);
+  };
+}, [ready, user, isAdmin]);
+
   /*
    * chef_coordinator uses the coordinator sidebar configuration.
    *
@@ -134,27 +196,19 @@ export default function Sidebar({
     avatar: defaultAvatar,
   } = config;
 
-  const isAdmin = role === "admin";
-
-  /*
-   * Both coordinator and chef_coordinator are coordinator-type users.
-   */
-  const isCoordinator =
-    role === "coordinator" || role === "chef_coordinator";
-
 
   const displayedAvatar = resolvePhotoUrl(user?.photo); 
 
-const adminData = {
-  nom: user?.nom ?? "",
-  prenom: user?.prenom ?? "",
-  username: user?.username,
-  id: user?.id ? `id – ${user.id}` : "id – admin",
-  role: "Admin",
-  avatarUrl: resolvePhotoUrl(user?.photo),
-  email: user?.email,
-  telephone: user?.telephone,
-};
+  const adminData = {
+    nom: user?.nom ?? "",
+    prenom: user?.prenom ?? "",
+    username: user?.username,
+    id: user?.id ? `id – ${user.id}` : "id – admin",
+    role: "Admin",
+    avatarUrl: resolvePhotoUrl(user?.photo),
+    email: user?.email,
+    telephone: user?.telephone,
+  };
 
   const handleItemClick = () => {
     setMobileOpen(false);
@@ -235,7 +289,32 @@ const adminData = {
               <div className="flex items-center gap-4">
                 <button
                   type="button"
-                     onClick={() => navigate("/notifications")}
+                  onClick={() => {
+                    const storageKey = `notificationsLastSeenId_${user.id}`;
+
+                    getNotifications()
+                      .then((res) => {
+                        const results = res.data?.results ?? [];
+
+                        if (results.length > 0) {
+                          const latestId = Math.max(
+                            ...results.map((notification) => notification.id)
+                          );
+
+                          localStorage.setItem(
+                            storageKey,
+                            latestId.toString()
+                          );
+                        }
+
+                        setNotificationCount(0);
+                        navigate("/notifications");
+                      })
+                      .catch(() => {
+                        setNotificationCount(0);
+                        navigate("/notifications");
+                      });
+                  }}
                   aria-label="Notifications"
                   className="
                     w-9
@@ -247,11 +326,40 @@ const adminData = {
                     transition
                   "
                 >
-                  <img
-                    src={bellIcon}
-                    alt="Notifications"
-                    className="w-7 h-7"
-                  />
+                    <div className="relative">
+                      <img
+                        src={bellIcon}
+                        alt="Notifications"
+                        className="w-7 h-7"
+                      />
+
+                      {notificationCount > 0 && (
+                        <span
+                          className="
+                            absolute
+                            -top-2
+                            -right-2
+                            min-w-[19px]
+                            h-[19px]
+                            px-1
+                            rounded-full
+                            bg-red-500
+                            text-white
+                            text-[10px]
+                            font-bold
+                            leading-none
+                            flex
+                            items-center
+                            justify-center
+                            whitespace-nowrap
+                            border-2
+                            border-white
+                          "
+                        >
+                          {notificationCount > 99 ? "99+" : notificationCount}
+                        </span>
+                      )}
+                    </div>
                 </button>
 
                 <button
@@ -302,18 +410,18 @@ const adminData = {
                 "
               >
                {displayedAvatar ? (
-  <img
-    src={displayedAvatar}
-    alt="Avatar"
-    className="w-full h-full rounded-full object-cover"
-  />
-) : (
-  <img
-    src={userIcon}
-    alt="Avatar par défaut"
-   className="w-8 h-8 translate-y-[2px]"
-  />
-)}
+                  <img
+                    src={displayedAvatar}
+                    alt="Avatar"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <img
+                    src={userIcon}
+                    alt="Avatar par défaut"
+                  className="w-8 h-8 translate-y-[2px]"
+                  />
+                )}
               </button>
             </RoleGate>
           )}
@@ -429,19 +537,19 @@ const adminData = {
         <div className="flex justify-center flex-shrink-0">
           <button onClick={handleAvatarClick}>
           {displayedAvatar ? (
-  <img
-    src={displayedAvatar}
-    alt="Avatar"
-    className="w-10 h-10 rounded-full object-cover"
-  />
-) : (
-  <div
-    className="w-10 h-10 rounded-full flex items-center justify-center"
-    style={{ backgroundColor: "#9ACDBF" }}
-  >
-    <img src={userIcon} alt="Avatar par défaut" className="w-7 h-7 translate-y-[2px]" />
-  </div>
-)}
+            <img
+              src={displayedAvatar}
+              alt="Avatar"
+              className="w-10 h-10 rounded-full object-cover"
+            />
+          ) : (
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "#9ACDBF" }}
+            >
+              <img src={userIcon} alt="Avatar par défaut" className="w-7 h-7 translate-y-[2px]" />
+            </div>
+          )}
           </button>
         </div>
       </aside>
