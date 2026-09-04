@@ -518,6 +518,7 @@ const isSuperviseParMoi =
           restoreDistributionId: location.state?.restoreDistributionId,
             restoreZakatDraft: location.state?.restoreZakatDraft,
            restoreVisiteDraft: location.state?.restoreVisiteDraft,
+            restoreDistributionDraft: location.state?.restoreDistributionDraft, 
         },
       });
       return;
