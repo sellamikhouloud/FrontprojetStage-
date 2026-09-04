@@ -6,7 +6,7 @@ import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import LaitInfantile from "../../components/Distribution/LaitInfantile";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, keepPreviousData  } from "@tanstack/react-query";
 import ColisAlimentaire from "../../components/Distribution/ColisAlimentaire";
 import { useState, useEffect, useRef } from "react";
 
@@ -31,6 +31,7 @@ import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
+import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
 
 
 
@@ -699,7 +700,7 @@ const {
   hasNextPage: hasNextFamillesPage,
   isFetchingNextPage: isFetchingNextFamillesPage,
 } = useInfiniteQuery({
-  queryKey: ["familles-popup", "infinite", searchFamille],
+   queryKey: ["familles-popup", "infinite", debouncedSearchFamille],
 
   queryFn: async ({ pageParam = 1 }) => {
   const params = { page: pageParam , statut: "active" };
@@ -730,9 +731,10 @@ const {
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
 
-  initialPageParam: 1,
-  keepPreviousData: true,
+   initialPageParam: 1,
+  placeholderData: keepPreviousData,
   enabled: openFamilles,
+  networkMode: "always",
 });
 
 const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
