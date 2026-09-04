@@ -4,7 +4,7 @@ import Card from "../../components/Cards/Card";
 import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; 
 import AlertBox from "../../components/AlertComposant/AlertBox";
 import MesureInput from "../../components/Containers/MesureInput";
 import TextArea from "../../components/Containers/Textarea";
@@ -23,14 +23,11 @@ import PopupListeFamilles from "../../components/Popups/PopupListeFamilles";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-
-import { listFamilles } from "@/lib/api/familles";
-import { saveDraft } from "@/lib/offlineDrafts";
+import { useQuery, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
+import { listFamilles} from "@/lib/api/familles";
+import { saveDraft, deleteDraft } from "@/lib/offlineDrafts";
 import { createVisite, getPreCreationVisite } from "../../lib/api/visites";
-import { loadCache } from "@/lib/offlineCache";
-
-import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
+import { saveCache, loadCache } from "@/lib/offlineCache";
 
 const KNOWN_FIELDS = [
   "famille",
@@ -174,12 +171,37 @@ const formatDateFr = (isoDate) => {
   if (!y || !m || !d) return isoDate;
   return `${d}/${m}/${y}`;
 };
+function filterCachedFamilles(cachedData, searchTerm) {
+  const list = Array.isArray(cachedData) ? cachedData : cachedData?.results ?? [];
 
+  if (!searchTerm) return cachedData;
+
+  const term = searchTerm.trim().toLowerCase();
+  if (!term) return cachedData;
+
+  const filtered = list.filter((f) => {
+    const haystack = [
+      f?.mere?.nom,
+      f?.mere?.prenom,
+      f?.nourrisson?.prenom,
+      String(f?.id ?? ""),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(term);
+  });
+
+  return Array.isArray(cachedData)
+    ? filtered
+    : { ...cachedData, results: filtered, next: null };
+}
 export default function AjoutVisite() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-  const location = useLocation();
+   const location = useLocation();
   const draft = location.state?.draft;
+  const sourceDraftClientId = location.state?.sourceDraftClientId;
 
   const [selectedFamille, setSelectedFamille] = useState(
     draft?.selectedFamille || null
@@ -307,6 +329,7 @@ const [saving, setSaving] = useState(false);
 const [backendFieldErrors, setBackendFieldErrors] = useState({});
 const [backendGeneralError, setBackendGeneralError] = useState(null);
 const [offlinePending, setOfflinePending] = useState(false);
+const savingRef = useRef(false);
 
   // Convertit une date (Date ou string) en format "YYYY-MM-DD"
   const formatDate = (d) => {
@@ -318,9 +341,12 @@ const [offlinePending, setOfflinePending] = useState(false);
 
 
 
- const handleSave = async () => {
+  const handleSave = async () => {
+ 
+  if (savingRef.current) return;
   if (!validateForm()) return;
 
+  savingRef.current = true;
   setSaving(true);
   setBackendFieldErrors({});
   setBackendGeneralError(null);
@@ -347,12 +373,16 @@ const [offlinePending, setOfflinePending] = useState(false);
     hemoglobine: hemoglobine || null,
   };
 
-  try {
+   try {
     const response = await createVisite(payload);
 
     console.log("✅ Réponse backend complète :", JSON.stringify(response.data, null, 2));
 
     const data = response.data;
+
+    if (sourceDraftClientId) {
+      await deleteDraft(sourceDraftClientId);
+    }
 
     setResultatVisite({
       zScores: {
@@ -366,13 +396,14 @@ const [offlinePending, setOfflinePending] = useState(false);
 
     setShowSuccessPopup(true);
   } catch (error) {
-    // No response at all = the request never reached the server, i.e.
-    // we're offline. Save it as a reviewable draft instead — nothing
-    // auto-syncs. The coordinator has to open "Brouillons hors ligne"
-    // and explicitly click "Ajouter" once back online.
+   
     if (!error.response) {
-      try {
+           try {
+     
         await saveDraft("visite", payload);
+        if (sourceDraftClientId) {
+          await deleteDraft(sourceDraftClientId);
+        }
         setResultatVisite(null); 
         setOfflinePending(true);
         setShowSuccessPopup(true);
@@ -407,7 +438,8 @@ const [offlinePending, setOfflinePending] = useState(false);
     setBackendGeneralError(
       generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la visite.")
     );
-  } finally {
+   } finally {
+    savingRef.current = false;
     setSaving(false);
   }
 };
@@ -462,104 +494,145 @@ const [offlinePending, setOfflinePending] = useState(false);
   const [openFamilles, setOpenFamilles] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
   const [searchFamille, setSearchFamille] = useState("");
-  
+
+const [debouncedSearchFamille, setDebouncedSearchFamille] = useState("");
 
 
  const FAMILLES_CACHE_KEY = "familles-popup";
 
- 
-
 
 const {
-  data: famillesData,
+  data: famillesResponse,
   isLoading: famillesLoading,
   isError: famillesError,
   refetch: refetchFamilles,
-} = useQuery({
-  queryKey: ["familles-popup"],
-  queryFn: async () => {
+  fetchNextPage: fetchNextFamillesPage,
+  hasNextPage: hasNextFamillesPage,
+  isFetchingNextPage: isFetchingNextFamillesPage,
+} = useInfiniteQuery({
+  queryKey: ["familles-popup", "infinite", debouncedSearchFamille],
+
+  queryFn: async ({ pageParam = 1 }) => {
+    const params = { page: pageParam, statut: "active" };
+
+    const trimmedSearch = searchFamille.trim();
+    if (trimmedSearch) {
+      params.search = trimmedSearch;
+    }
+
     try {
-      // Toutes les pages, pas juste la première — pour que le popup
-      // montre exactement les mêmes familles en ligne qu'en cache
-      // hors ligne (voir usePrefetchOfflineData).
-      const allResults = await fetchAllPages((page) => listFamilles({ page }));
-      // No saveCache here — the dashboard prefetch already keeps
-      // "familles-popup" warm on login.
-      return { results: allResults, next: null };
+      const response = await listFamilles(params);
+      return response.data;
     } catch (error) {
-      const cached = loadCache(FAMILLES_CACHE_KEY);
-      if (cached?.data) {
-        return cached.data;
+      if (pageParam === 1) {
+        const cached = loadCache(FAMILLES_CACHE_KEY);
+        if (cached?.data) {
+          return filterCachedFamilles(cached.data, trimmedSearch);
+        }
       }
       throw error;
     }
   },
+
+  getNextPageParam: (lastPage, allPages) =>
+    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+
+   initialPageParam: 1,
+  placeholderData: keepPreviousData,
   enabled: openFamilles,
   networkMode: "always",
   retry: 1,
 });
 
-  const famillesBrutes = famillesData?.results ?? famillesData ?? [];
+const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
+  Array.isArray(page) ? page : page?.results ?? []
+);
 
-  
-  const listeDesFamilles = famillesBrutes.map((famille) => ({
-    id: famille.id,
-    enfant: famille.nourrisson?.prenom,
-    mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
-    sexe:
-      famille?.nourrisson?.sexe === "M"
-        ? "Fils"
-        : famille?.nourrisson?.sexe === "F"
-        ? "Fille"
-        : "-",
-    region: famille.mere?.village?.nom ?? "-",
-    naissance: famille.nourrisson?.date_naissance,
-    code: famille.id,
-    badges: [
-      famille?.statut_nutritionnel_bebe === "mam" && {
-        type: "mam",
-        text: "MAM nourrisson",
-      },
-      famille?.statut_nutritionnel_bebe === "mas" && {
-        type: "mas",
-        text: "MAS nourrisson",
-      },
-      famille?.statut_nutritionnel_bebe === "normale" && {
-        type: "mere",
-        text: "Bébé normal",
-      },
-      famille?.statut_nutritionnel_mere === "normale" && {
-        type: "mere",
-        text: "Mère normale",
-      },
-      famille?.statut_nutritionnel_mere === "a_risque" && {
-        type: "risque",
-        text: "Mère à risque",
-      },
-      famille?.statut_nutritionnel_mere === "malnutrition" && {
-        type: "mas",
-        text: "Mère malnutrie",
-      },
-      famille.est_visite_en_retard && {
-        type: "retard",
-        text: "Visite en retard",
-      },
-    ].filter(Boolean),
-  }));
+const famillesObserverTarget = useRef(null);
 
-  const displayedFamillesPopup = (() => {
-  const term = searchFamille.trim().toLowerCase();
-  if (!term) return listeDesFamilles;
-  return listeDesFamilles.filter((f) => {
-    const haystack = [f.mere, f.enfant, f.code]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(term);
+useEffect(() => {
+  if (!famillesObserverTarget.current || !openFamilles) return;
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      if (
+        entries[0].isIntersecting &&
+        hasNextFamillesPage &&
+        !isFetchingNextFamillesPage
+      ) {
+        fetchNextFamillesPage();
+      }
+    },
+    { threshold: 1 }
+  );
+
+  observer.observe(famillesObserverTarget.current);
+
+  return () => observer.disconnect();
+}, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
+
+  // Mapping vers le format attendu par le popup / les cartes
+  // (même logique que dans la page "Liste des familles")
+  const mapFamilleForPopup = (famille) => ({
+  id: famille.id,
+  enfant: famille.nourrisson?.prenom,
+  mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
+  sexe:
+    famille?.nourrisson?.sexe === "M"
+      ? "Fils"
+      : famille?.nourrisson?.sexe === "F"
+      ? "Fille"
+      : "-",
+  region: famille.mere?.village?.nom ?? "-",
+  naissance: famille.nourrisson?.date_naissance,
+  code: famille.id,
+  badges: [
+    famille?.statut_nutritionnel_bebe === "mam" && { type: "mam", text: "MAM nourrisson" },
+    famille?.statut_nutritionnel_bebe === "mas" && { type: "mas", text: "MAS nourrisson" },
+    famille?.statut_nutritionnel_bebe === "normale" && { type: "mere", text: "Bébé normal" },
+    famille?.statut_nutritionnel_mere === "normale" && { type: "mere", text: "Mère normale" },
+    famille?.statut_nutritionnel_mere === "a_risque" && { type: "risque", text: "Mère à risque" },
+    famille?.statut_nutritionnel_mere === "malnutrition" && { type: "mas", text: "Mère malnutrie" },
+    famille.est_visite_en_retard && { type: "retard", text: "Visite en retard" },
+  ].filter(Boolean),
+});
+
+const listeDesFamilles = famillesBrutes.map(mapFamilleForPopup);
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearchFamille(searchFamille);
+  }, 300);
+  return () => clearTimeout(timer);
+}, [searchFamille]);
+
+
+const handleGoToFamilleSelectionnee = () => {
+  if (!selectedFamille?.id) return;
+
+  navigate(`/famille/${selectedFamille.id}`, {
+    state: {
+      fromPage: "/ajout-visite",
+      restoreVisiteDraft: {
+        selectedFamille,
+        date,
+        mois,
+        numeroCycle,
+        poidsNourrisson,
+        tailleNourrisson,
+        muacNourrisson,
+        positionNourrisson,
+        observationsNourrisson,
+        poidsMere,
+        tailleMere,
+        muacMere,
+        observationsMere,
+        evaluationVisuelle,
+        hemoglobine,
+      },
+    },
   });
-})();
-
-
+};
   const familyOptions = [
     { label: "Changer la famille", value: "changer" },
     { label: "Voir la fiche famille", value: "voir" },
@@ -568,35 +641,13 @@ const {
   const handleSearch = () => {
     setOpenFamilles(true);
   };
-
-  const handleOptionSelect = (value) => {
-    if (value === "changer") {
-      setOpenFamilles(true);
-    } else if (value === "voir") {
-      navigate(`/famille/${selectedFamille.id}`, {
-        state: {
-          from: "/ajout-visite",
-          draft: {
-            selectedFamille,
-            date,
-            mois,
-            numeroCycle,
-            poidsNourrisson,
-            tailleNourrisson,
-            muacNourrisson,
-            positionNourrisson,
-            observationsNourrisson,
-            poidsMere,
-            tailleMere,
-            muacMere,
-            observationsMere,
-            evaluationVisuelle,
-            hemoglobine,
-          },
-        },
-      });
-    }
-  };
+const handleOptionSelect = (value) => {
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    handleGoToFamilleSelectionnee();
+  }
+};
 
   // Pré-création : appelée dès qu'une famille est sélectionnée
 
@@ -678,7 +729,28 @@ const handleManualFamilleCode = (code) => {
 
   setErrors((prev) => ({ ...prev, famille: false }));
 };
+useEffect(() => {
+  const restoredDraft = location.state?.restoreVisiteDraft;
+  if (!restoredDraft) return;
 
+  if (restoredDraft.selectedFamille) setSelectedFamille(restoredDraft.selectedFamille);
+  if (restoredDraft.date) setDate(new Date(restoredDraft.date));
+  if (restoredDraft.mois !== undefined) setMois(restoredDraft.mois);
+  if (restoredDraft.numeroCycle !== undefined) setNumeroCycle(restoredDraft.numeroCycle);
+  if (restoredDraft.poidsNourrisson !== undefined) setPoidsNourrisson(restoredDraft.poidsNourrisson);
+  if (restoredDraft.tailleNourrisson !== undefined) setTailleNourrisson(restoredDraft.tailleNourrisson);
+  if (restoredDraft.muacNourrisson !== undefined) setMuacNourrisson(restoredDraft.muacNourrisson);
+  if (restoredDraft.positionNourrisson !== undefined) setPositionNourrisson(restoredDraft.positionNourrisson);
+  if (restoredDraft.observationsNourrisson !== undefined) setObservationsNourrisson(restoredDraft.observationsNourrisson);
+  if (restoredDraft.poidsMere !== undefined) setPoidsMere(restoredDraft.poidsMere);
+  if (restoredDraft.tailleMere !== undefined) setTailleMere(restoredDraft.tailleMere);
+  if (restoredDraft.muacMere !== undefined) setMuacMere(restoredDraft.muacMere);
+  if (restoredDraft.observationsMere !== undefined) setObservationsMere(restoredDraft.observationsMere);
+  if (restoredDraft.evaluationVisuelle !== undefined) setEvaluationVisuelle(restoredDraft.evaluationVisuelle);
+  if (restoredDraft.hemoglobine !== undefined) setHemoglobine(restoredDraft.hemoglobine);
+
+  navigate(location.pathname, { replace: true, state: {} });
+}, [location.state, navigate, location.pathname]);
   return (
   <div className="flex h-screen bg-white overflow-hidden">
 
@@ -778,10 +850,10 @@ const handleManualFamilleCode = (code) => {
           <>
             {/* Mobile */}
             <div className="relative block lg:hidden mt-4">
-              <div
-                className="cursor-pointer"
-                onClick={() => setOpenOptions((prev) => !prev)}
-              >
+             <div
+    className="cursor-pointer"
+    onClick={() => setOpenOptions((prev) => !prev)}
+  >
                 <CardPopup
                   enfant={selectedFamille.enfant}
                   mere={selectedFamille.mere} 
@@ -803,10 +875,10 @@ const handleManualFamilleCode = (code) => {
 
             {/* Desktop */}
             <div className="relative hidden lg:block">
-              <div
-                className="cursor-pointer"
-                onClick={() => setOpenOptions((prev) => !prev)}
-              >
+                 <div
+    className="cursor-pointer"
+    onClick={() => setOpenOptions((prev) => !prev)}
+  >
                 <Card
                   enfant={selectedFamille.enfant}
                   mere={selectedFamille.mere}
@@ -1275,16 +1347,17 @@ const handleManualFamilleCode = (code) => {
         "
       />
     </main>
-
 <PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
-  familles={displayedFamillesPopup}
+  familles={listeDesFamilles}
   loading={famillesLoading}
   isError={famillesError}
   onRetry={refetchFamilles}
   search={searchFamille}
   onSearchChange={setSearchFamille}
+  observerTarget={famillesObserverTarget}
+  isFetchingNextPage={isFetchingNextFamillesPage}
   onSelectFamille={(famille) => {
     setSelectedFamille(famille);
     setOpenFamilles(false);
