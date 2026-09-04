@@ -1,7 +1,11 @@
 
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+
+import { listVillages } from "@/lib/api/Parametres";
+import { loadCache } from "@/lib/offlineCache";
 
 import InfoCard from "../Containers/AfficherContainer";
 import Button from "../Button/Button";
@@ -12,6 +16,7 @@ import DeleteIcon from "../../assets/Delete.svg";
 
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
+
 
 const formatDate = (date) => {
   if (!date) return "-";
@@ -25,6 +30,15 @@ const STATUT_LABELS = {
   sorti: "Sorti",
 
 };
+const STATUT_MATRIMONIAL_LABELS = {
+  mariee: "Mariée",
+  celibataire: "Célibataire",
+  divorcee: "Divorcée",
+  veuve: "Veuve",
+  decedee: "Décédée",
+};
+
+const VILLAGES_CACHE_KEY = "villages";
 
 
 const KNOWN_LABELS = {
@@ -42,14 +56,6 @@ const KNOWN_LABELS = {
   sexe: "Sexe",
 };
 
-function toInfoCardData(obj, excludeKeys = []) {
-  return Object.entries(obj || {})
-    .filter(([key, value]) => !excludeKeys.includes(key) && value !== null && value !== undefined && value !== "")
-    .map(([key, value]) => ({
-      label: KNOWN_LABELS[key] ?? key,
-      value: key.includes("date") ? formatDate(value) : String(value),
-    }));
-}
 
 
 export default function PopupDetailBrouillonFamille({
@@ -62,6 +68,80 @@ export default function PopupDetailBrouillonFamille({
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [showPhotoPopup, setShowPhotoPopup] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(null);
+
+  const {
+    data: villagesData,
+  } = useQuery({
+    queryKey: ["villages-lookup"],
+    queryFn: async () => {
+      try {
+        const response = await listVillages();
+        return response.data;
+      } catch (error) {
+        const cached = loadCache(VILLAGES_CACHE_KEY);
+        if (cached?.data) {
+          return cached.data;
+        }
+        throw error;
+      }
+    },
+    enabled: open,
+    networkMode: "always",
+    retry: 1,
+  });
+
+  const villagesListe = Array.isArray(villagesData)
+    ? villagesData
+    : villagesData?.results ?? [];
+
+  const getVillageNom = (villageId) => {
+    if (!villageId) return "/";
+    const match = villagesListe.find((v) => String(v.id) === String(villageId));
+    return match?.nom || "/";
+  };
+
+  const buildNourrissonData = (n) => [
+    { label: "Prénom", value: n?.prenom || "/" },
+    {
+      label: "Date de naissance",
+      value: n?.date_naissance ? formatDate(n.date_naissance) : "/",
+    },
+    {
+      label: "Sexe",
+      value: n?.sexe === "M" ? "Masculin" : n?.sexe === "F" ? "Féminin" : "/",
+    },
+    {
+      label: "Poids de naissance",
+      value: n?.poids_naissance ? `${n.poids_naissance} g` : "/",
+    },
+    {
+      label: "Taille de naissance",
+      value: n?.taille_naissance ? `${n.taille_naissance} cm` : "/",
+    },
+  ];
+
+  const buildMereData = (m) => [
+    { label: "Village", value: getVillageNom(m?.village) },
+    { label: "Numéro de téléphone", value: m?.telephone || "/" },
+    {
+      label: "Date de naissance",
+      value: m?.date_naissance ? formatDate(m.date_naissance) : "/",
+    },
+    {
+      label: "Statut matrimonial",
+      value:
+        STATUT_MATRIMONIAL_LABELS[m?.statut_matrimonial] ||
+        m?.statut_matrimonial ||
+        "/",
+    },
+    { label: "Nombre d'enfants à charge", value: m?.nb_enfants ?? "/" },
+    { label: "Motif de prise en charge", value: m?.motif_prise_en_charge || "/" },
+    { label: "Référent médical", value: m?.referent_medical || "/" },
+    {
+      label: "Informations complémentaires",
+      value: m?.informations_complementaires || "/",
+    },
+  ];
 
   useEffect(() => {
   const photo = draft?.files?.photo;
@@ -246,9 +326,9 @@ export default function PopupDetailBrouillonFamille({
   ]}
 />
 
-              <InfoCard
+               <InfoCard
                title="Mère"
-               data={toInfoCardData(mere)}
+               data={buildMereData(mere)}
               />
 
 
@@ -261,11 +341,11 @@ export default function PopupDetailBrouillonFamille({
             </div>
 
             <div className="space-y-3">
-              {nourrissons.map((n, i) => (
+               {nourrissons.map((n, i) => (
                 <InfoCard
                   key={i}
                   title={nourrissons.length > 1 ? `Nourrisson ${i + 1}` : "Nourrisson"}
-                  data={toInfoCardData(n)}
+                  data={buildNourrissonData(n)}
                 />
               ))}
 
