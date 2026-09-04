@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import InfoCard from "../Containers/AfficherContainer";
 import Button from "../Button/Button";
+import Card from "../Cards/Card";
+import CardPopup from "../Cards/Card2";
+
 
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
@@ -12,6 +15,7 @@ import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
 
 import { loadCache } from "@/lib/offlineCache";
+import { getFamille } from "../../lib/api/familles";
 
 const STOCK_CACHE_KEY = "stock-produits";
 
@@ -27,12 +31,7 @@ const LAIT_TYPE_LABELS = {
   "2eme_age": "Lait 2e âge",
 };
 
-// A distribution draft's payload only stores { produit: id, quantite } — no
-// names, no units. This resolves each id against the last cached stock
-// snapshot (same "stock-produits" cache AjoutDistribution reads from) so the
-// popup can show "Sucre — 5 kg" instead of "Produit #4 — 5". If the id isn't
-// found (stock never loaded online, or the product was deleted since), it
-// falls back to a plain "Produit #<id>" label rather than failing.
+
 function resolveProductLine(produitId, quantite, stockCacheData) {
   const produits = stockCacheData?.produits || [];
   const match = produits.find((p) => p.id === produitId);
@@ -58,9 +57,7 @@ function resolveProductLine(produitId, quantite, stockCacheData) {
   return { nom: `Produit #${produitId}`, quantiteLabel: `${quantite}`, isLait: false };
 }
 
-// Detail popup for a DISTRIBUTION DRAFT specifically — not a real,
-// already-created distribution. No numeroDistribution, no audit trail
-// (cree_par/modifie_par), since the backend hasn't created the record yet.
+
 export default function PopupDetailBrouillonDistribution({
   open,
   onClose,
@@ -69,11 +66,93 @@ export default function PopupDetailBrouillonDistribution({
   onDelete,
 }) {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [familleData, setFamilleData] = useState(null);
+  const [familleLoading, setFamilleLoading] = useState(false);
+
+
+
+
+    useEffect(() => {
+  if (!open || !draft) return;
+
+  const code = draft.payload?.famille;
+
+  if (!code) {
+    setFamilleData(null);
+    return;
+  }
+
+  const loadFamille = async () => {
+    try {
+      setFamilleLoading(true);
+
+      const response = await getFamille(code);
+
+      setFamilleData(response.data);
+    } catch (error) {
+      console.error("Erreur récupération famille :", error);
+      setFamilleData(null);
+    } finally {
+      setFamilleLoading(false);
+    }
+  };
+
+  loadFamille();
+}, [open, draft]);
+
 
   if (!open || !draft) return null;
 
   const payload = draft.payload || {};
   const stockCache = loadCache(STOCK_CACHE_KEY);
+
+    
+const familleCard = familleData
+  ? {
+      id: familleData.id,
+      enfant: familleData.nourrisson?.prenom,
+      mere: `${familleData.mere?.nom ?? ""} ${familleData.mere?.prenom ?? ""}`,
+      sexe:
+        familleData.nourrisson?.sexe === "M"
+          ? "Fils"
+          : familleData.nourrisson?.sexe === "F"
+          ? "Fille"
+          : "-",
+      region: familleData.mere?.village?.nom ?? "-",
+      naissance: familleData.nourrisson?.date_naissance,
+      code: familleData.id,
+      badges: [
+        familleData.statut_nutritionnel_bebe === "mam" && {
+          type: "mam",
+          text: "MAM nourrisson",
+        },
+        familleData.statut_nutritionnel_bebe === "mas" && {
+          type: "mas",
+          text: "MAS nourrisson",
+        },
+        familleData.statut_nutritionnel_bebe === "normale" && {
+          type: "mere",
+          text: "Nourrisson normal",
+        },
+        familleData.statut_nutritionnel_mere === "normale" && {
+          type: "mere",
+          text: "Mère normale",
+        },
+        familleData.statut_nutritionnel_mere === "a_risque" && {
+          type: "risque",
+          text: "Mère à risque",
+        },
+        familleData.statut_nutritionnel_mere === "malnutrition" && {
+          type: "mas",
+          text: "Mère malnutrie",
+        },
+        familleData.est_visite_en_retard && {
+          type: "retard",
+          text: "Visite en retard",
+        },
+      ].filter(Boolean),
+    }
+  : null;
 
   const lignes = (payload.produits || []).map((item) =>
     resolveProductLine(item.produit, item.quantite, stockCache?.data)
@@ -81,6 +160,7 @@ export default function PopupDetailBrouillonDistribution({
 
   const produitsLait = lignes.filter((l) => l.isLait);
   const produitsAlimentaires = lignes.filter((l) => !l.isLait);
+
 
   return (
     <AnimatePresence>
@@ -160,17 +240,52 @@ export default function PopupDetailBrouillonDistribution({
             </div>
           </div>
 
-          {/* Pas de carte famille enrichie — un brouillon ne connaît que le
-              code, pas le prénom/village/etc. Affiché en simple texte. */}
-          <div
-            className="rounded-[15px] px-4 py-3 flex items-center justify-between"
-            style={{ backgroundColor: "#ECF8F7" }}
-          >
-            <span className="text-[14px] text-[#7B7B7B]">Famille</span>
-            <span className="text-[16px] font-bold" style={{ color: "#4E9F8A" }}>
-              {payload.famille || "-"}
-            </span>
-          </div>
+         
+         {familleCard ? (
+  <>
+    {/* MOBILE */}
+    <div className="block lg:hidden mt-4">
+      <CardPopup
+        enfant={familleCard.enfant}
+        mere={familleCard.mere}
+        sexe={familleCard.sexe}
+        region={familleCard.region}
+        naissance={familleCard.naissance}
+        code={familleCard.code}
+        badges={familleCard.badges}
+      />
+    </div>
+
+    {/* DESKTOP */}
+    <div className="hidden lg:block mt-4">
+      <Card
+        enfant={familleCard.enfant}
+        mere={familleCard.mere}
+        sexe={familleCard.sexe}
+        region={familleCard.region}
+        naissance={familleCard.naissance}
+        code={familleCard.code}
+        badges={familleCard.badges}
+      />
+    </div>
+  </>
+) : (
+  <div
+    className="rounded-[15px] px-4 py-3 flex items-center justify-between"
+    style={{ backgroundColor: "#ECF8F7" }}
+  >
+    <span className="text-[14px] text-[#7B7B7B]">
+      Famille
+    </span>
+
+    <span
+      className="text-[16px] font-bold"
+      style={{ color: "#4E9F8A" }}
+    >
+      {familleLoading ? "Chargement..." : payload.famille || "-"}
+    </span>
+  </div>
+)}
 
           <div className="grid grid-cols-1 sm:grid-cols-[62%_36%] gap-3 mt-4">
             <div className="space-y-3">

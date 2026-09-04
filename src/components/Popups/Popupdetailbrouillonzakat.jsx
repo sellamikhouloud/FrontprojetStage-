@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import InfoCard from "../Containers/AfficherContainer";
 import Button from "../Button/Button";
+import Card from "../Cards/Card";
+import CardPopup from "../Cards/Card2";
 
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
@@ -10,6 +12,8 @@ import DeleteIcon from "../../assets/Delete.svg";
 
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
+
+import { getFamille } from "../../lib/api/familles";
 
 const CAUSE_PRINCIPALE_LABELS = {
   veuvage: "Veuvage",
@@ -31,11 +35,7 @@ const formatDate = (date) => {
   return `${d}/${m}/${y}`;
 };
 
-// Detail popup for a ZAKAT DRAFT specifically — not a real, already-created
-// zakat. Deliberately separate from PopupDetailZakat: a draft has none of
-// numero_zakat / date_creation / cree_par / modifie_par / est_annule, since
-// those only exist once the backend has actually created the record. Trying
-// to reuse the real popup means faking all of those with "-" placeholders.
+
 export default function PopupDetailBrouillonZakat({
   open,
   onClose,
@@ -44,6 +44,38 @@ export default function PopupDetailBrouillonZakat({
   onDelete,
 }) {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [familleData, setFamilleData] = useState(null);
+   const [familleLoading, setFamilleLoading] = useState(false);
+  
+
+  
+      useEffect(() => {
+    if (!open || !draft) return;
+  
+    const code = draft.payload?.famille;
+  
+    if (!code) {
+      setFamilleData(null);
+      return;
+    }
+  
+    const loadFamille = async () => {
+      try {
+        setFamilleLoading(true);
+  
+        const response = await getFamille(code);
+  
+        setFamilleData(response.data);
+      } catch (error) {
+        console.error("Erreur récupération famille :", error);
+        setFamilleData(null);
+      } finally {
+        setFamilleLoading(false);
+      }
+    };
+  
+    loadFamille();
+  }, [open, draft]);
 
   if (!open || !draft) return null;
 
@@ -56,6 +88,54 @@ export default function PopupDetailBrouillonZakat({
 
   const modeRemise =
     MODE_REMISE_LABELS[payload.mode_remise] ?? payload.mode_remise ?? "-";
+
+    
+const familleCard = familleData
+  ? {
+      id: familleData.id,
+      enfant: familleData.nourrisson?.prenom,
+      mere: `${familleData.mere?.nom ?? ""} ${familleData.mere?.prenom ?? ""}`,
+      sexe:
+        familleData.nourrisson?.sexe === "M"
+          ? "Fils"
+          : familleData.nourrisson?.sexe === "F"
+          ? "Fille"
+          : "-",
+      region: familleData.mere?.village?.nom ?? "-",
+      naissance: familleData.nourrisson?.date_naissance,
+      code: familleData.id,
+      badges: [
+        familleData.statut_nutritionnel_bebe === "mam" && {
+          type: "mam",
+          text: "MAM nourrisson",
+        },
+        familleData.statut_nutritionnel_bebe === "mas" && {
+          type: "mas",
+          text: "MAS nourrisson",
+        },
+        familleData.statut_nutritionnel_bebe === "normale" && {
+          type: "mere",
+          text: "Nourrisson normal",
+        },
+        familleData.statut_nutritionnel_mere === "normale" && {
+          type: "mere",
+          text: "Mère normale",
+        },
+        familleData.statut_nutritionnel_mere === "a_risque" && {
+          type: "risque",
+          text: "Mère à risque",
+        },
+        familleData.statut_nutritionnel_mere === "malnutrition" && {
+          type: "mas",
+          text: "Mère malnutrie",
+        },
+        familleData.est_visite_en_retard && {
+          type: "retard",
+          text: "Visite en retard",
+        },
+      ].filter(Boolean),
+    }
+  : null;
 
   return (
     <AnimatePresence>
@@ -135,8 +215,36 @@ export default function PopupDetailBrouillonZakat({
             </div>
           </div>
 
-          {/* Pas de carte famille enrichie — un brouillon ne connaît que le
-              code, pas le prénom/village/etc. Affiché en simple texte. */}
+         {familleCard ? (
+  <>
+    {/* MOBILE */}
+    <div className="block lg:hidden mt-4">
+      <CardPopup
+        enfant={familleCard.enfant}
+        mere={familleCard.mere}
+        sexe={familleCard.sexe}
+        region={familleCard.region}
+        naissance={familleCard.naissance}
+        code={familleCard.code}
+        badges={familleCard.badges}
+      />
+    </div>
+
+    {/* DESKTOP */}
+    <div className="hidden lg:block mt-4">
+      <Card
+        enfant={familleCard.enfant}
+        mere={familleCard.mere}
+        sexe={familleCard.sexe}
+        region={familleCard.region}
+        naissance={familleCard.naissance}
+        code={familleCard.code}
+        badges={familleCard.badges}
+      />
+    </div>
+  </>
+) : (
+
           <div
             className="rounded-[15px] px-4 py-3 flex items-center justify-between"
             style={{ backgroundColor: "#FFF6E9" }}
@@ -146,6 +254,7 @@ export default function PopupDetailBrouillonZakat({
               {payload.famille || "-"}
             </span>
           </div>
+   )}
 
           <div className="grid grid-cols-1 sm:grid-cols-[58%_40%] gap-5 mt-4">
             <div className="space-y-3">
