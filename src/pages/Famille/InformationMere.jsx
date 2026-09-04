@@ -19,7 +19,7 @@ import { useFamilyForm } from "../../context/FamilyFormContext";
 import { searchMere } from "../../lib/api/familles";
 import { listVillages } from "../../lib/api/Parametres";
 import { loadCache } from "@/lib/offlineCache";
-import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
+
 
 
 const isFutureDate = (date) => {
@@ -75,6 +75,8 @@ useEffect(() => {
     motif_sortie: payload.motif_sortie ?? null,
     id_mere: payload.id_mere ?? null,
     coordinateur: payload.coordinateur ?? null,
+    sourceDraftClientId: draftFamille.clientId,
+
   });
 
   // Restaurer le nombre d'enfants
@@ -96,7 +98,6 @@ useEffect(() => {
   updateFamilyData,
   setNourrissonsCount,
 ]);
-
 const {
   data: villagesData,
   isLoading: villagesLoading,
@@ -106,16 +107,16 @@ const {
   networkMode: "always",
   queryFn: async () => {
     try {
-     
-   
-      const allResults = await fetchAllPages((page) => listVillages({ page }));
-      return { results: allResults, next: null };
+      const response = await listVillages();
+      return response.data;
     } catch (error) {
       const cached = loadCache("villages");
+
       if (cached?.data) {
         console.log("📦 Villages chargés depuis le cache (fallback)");
         return cached.data;
       }
+
       throw error;
     }
   },
