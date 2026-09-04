@@ -32,8 +32,8 @@ import { listFamilles, getFamille  } from "@/lib/api/familles";
 import { getTauxDeChange } from "@/lib/api/parametres";
 import { getSoldeActuel , createAideZakat , getDerniereZakatFamille,} from "@/lib/api/zakat";
 
-import { saveCache, loadCache } from "@/lib/offlineCache";
-import { saveDraft } from "@/lib/offlineDrafts";
+import { loadCache } from "@/lib/offlineCache";
+import { saveDraft, deleteDraft } from "@/lib/offlineDrafts";
 import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
 
 
@@ -192,6 +192,8 @@ export default function AjoutZakat() {
 
   const location = useLocation();
   const draft = location.state?.draft;
+  
+  const sourceDraftClientId = location.state?.sourceDraftClientId;
 
   const [selectedFamille, setSelectedFamille] = useState(
     draft?.selectedFamille || null
@@ -349,15 +351,20 @@ const extractErrorMessage = (error) => {
     confirmation: confirmed,
   };
 
-  try {
+   try {
     await createAideZakat(payload);
+  
+    if (sourceDraftClientId) {
+      await deleteDraft(sourceDraftClientId);
+    }
     setShowSuccessPopup(true);
   } catch (error) {
   if (!error.response) {
   try {
-    // Saved as a draft, not auto-queued: nothing syncs on its own.
-    // The coordinator reviews it from "Brouillons hors ligne" and
-    // explicitly clicks "ajouter" once back online.
+  
+    if (sourceDraftClientId) {
+      await deleteDraft(sourceDraftClientId);
+    }
     await saveDraft("aide_zakat", payload);
     setOfflinePending(true);
     setShowSuccessPopup(true);
