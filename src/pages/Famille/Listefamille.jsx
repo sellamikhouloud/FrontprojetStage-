@@ -654,7 +654,7 @@ if  (isFilterOpen && isMobile)  {
 
   famille?.statut_nutritionnel_bebe === "normale" && {
     type: "mere",
-    text: "Bébé normal",
+    text: "Nourrisson normal",
   },
     // =========================
     // STATUT NUTRITIONNEL MÈRE
@@ -726,7 +726,7 @@ if  (isFilterOpen && isMobile)  {
 
   famille?.statut_nutritionnel_bebe === "normale" && {
     type: "mere",
-    text: "Bébé normal",
+    text: "Nourrisson normal",
   },
     // =========================
     // STATUT NUTRITIONNEL MÈRE
