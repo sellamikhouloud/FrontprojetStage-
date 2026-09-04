@@ -43,8 +43,8 @@ import {
   getPreCreationProduits,
   getPreCreationDate,
 } from "@/lib/api/distributions";
-import { saveDraft } from "@/lib/offlineDrafts";
-import { saveCache, loadCache } from "@/lib/offlineCache";
+import { saveDraft, deleteDraft } from "@/lib/offlineDrafts";
+import {  loadCache } from "@/lib/offlineCache";
 
 
 
@@ -137,8 +137,9 @@ const DEFAULT_STOCK_ICON = Sucre; //  si le nom n'est pas mappé
   const [saveError, setSaveError] = useState(null);
   const [offlinePending, setOfflinePending] = useState(false); 
 
-  const location = useLocation();
+   const location = useLocation();
   const draft = location.state?.draft;
+  const sourceDraftClientId = location.state?.sourceDraftClientId;
   // Distribution existante passée depuis la page de détail (mode modification)
   const distributionAModifier = location.state?.distributionAModifier;
 
@@ -530,17 +531,25 @@ useEffect(() => {
   await updateDistribution(distributionAModifier.id, patch);
 } else {
   await createDistribution(payload);
+
+  // Enregistrement en ligne réussi : si on éditait un ancien brouillon,
+  // on peut maintenant le supprimer en toute sécurité — les données
+  // sont bien arrivées au serveur.
+  if (sourceDraftClientId) {
+    await deleteDraft(sourceDraftClientId);
+  }
 }
 
 setShowSuccessPopup(true);
    } catch (error) {
-  // Offline queueing only applies to brand-new distributions (CREATE) —
-  // edits stay online-only, per scope.
+
   if (!isEditMode && !error.response) {
     try {
-      // Saved as a draft, not auto-queued: nothing syncs on its own.
-      // The coordinator reviews it from "Brouillons hors ligne" and
-      // explicitly clicks "ajouter" once back online.
+     
+      if (sourceDraftClientId) {
+        await deleteDraft(sourceDraftClientId);
+      }
+   
       await saveDraft("distribution", payload);
       setOfflinePending(true);
       setShowSuccessPopup(true);
