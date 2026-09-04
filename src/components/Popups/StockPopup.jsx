@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef , useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
@@ -42,36 +42,42 @@ const StockPopup = ({
   const [backupProducts, setBackupProducts] = useState([]);
 
   const timerRef = useRef(null);
-const stockObserverInstance = useRef(null);
+const stockScrollRef = useRef(null);
 
-const stockObserverTarget = useCallback(
-  (node) => {
-    // On nettoie toujours l'ancien observer avant d'en créer un nouveau
-    if (stockObserverInstance.current) {
-      stockObserverInstance.current.disconnect();
-      stockObserverInstance.current = null;
+useEffect(() => {
+  const container = stockScrollRef.current;
+
+  if (!container) {
+    return;
+  }
+
+  const handleScroll = () => {
+    const distanceFromBottom =
+      container.scrollHeight -
+      container.scrollTop -
+      container.clientHeight;
+
+    if (
+      distanceFromBottom <= 150 &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      fetchNextPage
+    ) {
+      console.log("➡️ Chargement page suivante des produits...");
+      fetchNextPage();
     }
+  };
 
-    if (!node) return; // le div a été démonté
+  container.addEventListener("scroll", handleScroll);
 
-    stockObserverInstance.current = new IntersectionObserver(
-      (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          hasNextPage &&
-          !isFetchingNextPage &&
-          fetchNextPage
-        ) {
-          fetchNextPage();
-        }
-      },
-      { threshold: 1 }
-    );
-
-    stockObserverInstance.current.observe(node);
-  },
-  [hasNextPage, isFetchingNextPage, fetchNextPage]
-);
+  return () => {
+    container.removeEventListener("scroll", handleScroll);
+  };
+}, [
+  hasNextPage,
+  isFetchingNextPage,
+  fetchNextPage,
+]);
 
   const [showAddProduct, setShowAddProduct] = useState(false);
 
@@ -2293,7 +2299,10 @@ const payload = {
               PRODUCTS
           ================================================= */}
 
-          <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-2">
+         <div
+  ref={stockScrollRef}
+  className="flex-1 overflow-y-auto px-5 pb-4 space-y-2"
+>
             {products.length > 0 ? (
               products.map(
                 (
@@ -2618,14 +2627,7 @@ const payload = {
 
             {/* INFINITE SCROLL */}
 
-                      {products.length > 0 && (
-              <div
-                ref={
-                  stockObserverTarget
-                }
-                className="h-1"
-              />
-            )}
+                    
 
             {isFetchingNextPage && (
               <div className="flex justify-center py-4">
