@@ -158,29 +158,54 @@ const PopupMas = ({
       .filter(Boolean)
       .join(" ");
 
-    // =======================================================
-    // BADGES
-    // =======================================================
+// =======================================================
+// BADGES
+// =======================================================
+const badges = [
+  // =========================
+  // STATUT NUTRITIONNEL BÉBÉ
+  // =========================
+  famille?.statut_nutritionnel_bebe === "mam" && {
+    type: "mam",
+    text: "MAM nourrisson",
+  },
 
-    const badges = [];
+  famille?.statut_nutritionnel_bebe === "mas" && {
+    type: "mas",
+    text: "MAS nourrisson",
+  },
 
-    // MAS bébé
-    if (
-      famille.statut_nutritionnel_bebe === "mas"
-    ) {
-      badges.push({
-        type: "mas",
-        text: "MAS nourrisson",
-      });
-    }
+  famille?.statut_nutritionnel_bebe === "normale" && {
+    type: "mere",
+    text: "Nourrisson normal",
+  },
 
-    // Statut nutritionnel mère
-    if (famille.statut_nutritionnel_mere) {
-      badges.push({
-        type: famille.statut_nutritionnel_mere,
-        text: famille.statut_nutritionnel_mere,
-      });
-    }
+  // =========================
+  // STATUT NUTRITIONNEL MÈRE
+  // =========================
+  famille?.statut_nutritionnel_mere === "normale" && {
+    type: "mere",
+    text: "Mère normale",
+  },
+
+  famille?.statut_nutritionnel_mere === "a_risque" && {
+    type: "risque",
+    text: "Mère à risque",
+  },
+
+  famille?.statut_nutritionnel_mere === "malnutrition" && {
+    type: "mas",
+    text: "Mère malnutrie",
+  },
+
+  // =========================
+  // VISITE EN RETARD
+  // =========================
+  famille?.est_visite_en_retard && {
+    type: "retard",
+    text: "Visite en retard",
+  },
+].filter(Boolean);
 
     return {
       id: famille.id,
