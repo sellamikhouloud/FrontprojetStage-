@@ -31,9 +31,6 @@ import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
-import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
-
-
 
 
 import { listFamilles , getFamille } from "@/lib/api/familles";
@@ -799,6 +796,34 @@ const mapFamilleToPopupItem = (famille) => ({
 });
 
 const listeDesFamilles = famillesBrutes.map(mapFamilleToPopupItem);
+// Si on arrive depuis un brouillon 
+
+useEffect(() => {
+  const isDraftPlaceholder = draft?.selectedFamille?.badges?.some(
+    (b) => b?.text === "Depuis un brouillon — non re-vérifié"
+  );
+  if (!isDraftPlaceholder) return;
+
+  const code = draft.selectedFamille.code;
+  if (!code) return;
+
+  let cancelled = false;
+
+  getFamille(code)
+    .then((response) => {
+      if (cancelled) return;
+      setSelectedFamille(mapFamilleToPopupItem(response.data));
+    })
+    .catch(() => {
+      // Hors ligne (ou famille introuvable) : on garde le placeholder
+      // minimal du brouillon, le formulaire reste utilisable normalement.
+    });
+
+  return () => {
+    cancelled = true;
+  };
+
+}, []);
 
  const rechercherParCode = async (code) => {
   try {
