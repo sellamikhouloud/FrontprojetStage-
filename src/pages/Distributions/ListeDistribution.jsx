@@ -200,6 +200,7 @@ useEffect(() => {
     }
   }, [location.state, navigate, location.pathname]);
 
+
 const {
   data: produitsResponse,
   isLoading: produitsLoading,
@@ -211,16 +212,44 @@ const {
 } = useInfiniteQuery({
   queryKey: ["produits-list", "infinite"],
 
-  queryFn: ({ pageParam = 1 }) =>
-    listProduits({
-      page: pageParam,
-    }).then((r) => r.data),
+  queryFn: ({ pageParam }) => {
+    console.log("📡 Demande produits page :", pageParam);
 
-  getNextPageParam: (lastPage, allPages) =>
-    lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
+    return listProduits({
+      page: pageParam,
+    }).then((r) => {
+   
+      return r.data;
+    });
+  },
 
   initialPageParam: 1,
+
+  getNextPageParam: (lastPage) => {
+    if (!lastPage?.next) {
+      console.log("🏁 Fin de la liste produits");
+      return undefined;
+    }
+
+    try {
+      const url = new URL(
+        lastPage.next,
+        window.location.origin
+      );
+
+      const nextPage = url.searchParams.get("page");
+
+   
+
+      return nextPage ? Number(nextPage) : undefined;
+    } catch (error) {
+      console.error("Erreur pagination produits :", error);
+      return undefined;
+    }
+  },
 });
+
+
 
 const produitsData = useMemo(() => {
   return (produitsResponse?.pages ?? []).flatMap((page) =>
@@ -229,35 +258,42 @@ const produitsData = useMemo(() => {
 }, [produitsResponse]);
 
 
+const produitsScrollRef = useRef(null);
 
-const produitsObserverInstance = useRef(null);
+useEffect(() => {
+  const container = produitsScrollRef.current;
 
-const produitsObserverTarget = useCallback(
-  (node) => {
-    if (produitsObserverInstance.current) {
-      produitsObserverInstance.current.disconnect();
-      produitsObserverInstance.current = null;
+  if (!container) return;
+
+  const handleScroll = () => {
+    const distanceFromRight =
+      container.scrollWidth -
+      container.scrollLeft -
+      container.clientWidth;
+
+    if (
+      distanceFromRight <= 150 &&
+      hasNextProduitsPage &&
+      !isFetchingNextProduitsPage
+    ) {
+      console.log("➡️ Chargement de la prochaine page produits...");
+      fetchNextProduitsPage();
     }
+  };
 
-    if (!node) return;
+  container.addEventListener("scroll", handleScroll);
 
-    produitsObserverInstance.current = new IntersectionObserver(
-      (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          hasNextProduitsPage &&
-          !isFetchingNextProduitsPage
-        ) {
-          fetchNextProduitsPage();
-        }
-      },
-      { threshold: 1 }
-    );
+  return () => {
+    container.removeEventListener("scroll", handleScroll);
+  };
+}, [
+  hasNextProduitsPage,
+  isFetchingNextProduitsPage,
+  fetchNextProduitsPage,
+]);
 
-    produitsObserverInstance.current.observe(node);
-  },
-  [hasNextProduitsPage, isFetchingNextProduitsPage, fetchNextProduitsPage]
-);
+
+
 
 const [products, setProducts] = useState([]);
 
@@ -610,7 +646,7 @@ useEffect(() => {
         />
 
         {/* Stock cards */}
-       <div className="mt-6 mb-5 w-full overflow-x-auto scrollbar-hide">
+      <div ref={produitsScrollRef} className="mt-6 mb-5 w-full overflow-x-auto scrollbar-hide" >
   {produitsLoading && <Spinner />}
   {produitsError && <p className="text-red-500">Impossible de charger le stock.</p>}
   <div className="flex gap-[4px] md:gap-[10px] w-max">
@@ -627,8 +663,7 @@ useEffect(() => {
 />
   ))}
 
-  {/* Pagination produits */}
-     <div ref={produitsObserverTarget} className="w-1 shrink-0" />
+  
 
     {isFetchingNextProduitsPage && (
       <div className="flex items-center justify-center px-4">
