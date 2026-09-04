@@ -5,7 +5,8 @@ import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+
+import { useQuery,useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 
 import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import TextArea from "../../components/Containers/Textarea";
@@ -27,12 +28,13 @@ import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 
 import { useAuth } from "../../components/Providers/AuthProvider";
-import { listFamilles } from "@/lib/api/familles";
+import { listFamilles, getFamille  } from "@/lib/api/familles";
 import { getTauxDeChange } from "@/lib/api/parametres";
 import { getSoldeActuel , createAideZakat , getDerniereZakatFamille,} from "@/lib/api/zakat";
 
-import { saveCache, loadCache } from "@/lib/offlineCache";
-import { saveDraft } from "@/lib/offlineDrafts";
+import { loadCache } from "@/lib/offlineCache";
+import { saveDraft, deleteDraft } from "@/lib/offlineDrafts";
+import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
 
 
 
@@ -159,15 +161,16 @@ function filterCachedFamilles(cachedData, searchTerm) {
   if (!term) return cachedData;
 
   const filtered = list.filter((f) => {
-    const haystack = [
-      f?.mere?.nom,
-      f?.mere?.prenom,
-      f?.nourrisson?.prenom,
-      String(f?.id ?? ""),
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+  const haystack = [
+  f?.mere?.nom,
+  f?.mere?.prenom,
+  f?.nourrisson?.prenom,
+  f?.mere?.village?.nom,
+  String(f?.id ?? ""),
+]
+  .filter(Boolean)
+  .join(" ")
+  .toLowerCase();
     return haystack.includes(term);
   });
 
@@ -189,6 +192,8 @@ export default function AjoutZakat() {
 
   const location = useLocation();
   const draft = location.state?.draft;
+  
+  const sourceDraftClientId = location.state?.sourceDraftClientId;
 
   const [selectedFamille, setSelectedFamille] = useState(
     draft?.selectedFamille || null
@@ -199,6 +204,10 @@ export default function AjoutZakat() {
   const [montant, setMontant] = useState(draft?.montant || "");
   const [modePaiement, setModePaiement] = useState(draft?.modePaiement || null);
 
+const [debouncedSearchFamille, setDebouncedSearchFamille] = useState("");
+const [familleParCode, setFamilleParCode] = useState(null);
+const [codeError, setCodeError] = useState("");
+const [isSearchingByCode, setIsSearchingByCode] = useState(false);
 
   const { user } = useAuth();
   const role = user?.role ?? null;
@@ -342,15 +351,20 @@ const extractErrorMessage = (error) => {
     confirmation: confirmed,
   };
 
-  try {
+   try {
     await createAideZakat(payload);
+  
+    if (sourceDraftClientId) {
+      await deleteDraft(sourceDraftClientId);
+    }
     setShowSuccessPopup(true);
   } catch (error) {
   if (!error.response) {
   try {
-    // Saved as a draft, not auto-queued: nothing syncs on its own.
-    // The coordinator reviews it from "Brouillons hors ligne" and
-    // explicitly clicks "ajouter" once back online.
+  
+    if (sourceDraftClientId) {
+      await deleteDraft(sourceDraftClientId);
+    }
     await saveDraft("aide_zakat", payload);
     setOfflinePending(true);
     setShowSuccessPopup(true);
@@ -451,10 +465,10 @@ const {
   hasNextPage: hasNextFamillesPage,
   isFetchingNextPage: isFetchingNextFamillesPage,
 } = useInfiniteQuery({
-  queryKey: ["familles-popup", "infinite", searchFamille],
+  queryKey: ["familles-popup", "infinite", debouncedSearchFamille],
 
  queryFn: async ({ pageParam = 1 }) => {
-  const params = { page: pageParam };
+  const params = { page: pageParam , statut: "active"};
 
   const trimmedSearch = searchFamille.trim();
   if (trimmedSearch) {
@@ -482,9 +496,11 @@ const {
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
 
-  initialPageParam: 1,
-  keepPreviousData: true,
+    initialPageParam: 1,
+  placeholderData: keepPreviousData,
   enabled: openFamilles,
+    networkMode: "always",
+
 });
 
 const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
@@ -516,50 +532,73 @@ useEffect(() => {
 
   // Mapping vers le format attendu par le popup / les cartes
   // (même logique que dans "Liste des familles" et "Ajout Visite")
-  const listeDesFamilles = famillesBrutes.map((famille) => ({
-    id: famille.id,
-    enfant: famille.nourrisson?.prenom,
-    mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
-    sexe:
-      famille?.nourrisson?.sexe === "M"
-        ? "Fils"
-        : famille?.nourrisson?.sexe === "F"
-        ? "Fille"
-        : "-",
-    region: famille.mere?.village?.nom ?? "-",
-    naissance: famille.nourrisson?.date_naissance,
-    code: famille.id,
-    badges: [
-      famille?.statut_nutritionnel_bebe === "mam" && {
-        type: "mam",
-        text: "MAM nourrisson",
-      },
-      famille?.statut_nutritionnel_bebe === "mas" && {
-        type: "mas",
-        text: "MAS nourrisson",
-      },
-      famille?.statut_nutritionnel_bebe === "normale" && {
-        type: "mere",
-        text: "Bébé normal",
-      },
-      famille?.statut_nutritionnel_mere === "normale" && {
-        type: "mere",
-        text: "Mère normale",
-      },
-      famille?.statut_nutritionnel_mere === "a_risque" && {
-        type: "risque",
-        text: "Mère à risque",
-      },
-      famille?.statut_nutritionnel_mere === "malnutrition" && {
-        type: "mas",
-        text: "Mère malnutrie",
-      },
-      famille.est_visite_en_retard && {
-        type: "retard",
-        text: "Visite en retard",
-      },
-    ].filter(Boolean),
-  }));
+ const mapFamilleForPopup = (famille) => ({
+  id: famille.id,
+  enfant: famille.nourrisson?.prenom,
+  mere: `${famille.mere?.nom ?? ""} ${famille.mere?.prenom ?? ""}`,
+  sexe:
+    famille?.nourrisson?.sexe === "M"
+      ? "Fils"
+      : famille?.nourrisson?.sexe === "F"
+      ? "Fille"
+      : "-",
+  region: famille.mere?.village?.nom ?? "-",
+  naissance: famille.nourrisson?.date_naissance,
+  code: famille.id,
+  badges: [
+    famille?.statut_nutritionnel_bebe === "mam" && { type: "mam", text: "MAM nourrisson" },
+    famille?.statut_nutritionnel_bebe === "mas" && { type: "mas", text: "MAS nourrisson" },
+    famille?.statut_nutritionnel_bebe === "normale" && { type: "mere", text: "Nourrisson normal" },
+    famille?.statut_nutritionnel_mere === "normale" && { type: "mere", text: "Mère normale" },
+    famille?.statut_nutritionnel_mere === "a_risque" && { type: "risque", text: "Mère à risque" },
+    famille?.statut_nutritionnel_mere === "malnutrition" && { type: "mas", text: "Mère malnutrie" },
+    famille.est_visite_en_retard && { type: "retard", text: "Visite en retard" },
+  ].filter(Boolean),
+});
+
+const listeDesFamilles = familleParCode
+  ? [mapFamilleForPopup(familleParCode)]
+  : famillesBrutes.map(mapFamilleForPopup);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setDebouncedSearchFamille(searchFamille);
+  }, 300);
+  return () => clearTimeout(timer);
+}, [searchFamille]);
+
+const rechercherFamilleParCode = async (code) => {
+  try {
+    setIsSearchingByCode(true);
+    setCodeError("");
+    const response = await getFamille(code);
+
+    if (response.data?.statut !== "active") {
+      setFamilleParCode(null);
+      setCodeError("Aucune famille active trouvée avec ce code.");
+      return;
+    }
+
+    setFamilleParCode(response.data);
+  } catch (error) {
+    console.error("Erreur recherche famille par code :", error);
+    setFamilleParCode(null);
+    setCodeError("Aucune famille trouvée avec ce code.");
+  } finally {
+    setIsSearchingByCode(false);
+  }
+};
+useEffect(() => {
+  const value = debouncedSearchFamille.trim();
+
+  if (/^GDK-\d{4}-\d+$/i.test(value)) {
+    rechercherFamilleParCode(value);
+  } else {
+    // on n'est plus sur un code valide → on repasse en mode liste normale
+    setFamilleParCode(null);
+    setCodeError("");
+  }
+}, [debouncedSearchFamille]);
 
   const familyOptions = [
     { label: "Changer la famille", value: "changer" },
@@ -569,19 +608,34 @@ useEffect(() => {
   const handleSearch = () => {
     setOpenFamilles(true);
   };
+const handleOptionSelect = (value) => {
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    handleGoToFamilleSelectionnee();
+  }
+};
 
-  const handleOptionSelect = (value) => {
-    if (value === "changer") {
-      setOpenFamilles(true);
-    } else if (value === "voir") {
-      navigate(`/famille/${selectedFamille.id}`, {
-        state: {
-          from: "/ajout-zakat",
-          draft: { selectedFamille, date, confirmed },
-        },
-      });
-    }
-  };
+
+  const handleGoToFamilleSelectionnee = () => {
+  if (!selectedFamille?.id) return;
+
+  navigate(`/famille/${selectedFamille.id}`, {
+    state: {
+      fromPage: "/ajout-zakat",
+      restoreZakatDraft: {
+        selectedFamille,
+        date,
+        confirmed,
+        montant,
+        modePaiement,
+        causePrincipale,
+        precisions,
+        observations,
+      },
+    },
+  });
+};
   const [manualFamilleError, setManualFamilleError] = useState(null);
 
 const handleManualFamilleCode = (code) => {
@@ -622,6 +676,22 @@ const handleManualFamilleCode = (code) => {
 
   setErrors((prev) => ({ ...prev, famille: false }));
 };
+
+useEffect(() => {
+  const restoredDraft = location.state?.restoreZakatDraft;
+  if (!restoredDraft) return;
+
+  if (restoredDraft.selectedFamille) setSelectedFamille(restoredDraft.selectedFamille);
+  if (restoredDraft.date) setDate(new Date(restoredDraft.date));
+  if (typeof restoredDraft.confirmed === "boolean") setConfirmed(restoredDraft.confirmed);
+  if (restoredDraft.montant !== undefined) setMontant(restoredDraft.montant);
+  if (restoredDraft.modePaiement !== undefined) setModePaiement(restoredDraft.modePaiement);
+  if (restoredDraft.causePrincipale !== undefined) setCausePrincipale(restoredDraft.causePrincipale);
+  if (restoredDraft.precisions !== undefined) setPrecisions(restoredDraft.precisions);
+  if (restoredDraft.observations !== undefined) setObservations(restoredDraft.observations);
+
+  navigate(location.pathname, { replace: true, state: {} });
+}, [location.state, navigate, location.pathname]);
 
   return (
       
@@ -709,10 +779,7 @@ const handleManualFamilleCode = (code) => {
           <>
             {/* Mobile */}
             <div className="relative block lg:hidden mt-4">
-              <div
-                className="cursor-pointer"
-                onClick={() => setOpenOptions((prev) => !prev)}
-              >
+              <div className="cursor-pointer" onClick={() => setOpenOptions((prev) => !prev)}>
                 <CardPopup
                   enfant={selectedFamille.enfant}
                   sexe={selectedFamille.sexe}
@@ -733,10 +800,7 @@ const handleManualFamilleCode = (code) => {
 
             {/* Desktop */}
             <div className="relative hidden lg:block">
-              <div
-                className="cursor-pointer"
-                onClick={() => setOpenOptions((prev) => !prev)}
-              >
+              <div className="cursor-pointer" onClick={() => setOpenOptions((prev) => !prev)}>
                 <Card
                   enfant={selectedFamille.enfant}
                   mere={selectedFamille.mere}
@@ -1139,18 +1203,22 @@ const handleManualFamilleCode = (code) => {
         />
 
       </main>
-
-   <PopupListeFamilles
+<PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
   familles={listeDesFamilles}
-  loading={famillesLoading}
-  isError={famillesError}
+  loading={
+    familleParCode
+      ? false
+      : (isSearchingByCode && famillesBrutes.length === 0) ||
+        (famillesLoading && !isSearchingByCode)
+  }
+  isError={familleParCode ? false : famillesError}
   onRetry={refetchFamilles}
   search={searchFamille}
   onSearchChange={setSearchFamille}
-  observerTarget={famillesObserverTarget}
-  isFetchingNextPage={isFetchingNextFamillesPage}
+  observerTarget={familleParCode ? null : famillesObserverTarget}
+  isFetchingNextPage={familleParCode ? false : isFetchingNextFamillesPage}
   onSelectFamille={(famille) => {
     setSelectedFamille(famille);
     setOpenFamilles(false);
@@ -1160,3 +1228,4 @@ const handleManualFamilleCode = (code) => {
     </div>
   );
 }
+

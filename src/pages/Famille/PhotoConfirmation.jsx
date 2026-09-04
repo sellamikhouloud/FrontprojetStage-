@@ -16,7 +16,7 @@ import { searchMere, createFamille } from "../../lib/api/familles";
 import { listUsers } from "../../lib/api/users";
 import { useAuth } from "../../components/Providers/AuthProvider";
 import BackendErrorMessage from "../../components/Forms/BackendErrorMessage.jsx";
-import { saveDraft } from "@/lib/offlineDrafts";
+import { saveDraft, deleteDraft } from "@/lib/offlineDrafts";
 
 
 
@@ -167,18 +167,6 @@ const handleSave = async () => {
 
     const resultats = [];
 
-    /*
-     * IMPORTANT :
-     *
-     * On garde l'id dans une variable locale.
-     *
-     * On ne fait PAS :
-     *
-     * updateFamilyData({ id_mere: ... })
-     *
-     * puis formData.id_mere immédiatement après,
-     * car React peut encore avoir l'ancienne valeur.
-     */
     let currentIdMere = formData.id_mere || null;
 
     for (let i = 0; i < nourrissons.length; i++) {
@@ -307,11 +295,7 @@ console.log(
       // =====================================================
       // 5️⃣ SI ON VIENT DE CRÉER UNE NOUVELLE MÈRE
       // =====================================================
-      //
-      // On refait un search immédiatement après.
-      //
-      // Ainsi, pour l'enfant suivant, la mère sera trouvée.
-      //
+    
 
       if (!currentIdMere) {
 
@@ -351,22 +335,23 @@ console.log(
       }
     }
 
-    console.log(
+      console.log(
       "✅ Toutes les familles créées :",
       resultats
     );
     setCreatedFamilleId(resultats[0]?.id ?? null);
+
+    
+    if (formData.sourceDraftClientId) {
+      await deleteDraft(formData.sourceDraftClientId);
+    }
 
     setShowPopup(true);
 
     resetFamilyForm();
 
  } catch (error) {
-  // Pas de réponse du tout = la requête n'a jamais atteint le serveur,
-  // donc on est hors ligne. On enregistre un brouillon consultable au
-  // lieu d'afficher une erreur — rien n'est synchronisé automatiquement.
-  // Le coordinateur doit ouvrir "Brouillons hors ligne" et cliquer sur
-  // « Ajouter » une fois de retour en ligne. Même principe que AjoutVisite.
+
   if (!error.response) {
     try {
      const nourrissonsDraft = formData.nourrissons?.length
@@ -374,6 +359,12 @@ console.log(
   : [formData.nourrisson];
 
 const { photo, ...mereSansPhoto } = formData.mere || {};
+
+// Toujours hors ligne : on remplace l'ancien brouillon par le nouveau,
+// plutôt que de garder les deux (éviter les doublons).
+if (formData.sourceDraftClientId) {
+  await deleteDraft(formData.sourceDraftClientId);
+}
 
 await saveDraft(
   "famille",

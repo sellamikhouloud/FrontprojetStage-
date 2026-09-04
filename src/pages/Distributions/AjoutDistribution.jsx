@@ -6,7 +6,7 @@ import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import LaitInfantile from "../../components/Distribution/LaitInfantile";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery, keepPreviousData  } from "@tanstack/react-query";
 import ColisAlimentaire from "../../components/Distribution/ColisAlimentaire";
 import { useState, useEffect, useRef } from "react";
 
@@ -31,6 +31,7 @@ import BackendErrorMessage from "../../components/Forms/BackendErrorMessage";
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
+import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
 
 
 
@@ -42,8 +43,8 @@ import {
   getPreCreationProduits,
   getPreCreationDate,
 } from "@/lib/api/distributions";
-import { saveDraft } from "@/lib/offlineDrafts";
-import { saveCache, loadCache } from "@/lib/offlineCache";
+import { saveDraft, deleteDraft } from "@/lib/offlineDrafts";
+import {  loadCache } from "@/lib/offlineCache";
 
 
 
@@ -136,8 +137,9 @@ const DEFAULT_STOCK_ICON = Sucre; //  si le nom n'est pas mappé
   const [saveError, setSaveError] = useState(null);
   const [offlinePending, setOfflinePending] = useState(false); 
 
-  const location = useLocation();
+   const location = useLocation();
   const draft = location.state?.draft;
+  const sourceDraftClientId = location.state?.sourceDraftClientId;
   // Distribution existante passée depuis la page de détail (mode modification)
   const distributionAModifier = location.state?.distributionAModifier;
 
@@ -372,8 +374,6 @@ useEffect(() => {
     return !hasFieldError && !hasProduitError;
   };
 
-
-
  const handleSave = async () => {
   if (!validateForm()) return;
 
@@ -461,14 +461,13 @@ useEffect(() => {
   return messageGenerique;
 };
 
-
-
-  try {
- if (isEditMode) {
+   try {
+   if (isEditMode) {
   const initialData = initialEditDataRef.current;
 
   if (!initialData) {
     setSaveError("Impossible de vérifier les modifications.");
+    setSaving(false);
     return;
   }
 
@@ -511,47 +510,46 @@ useEffect(() => {
     dateChanged ||
     confirmationChanged;
 
-  console.log("========== VÉRIFICATION MODIFICATION ==========");
-  console.log("Date initiale :", initialDate);
-  console.log("Date actuelle :", currentDate);
-  console.log("Date modifiée :", dateChanged);
-
-  console.log("Confirmation initiale :", initialData.reception_confirmee);
-  console.log("Confirmation actuelle :", payload.reception_confirmee);
-  console.log("Confirmation modifiée :", confirmationChanged);
-
-  console.log("Produits initiaux :", initialProducts);
-  console.log("Produits actuels :", currentProducts);
-  console.log("Produits modifiés :", produitsChanged);
-
-  console.log("Modification détectée :", hasChanges);
-
-  
   if (!hasChanges) {
     setSaveError("Aucune modification à enregistrer.");
+    setSaving(false);
     return;
   }
 
- 
-  await updateDistribution(distributionAModifier.id, {
+  const patch = {
     produits: produitsPayload,
     date_distribution: payload.date_distribution,
     reception_confirmee: payload.reception_confirmee,
-  });
+  };
 
+  console.log("========== MODE MODIFICATION ==========");
+  console.log("ID distribution :", distributionAModifier.id);
+  console.log("PATCH FINAL :", patch);
+  console.log("Nombre de produits envoyés :", patch.produits.length);
+  console.log("Produits envoyés :", patch.produits);
+
+  await updateDistribution(distributionAModifier.id, patch);
 } else {
   await createDistribution(payload);
+
+  // Enregistrement en ligne réussi : si on éditait un ancien brouillon,
+  // on peut maintenant le supprimer en toute sécurité — les données
+  // sont bien arrivées au serveur.
+  if (sourceDraftClientId) {
+    await deleteDraft(sourceDraftClientId);
+  }
 }
 
 setShowSuccessPopup(true);
    } catch (error) {
-  // Offline queueing only applies to brand-new distributions (CREATE) —
-  // edits stay online-only, per scope.
+
   if (!isEditMode && !error.response) {
     try {
-      // Saved as a draft, not auto-queued: nothing syncs on its own.
-      // The coordinator reviews it from "Brouillons hors ligne" and
-      // explicitly clicks "ajouter" once back online.
+     
+      if (sourceDraftClientId) {
+        await deleteDraft(sourceDraftClientId);
+      }
+   
       await saveDraft("distribution", payload);
       setOfflinePending(true);
       setShowSuccessPopup(true);
@@ -711,7 +709,7 @@ const {
   hasNextPage: hasNextFamillesPage,
   isFetchingNextPage: isFetchingNextFamillesPage,
 } = useInfiniteQuery({
-  queryKey: ["familles-popup", "infinite", searchFamille],
+   queryKey: ["familles-popup", "infinite", debouncedSearchFamille],
 
   queryFn: async ({ pageParam = 1 }) => {
   const params = { page: pageParam , statut: "active" };
@@ -742,9 +740,10 @@ const {
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
 
-  initialPageParam: 1,
-  keepPreviousData: true,
+   initialPageParam: 1,
+  placeholderData: keepPreviousData,
   enabled: openFamilles,
+  networkMode: "always",
 });
 
 const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
@@ -874,28 +873,35 @@ const displayedFamillesPopup = familleParCode ? [familleParCode] : listeDesFamil
     });
   };
 
+
+  const handleGoToFamilleSelectionnee = () => {
+  if (!selectedFamille?.id) return;
+
+  navigate(`/famille/${selectedFamille.id}`, {
+    state: {
+      fromPage: "/ajout-distribution",
+      restoreDistributionDraft: {
+        selectedFamille,
+        products,
+        date,
+        confirmed,
+        laitType,
+        selectedLaitOption,
+        boxes,
+      },
+      // Garde le contexte du mode modification si on y était déjà
+      distributionAModifier: isEditMode ? distributionAModifier : undefined,
+    },
+  });
+};
   const handleOptionSelect = (value) => {
-    if (value === "changer") {
-      setOpenFamilles(true);
-    } else if (value === "voir") {
-      navigate(`/famille/${selectedFamille.id}`, {
-        state: {
-          from: "/ajout-distribution",
-          draft: {
-            selectedFamille,
-            products,
-            date,
-            confirmed,
-            laitType,
-            selectedLaitOption,
-            boxes,
-          },
-          // Si on était déjà en mode modification, on garde le contexte au retour
-          distributionAModifier: isEditMode ? distributionAModifier : undefined,
-        },
-      });
-    }
-  };
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    handleGoToFamilleSelectionnee();
+  }
+};
+
 useEffect(() => {
   if (!isEditMode || !distributionAModifier) return;
 
@@ -918,6 +924,27 @@ useEffect(() => {
     produits: initialProducts,
   };
 }, [isEditMode, distributionAModifier]);
+
+useEffect(() => {
+  const restoredDraft = location.state?.restoreDistributionDraft;
+  if (!restoredDraft) return;
+
+  if (restoredDraft.selectedFamille) setSelectedFamille(restoredDraft.selectedFamille);
+  if (restoredDraft.products) setProducts(withDefaultIcon(restoredDraft.products));
+  if (restoredDraft.date) {
+    setDate(
+      restoredDraft.date instanceof Date
+        ? restoredDraft.date
+        : new Date(restoredDraft.date)
+    );
+  }
+  if (typeof restoredDraft.confirmed === "boolean") setConfirmed(restoredDraft.confirmed);
+  if (restoredDraft.laitType !== undefined) setLaitType(restoredDraft.laitType);
+  if (restoredDraft.selectedLaitOption !== undefined) setSelectedLaitOption(restoredDraft.selectedLaitOption);
+  if (restoredDraft.boxes !== undefined) setBoxes(restoredDraft.boxes);
+
+  navigate(location.pathname, { replace: true, state: {} });
+}, [location.state, navigate, location.pathname]);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -1206,7 +1233,7 @@ useEffect(() => {
  
 </div>
 
-       {showSuccessPopup && (
+     {showSuccessPopup && (
   <Popup
     title={
       offlinePending
@@ -1216,12 +1243,22 @@ useEffect(() => {
         : "Distribution enregistrée avec succès"
     }
     image={offlinePending ? null : SuccessImage}
-    primaryButtonText="Voir la fiche famille"
+    primaryButtonText={
+      offlinePending
+        ? "Voir les brouillons hors ligne"
+        : "Voir la fiche famille"
+    }
     secondaryButtonText="Revenir à l'accueil"
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
+
+      if (offlinePending) {
+        navigate("/brouillons-hors-ligne");
+      } else {
+        navigate(`/famille/${selectedFamille?.id}`);
+      }
+
       setOfflinePending(false);
-      navigate(`/famille/${selectedFamille?.id}`);
     }}
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
@@ -1285,3 +1322,4 @@ useEffect(() => {
     </div>
   );
 }
+

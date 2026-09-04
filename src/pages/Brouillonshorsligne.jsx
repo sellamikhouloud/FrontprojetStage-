@@ -209,41 +209,40 @@ export default function BrouillonsHorsLigne() {
       setDetailFamilleDraft(draft);
     }
   };
+const handleEditZakatDraft = async (draft) => {
 
-  const handleEditZakatDraft = async (draft) => {
-  
-    const minimalFamille = {
-      id: draft.payload?.famille,
-      code: draft.payload?.famille,
-      enfant: undefined,
-      mere: undefined,
-      sexe: "-",
-      region: "-",
-      naissance: undefined,
-      badges: [{ type: "retard", text: "Depuis un brouillon — non re-vérifié" }],
-    };
-
- 
-    await deleteDraft(draft.clientId);
-    setDetailZakatDraft(null);
-
-    navigate("/ajout-zakat", {
-      state: {
-        draft: {
-          selectedFamille: minimalFamille,
-          date: draft.payload?.date_versement
-            ? new Date(draft.payload.date_versement)
-            : new Date(),
-          confirmed: draft.payload?.confirmation ?? false,
-          montant: draft.payload?.montant ? String(draft.payload.montant) : "",
-          modePaiement: draft.payload?.mode_remise ?? null,
-          causePrincipale: draft.payload?.cause_principale ?? null,
-          precisions: draft.payload?.precisions ?? "",
-          observations: draft.payload?.observation ?? "",
-        },
-      },
-    });
+  const minimalFamille = {
+    id: draft.payload?.famille,
+    code: draft.payload?.famille,
+    enfant: undefined,
+    mere: undefined,
+    sexe: "-",
+    region: "-",
+    naissance: undefined,
+    badges: [{ type: "retard", text: "Depuis un brouillon — non re-vérifié" }],
   };
+
+  
+  setDetailZakatDraft(null);
+
+  navigate("/ajout-zakat", {
+    state: {
+      draft: {
+        selectedFamille: minimalFamille,
+        date: draft.payload?.date_versement
+          ? new Date(draft.payload.date_versement)
+          : new Date(),
+        confirmed: draft.payload?.confirmation ?? false,
+        montant: draft.payload?.montant ? String(draft.payload.montant) : "",
+        modePaiement: draft.payload?.mode_remise ?? null,
+        causePrincipale: draft.payload?.cause_principale ?? null,
+        precisions: draft.payload?.precisions ?? "",
+        observations: draft.payload?.observation ?? "",
+      },
+      sourceDraftClientId: draft.clientId,
+    },
+  });
+};
 
   const handleDeleteZakatDraft = async (draft) => {
     await deleteDraft(draft.clientId);
@@ -251,59 +250,60 @@ export default function BrouillonsHorsLigne() {
     refresh();
   };
 
-  const handleEditVisiteDraft = async (draft) => {
-    const p = draft.payload || {};
+ const handleEditVisiteDraft = async (draft) => {
+  const p = draft.payload || {};
 
-    const minimalFamille = {
-      id: p.famille,
-      code: p.famille,
-      enfant: undefined,
-      mere: undefined,
-      sexe: "-",
-      region: "-",
-      naissance: undefined,
-      badges: [{ type: "retard", text: "Depuis un brouillon — non re-vérifié" }],
-    };
-
-   
-    const positionNourrisson =
-      p.mesure_couchee === true ? false : p.mesure_couchee === false ? true : null;
-
-    const mois = p.month ? MONTH_VALUES[p.month - 1] ?? null : null;
-
-    await deleteDraft(draft.clientId);
-    setDetailVisiteDraft(null);
-
-    navigate("/ajout-visite", {
-      state: {
-        draft: {
-          selectedFamille: minimalFamille,
-          date: p.date_visite ? new Date(p.date_visite) : new Date(),
-          mois,
-       
-          poidsNourrisson: p.poids_bebe != null ? String(p.poids_bebe) : "",
-          tailleNourrisson: p.taille_bebe != null ? String(p.taille_bebe) : "",
-          muacNourrisson: p.muac_bebe != null ? String(p.muac_bebe) : "",
-          positionNourrisson,
-          observationsNourrisson: p.observations_cliniques_bebe ?? "",
-          poidsMere: p.poids_mere != null ? String(p.poids_mere) : "",
-          tailleMere: p.taille_mere != null ? String(p.taille_mere) : "",
-          muacMere: p.muac_mere != null ? String(p.muac_mere) : "",
-          observationsMere: p.observations_cliniques_mere ?? "",
-          evaluationVisuelle: p.evaluation_famille ?? "",
-          hemoglobine: p.hemoglobine ?? "",
-        },
-      },
-    });
+  const minimalFamille = {
+    id: p.famille,
+    code: p.famille,
+    enfant: undefined,
+    mere: undefined,
+    sexe: "-",
+    region: "-",
+    naissance: undefined,
+    badges: [{ type: "retard", text: "Depuis un brouillon — non re-vérifié" }],
   };
-  const handleEditFamilleDraft = async (draft) => {
-  await deleteDraft(draft.clientId);
 
+ 
+  const positionNourrisson =
+    p.mesure_couchee === true ? false : p.mesure_couchee === false ? true : null;
+
+  const mois = p.month ? MONTH_VALUES[p.month - 1] ?? null : null;
+
+  
+  setDetailVisiteDraft(null);
+
+  navigate("/ajout-visite", {
+    state: {
+      draft: {
+        selectedFamille: minimalFamille,
+        date: p.date_visite ? new Date(p.date_visite) : new Date(),
+        mois,
+     
+        poidsNourrisson: p.poids_bebe != null ? String(p.poids_bebe) : "",
+        tailleNourrisson: p.taille_bebe != null ? String(p.taille_bebe) : "",
+        muacNourrisson: p.muac_bebe != null ? String(p.muac_bebe) : "",
+        positionNourrisson,
+        observationsNourrisson: p.observations_cliniques_bebe ?? "",
+        poidsMere: p.poids_mere != null ? String(p.poids_mere) : "",
+        tailleMere: p.taille_mere != null ? String(p.taille_mere) : "",
+        muacMere: p.muac_mere != null ? String(p.muac_mere) : "",
+        observationsMere: p.observations_cliniques_mere ?? "",
+        evaluationVisuelle: p.evaluation_famille ?? "",
+        hemoglobine: p.hemoglobine ?? "",
+      },
+      sourceDraftClientId: draft.clientId,
+    },
+  });
+};
+ const handleEditFamilleDraft = async (draft) => {
+ 
   setDetailFamilleDraft(null);
 
   navigate("/information-mere", {
     state: {
       draftFamille: draft,
+      sourceDraftClientId: draft.clientId,
     },
   });
 };
@@ -330,11 +330,7 @@ export default function BrouillonsHorsLigne() {
       badges: [{ type: "retard", text: "Depuis un brouillon — non re-vérifié" }],
     };
 
-    // The draft only stores { produit: id, quantite } — AjoutDistribution's
-    // form state needs { id, title, quantity, unit, maxQuantity } for normal
-    // products, and separate laitType/selectedLaitOption/boxes state for
-    // milk. Resolve ids against the same "stock-produits" cache the popup
-    // uses, so the form pre-fills with readable names instead of just ids.
+   
     const stockCache = loadCache(STOCK_CACHE_KEY);
     const stockData = stockCache?.data;
     const stockProduits = stockData?.produits || [];
@@ -368,8 +364,6 @@ export default function BrouillonsHorsLigne() {
         }
       }
 
-      // Not found in cache at all — keep it as a plain product so it isn't
-      // silently dropped, just with no readable name available.
       products.push({
         id: item.produit,
         title: `Produit #${item.produit}`,
@@ -379,10 +373,9 @@ export default function BrouillonsHorsLigne() {
       });
     });
 
-    // Same reasoning as zakat/visite: delete now, so re-submitting from
-    // AjoutDistribution creates one fresh draft instead of leaving this one
-    // behind as a duplicate.
-    await deleteDraft(draft.clientId);
+       // On NE supprime PAS le brouillon ici — seulement s'il est effectivement
+    // ré-enregistré depuis AjoutDistribution. Si l'utilisateur abandonne
+    // (ferme la page sans enregistrer), le brouillon original reste intact.
     setDetailDistributionDraft(null);
 
     navigate("/ajout-distribution", {
@@ -396,9 +389,11 @@ export default function BrouillonsHorsLigne() {
           selectedLaitOption,
           boxes,
         },
+        sourceDraftClientId: draft.clientId,
       },
     });
   };
+  
 
 
   const handleDeleteDistributionDraft = async (draft) => {

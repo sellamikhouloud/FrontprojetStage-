@@ -175,26 +175,49 @@ const PopupModifierZakat = ({
   if (!open || !zakat || !form) {
     return null;
   }
+const familleData = famille || zakat?.famille_info;
 
-  const enfant = famille?.enfant_prenom || "-";
-  const mere = famille?.mere_nom || "-";
+const enfant =
+  familleData?.nourrisson?.prenom ||
+  familleData?.enfant_prenom ||
+  "-";
 
-  const sexe =
-    famille?.enfant_sexe === "M"
-      ? "Fils"
-      : famille?.enfant_sexe === "F"
-      ? "Fille"
-      : "-";
+const mere = [
+  familleData?.mere?.nom || familleData?.mere_nom,
+  familleData?.mere?.prenom || familleData?.mere_prenom,
+]
+  .filter(Boolean)
+  .join(" ") || "-";
 
-  const region = famille?.village || "-";
+const sexe =
+  familleData?.nourrisson?.sexe === "M"
+    ? "Fils"
+    : familleData?.nourrisson?.sexe === "F"
+    ? "Fille"
+    : familleData?.enfant_sexe === "M"
+    ? "Fils"
+    : familleData?.enfant_sexe === "F"
+    ? "Fille"
+    : "-";
 
-  const dateNaissance = famille?.enfant_date_naissance
+const region =
+  familleData?.mere?.village?.nom ||
+  familleData?.village ||
+  "-";
+
+const dateNaissance =
+  familleData?.nourrisson?.date_naissance ||
+  familleData?.enfant_date_naissance
     ? new Date(
-        famille.enfant_date_naissance
+        familleData?.nourrisson?.date_naissance ||
+        familleData?.enfant_date_naissance
       ).toLocaleDateString("fr-FR")
     : "-";
 
-  const code = zakat.famille || "-";
+const code =
+  familleData?.id ||
+  zakat?.famille ||
+  "-";
 
   const causePrincipaleOptions = [
     {
@@ -690,3 +713,4 @@ const PopupModifierZakat = ({
 };
 
 export default PopupModifierZakat;
+

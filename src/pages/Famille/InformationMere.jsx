@@ -21,6 +21,7 @@ import { listVillages } from "../../lib/api/Parametres";
 import { loadCache } from "@/lib/offlineCache";
 
 
+
 const isFutureDate = (date) => {
   if (!date) return false;
 
@@ -74,6 +75,8 @@ useEffect(() => {
     motif_sortie: payload.motif_sortie ?? null,
     id_mere: payload.id_mere ?? null,
     coordinateur: payload.coordinateur ?? null,
+    sourceDraftClientId: draftFamille.clientId,
+
   });
 
   // Restaurer le nombre d'enfants
@@ -95,9 +98,7 @@ useEffect(() => {
   updateFamilyData,
   setNourrissonsCount,
 ]);
-
-  
- const {
+const {
   data: villagesData,
   isLoading: villagesLoading,
   isError: villagesError,
@@ -110,10 +111,12 @@ useEffect(() => {
       return response.data;
     } catch (error) {
       const cached = loadCache("villages");
+
       if (cached?.data) {
         console.log("📦 Villages chargés depuis le cache (fallback)");
         return cached.data;
       }
+
       throw error;
     }
   },

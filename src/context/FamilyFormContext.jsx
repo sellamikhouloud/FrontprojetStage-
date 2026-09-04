@@ -12,6 +12,8 @@ export function FamilyFormProvider({ children }) {
     motif_sortie: null,
     id_mere: null,
     coordinateur: null,
+  // Rempli uniquement quand on édite un brouillon existant 
+    sourceDraftClientId: null,
   });
 
   const updateMere = (data) => {
@@ -21,7 +23,7 @@ export function FamilyFormProvider({ children }) {
     }));
   };
 
-  // Met à jour les infos de l'enfant à l'index donné (0 = premier enfant)
+ 
   const updateNourrisson = (index, data) => {
     setFormData((prev) => {
       const nourrissons = [...prev.nourrissons];
@@ -30,9 +32,7 @@ export function FamilyFormProvider({ children }) {
     });
   };
 
-  // Redimensionne le tableau des nourrissons selon nb_enfants, en conservant
-  // les données déjà saisies pour les enfants existants (utile si l'utilisateur
-  // revient en arrière et change le nombre d'enfants)
+
   const setNourrissonsCount = (count) => {
     const safeCount = Math.max(1, Number(count) || 1);
     setFormData((prev) => {
@@ -56,6 +56,7 @@ export function FamilyFormProvider({ children }) {
       motif_sortie: null,
       id_mere: null,
       coordinateur: null,
+      sourceDraftClientId: null,
     });
   };
 
