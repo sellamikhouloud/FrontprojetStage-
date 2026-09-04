@@ -71,6 +71,28 @@ const queryClient = useQueryClient();
     return `${d}/${m}/${y}`;
   }
 
+ // Recherche versements : l'utilisateur tape JJ/MM/AAAA dans la SearchBar
+const [searchVersementText, setSearchVersementText] = useState("");
+const [debouncedSearchVersement, setDebouncedSearchVersement] = useState("");
+
+// Debounce : on attend que l'utilisateur arrête de taper avant d'interroger le backend
+useEffect(() => {
+  const timeout = setTimeout(() => {
+    setDebouncedSearchVersement(searchVersementText.trim());
+  }, 400);
+  return () => clearTimeout(timeout);
+}, [searchVersementText]);
+
+// Convertit "JJ/MM/AAAA" (ou "JJ-MM-AAAA") tapé en "AAAA-MM-JJ" pour le backend.
+// Retourne undefined si la date n'est pas complète/valide -> pas de filtre envoyé.
+function parseSearchToISO(text) {
+  if (!text) return undefined;
+  const match = text.match(/^(\d{2})[/-](\d{2})[/-](\d{4})$/);
+  if (!match) return undefined;
+  const [, d, m, y] = match;
+  return `${y}-${m}-${d}`;
+}
+
   function formatNombre(n) {
   if (n === null || n === undefined || Number.isNaN(n)) return "-";
   return Number(n).toLocaleString("fr-FR");
@@ -186,9 +208,7 @@ useEffect(() => {
   queryFn: () => getZakatDashboard().then((r) => r.data),
   enabled: isAdmin,
 });
-
-
- const {
+const {
   data: versementsData,
   isLoading: versementsLoading,
   isError: versementsError,
@@ -197,10 +217,18 @@ useEffect(() => {
   hasNextPage: hasNextVersementsPage,
   isFetchingNextPage: isFetchingNextVersementsPage,
 } = useInfiniteQuery({
-  queryKey: ["versements-solde", "infinite"],
+  queryKey: ["versements-solde", "infinite", debouncedSearchVersement],
 
-  queryFn: ({ pageParam = 1 }) =>
-    listVersementsSolde({ page: pageParam }).then((r) => r.data),
+  queryFn: ({ pageParam = 1 }) => {
+    const params = { page: pageParam };
+
+    const isoDate = parseSearchToISO(debouncedSearchVersement);
+    if (isoDate) {
+      params.date = isoDate; // AAAA-MM-JJ, jamais de slashes envoyés
+    }
+
+    return listVersementsSolde(params).then((r) => r.data);
+  },
 
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
@@ -395,6 +423,7 @@ const handleExportZakat = async () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  
   const filtersContent = (
     <div className="space-y-4">
       <div className="w-full">
@@ -690,10 +719,12 @@ const handleExportZakat = async () => {
   onClose={() => setOpenAlimenterSolde(false)}
   onSave={handleAlimenterSolde}
 />
-
-     <PopupHistoriqueVersements
+<PopupHistoriqueVersements
   open={isAdmin && showHistoriqueVersements}
-  onClose={() => setShowHistoriqueVersements(false)}
+  onClose={() => {
+    setShowHistoriqueVersements(false);
+    setSearchVersementText(""); // reset à la fermeture
+  }}
   versements={versements}
   loading={versementsLoading}
   error={versementsError}
@@ -705,6 +736,8 @@ const handleExportZakat = async () => {
   }}
   observerTarget={versementsObserverTarget}
   isFetchingNextPage={isFetchingNextVersementsPage}
+  searchValue={searchVersementText}
+  onSearchChange={setSearchVersementText}
 />
 
 <PopupDetailVersement
@@ -749,3 +782,4 @@ const handleExportZakat = async () => {
     </div>
   );
 }
+
