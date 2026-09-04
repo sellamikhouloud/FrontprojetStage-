@@ -51,12 +51,10 @@ export function usePrefetchOfflineData(role) {
       });
 
 
-    fetchAllPages((page) => listVillages({ page }))
-      .then((allResults) => {
-        saveCache("villages", { results: allResults, next: null });
-      })
-      .catch(() => {
-    
-      });
+   listVillages()
+  .then((response) => {
+    saveCache("villages", response.data);
+  })
+  .catch(() => {});
   }, [role]);
 }
