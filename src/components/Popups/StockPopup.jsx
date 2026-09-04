@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef , useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
@@ -18,12 +18,12 @@ import {
   modifierSeuil,
   updateProduit,
 } from "../../lib/api/stock";
-
 const StockPopup = ({
   initialProducts = [],
   onClose,
   onSaveProducts,
-  observerTarget,
+  fetchNextPage,
+  hasNextPage = false,
   isFetchingNextPage = false,
   canManageStock = false,
   currentUserId,
@@ -42,6 +42,36 @@ const StockPopup = ({
   const [backupProducts, setBackupProducts] = useState([]);
 
   const timerRef = useRef(null);
+const stockObserverInstance = useRef(null);
+
+const stockObserverTarget = useCallback(
+  (node) => {
+    // On nettoie toujours l'ancien observer avant d'en créer un nouveau
+    if (stockObserverInstance.current) {
+      stockObserverInstance.current.disconnect();
+      stockObserverInstance.current = null;
+    }
+
+    if (!node) return; // le div a été démonté
+
+    stockObserverInstance.current = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          hasNextPage &&
+          !isFetchingNextPage &&
+          fetchNextPage
+        ) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    stockObserverInstance.current.observe(node);
+  },
+  [hasNextPage, isFetchingNextPage, fetchNextPage]
+);
 
   const [showAddProduct, setShowAddProduct] = useState(false);
 
@@ -2588,10 +2618,10 @@ const payload = {
 
             {/* INFINITE SCROLL */}
 
-            {products.length > 0 && (
+                      {products.length > 0 && (
               <div
                 ref={
-                  observerTarget
+                  stockObserverTarget
                 }
                 className="h-1"
               />
