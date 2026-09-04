@@ -24,10 +24,10 @@ import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
 import { useLocation } from "react-router-dom";
 import { useQuery, useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
-import { listFamilles} from "@/lib/api/familles";
+import { listFamilles, getFamille } from "@/lib/api/familles";
 import { saveDraft, deleteDraft } from "@/lib/offlineDrafts";
 import { createVisite, getPreCreationVisite } from "../../lib/api/visites";
-import { saveCache, loadCache } from "@/lib/offlineCache";
+import { loadCache } from "@/lib/offlineCache";
 
 const KNOWN_FIELDS = [
   "famille",
@@ -598,6 +598,34 @@ useEffect(() => {
 });
 
 const listeDesFamilles = famillesBrutes.map(mapFamilleForPopup);
+// Si on arrive depuis un brouillon 
+
+useEffect(() => {
+  const isDraftPlaceholder = draft?.selectedFamille?.badges?.some(
+    (b) => b?.text === "Depuis un brouillon — non re-vérifié"
+  );
+  if (!isDraftPlaceholder) return;
+
+  const code = draft.selectedFamille.code;
+  if (!code) return;
+
+  let cancelled = false;
+
+  getFamille(code)
+    .then((response) => {
+      if (cancelled) return;
+      setSelectedFamille(mapFamilleForPopup(response.data));
+    })
+    .catch(() => {
+      // Hors ligne (ou famille introuvable) : on garde le placeholder
+      // minimal du brouillon, le formulaire reste utilisable normalement.
+    });
+
+  return () => {
+    cancelled = true;
+  };
+
+}, []);
 
   useEffect(() => {
   const timer = setTimeout(() => {
