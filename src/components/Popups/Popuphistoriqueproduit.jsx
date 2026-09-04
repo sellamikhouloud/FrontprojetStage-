@@ -1,6 +1,7 @@
 import { Plus, Minus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
+import Spinner from "../Spinner";
 
 /**
  * Popup Historique d'un produit — liste des mouvements +/- de quantité.
@@ -11,9 +12,11 @@ import quitter from "../../assets/quitter.svg";
  */
 export default function PopupHistoriqueProduit({
   open,
-  produit, // { nom, unite }
+  produit,
   historique = [],
   onClose,
+  observerTarget,
+  isFetchingNextPage,
 }) {
   if (!produit) return null;
 
@@ -111,7 +114,7 @@ export default function PopupHistoriqueProduit({
               </h2>
             </div>
 
-            {/* Liste des mouvements — seule cette partie scroll */}
+            {/* Liste des mouvements */}
             <div
               className="
                 space-y-3
@@ -165,8 +168,12 @@ export default function PopupHistoriqueProduit({
                           justify-center
                         "
                         style={{
-                          backgroundColor: isAjout ? "#DCFCE7" : "#FEE2E2",
-                          color: isAjout ? "#22C55E" : "#EF4444",
+                          backgroundColor: isAjout
+                            ? "#DCFCE7"
+                            : "#FEE2E2",
+                          color: isAjout
+                            ? "#22C55E"
+                            : "#EF4444",
                         }}
                       >
                         {isAjout ? (
@@ -181,6 +188,7 @@ export default function PopupHistoriqueProduit({
                         <p className="text-[14px] font-semibold text-[#202124] truncate">
                           {mvt.par}
                         </p>
+
                         <p className="text-[12px] text-[#6B7280] truncate">
                           Par {mvt.user} · {mvt.date}
                         </p>
@@ -188,19 +196,47 @@ export default function PopupHistoriqueProduit({
 
                       {/* Quantité */}
                       <p
-                        className="text-[15px] font-bold shrink-0 flex items-center gap-0.5"
-                        style={{ color: isAjout ? "#22C55E" : "#EF4444" }}
+                        className="
+                          text-[15px]
+                          font-bold
+                          shrink-0
+                          flex
+                          items-center
+                          gap-0.5
+                        "
+                        style={{
+                          color: isAjout
+                            ? "#22C55E"
+                            : "#EF4444",
+                        }}
                       >
                         {isAjout ? (
                           <Plus size={14} strokeWidth={3} />
                         ) : (
                           <Minus size={14} strokeWidth={3} />
                         )}
-                        {mvt.quantite} {mvt.unite || produit.unite}
+
+                        {mvt.quantite}{" "}
+                        {mvt.unite || produit.unite}
                       </p>
                     </div>
                   );
                 })
+              )}
+
+              {/* Sentinel pagination */}
+              {historique.length > 0 && (
+                <div
+                  ref={observerTarget}
+                  className="h-1 w-full"
+                />
+              )}
+
+              {/* Loader page suivante */}
+              {isFetchingNextPage && (
+                <div className="flex justify-center py-4">
+                  <Spinner />
+                </div>
               )}
             </div>
           </motion.div>
