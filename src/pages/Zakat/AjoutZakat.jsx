@@ -5,7 +5,8 @@ import CardPopup from "../../components/Cards/Card2";
 import OptionsMenu from "../../components/Containers/OptionsMenu";
 import SelectorWithAction from "../../components/Forms/SelectorWithAction";
 import { useState, useEffect, useRef } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+
+import { useQuery,useInfiniteQuery, keepPreviousData } from "@tanstack/react-query";
 
 import SelectInput2 from "../../components/Containers/ChoiceContainer2";
 import TextArea from "../../components/Containers/Textarea";
@@ -33,6 +34,7 @@ import { getSoldeActuel , createAideZakat , getDerniereZakatFamille,} from "@/li
 
 import { saveCache, loadCache } from "@/lib/offlineCache";
 import { saveDraft } from "@/lib/offlineDrafts";
+import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
 
 
 
@@ -159,15 +161,16 @@ function filterCachedFamilles(cachedData, searchTerm) {
   if (!term) return cachedData;
 
   const filtered = list.filter((f) => {
-    const haystack = [
-      f?.mere?.nom,
-      f?.mere?.prenom,
-      f?.nourrisson?.prenom,
-      String(f?.id ?? ""),
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
+  const haystack = [
+  f?.mere?.nom,
+  f?.mere?.prenom,
+  f?.nourrisson?.prenom,
+  f?.mere?.village?.nom,
+  String(f?.id ?? ""),
+]
+  .filter(Boolean)
+  .join(" ")
+  .toLowerCase();
     return haystack.includes(term);
   });
 
@@ -455,7 +458,7 @@ const {
   hasNextPage: hasNextFamillesPage,
   isFetchingNextPage: isFetchingNextFamillesPage,
 } = useInfiniteQuery({
-  queryKey: ["familles-popup", "infinite", searchFamille],
+  queryKey: ["familles-popup", "infinite", debouncedSearchFamille],
 
  queryFn: async ({ pageParam = 1 }) => {
   const params = { page: pageParam , statut: "active"};
@@ -486,9 +489,11 @@ const {
   getNextPageParam: (lastPage, allPages) =>
     lastPage?.next ? (allPages?.length ?? 0) + 1 : undefined,
 
-  initialPageParam: 1,
-  keepPreviousData: true,
+    initialPageParam: 1,
+  placeholderData: keepPreviousData,
   enabled: openFamilles,
+    networkMode: "always",
+
 });
 
 const famillesBrutes = (famillesResponse?.pages ?? []).flatMap((page) =>
