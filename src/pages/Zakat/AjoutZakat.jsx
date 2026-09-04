@@ -596,19 +596,13 @@ useEffect(() => {
   const handleSearch = () => {
     setOpenFamilles(true);
   };
-
-  const handleOptionSelect = (value) => {
-    if (value === "changer") {
-      setOpenFamilles(true);
-    } else if (value === "voir") {
-      navigate(`/famille/${selectedFamille.id}`, {
-        state: {
-          from: "/ajout-zakat",
-          draft: { selectedFamille, date, confirmed },
-        },
-      });
-    }
-  };
+const handleOptionSelect = (value) => {
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    handleGoToFamilleSelectionnee();
+  }
+};
 
 
   const handleGoToFamilleSelectionnee = () => {
@@ -773,7 +767,7 @@ useEffect(() => {
           <>
             {/* Mobile */}
             <div className="relative block lg:hidden mt-4">
-                <div className="cursor-pointer" onClick={handleGoToFamilleSelectionnee}>
+              <div className="cursor-pointer" onClick={() => setOpenOptions((prev) => !prev)}>
                 <CardPopup
                   enfant={selectedFamille.enfant}
                   sexe={selectedFamille.sexe}
@@ -794,7 +788,7 @@ useEffect(() => {
 
             {/* Desktop */}
             <div className="relative hidden lg:block">
-                 <div className="cursor-pointer" onClick={handleGoToFamilleSelectionnee}>
+              <div className="cursor-pointer" onClick={() => setOpenOptions((prev) => !prev)}>
                 <Card
                   enfant={selectedFamille.enfant}
                   mere={selectedFamille.mere}
