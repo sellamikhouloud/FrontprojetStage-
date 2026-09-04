@@ -180,7 +180,16 @@ const DistributionCard = ({
                       whitespace-nowrap
                     "
                   >
-                    {product.name}
+                    {product.name?.toLowerCase().startsWith("lait") ? (
+                      <>
+                        {product.name.replace(/(\d+g)$/i, "").trim()}
+                        <span className="text-[12px] flex justify-center pt-1">
+                          {product.name.match(/(\d+g)$/i)?.[1]}
+                        </span>
+                      </>
+                    ) : (
+                      product.name
+                    )}
                   </span>
 
                   {/* Quantity + unit */}
@@ -190,7 +199,6 @@ const DistributionCard = ({
                       items-baseline
                       justify-center
                       gap-[2px]
-                      mt-[1px]
                     "
                   >
                     <span
