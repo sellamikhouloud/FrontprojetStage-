@@ -538,7 +538,7 @@ useEffect(() => {
   badges: [
     famille?.statut_nutritionnel_bebe === "mam" && { type: "mam", text: "MAM nourrisson" },
     famille?.statut_nutritionnel_bebe === "mas" && { type: "mas", text: "MAS nourrisson" },
-    famille?.statut_nutritionnel_bebe === "normale" && { type: "mere", text: "Bébé normal" },
+    famille?.statut_nutritionnel_bebe === "normale" && { type: "mere", text: "Nourrisson normal" },
     famille?.statut_nutritionnel_mere === "normale" && { type: "mere", text: "Mère normale" },
     famille?.statut_nutritionnel_mere === "a_risque" && { type: "risque", text: "Mère à risque" },
     famille?.statut_nutritionnel_mere === "malnutrition" && { type: "mas", text: "Mère malnutrie" },
