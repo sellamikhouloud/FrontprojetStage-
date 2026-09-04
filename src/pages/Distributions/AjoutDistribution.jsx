@@ -862,28 +862,34 @@ const displayedFamillesPopup = familleParCode ? [familleParCode] : listeDesFamil
     });
   };
 
-   const handleOptionSelect = (value) => {
-    if (value === "changer") {
-      setOpenFamilles(true);
-    } else if (value === "voir") {
-      navigate(`/famille/${selectedFamille.id}`, {
-        state: {
-          from: "/ajout-distribution",
-          draft: {
-            selectedFamille,
-            products,
-            date,
-            confirmed,
-            laitType,
-            selectedLaitOption,
-            boxes,
-          },
-          // Si on était déjà en mode modification, on garde le contexte au retour
-          distributionAModifier: isEditMode ? distributionAModifier : undefined,
-        },
-      });
-    }
-  };
+
+  const handleGoToFamilleSelectionnee = () => {
+  if (!selectedFamille?.id) return;
+
+  navigate(`/famille/${selectedFamille.id}`, {
+    state: {
+      fromPage: "/ajout-distribution",
+      restoreDistributionDraft: {
+        selectedFamille,
+        products,
+        date,
+        confirmed,
+        laitType,
+        selectedLaitOption,
+        boxes,
+      },
+      // Garde le contexte du mode modification si on y était déjà
+      distributionAModifier: isEditMode ? distributionAModifier : undefined,
+    },
+  });
+};
+  const handleOptionSelect = (value) => {
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    handleGoToFamilleSelectionnee();
+  }
+};
 
 useEffect(() => {
   if (!isEditMode || !distributionAModifier) return;
@@ -907,6 +913,27 @@ useEffect(() => {
     produits: initialProducts,
   };
 }, [isEditMode, distributionAModifier]);
+
+useEffect(() => {
+  const restoredDraft = location.state?.restoreDistributionDraft;
+  if (!restoredDraft) return;
+
+  if (restoredDraft.selectedFamille) setSelectedFamille(restoredDraft.selectedFamille);
+  if (restoredDraft.products) setProducts(withDefaultIcon(restoredDraft.products));
+  if (restoredDraft.date) {
+    setDate(
+      restoredDraft.date instanceof Date
+        ? restoredDraft.date
+        : new Date(restoredDraft.date)
+    );
+  }
+  if (typeof restoredDraft.confirmed === "boolean") setConfirmed(restoredDraft.confirmed);
+  if (restoredDraft.laitType !== undefined) setLaitType(restoredDraft.laitType);
+  if (restoredDraft.selectedLaitOption !== undefined) setSelectedLaitOption(restoredDraft.selectedLaitOption);
+  if (restoredDraft.boxes !== undefined) setBoxes(restoredDraft.boxes);
+
+  navigate(location.pathname, { replace: true, state: {} });
+}, [location.state, navigate, location.pathname]);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -1284,3 +1311,4 @@ useEffect(() => {
     </div>
   );
 }
+
