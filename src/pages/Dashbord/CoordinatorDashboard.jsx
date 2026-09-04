@@ -23,6 +23,8 @@ import Spinner from "../../components/Spinner";
 import { getDashboard } from "../../lib/api/dashboard";
 import { useAuth } from "../../components/Providers/AuthProvider";
 
+import { usePrefetchOfflineData } from "@/hooks/usePrefetchOfflineData";
+
 const CoordinatorDashboard = () => {
   const navigate = useNavigate();
 
@@ -31,6 +33,8 @@ const CoordinatorDashboard = () => {
   // =====================================================
 
   const { user, ready } = useAuth();
+  
+  usePrefetchOfflineData(user?.role);
 
   // =====================================================
   // STATES

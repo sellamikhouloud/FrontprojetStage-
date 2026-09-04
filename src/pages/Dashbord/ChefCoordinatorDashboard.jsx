@@ -40,6 +40,8 @@ import { getDashboard } from "../../lib/api/dashboard";
 
 import { useAuth } from "../../components/Providers/AuthProvider";
 
+import { usePrefetchOfflineData } from "@/hooks/usePrefetchOfflineData";
+
 const ChefCoordinatorDashboard = () => {
   const navigate = useNavigate();
 
@@ -48,6 +50,8 @@ const ChefCoordinatorDashboard = () => {
   // =====================================================
 
   const { user, ready } = useAuth();
+  
+  usePrefetchOfflineData(user?.role);
 
   // =====================================================
   // STATES
