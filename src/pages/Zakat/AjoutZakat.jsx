@@ -149,9 +149,7 @@ function parseBackendErrors(data) {
   return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
 }
 
-// Approximates the backend's search, client-side, against the family list
-// already cached by the dashboard prefetch — used only when offline and
-// the real search can't run.
+
 function filterCachedFamilles(cachedData, searchTerm) {
   const list = Array.isArray(cachedData) ? cachedData : cachedData?.results ?? [];
 
@@ -394,12 +392,7 @@ const extractErrorMessage = (error) => {
       mappedFieldErrors[localKey] = message;
     });
 
-    // The dedicated "famille" ErrorMessage slot only renders when NO family
-    // is selected (see the JSX: `{!selectedFamille && ...}`). But a backend
-    // rejection of the famille reference itself always happens WITH a
-    // family already selected — so that slot is invisible exactly when
-    // it's needed. Surface it via the general error banner too, which is
-    // always rendered below the family card, so it's never console-only.
+
     let finalGeneralMessage = generalMessage;
     if (mappedFieldErrors.famille && selectedFamille) {
       finalGeneralMessage = finalGeneralMessage
@@ -477,9 +470,7 @@ const {
 
   try {
     const response = await listFamilles(params);
-    // No saveCache here — the dashboard prefetch already keeps
-    // "familles-popup" warm on login, and a filtered result here
-    // shouldn't silently overwrite that general cache.
+
     return response.data;
   } catch (error) {
     if (pageParam === 1) {
@@ -530,8 +521,7 @@ useEffect(() => {
   return () => observer.disconnect();
 }, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
 
-  // Mapping vers le format attendu par le popup / les cartes
-  // (même logique que dans "Liste des familles" et "Ajout Visite")
+
  const mapFamilleForPopup = (famille) => ({
   id: famille.id,
   enfant: famille.nourrisson?.prenom,
@@ -548,7 +538,7 @@ useEffect(() => {
   badges: [
     famille?.statut_nutritionnel_bebe === "mam" && { type: "mam", text: "MAM nourrisson" },
     famille?.statut_nutritionnel_bebe === "mas" && { type: "mas", text: "MAS nourrisson" },
-    famille?.statut_nutritionnel_bebe === "normale" && { type: "mere", text: "Nourrisson normal" },
+    famille?.statut_nutritionnel_bebe === "normale" && { type: "mere", text: "Bébé normal" },
     famille?.statut_nutritionnel_mere === "normale" && { type: "mere", text: "Mère normale" },
     famille?.statut_nutritionnel_mere === "a_risque" && { type: "risque", text: "Mère à risque" },
     famille?.statut_nutritionnel_mere === "malnutrition" && { type: "mas", text: "Mère malnutrie" },
@@ -559,6 +549,35 @@ useEffect(() => {
 const listeDesFamilles = familleParCode
   ? [mapFamilleForPopup(familleParCode)]
   : famillesBrutes.map(mapFamilleForPopup);
+
+  // Si on arrive depuis un brouillon 
+
+useEffect(() => {
+  const isDraftPlaceholder = draft?.selectedFamille?.badges?.some(
+    (b) => b?.text === "Depuis un brouillon — non re-vérifié"
+  );
+  if (!isDraftPlaceholder) return;
+
+  const code = draft.selectedFamille.code;
+  if (!code) return;
+
+  let cancelled = false;
+
+  getFamille(code)
+    .then((response) => {
+      if (cancelled) return;
+      setSelectedFamille(mapFamilleForPopup(response.data));
+    })
+    .catch(() => {
+      // Hors ligne (ou famille introuvable)
+   
+    });
+
+  return () => {
+    cancelled = true;
+  };
+
+}, []);
 
 useEffect(() => {
   const timer = setTimeout(() => {
