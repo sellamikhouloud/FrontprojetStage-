@@ -634,35 +634,13 @@ const handleGoToFamilleSelectionnee = () => {
   const handleSearch = () => {
     setOpenFamilles(true);
   };
-
-  const handleOptionSelect = (value) => {
-    if (value === "changer") {
-      setOpenFamilles(true);
-    } else if (value === "voir") {
-      navigate(`/famille/${selectedFamille.id}`, {
-        state: {
-          from: "/ajout-visite",
-          draft: {
-            selectedFamille,
-            date,
-            mois,
-            numeroCycle,
-            poidsNourrisson,
-            tailleNourrisson,
-            muacNourrisson,
-            positionNourrisson,
-            observationsNourrisson,
-            poidsMere,
-            tailleMere,
-            muacMere,
-            observationsMere,
-            evaluationVisuelle,
-            hemoglobine,
-          },
-        },
-      });
-    }
-  };
+const handleOptionSelect = (value) => {
+  if (value === "changer") {
+    setOpenFamilles(true);
+  } else if (value === "voir") {
+    handleGoToFamilleSelectionnee();
+  }
+};
 
   // Pré-création : appelée dès qu'une famille est sélectionnée
 
@@ -865,7 +843,10 @@ useEffect(() => {
           <>
             {/* Mobile */}
             <div className="relative block lg:hidden mt-4">
-             <div className="cursor-pointer" onClick={handleGoToFamilleSelectionnee}>
+             <div
+    className="cursor-pointer"
+    onClick={() => setOpenOptions((prev) => !prev)}
+  >
                 <CardPopup
                   enfant={selectedFamille.enfant}
                   mere={selectedFamille.mere} 
@@ -887,7 +868,10 @@ useEffect(() => {
 
             {/* Desktop */}
             <div className="relative hidden lg:block">
-                  <div className="cursor-pointer" onClick={handleGoToFamilleSelectionnee}>
+                 <div
+    className="cursor-pointer"
+    onClick={() => setOpenOptions((prev) => !prev)}
+  >
                 <Card
                   enfant={selectedFamille.enfant}
                   mere={selectedFamille.mere}
@@ -1376,4 +1360,5 @@ useEffect(() => {
     </div>
   );
 }
+
 
