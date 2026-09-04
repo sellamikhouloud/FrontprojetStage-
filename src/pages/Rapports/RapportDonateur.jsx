@@ -174,7 +174,7 @@ const RapportBilan = () => {
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar role="admin" />
+      <Sidebar  />
 
       <main className="flex-1 h-screen overflow-hidden px-4 md:px-6 min-[1000px]:px-8 pt-16 min-[1000px]:pt-6 pb-6 flex flex-col">
         {/* Navigation et Onglets */}
