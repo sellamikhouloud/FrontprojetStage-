@@ -3,7 +3,6 @@ import { Clock, MessageSquare } from "lucide-react";
 import quitter from "../../assets/quitter.svg";
 import SearchBar from "../Filter/Searchbar";
 import Spinner from "../Spinner";
-
 export default function PopupHistoriqueVersements({
   open,
   versements = [],
@@ -11,15 +10,10 @@ export default function PopupHistoriqueVersements({
   onVersementClick,
   observerTarget,
   isFetchingNextPage,
+  searchValue,
+  onSearchChange,
 }) {
-  const [search, setSearch] = useState("");
-
   if (!open) return null;
-
-  const filtered = versements.filter((v) =>
-    v.date?.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
     <div
       className="
@@ -82,8 +76,8 @@ export default function PopupHistoriqueVersements({
           <div className="mt-5">
             <SearchBar
               placeholder="Entrer la date"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              value={searchValue}
+              onChange={(e) => onSearchChange?.(e.target.value)}
               showFilter={false}
             />
           </div>
@@ -100,12 +94,12 @@ export default function PopupHistoriqueVersements({
           "
         >
           <div className="flex flex-col gap-3">
-            {filtered.length === 0 ? (
+            {versements.length === 0 ? (
               <p className="text-center text-[14px] text-[#6B7280] py-8">
                 Aucun versement trouvé.
               </p>
             ) : (
-              filtered.map((v) => (
+             versements.map((v) => (
                 <div
   key={v.id}
   onClick={() => onVersementClick?.(v)}
@@ -164,7 +158,7 @@ export default function PopupHistoriqueVersements({
               ))
             )}
          
-            {filtered.length > 0 && <div ref={observerTarget} className="h-1" />}
+           {versements.length > 0 && <div ref={observerTarget} className="h-1" />}
 
             {isFetchingNextPage && (
               <div className="flex justify-center py-4">
@@ -180,5 +174,6 @@ export default function PopupHistoriqueVersements({
     </div>
   );
 }
+
 
 
