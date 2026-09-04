@@ -28,7 +28,7 @@ import { useQuery } from "@tanstack/react-query";
 import { listFamilles } from "@/lib/api/familles";
 import { saveDraft } from "@/lib/offlineDrafts";
 import { createVisite, getPreCreationVisite } from "../../lib/api/visites";
-import { saveCache, loadCache } from "@/lib/offlineCache";
+import { loadCache } from "@/lib/offlineCache";
 
 import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
 
@@ -373,7 +373,7 @@ const [offlinePending, setOfflinePending] = useState(false);
     if (!error.response) {
       try {
         await saveDraft("visite", payload);
-        setResultatVisite(null); // no z-scores yet, backend hasn't computed them
+        setResultatVisite(null); 
         setOfflinePending(true);
         setShowSuccessPopup(true);
       } catch (draftError) {
@@ -461,6 +461,7 @@ const [offlinePending, setOfflinePending] = useState(false);
 
   const [openFamilles, setOpenFamilles] = useState(false);
   const [openOptions, setOpenOptions] = useState(false);
+  const [searchFamille, setSearchFamille] = useState("");
   
 
 
@@ -500,8 +501,7 @@ const {
 
   const famillesBrutes = famillesData?.results ?? famillesData ?? [];
 
-  // Mapping vers le format attendu par le popup / les cartes
-  // (même logique que dans la page "Liste des familles")
+  
   const listeDesFamilles = famillesBrutes.map((famille) => ({
     id: famille.id,
     enfant: famille.nourrisson?.prenom,
@@ -546,6 +546,18 @@ const {
       },
     ].filter(Boolean),
   }));
+
+  const displayedFamillesPopup = (() => {
+  const term = searchFamille.trim().toLowerCase();
+  if (!term) return listeDesFamilles;
+  return listeDesFamilles.filter((f) => {
+    const haystack = [f.mere, f.enfant, f.code]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+    return haystack.includes(term);
+  });
+})();
 
 
   const familyOptions = [
@@ -1264,13 +1276,15 @@ const handleManualFamilleCode = (code) => {
       />
     </main>
 
-    <PopupListeFamilles
+<PopupListeFamilles
   open={openFamilles}
   onClose={() => setOpenFamilles(false)}
-  familles={listeDesFamilles}
+  familles={displayedFamillesPopup}
   loading={famillesLoading}
-  error={famillesError}
+  isError={famillesError}
   onRetry={refetchFamilles}
+  search={searchFamille}
+  onSearchChange={setSearchFamille}
   onSelectFamille={(famille) => {
     setSelectedFamille(famille);
     setOpenFamilles(false);
