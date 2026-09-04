@@ -19,6 +19,7 @@ import { useFamilyForm } from "../../context/FamilyFormContext";
 import { searchMere } from "../../lib/api/familles";
 import { listVillages } from "../../lib/api/Parametres";
 import { loadCache } from "@/lib/offlineCache";
+import { fetchAllPages } from "@/hooks/usePrefetchOfflineData"; 
 
 
 const isFutureDate = (date) => {
@@ -96,8 +97,7 @@ useEffect(() => {
   setNourrissonsCount,
 ]);
 
-  
- const {
+const {
   data: villagesData,
   isLoading: villagesLoading,
   isError: villagesError,
@@ -106,8 +106,10 @@ useEffect(() => {
   networkMode: "always",
   queryFn: async () => {
     try {
-      const response = await listVillages();
-      return response.data;
+     
+   
+      const allResults = await fetchAllPages((page) => listVillages({ page }));
+      return { results: allResults, next: null };
     } catch (error) {
       const cached = loadCache("villages");
       if (cached?.data) {
