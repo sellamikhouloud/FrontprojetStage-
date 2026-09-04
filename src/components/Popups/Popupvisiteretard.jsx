@@ -139,48 +139,55 @@ const PopupRetard = ({
       region = String(mere.village);
     }
 
-    /* =========================
-       Badges
-       ========================= */
+/* =========================
+   Badges
+   ========================= */
 
-    const badges = [];
+const badges = [];
 
-    /*
-     * MAS du bébé
-     */
-    if (
-      famille.statut_nutritionnel_bebe === "mas"
-    ) {
-      badges.push({
-        type: "mas",
-        text: "MAS",
-      });
-    }
+/*
+ * MAS du bébé
+ */
+if (
+  famille.statut_nutritionnel_bebe === "mas"
+) {
+  badges.push({
+    type: "mas",
+    text: "MAS nourrisson",
+  });
+}
 
-    /*
-     * Statut nutritionnel de la mère
-     */
-    if (
-      famille.statut_nutritionnel_mere
-    ) {
-      badges.push({
-        type: famille.statut_nutritionnel_mere,
-        text: famille.statut_nutritionnel_mere,
-      });
-    }
+/*
+ * Statut nutritionnel de la mère
+ */
+if (
+  famille.statut_nutritionnel_mere
+) {
+  badges.push({
+    type: famille.statut_nutritionnel_mere,
+    text:
+      famille.statut_nutritionnel_mere === "normale"
+        ? "Mère normale"
+        : famille.statut_nutritionnel_mere === "a_risque"
+        ? "Mère à risque"
+        : famille.statut_nutritionnel_mere === "malnutrition"
+        ? "Mère malnutrie"
+        : famille.statut_nutritionnel_mere,
+  });
+}
 
-    /*
-     * Retard
-     *
-     * IMPORTANT :
-     * le type doit être "retard"
-     * car CardPopup utilise ce type
-     * pour mettre le badge sur une ligne séparée.
-     */
-    badges.push({
-      type: "retard",
-      text: "Visite en retard",
-    });
+/*
+ * Retard
+ *
+ * IMPORTANT :
+ * le type doit être "retard"
+ * car CardPopup utilise ce type
+ * pour mettre le badge sur une ligne séparée.
+ */
+badges.push({
+  type: "retard",
+  text: "Visite en retard",
+});
 
     return {
       sexe,
