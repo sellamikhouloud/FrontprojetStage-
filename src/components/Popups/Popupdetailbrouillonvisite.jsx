@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 import InfoCard from "../Containers/AfficherContainer";
 import AfficherMesure from "../Containers/AfficherMesure";
 import Button from "../Button/Button";
+import Card from "../Cards/Card";
+import CardPopup from "../Cards/Card2";
 
 import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
@@ -11,6 +13,8 @@ import DeleteIcon from "../../assets/Delete.svg";
 
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
+
+import { getFamille } from "../../lib/api/familles";
 
 const MOIS_LABELS = {
   janvier: "Janvier",
@@ -39,11 +43,7 @@ const formatDate = (date) => {
   return `${d}/${m}/${y}`;
 };
 
-// Detail popup for a VISITE DRAFT specifically — not a real, already-created
-// visite. Deliberately separate from PopupDetailVisite: a draft has no
-// numero_visite, no z-scores (score_z_pa/ta/pt), no statut_nutritionnel, and
-// no audit trail — all of those are computed/assigned by the backend at
-// creation time, which hasn't happened yet for a draft sitting in IndexedDB.
+
 export default function PopupDetailBrouillonVisite({
   open,
   onClose,
@@ -52,6 +52,39 @@ export default function PopupDetailBrouillonVisite({
   onDelete,
 }) {
   const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [familleData, setFamilleData] = useState(null);
+   const [familleLoading, setFamilleLoading] = useState(false);
+  
+  
+  
+  
+      useEffect(() => {
+    if (!open || !draft) return;
+  
+    const code = draft.payload?.famille;
+  
+    if (!code) {
+      setFamilleData(null);
+      return;
+    }
+  
+    const loadFamille = async () => {
+      try {
+        setFamilleLoading(true);
+  
+        const response = await getFamille(code);
+  
+        setFamilleData(response.data);
+      } catch (error) {
+        console.error("Erreur récupération famille :", error);
+        setFamilleData(null);
+      } finally {
+        setFamilleLoading(false);
+      }
+    };
+  
+    loadFamille();
+  }, [open, draft]);
 
   if (!open || !draft) return null;
 
@@ -67,6 +100,54 @@ export default function PopupDetailBrouillonVisite({
       : payload.mesure_couchee === false
       ? "Debout"
       : "-";
+
+      
+const familleCard = familleData
+  ? {
+      id: familleData.id,
+      enfant: familleData.nourrisson?.prenom,
+      mere: `${familleData.mere?.nom ?? ""} ${familleData.mere?.prenom ?? ""}`,
+      sexe:
+        familleData.nourrisson?.sexe === "M"
+          ? "Fils"
+          : familleData.nourrisson?.sexe === "F"
+          ? "Fille"
+          : "-",
+      region: familleData.mere?.village?.nom ?? "-",
+      naissance: familleData.nourrisson?.date_naissance,
+      code: familleData.id,
+      badges: [
+        familleData.statut_nutritionnel_bebe === "mam" && {
+          type: "mam",
+          text: "MAM nourrisson",
+        },
+        familleData.statut_nutritionnel_bebe === "mas" && {
+          type: "mas",
+          text: "MAS nourrisson",
+        },
+        familleData.statut_nutritionnel_bebe === "normale" && {
+          type: "mere",
+          text: "Nourrisson normal",
+        },
+        familleData.statut_nutritionnel_mere === "normale" && {
+          type: "mere",
+          text: "Mère normale",
+        },
+        familleData.statut_nutritionnel_mere === "a_risque" && {
+          type: "risque",
+          text: "Mère à risque",
+        },
+        familleData.statut_nutritionnel_mere === "malnutrition" && {
+          type: "mas",
+          text: "Mère malnutrie",
+        },
+        familleData.est_visite_en_retard && {
+          type: "retard",
+          text: "Visite en retard",
+        },
+      ].filter(Boolean),
+    }
+  : null;
 
   return (
     <AnimatePresence>
@@ -148,6 +229,36 @@ export default function PopupDetailBrouillonVisite({
 
           {/* Pas de carte famille enrichie — un brouillon ne connaît que le
               code, pas le prénom/village/etc. Affiché en simple texte. */}
+
+                 {familleCard ? (
+  <>
+    {/* MOBILE */}
+    <div className="block lg:hidden mt-4">
+      <CardPopup
+        enfant={familleCard.enfant}
+        mere={familleCard.mere}
+        sexe={familleCard.sexe}
+        region={familleCard.region}
+        naissance={familleCard.naissance}
+        code={familleCard.code}
+        badges={familleCard.badges}
+      />
+    </div>
+
+    {/* DESKTOP */}
+    <div className="hidden lg:block mt-4">
+      <Card
+        enfant={familleCard.enfant}
+        mere={familleCard.mere}
+        sexe={familleCard.sexe}
+        region={familleCard.region}
+        naissance={familleCard.naissance}
+        code={familleCard.code}
+        badges={familleCard.badges}
+      />
+    </div>
+  </>
+) : (
           <div
             className="rounded-[15px] px-4 py-3 flex items-center justify-between"
             style={{ backgroundColor: "#FFE6EC" }}
@@ -157,6 +268,7 @@ export default function PopupDetailBrouillonVisite({
               {payload.famille || "-"}
             </span>
           </div>
+          )}
 
           {/* ==================== DESKTOP ==================== */}
           <div className="hidden sm:grid sm:grid-cols-2 gap-4 mt-4">
