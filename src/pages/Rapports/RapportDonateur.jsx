@@ -16,7 +16,7 @@ import DistributionItem from "../../components/Report/DistributionItem";
 import TextArea from "../../components/Containers/Textarea";
 import Spinner from "../../components/Spinner";
 import { getRapportBilanDonateur, validerRapport, genererPdfRapport } from "@/lib/api/Rapport";
-import { getPhoto , getBilanCandidates } from "@/lib/api/galerie";
+import { getPhoto , getBilanCandidates } from "@/lib/api/Galerie";
 
 const MONTH_NAMES = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -551,4 +551,3 @@ useEffect(() => {
 };
 
 export default RapportBilan;
-
