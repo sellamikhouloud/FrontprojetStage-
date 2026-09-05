@@ -611,7 +611,7 @@ const isSuperviseParMoi =
         />
 
         <div className="mt-4">
-          {isSuperviseParMoi ? (
+          {isSuperviseParMoi && famille?.statut !== "sortie" ?  (
             <NavigationHeader
               title="Fiche famille"
               type="edit"
