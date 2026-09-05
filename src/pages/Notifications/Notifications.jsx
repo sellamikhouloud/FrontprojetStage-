@@ -115,6 +115,20 @@ const NotificationsPage = () => {
     }
   };
 
+  const getNotificationMessage = (notification) => {
+  const message = notification.message || "";
+
+  if (
+    (notification.type === "visite_retard" ||
+      notification.type === "malnutrition") &&
+    notification.famille
+  ) {
+    return `${message} (Code famille : ${notification.famille})`;
+  }
+
+  return message;
+};
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <Sidebar hideOnMobile />
@@ -239,11 +253,11 @@ const NotificationsPage = () => {
             notifications?.length > 0 &&
             notifications.map((notification) => (
               <NotificationCard
-                key={notification.id}
-                type={notification.type}
-                message={notification.message}
-                onClick={() => handleNotificationClick(notification)}
-              />
+      key={notification.id}
+      type={notification.type}
+      message={getNotificationMessage(notification)}
+      onClick={() => handleNotificationClick(notification)}
+    />
             ))}
 
           {!isLoading && !isError && notifications?.length > 0 && (
