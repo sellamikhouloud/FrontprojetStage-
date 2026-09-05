@@ -19,6 +19,7 @@ import { useFamilyForm } from "../../context/FamilyFormContext";
 import { searchMere } from "../../lib/api/familles";
 import { listVillages } from "../../lib/api/Parametres";
 import { loadCache } from "@/lib/offlineCache";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 
 
@@ -51,53 +52,73 @@ export default function InformationMere() {
   resetFamilyForm,
 } = useFamilyForm();
 
-  const mere = formData.mere;
-  const draftFamille = location.state?.draftFamille;
+const { user, ready } = useAuth();
+const role = user?.role ?? null;
+const isCoordinateur = role === "coordinator" || role === "chef_coordinator";
+
+const mere = formData.mere;
+const draftFamille = location.state?.draftFamille;
 const hydratedDraftRef = useRef(false);
 
 useEffect(() => {
-  if (!draftFamille || hydratedDraftRef.current) return;
+  if (hydratedDraftRef.current) return;
+
+  // CAS 1 : brouillon → ne dépend pas du rôle
+  if (draftFamille) {
+    hydratedDraftRef.current = true;
+
+    const payload = draftFamille.payload || {};
+
+    resetFamilyForm();
+
+    updateMere({
+      ...(payload.mere || {}),
+      photo: draftFamille.files?.photo ?? null,
+    });
+
+    updateFamilyData({
+      date_entree: payload.date_entree ?? null,
+      statut: payload.statut ?? "active",
+      date_sortie: payload.date_sortie ?? null,
+      motif_sortie: payload.motif_sortie ?? null,
+      id_mere: payload.id_mere ?? null,
+      coordinateur: payload.coordinateur ?? null,
+      sourceDraftClientId: draftFamille.clientId,
+      returnTo: location.state?.returnTo || "/liste-famille",
+    });
+
+    setNourrissonsCount(
+      payload.nourrissons?.length ||
+      payload.mere?.nb_enfants ||
+      1
+    );
+
+    (payload.nourrissons || []).forEach((nourrisson, index) => {
+      updateNourrisson(index, nourrisson);
+    });
+
+    return;
+  }
+
+  // ── CAS 2 : entrée directe → dépend du rôle, attendre useAuth ─────
+  if (!ready) return; 
 
   hydratedDraftRef.current = true;
 
-  const payload = draftFamille.payload || {};
-
-  resetFamilyForm();
-
-  // Restaurer les informations de la mère
-  updateMere(payload.mere || {});
-
-  // Restaurer les informations générales de la famille
   updateFamilyData({
-    date_entree: payload.date_entree ?? null,
-    statut: payload.statut ?? "active",
-    date_sortie: payload.date_sortie ?? null,
-    motif_sortie: payload.motif_sortie ?? null,
-    id_mere: payload.id_mere ?? null,
-    coordinateur: payload.coordinateur ?? null,
-    sourceDraftClientId: draftFamille.clientId,
-
-  });
-
-  // Restaurer le nombre d'enfants
-  setNourrissonsCount(
-    payload.nourrissons?.length ||
-    payload.mere?.nb_enfants ||
-    1
-  );
-
-  // Restaurer les informations des nourrissons
-  (payload.nourrissons || []).forEach((nourrisson, index) => {
-    updateNourrisson(index, nourrisson);
+    returnTo: isCoordinateur ? "/dashboard" : "/liste-famille",
   });
 }, [
   draftFamille,
+  ready,
+  isCoordinateur,
   resetFamilyForm,
   updateMere,
   updateNourrisson,
   updateFamilyData,
   setNourrissonsCount,
 ]);
+
 const {
   data: villagesData,
   isLoading: villagesLoading,
@@ -232,10 +253,8 @@ const {
     });
   }
 };
-    // Simulation du rôle — à remplacer plus tard par le vrai contexte d'auth
-const role = "admin";
-// const role = "coordinateur"; 
-const isAdmin = role === "admin";
+    
+
 
   return (
     <div className="flex h-screen overflow-hidden bg-white">
@@ -282,11 +301,14 @@ const isAdmin = role === "admin";
           <div className="min-h-full flex flex-col justify-center">
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
           {/* Header */}
-          <PageHeader
-            leftTitle="Annuler"
-            showRight={false}
-            onBack={() => navigate("/liste-famille")}
-          />
+        <PageHeader
+        leftTitle="Annuler"
+        showRight={false}
+        onBack={() => {
+        resetFamilyForm();
+        navigate(formData.returnTo || "/liste-famille");
+        }}
+        />
 
           {/* Page Title */}
           <h1
