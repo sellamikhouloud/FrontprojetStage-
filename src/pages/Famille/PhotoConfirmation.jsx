@@ -31,7 +31,6 @@ function parseBackendErrors(data, parentLabel = "") {
   if (typeof data === "string") {
     return [parentLabel ? `${parentLabel} : ${data}` : data];
   }
-
   if (Array.isArray(data)) {
     return data
       .filter((m) => typeof m === "string")
