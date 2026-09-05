@@ -29,7 +29,7 @@ export default function InformationNourrisson() {
   const [errors, setErrors] = useState({});
   const [currentIndex, setCurrentIndex] = useState(0);
   const navigate = useNavigate();
-  const { formData, updateNourrisson } = useFamilyForm();
+  const { formData, updateNourrisson ,resetFamilyForm,} = useFamilyForm();
  if (!formData) return null;
 
 const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.length
@@ -173,12 +173,14 @@ const nourrissons = Array.isArray(formData.nourrissons) && formData.nourrissons.
              <div className="min-h-full flex flex-col justify-center">
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
           {/* Header */}
-          <PageHeader
-            leftTitle="Annuler"
-            showRight={false}
-            onBack={() => navigate("/liste-famille")}
+         <PageHeader
+          leftTitle="Annuler"
+          showRight={false}
+         onBack={() => {
+         resetFamilyForm();
+         navigate(formData.returnTo || "/liste-famille");
+          }}
           />
-
           {/* Title */}
           <h1
             className="
