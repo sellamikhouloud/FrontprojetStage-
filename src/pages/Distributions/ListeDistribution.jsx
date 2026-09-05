@@ -482,24 +482,28 @@ useEffect(() => {
   const [selectedDistribution, setSelectedDistribution] = useState(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+const handleAnnulerDistribution = async (distribution) => {
+  try {
+    await annulerDistribution(distribution.id);
 
-    const handleAnnulerDistribution = async (distribution) => {
-    try {
-      await annulerDistribution(distribution.id);
-
-      await queryClient.invalidateQueries({
+    await Promise.all([
+      queryClient.invalidateQueries({
         queryKey: ["distributions-list"],
-      });
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["produits-list"],
+      }),
+    ]);
 
-      setIsPopupOpen(false);
-      setSelectedDistribution(null);
-    } catch (error) {
-      console.error(
-        "Erreur lors de l'annulation de la distribution :",
-        error?.response?.data || error
-      );
-    }
-  };
+    setIsPopupOpen(false);
+    setSelectedDistribution(null);
+  } catch (error) {
+    console.error(
+      "Erreur lors de l'annulation de la distribution :",
+      error?.response?.data || error
+    );
+  }
+};
 
 
   const filterTagsContent = (
@@ -915,3 +919,4 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     </div>
   );
 }
+
