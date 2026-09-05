@@ -196,12 +196,14 @@ function filterCachedFamilles(cachedData, searchTerm) {
     ? filtered
     : { ...cachedData, results: filtered, next: null };
 }
+
 export default function AjoutVisite() {
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
    const location = useLocation();
-  const draft = location.state?.draft;
-  const sourceDraftClientId = location.state?.sourceDraftClientId;
+   const draft = location.state?.draft;
+   const sourceDraftClientId = location.state?.sourceDraftClientId;
+   const [remainingFamilleIds, setRemainingFamilleIds] = useState([]);
 
   const [selectedFamille, setSelectedFamille] = useState(
     draft?.selectedFamille || null
@@ -237,9 +239,39 @@ export default function AjoutVisite() {
   // --- Hémoglobine (nécessaire pour le payload de l'API) ---
   const [hemoglobine, setHemoglobine] = useState(draft?.hemoglobine || "");
 
+  
+const resetVisiteMeasurements = () => {
+  setPoidsNourrisson("");
+  setTailleNourrisson("");
+  setMuacNourrisson("");
+  setObservationsNourrisson("");
+  setPositionNourrisson(null);
+  setPoidsMere("");
+  setTailleMere("");
+  setMuacMere("");
+  setObservationsMere("");
+  setEvaluationVisuelle("");
+  setHemoglobine("");
+  setNumeroCycle("");
+  setErrors({
+    famille: false,
+    date: false,
+    mois: false,
+    numeroCycle: false,
+    poidsNourrisson: false,
+    tailleNourrisson: false,
+    muacNourrisson: false,
+    positionNourrisson: false,
+    poidsMere: false,
+    tailleMere: false,
+    muacMere: false,
+    hemoglobine: false,
+  });
+  setBackendFieldErrors({});
+  setBackendGeneralError(null);
+};
+
   // --- Résultat renvoyé par le backend après enregistrement ---
-  // (statuts MAS/MAM/Normal, Mère normale/à risque, et z-scores : calculés côté backend, pas côté front)
-  // Forme attendue : { zScores: { pa, ta, pt }, statutNourrisson: { type, label }, statutMere: { type, label } }
   const [resultatVisite, setResultatVisite] = useState(null);
 
   const successExtraContent = resultatVisite && (
@@ -626,6 +658,49 @@ useEffect(() => {
   };
 
 }, []);
+
+// Si on arrive juste après la création d'une (ou plusieurs) famille(s) —
+// on ne connaît que l'id, tous les autres champs du formulaire restent vides.
+const processedIdsKeyRef = useRef(null);
+
+useEffect(() => {
+  const newIds = location.state?.newlyCreatedFamilleIds;
+  if (!newIds || newIds.length === 0) return;
+
+ 
+  const idsKey = newIds.join(",");
+  if (processedIdsKeyRef.current === idsKey) return;
+  processedIdsKeyRef.current = idsKey;
+
+  const [firstId, ...rest] = newIds;
+  if (!firstId) return;
+
+  setRemainingFamilleIds(rest);
+  resetVisiteMeasurements();
+
+  setSelectedFamille({
+    id: firstId,
+    code: firstId,
+    enfant: undefined,
+    mere: undefined,
+    sexe: "-",
+    region: "-",
+    naissance: undefined,
+    badges: [{ type: "retard", text: "Famille créée à l'instant — chargement..." }],
+  });
+
+  getFamille(firstId)
+    .then((response) => {
+      setSelectedFamille(mapFamilleForPopup(response.data));
+    })
+    .catch(() => {
+      // Si le fetch échoue (hors ligne, etc.), on garde le placeholder minimal
+    });
+
+  navigate(location.pathname, { replace: true, state: {} });
+}, [location.state]);
+
+
 
   useEffect(() => {
   const timer = setTimeout(() => {
@@ -1322,7 +1397,6 @@ useEffect(() => {
           />
         
         </div>
-
 {showSuccessPopup && (
   <Popup
     title={
@@ -1335,6 +1409,8 @@ useEffect(() => {
     primaryButtonText={
       offlinePending
         ? "Voir les brouillons hors ligne"
+        : remainingFamilleIds.length > 0
+        ? "Visite pour la famille suivante"
         : "Ajouter une distribution"
     }
     secondaryButtonText="Revenir à l'accueil"
@@ -1344,6 +1420,10 @@ useEffect(() => {
 
       if (offlinePending) {
         navigate("/brouillons-hors-ligne");
+      } else if (remainingFamilleIds.length > 0) {
+        navigate("/ajout-visite", {
+          state: { newlyCreatedFamilleIds: remainingFamilleIds },
+        });
       } else {
         navigate("/ajout-distribution");
       }
