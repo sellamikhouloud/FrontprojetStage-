@@ -536,3 +536,4 @@ const queryClient = useQueryClient();
 };
 
 export default RapportBilan;
+
