@@ -60,7 +60,7 @@ const RapportBilan = () => {
 } = useQuery({
   queryKey: ["bilan-candidates", rapport?.id],
   queryFn: () =>
-    getBilanCandidates({ inclus_bilan: true }).then((res) => res.data || []),
+    getBilanCandidates({ inclus_bilan: "true" }).then((res) => res.data || []),
   enabled: !!rapport && !rapport.est_valide,
 });
 
