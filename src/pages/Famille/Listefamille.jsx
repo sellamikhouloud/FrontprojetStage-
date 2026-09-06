@@ -401,74 +401,111 @@ const filtersContent = (
     />
   </div>
 );
+
+
 const filterTagsContent = (
   <div className="flex flex-wrap gap-2 my-4">
-   {appliedFilters.mois_entree && (
-  <FilterTag
-    text={appliedFilters.moisLabel}
-    onRemove={() =>
-      setAppliedFilters((prev) => ({
-        ...prev,
-        mois_entree: "",
-        moisLabel: "",
-      }))
-    }
-  />
-)}
 
-   {appliedFilters.statut && (
+    {/* MOIS */}
+    {appliedFilters.mois_entree && (
+      <FilterTag
+        text={appliedFilters.moisLabel}
+        onRemove={() => {
+          setAppliedFilters((prev) => ({
+            ...prev,
+            mois_entree: "",
+            moisLabel: "",
+          }));
+
+          setFilters((prev) => ({
+            ...prev,
+            mois_entree: "",
+            moisLabel: "",
+          }));
+        }}
+      />
+    )}
+
+    {/* STATUT */}
+    {appliedFilters.statut && (
       <FilterTag
         text={appliedFilters.statut}
-        onRemove={() =>
+        onRemove={() => {
           setAppliedFilters((prev) => ({
             ...prev,
             statut: "",
             statutLabel: "",
-          }))
-        }
+          }));
+
+          setFilters((prev) => ({
+            ...prev,
+            statut: "",
+            statutLabel: "",
+          }));
+        }}
       />
     )}
 
-     {appliedFilters.sexe && (
+    {/* SEXE */}
+    {appliedFilters.sexe && (
       <FilterTag
         text={appliedFilters.sexeLabel}
-        onRemove={() =>
+        onRemove={() => {
           setAppliedFilters((prev) => ({
             ...prev,
             sexe: "",
             sexeLabel: "",
-          }))
-        }
+          }));
+
+          setFilters((prev) => ({
+            ...prev,
+            sexe: "",
+            sexeLabel: "",
+          }));
+        }}
       />
     )}
 
+    {/* STATUT ZAKAT */}
     {appliedFilters.statut_zakat && (
-  <FilterTag
-    text={appliedFilters.statutZakatLabel}
-    onRemove={() =>
-      setAppliedFilters((prev) => ({
-        ...prev,
-        statut_zakat: "",
-        statutZakatLabel: "",
-      }))
-    }
-  />
-)}
+      <FilterTag
+        text={appliedFilters.statutZakatLabel}
+        onRemove={() => {
+          setAppliedFilters((prev) => ({
+            ...prev,
+            statut_zakat: "",
+            statutZakatLabel: "",
+          }));
 
-   {appliedFilters.village && (
-  <FilterTag
-    text={appliedFilters.villageLabel || appliedFilters.village}
-    onRemove={() =>
-      setAppliedFilters((prev) => ({
-        ...prev,
-        village: "",
-        villageLabel: "",
-      }))
-    }
-  />
-)}
+          setFilters((prev) => ({
+            ...prev,
+            statut_zakat: "",
+            statutZakatLabel: "",
+          }));
+        }}
+      />
+    )}
 
- 
+    {/* VILLAGE */}
+    {appliedFilters.village && (
+      <FilterTag
+        text={appliedFilters.villageLabel || appliedFilters.village}
+        onRemove={() => {
+          setAppliedFilters((prev) => ({
+            ...prev,
+            village: "",
+            villageLabel: "",
+          }));
+
+          setFilters((prev) => ({
+            ...prev,
+            village: "",
+            villageLabel: "",
+          }));
+        }}
+      />
+    )}
+
   </div>
 );
  
@@ -784,3 +821,4 @@ if  (isFilterOpen && isMobile)  {
     
   );
 }
+
