@@ -388,19 +388,6 @@ const Dashboard = () => {
     );
 
   // =========================================================
-  // LOW STOCK
-  // =========================================================
-
-  const lowStockProducts = stockAlerts.map(
-    (alert, index) => ({
-      id: alert?.id || index + 1,
-      name: alert?.message || "Produit",
-      quantity: alert?.quantite ?? "",
-      unit: alert?.unite || "",
-    })
-  );
-
-  // =========================================================
   // COORDINATORS
   // =========================================================
 
@@ -732,19 +719,17 @@ const exchangeRateValue =
         key={alert.id}
         className="w-full min-w-0"
       >
-        <AlertBanner
-          icon={alert.icon}
-          title={alert.title}
-          subtitle={alert.subtitle}
-          count={alert.count}
-          bgColor={alert.bgColor}
-          iconBgColor={alert.iconBgColor}
-          borderColor={alert.borderColor}
-          hasLeftBorder={alert.hasLeftBorder}
-          onClick={() =>
-            handleAlertClick(alert)
-          }
-        />
+<AlertBanner
+  icon={alert.icon}
+  title={alert.title}
+  subtitle={alert.subtitle}
+  count={alert.count}
+  bgColor={alert.bgColor}
+  iconBgColor={alert.iconBgColor}
+  borderColor={alert.borderColor}
+  hasLeftBorder={alert.hasLeftBorder}
+  onClick={() => handleAlertClick(alert)}
+/>
       </div>
     ))}
   </div>
@@ -858,11 +843,7 @@ const exchangeRateValue =
         onClose={() =>
           setShowBas(false)
         }
-        products={lowStockProducts}
-        onGoToStock={() => {
-          setShowBas(false);
-          navigate("/liste-distributions");
-        }}
+        products={stockAlerts}
       />
     </div>
   );

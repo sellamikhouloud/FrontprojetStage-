@@ -541,19 +541,6 @@ const lastConnectionUsername =
     }));
 
   // =====================================================
-  // LOW STOCK POPUP
-  // =====================================================
-
-  const lowStockProducts = stockAlerts.map(
-    (alert, index) => ({
-      id: alert?.id || index + 1,
-      name: alert?.message || "Produit",
-      quantity: alert?.quantite ?? "",
-      unit: alert?.unite || "",
-    })
-  );
-
-  // =====================================================
   // HANDLERS
   // =====================================================
 
@@ -678,22 +665,17 @@ const lastConnectionUsername =
               `}
             >
               {alerts.map((alert) => (
-                <AlertBanner
-                  key={alert.id}
-                  icon={alert.icon}
-                  title={alert.title}
-                  subtitle={alert.subtitle}
-                  count={alert.count}
-                  bgColor={alert.bgColor}
-                  iconBgColor={alert.iconBgColor}
-                  borderColor={alert.borderColor}
-                  hasLeftBorder={
-                    alert.hasLeftBorder
-                  }
-                  onClick={() =>
-                    handleAlertClick(alert)
-                  }
-                />
+<AlertBanner
+  icon={alert.icon}
+  title={alert.title}
+  subtitle={alert.subtitle}
+  count={alert.count}
+  bgColor={alert.bgColor}
+  iconBgColor={alert.iconBgColor}
+  borderColor={alert.borderColor}
+  hasLeftBorder={alert.hasLeftBorder}
+  onClick={() => handleAlertClick(alert)}
+/>
               ))}
             </div>
           )}
@@ -1076,11 +1058,7 @@ const lastConnectionUsername =
         onClose={() =>
           setShowBas(false)
         }
-        products={lowStockProducts}
-        onGoToStock={() => {
-          setShowBas(false);
-          navigate("/liste-distributions");
-        }}
+        products={stockAlerts}
       />
         </div>
       </main>
