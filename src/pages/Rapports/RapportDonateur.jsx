@@ -518,6 +518,7 @@ const queryClient = useQueryClient();
   )}
 
   {/* 3. "Télécharger PDF" (En bas) */}
+{!isLoading && rapport?.est_valide === true && (
   <Button
     title="Télécharger PDF"
     icon={Download}
@@ -525,8 +526,8 @@ const queryClient = useQueryClient();
     variant="telecharger"
     noPadding
     onClick={handleDownloadPdf}
-    disabled={isLoading || !rapport}
   />
+)}
 </div>
           </div>
         </div>
