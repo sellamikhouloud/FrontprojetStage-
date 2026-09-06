@@ -16,7 +16,7 @@ import DistributionItem from "../../components/Report/DistributionItem";
 import TextArea from "../../components/Containers/Textarea";
 import Spinner from "../../components/Spinner";
 import { getRapportBilanDonateur, validerRapport, genererPdfRapport } from "@/lib/api/Rapport";
-import { getPhoto } from "@/lib/api/galerie";
+import { getPhoto , getBilanCandidates } from "@/lib/api/Galerie";
 
 const MONTH_NAMES = [
   "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
@@ -53,6 +53,10 @@ const RapportBilan = () => {
 
   const [terrainPhotos, setTerrainPhotos] = useState([]);
   const [photosLoading, setPhotosLoading] = useState(false);
+
+  const [bilanCandidates, setBilanCandidates] = useState([]);
+const [candidatesLoading, setCandidatesLoading] = useState(false);
+const candidatesRequestIdRef = useRef(0); 
 
   const requestIdRef = useRef(0);
   const photosRequestIdRef = useRef(0);
@@ -172,9 +176,35 @@ const RapportBilan = () => {
     }
   };
 
+  // AJOUT : charger les photos candidates uniquement si le rapport n'est pas encore validé
+useEffect(() => {
+  if (!rapport || rapport.est_valide) {
+    setBilanCandidates([]);
+    return;
+  }
+
+  const currentRequestId = ++candidatesRequestIdRef.current;
+  setCandidatesLoading(true);
+
+  getBilanCandidates()
+    .then((res) => {
+      if (currentRequestId !== candidatesRequestIdRef.current) return;
+      setBilanCandidates(res.data || []);
+    })
+    .catch((error) => {
+      console.error("Erreur lors du chargement des photos candidates :", error);
+      if (currentRequestId !== candidatesRequestIdRef.current) return;
+      setBilanCandidates([]);
+    })
+    .finally(() => {
+      if (currentRequestId !== candidatesRequestIdRef.current) return;
+      setCandidatesLoading(false);
+    });
+}, [rapport?.id, rapport?.est_valide]);
+
   return (
     <div className="flex h-screen bg-white overflow-hidden">
-      <Sidebar role="admin" />
+      <Sidebar  />
 
       <main className="flex-1 h-screen overflow-hidden px-4 md:px-6 min-[1000px]:px-8 pt-16 min-[1000px]:pt-6 pb-6 flex flex-col">
         {/* Navigation et Onglets */}
@@ -356,33 +386,63 @@ const RapportBilan = () => {
                   title="Bilan donateurs"
                 />
 
-                {photosLoading ? (
-                  <div className="flex justify-center items-center py-10">
-                    <Spinner />
-                  </div>
-                ) : terrainPhotos.length > 0 ? (
-                  <div className="space-y-6">
-                    {terrainPhotos.map((photo) => (
-                      <div key={photo.id} className="mx-auto w-[70%]">
-                        <img
-                          src={photo.image}
-                          alt={photo.titre || `Photo terrain ${photo.id}`}
-                          className="w-full rounded-[10px] object-cover"
-                        />
-                        {photo.titre && (
-                          <p className="mt-2 text-[17px] font-semibold text-[#202124] text-center">
-                            {photo.titre}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-center text-[#818181] py-6">
-                    Sélectionnez les photos depuis la galerie,
-                    Les photos seront affichées après la validation du rapport.
-                  </p>
-                )}
+             {rapport.est_valide ? (
+  
+  photosLoading ? (
+    <div className="flex justify-center items-center py-10">
+      <Spinner />
+    </div>
+  ) : terrainPhotos.length > 0 ? (
+    <div className="space-y-6">
+      {terrainPhotos.map((photo) => (
+        <div key={photo.id} className="mx-auto w-[70%]">
+          <img
+            src={photo.image}
+            alt={photo.titre || `Photo terrain ${photo.id}`}
+            className="w-full rounded-[10px] object-cover"
+          />
+          {photo.titre && (
+            <p className="mt-2 text-[17px] font-semibold text-[#202124] text-center">
+              {photo.titre}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-center text-[#818181] py-6">
+      Aucune photo associée à ce rapport.
+    </p>
+  )
+) : (
+
+  candidatesLoading ? (
+    <div className="flex justify-center items-center py-10">
+      <Spinner />
+    </div>
+  ) : bilanCandidates.length > 0 ? (
+    <div className="space-y-6">
+      {bilanCandidates.map((photo) => (
+        <div key={photo.id} className="mx-auto w-[70%]">
+          <img
+            src={photo.image}
+            alt={photo.titre || `Photo ${photo.id}`}
+            className="w-full rounded-[10px] object-cover"
+          />
+          {photo.titre && (
+            <p className="mt-2 text-[17px] font-semibold text-[#202124] text-center">
+              {photo.titre}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <p className="text-center text-[#818181] py-6">
+      Sélectionnez les photos depuis la galerie.
+    </p>
+  )
+)}
               </div>
             )}
           </div>

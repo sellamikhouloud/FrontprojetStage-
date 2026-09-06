@@ -115,28 +115,42 @@ const NotificationsPage = () => {
     }
   };
 
+  const getNotificationMessage = (notification) => {
+  const message = notification.message || "";
+
+  if (
+    (notification.type === "visite_retard" ||
+      notification.type === "malnutrition") &&
+    notification.famille
+  ) {
+    return `${message} (Code famille : ${notification.famille})`;
+  }
+
+  return message;
+};
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <Sidebar hideOnMobile />
 
-      <main
-        className="
-          flex-1
-          min-w-0
-          h-screen
-          overflow-y-auto
-          bg-white
-          px-4
-          sm:px-5
-          md:px-6
-          lg:px-8
-          xl:px-10
-          pt-8
-          sm:pt-9
-          lg:pt-8
-          pb-8
-        "
-      >
+    <main
+  className="
+    flex-1
+    min-w-0
+    h-screen
+    overflow-y-auto
+    bg-white
+    px-4
+    sm:px-5
+    md:px-6
+    lg:px-8
+    xl:px-10
+    pt-4
+    sm:pt-6
+    lg:pt-8
+    pb-8
+  "
+>
         {/* Conteneur Header + Bouton Historique */}
         <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <PageHeader
@@ -239,11 +253,11 @@ const NotificationsPage = () => {
             notifications?.length > 0 &&
             notifications.map((notification) => (
               <NotificationCard
-                key={notification.id}
-                type={notification.type}
-                message={notification.message}
-                onClick={() => handleNotificationClick(notification)}
-              />
+      key={notification.id}
+      type={notification.type}
+      message={getNotificationMessage(notification)}
+      onClick={() => handleNotificationClick(notification)}
+    />
             ))}
 
           {!isLoading && !isError && notifications?.length > 0 && (

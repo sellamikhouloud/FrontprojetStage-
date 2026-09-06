@@ -4,6 +4,8 @@ import Sidebar from "@/components/Sidebar/Sidebar";
 import NavigationHeader from "@/components/Navigation,Pageheader/NavigationHeader";
 import Spinner from "@/components/Spinner";
 import NoResultImage from "@/assets/no result picture.svg";
+import Popup from "@/components/Popups/SuccessPopup";
+import successImage from "../assets/Success.svg";
 import {
   listDrafts,
   deleteDraft,
@@ -20,6 +22,8 @@ import { createVisite } from "@/lib/api/visites";
 import { createAideZakat } from "@/lib/api/zakat";
 
  import { createFamilleFromDraft } from "@/lib/api/familles";
+ import StatusBadge from "@/components/Cards/Badge";
+import ZScoreBox from "@/components/Containers/ZScoreBox";
 
 const TYPE_LABELS = {
   famille: "Nouvelle famille",
@@ -48,9 +52,140 @@ const TYPE_STYLES = {
   },
 };
 
+const STATUT_BEBE_MAP = {
+  mas: { type: "mas", label: "MAS nourrisson" },
+  mam: { type: "mam", label: "MAM nourrisson" },
+  normale: { type: "mere", label: "Nourrisson normal" },
+};
+
+const STATUT_MERE_MAP = {
+  a_risque: { type: "risque", label: "Mère à risque" },
+  normale: { type: "mere", label: "Mère normale" },
+  malnutrition: { type: "mas", label: "Mère malnutrie" },
+};
+function buildExtraContent(type, responseData) {
+  if (type !== "visite" || !responseData) return null;
+
+  const zScores = {
+    pa: responseData.score_z_pa,
+    ta: responseData.score_z_ta,
+    pt: responseData.score_z_pt,
+  };
+  const statutNourrisson = STATUT_BEBE_MAP[responseData.statut_bebe] ?? null;
+  const statutMere = STATUT_MERE_MAP[responseData.statut_mere] ?? null;
+
+  return (
+    <div className="flex flex-col gap-4 border-t border-[#E5E7EB] pt-4 w-full">
+      <div>
+        <p className="text-[13px] font-semibold text-[#202124] mb-2">
+          Z-scores nourrisson
+        </p>
+        <div className="flex gap-2">
+          <ZScoreBox label="P/A" value={zScores.pa} />
+          <ZScoreBox label="T/A" value={zScores.ta} />
+          <ZScoreBox label="P/T" value={zScores.pt} />
+        </div>
+      </div>
+
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-[#202124] mb-2">
+            Statut nourrisson
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {statutNourrisson && (
+              <StatusBadge type={statutNourrisson.type} text={statutNourrisson.label} />
+            )}
+          </div>
+        </div>
+
+        <div className="flex-1">
+          <p className="text-[13px] font-semibold text-[#202124] mb-2">
+            Statut mère
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {statutMere && (
+              <StatusBadge type={statutMere.type} text={statutMere.label} />
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function renderExtraContent(successPopup) {
+  const { type, ids, responseData } = successPopup;
+
+  if (type === "famille" && ids && ids.length > 1) {
+    return (
+      <div className="flex flex-col gap-2 border-t border-[#E5E7EB] pt-4 w-full">
+        <p className="text-[16px] font-semibold text-[#202124]">
+          Codes des familles créées
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {ids.map((id, i) => (
+            <span
+              key={id ?? i}
+              className="text-[16px] font-medium text-[#3B5BA9] bg-[#EEF3FF] rounded-full px-3 py-1 text-center"
+            >
+              {` ${id}`}
+            </span>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "visite") {
+    return buildExtraContent(type, responseData);
+  }
+
+  return null;
+}
+
+function extractCreatedIds(response) {
+  const raw = response?.data ?? response;
+  if (Array.isArray(raw)) {
+    return raw.map((r) => r?.id).filter(Boolean);
+  }
+  if (Array.isArray(raw?.results)) {
+    return raw.results.map((r) => r?.id).filter(Boolean);
+  }
+  return raw?.id ? [raw.id] : [];
+}
+
+function extractResponseData(response) {
+  return response?.data ?? response ?? null;
+}
+
 const DEFAULT_TYPE_STYLE = {
   cardBg: "#F8FBFC",
   chipText: "#528583",
+};
+
+const SUCCESS_CONFIG = {
+  famille: {
+    title: "Famille ajoutée avec succès",
+    primaryButtonText: "Voir la fiche de la famille",
+    getPrimaryPath: (id) => `/famille/${id}`,
+    showId: true,
+  },
+  visite: {
+    title: "Visite ajoutée avec succès",
+    primaryButtonText: "Voir la fiche de la famille",
+    getPrimaryPath: (id, draft) => `/famille/${draft.payload?.famille}`,
+  },
+  distribution: {
+    title: "Distribution ajoutée avec succès",
+    primaryButtonText: "Voir la fiche de la famille",
+    getPrimaryPath: (id, draft) => `/famille/${draft.payload?.famille}`,
+  },
+  aide_zakat: {
+    title: "Aide zakat ajoutée avec succès",
+    primaryButtonText: "Voir la fiche de la famille",
+    getPrimaryPath: (id, draft) => `/famille/${draft.payload?.famille}`,
+  },
 };
 
 
@@ -147,7 +282,8 @@ export default function BrouillonsHorsLigne() {
   const [detailZakatDraft, setDetailZakatDraft] = useState(null);
   const [detailVisiteDraft, setDetailVisiteDraft] = useState(null);
   const [detailDistributionDraft, setDetailDistributionDraft] = useState(null);
-   const [detailFamilleDraft, setDetailFamilleDraft] = useState(null);
+  const [detailFamilleDraft, setDetailFamilleDraft] = useState(null);
+  const [successPopup, setSuccessPopup] = useState(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -166,30 +302,39 @@ export default function BrouillonsHorsLigne() {
     refresh();
   }, [refresh]);
 
-  const handleAjouter = async (draft) => {
-    const submit = SUBMIT_FN[draft.type];
-    if (!submit) {
-      await markDraftStatus(draft.clientId, "error", "Type de brouillon non pris en charge.");
-      refresh();
-      return;
-    }
-
-    await markDraftStatus(draft.clientId, "sending");
+const handleAjouter = async (draft) => {
+  const submit = SUBMIT_FN[draft.type];
+  if (!submit) {
+    await markDraftStatus(draft.clientId, "error", "Type de brouillon non pris en charge.");
     refresh();
+    return;
+  }
 
-    try {
-    
-      await submit(
-        { ...draft.payload, client_id: draft.clientId },
-        draft.files
-      );
-      await deleteDraft(draft.clientId);
-    } catch (error) {
-      const message = extractBackendErrorMessage(error);
-      await markDraftStatus(draft.clientId, "error", message);
-    }
-    refresh();
-  };
+  await markDraftStatus(draft.clientId, "sending");
+  refresh();
+
+  try {
+    const response = await submit(
+      { ...draft.payload, client_id: draft.clientId },
+      draft.files
+    );
+    await deleteDraft(draft.clientId);
+
+    const createdIds = extractCreatedIds(response);
+
+    setSuccessPopup({
+      type: draft.type,
+      ids: createdIds,
+      id: createdIds[0] ?? null,
+      draft,
+      responseData: extractResponseData(response),
+    });
+  } catch (error) {
+    const message = extractBackendErrorMessage(error);
+    await markDraftStatus(draft.clientId, "error", message);
+  }
+  refresh();
+};
 
   const handleSupprimer = async (draft) => {
     await deleteDraft(draft.clientId);
@@ -304,6 +449,8 @@ const handleEditZakatDraft = async (draft) => {
     state: {
       draftFamille: draft,
       sourceDraftClientId: draft.clientId,
+      returnTo: "/brouillons-hors-ligne", 
+
     },
   });
 };
@@ -567,6 +714,50 @@ const handleEditZakatDraft = async (draft) => {
   onEdit={handleEditFamilleDraft}
   onDelete={handleDeleteFamilleDraft}
 />
+
+{successPopup && (() => {
+  const config = SUCCESS_CONFIG[successPopup.type] ?? {
+    title: "Enregistré avec succès",
+    primaryButtonText: "Fermer",
+    getPrimaryPath: null,
+  };
+
+  const isMultiFamille =
+    successPopup.type === "famille" && (successPopup.ids?.length ?? 0) > 1;
+
+  return (
+    <Popup
+      title={config.title}
+      image={successImage}
+      id={
+        config.showId && successPopup.ids?.length === 1
+          ? successPopup.ids[0]
+          : undefined
+      }
+      extraContent={renderExtraContent(successPopup)}
+      primaryButtonText={
+        isMultiFamille ? "Ajouter une visite" : config.primaryButtonText
+      }
+      secondaryButtonText="Fermer"
+      onPrimaryClick={() => {
+        setSuccessPopup(null);
+
+        if (isMultiFamille) {
+          navigate("/ajout-visite", {
+            state: { newlyCreatedFamilleIds: successPopup.ids },
+          });
+          return;
+        }
+
+        if (config.getPrimaryPath) {
+          navigate(config.getPrimaryPath(successPopup.id, successPopup.draft));
+        }
+      }}
+      onSecondaryClick={() => setSuccessPopup(null)}
+    />
+  );
+})()}
+
     </div>
   );
 }

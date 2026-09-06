@@ -36,6 +36,7 @@ const FamilyProfile = () => {
   const queryClient = useQueryClient();
   const { user, ready } = useAuth();
 
+const isAdmin = user?.role === "admin"; 
 
 console.log("USER COMPLET :", user);
   const [openDistribution, setOpenDistribution] = useState(false);
@@ -610,25 +611,25 @@ const isSuperviseParMoi =
           onBack={handleBack}
         />
 
-        <div className="mt-4">
-          {isSuperviseParMoi ? (
-            <NavigationHeader
-              title="Fiche famille"
-              type="edit"
-              actionTitle="Modifier la fiche famille"
-              onAction={() =>
-                navigate(`/famille/${id}/modifier`, {
-                  state: {
-                    from: location.state?.from,
-                    draft: location.state?.draft,
-                  },
-                })
-              }
-            />
-          ) : (
-            <NavigationHeader title="Fiche famille" />
-          )}
-        </div>
+      <div className="mt-4">
+  {isAdmin || (isSuperviseParMoi && famille?.statut !== "sortie") ? (
+    <NavigationHeader
+      title="Fiche famille"
+      type="edit"
+      actionTitle="Modifier la fiche famille"
+      onAction={() =>
+        navigate(`/famille/${id}/modifier`, {
+          state: {
+            from: location.state?.from,
+            draft: location.state?.draft,
+          },
+        })
+      }
+    />
+  ) : (
+    <NavigationHeader title="Fiche famille" />
+  )}
+</div>
 
         {/* ==================== HAUT ==================== */}
 

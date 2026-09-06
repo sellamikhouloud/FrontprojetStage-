@@ -31,7 +31,6 @@ function parseBackendErrors(data, parentLabel = "") {
   if (typeof data === "string") {
     return [parentLabel ? `${parentLabel} : ${data}` : data];
   }
-
   if (Array.isArray(data)) {
     return data
       .filter((m) => typeof m === "string")
@@ -66,8 +65,8 @@ const isFutureDate = (date) => {
 export default function PhotoConfirmation() {
 
   
-  const [relecture, setRelecture] = useState("");
-  const [createdFamilleId, setCreatedFamilleId] = useState(null);
+
+ const [createdFamilleIds, setCreatedFamilleIds] = useState([]);
   const navigate = useNavigate();
  const {
   formData,
@@ -140,9 +139,7 @@ useEffect(() => {
 
  const [saving, setSaving] = useState(false);
  const [saveError, setSaveError] = useState(null);
- // Comme dans AjoutVisite : passe à true uniquement quand la création a
- // été enregistrée en brouillon local faute de connexion (aucune réponse
- // du serveur), et non à cause d'une vraie erreur backend.
+
  const [offlinePending, setOfflinePending] = useState(false);
 
 const handleSave = async () => {
@@ -274,21 +271,7 @@ const handleSave = async () => {
       // 4️⃣ CRÉATION DE LA FAMILLE
       // =====================================================
 
-      console.log(
-        `📦 Création famille enfant ${i + 1}/${nourrissons.length}`
-      );
-      console.log("📸 PHOTO AVANT ENVOI :", formData.mere.photo);
-console.log(
-  "📸 EST UN FILE ?",
-  formData.mere.photo instanceof File
-);
-
       const response = await createFamille(payload);
-
-      console.log(
-        `✅ Famille enfant ${i + 1} créée :`,
-        response.data
-      );
 
       resultats.push(response.data);
 
@@ -299,10 +282,6 @@ console.log(
 
       if (!currentIdMere) {
 
-        console.log(
-          "🔎 Nouvelle recherche après création de la mère..."
-        );
-
         const searchAfterCreate =
           await searchMere({
             nom: formData.mere.nom,
@@ -311,10 +290,6 @@ console.log(
               formData.mere.date_naissance,
           });
 
-        console.log(
-          "🔎 Mère après création :",
-          searchAfterCreate.data
-        );
 
         const newIdMere =
           searchAfterCreate.data?.id ?? null;
@@ -322,11 +297,6 @@ console.log(
         if (newIdMere) {
 
           currentIdMere = newIdMere;
-
-          console.log(
-            "🆔 ID mère récupéré après création :",
-            currentIdMere
-          );
 
           updateFamilyData({
             id_mere: currentIdMere,
@@ -339,7 +309,7 @@ console.log(
       "✅ Toutes les familles créées :",
       resultats
     );
-    setCreatedFamilleId(resultats[0]?.id ?? null);
+  setCreatedFamilleIds(resultats.map((r) => r?.id).filter(Boolean));
 
     
     if (formData.sourceDraftClientId) {
@@ -382,7 +352,7 @@ await saveDraft(
   photo instanceof File ? { photo } : undefined
 );
 
-      setCreatedFamilleId(null);
+      setCreatedFamilleIds([]);
       setOfflinePending(true);
       setShowPopup(true);
       resetFamilyForm();
@@ -422,11 +392,7 @@ const isAdmin = role === "admin" || role === "chef_coordinator";
 
 const [searchCoordinateur, setSearchCoordinateur] = useState("");
 
-// Liste des coordinateurs : volontairement 100% réseau, sans repli sur un
-// cache local (contrairement à la liste des familles dans AjoutVisite).
-// Pas de saveCache/loadCache ici — si hors ligne, la liste échoue tout
-// simplement (coordinateursIsError) et l'utilisateur peut réessayer plus
-// tard ; on ne veut pas qu'un coordinateur choisisse dans une liste périmée.
+
 const {
   data: coordinateursResponse,
   isLoading: coordinateursLoading,
@@ -558,9 +524,12 @@ useEffect(() => {
         <div className="flex flex-col gap-[14px] lg:gap-[18px]">
           {/* Header */}
           <PageHeader
-            leftTitle="Annuler"
-            showRight={false}
-            onBack={() => navigate("/liste-famille")}
+           leftTitle="Annuler"
+           showRight={false}
+           onBack={() => {
+           resetFamilyForm();
+           navigate(formData.returnTo || "/liste-famille");
+           }}
           />
 
           {/* Title */}
@@ -842,6 +811,7 @@ useEffect(() => {
   disabled={saving}
 />
 
+
 {showPopup && (
   <Popup
     title={
@@ -850,19 +820,45 @@ useEffect(() => {
         : "Enregistrer avec succès"
     }
     image={offlinePending ? null : successImage}
-    id={offlinePending ? null : createdFamilleId}
+    id={
+      !offlinePending && createdFamilleIds.length === 1
+        ? createdFamilleIds[0]
+        : null
+    }
+   extraContent={
+  !offlinePending && createdFamilleIds.length > 1 ? (
+    <div className="flex flex-col gap-2 border-t border-[#E5E7EB] pt-4 w-full">
+      <p className="text-[18px] font-bold text-[#202124]">
+        Codes des familles créées
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        {createdFamilleIds.map((id, i) => (
+          <span
+            key={id ?? i}
+            className="text-[18px] font-semibold text-[#3B5BA9] bg-[#EEF3FF] rounded-full px-3 py-1 text-center"
+          >
+            {`${id}`}
+          </span>
+        ))}
+      </div>
+    </div>
+  ) : null
+}
     primaryButtonText={
-      offlinePending ? "Voir les brouillons hors ligne" : "Voir la fiche de la famille"
+      offlinePending ? "Voir les brouillons hors ligne" : "Ajouter une visite"
     }
     secondaryButtonText="Revenir à l'accueil"
     onPrimaryClick={() => {
       setShowPopup(false);
-      if (offlinePending) {
-        
-        navigate("/brouillons-hors-ligne");
-      } else {
-        navigate(`/famille/${createdFamilleId}`);
-      }
+     if (offlinePending) {
+    navigate("/brouillons-hors-ligne");
+  } else {
+    navigate("/ajout-visite", {
+      state: {
+        newlyCreatedFamilleIds: createdFamilleIds,
+      },
+    });
+  }
       setOfflinePending(false);
     }}
     onSecondaryClick={() => {
@@ -872,6 +868,7 @@ useEffect(() => {
     }}
   />
 )}
+
 <PopupListeCoordinateurs
   open={openCoordinateurs}
   onClose={() => setOpenCoordinateurs(false)}
