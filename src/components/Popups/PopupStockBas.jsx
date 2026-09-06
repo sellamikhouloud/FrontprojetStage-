@@ -3,22 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import quitter from "../../assets/quitter.svg";
-import { listStock } from "../../lib/api/stock";
 
 export default function PopupStockBas({
   isOpen,
   onClose,
   products = [],
-  onLowStockCountChange,
 }) {
   const navigate = useNavigate();
 
-  // =========================================================
-  // STATES
-  // =========================================================
-
   const [lowStockProducts, setLowStockProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   // =========================================================
   // FORMAT QUANTITY
@@ -42,206 +35,80 @@ export default function PopupStockBas({
     return Number(number.toFixed(2));
   };
 
-  // =========================================================
-  // BACKEND UNIT -> FRONTEND UNIT
-  // =========================================================
+const formatStockAlert = (alert) => {
+  const message = alert?.message || "";
 
-  const getDisplayUnit = (unit) => {
-    switch (unit) {
-      case "kg":
-        return "Kg";
+  const match = message.match(
+    /produit\s+'([^']+)'.*?\(([\d.,]+)\/([\d.,]+)\)\s*([^\s.]+)?\.?$/
+  );
 
-      case "litre":
-      case "litres":
-        return "Litres";
-
-      case "boite":
-      case "boîtes":
-        return "boîtes";
-
-      default:
-        return unit || "Kg";
-    }
-  };
-
-  // =========================================================
-  // GET LOW STOCK PRODUCTS
-  // =========================================================
-  
-const fetchAllStockProducts = async () => {
-  let allProducts = [];
-  let page = 1;
-
-  while (true) {
-    const response = await listStock({ page });
-
-    const data = response?.data;
-
-    const pageProducts = Array.isArray(data?.results)
-      ? data.results
-      : Array.isArray(data)
-        ? data
-        : [];
-
-    allProducts = [
-      ...allProducts,
-      ...pageProducts,
-    ];
-
-    // DRF pagination
-    if (!data?.next) {
-      break;
-    }
-
-    page += 1;
+  if (!match) {
+    return {
+      id: alert?.id,
+      name: "Produit",
+      quantity: 0,
+      threshold: 0,
+      unit: "",
+    };
   }
 
-  return allProducts;
+  const [, name, quantity, threshold, unit] = match;
+
+  return {
+    id: alert?.id,
+    name,
+    quantity: formatQuantity(
+      quantity.replace(",", ".")
+    ),
+    threshold: formatQuantity(
+      threshold.replace(",", ".")
+    ),
+    unit: unit || "",
+  };
 };
 
+  // =========================================================
+  // LOAD PRODUCTS FROM DASHBOARD DATA
+  // =========================================================
+
   useEffect(() => {
-    const fetchLowStockProducts = async () => {
-      setIsLoading(true);
+    // =======================================================
+    // SAME LOGIC AS PopupMas
+    // Don't process anything when popup is closed
+    // =======================================================
 
-      try {
-        // =====================================================
-        // GET PRODUCTS FROM BACKEND
-        // =====================================================
-        
-        const backendProducts = await fetchAllStockProducts();
+    if (!isOpen) {
+      setLowStockProducts([]);
+      return;
+    }
 
-        // =====================================================
-        // FORMAT + FILTER LOW STOCK
-        // stock_courant <= alerte_seuil
-        // =====================================================
+    // =======================================================
+    // DASHBOARD ALREADY GIVES US THE STOCK ALERTS
+    // =======================================================
 
-        const formattedProducts = backendProducts
-          .map((product) => {
-            const quantity = formatQuantity(
-              product.stock_courant ??
-                product.quantity ??
-                0
-            );
+    if (!Array.isArray(products)) {
+      setLowStockProducts([]);
+      return;
+    }
 
-            const threshold = formatQuantity(
-              product.alerte_seuil ??
-                product.threshold ??
-                1
-            );
+    // =======================================================
+    // KEEP ONLY UNRESOLVED LOW-STOCK ALERTS
+    // =======================================================
 
-            return {
-              id: product.id,
+    const formattedProducts = products
+      .filter(
+        (alert) =>
+          alert?.type === "stock_faible" &&
+          !alert?.est_resolue
+      )
+      .map(formatStockAlert);
 
-              name:
-                product.nom ??
-                product.name ??
-                product.title ??
-                "",
+    // =======================================================
+    // SAVE PRODUCTS
+    // =======================================================
 
-              quantity,
-
-              unit: getDisplayUnit(
-                product.unite ??
-                  product.unit
-              ),
-
-              threshold,
-            };
-          })
-          .filter(
-            (product) =>
-              product.quantity <=
-              product.threshold
-          );
-
-        // =====================================================
-        // SAVE LOW STOCK PRODUCTS
-        // =====================================================
-
-        setLowStockProducts(
-          formattedProducts
-        );
-
-        // =====================================================
-        // SEND EXACT COUNT TO PARENT
-        // =====================================================
-
-        onLowStockCountChange?.(
-          formattedProducts.length
-        );
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération du stock bas :",
-          error
-        );
-
-        // =====================================================
-        // FALLBACK TO PRODUCTS FROM PARENT
-        // =====================================================
-
-        const fallbackProducts = products
-          .map((product) => {
-            const quantity =
-              formatQuantity(
-                product.quantity ??
-                  product.stock_courant ??
-                  0
-              );
-
-            const threshold =
-              formatQuantity(
-                product.threshold ??
-                  product.alerte_seuil ??
-                  1
-              );
-
-            return {
-              id: product.id,
-
-              name:
-                product.name ??
-                product.title ??
-                product.nom ??
-                "",
-
-              quantity,
-
-              unit: getDisplayUnit(
-                product.unit ??
-                  product.unite
-              ),
-
-              threshold,
-            };
-          })
-          .filter(
-            (product) =>
-              product.quantity <=
-              product.threshold
-          );
-
-        setLowStockProducts(
-          fallbackProducts
-        );
-
-        // =====================================================
-        // SEND EXACT FALLBACK COUNT TO PARENT
-        // =====================================================
-
-        onLowStockCountChange?.(
-          fallbackProducts.length
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    // =========================================================
-    // FETCH EVEN WHEN POPUP IS CLOSED
-    // =========================================================
-
-    fetchLowStockProducts();
-  }, [products, onLowStockCountChange]);
+    setLowStockProducts(formattedProducts);
+  }, [isOpen, products]);
 
   // =========================================================
   // GO TO STOCK PAGE
@@ -330,7 +197,9 @@ const fetchAllStockProducts = async () => {
               sm:pb-7
             "
           >
-            {/* Close */}
+            {/* =================================================
+                CLOSE
+            ================================================= */}
 
             <button
               onClick={onClose}
@@ -354,7 +223,9 @@ const fetchAllStockProducts = async () => {
               Fermer
             </button>
 
-            {/* Title */}
+            {/* =================================================
+                TITLE
+            ================================================= */}
 
             <h2
               className="
@@ -369,7 +240,9 @@ const fetchAllStockProducts = async () => {
               Stock Bas
             </h2>
 
-            {/* Products */}
+            {/* =================================================
+                PRODUCTS
+            ================================================= */}
 
             <div
               className={`
@@ -381,39 +254,69 @@ const fetchAllStockProducts = async () => {
                 }
               `}
             >
-              {isLoading ? (
-                <div className="py-10 text-center text-gray-500 text-[16px]">
-                  Chargement...
-                </div>
-              ) : lowStockProducts.length > 0 ? (
+              {lowStockProducts.length > 0 ? (
                 lowStockProducts.map((item) => (
                   <div
                     key={item.id}
-                    className="flex justify-between items-center"
+                    className="
+                      flex
+                      justify-between
+                      items-center
+                    "
                   >
-                    <span className="text-[16px] sm:text-[18px] font-medium">
+                    <span
+                      className="
+                        text-[16px]
+                        sm:text-[18px]
+                        font-medium
+                      "
+                    >
                       {item.name}
                     </span>
 
                     <div className="flex items-end gap-1">
-                      <span className="text-[#EF4444] text-[22px] sm:text-[24px] font-extrabold leading-none">
+                      <span
+                        className="
+                          text-[#EF4444]
+                          text-[22px]
+                          sm:text-[24px]
+                          font-extrabold
+                          leading-none
+                        "
+                      >
                         {item.quantity}
                       </span>
 
-                      <span className="text-[13px] sm:text-[14px]">
-                        {item.unit}
-                      </span>
+                      {item.unit && (
+                        <span
+                          className="
+                            text-[13px]
+                            sm:text-[14px]
+                          "
+                        >
+                          {item.unit}
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="py-10 text-center text-gray-500 text-[16px]">
+                <div
+                  className="
+                    py-10
+                    text-center
+                    text-gray-500
+                    text-[16px]
+                  "
+                >
                   Aucun produit en stock bas.
                 </div>
               )}
             </div>
 
-            {/* Button */}
+            {/* =================================================
+                BUTTON
+            ================================================= */}
 
             <button
               onClick={handleGoToStock}
