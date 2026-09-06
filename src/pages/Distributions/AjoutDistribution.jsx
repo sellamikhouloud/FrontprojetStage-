@@ -113,6 +113,7 @@ export default function AjoutDistribution() {
   const { user, ready } = useAuth();
   const role = user?.role ?? null;
   const isAdmin = role === "admin" || role === "chef_coordinator";
+  const isRoleAdmin = role === "admin";
   
  
 
@@ -406,7 +407,7 @@ useEffect(() => {
   const messageGenerique = "Une erreur est survenue lors de l'enregistrement de la distribution.";
 
   // Si la réponse est du HTML (page d'erreur Django/serveur) plutôt que du JSON,
-  // on ne tente même pas de l'analyser — on affiche un message générique.
+
   if (contentType.includes("text/html")) {
     return messageGenerique;
   }
@@ -541,12 +542,21 @@ setShowSuccessPopup(true);
    } catch (error) {
 
   if (!isEditMode && !error.response) {
+    // L'admin ne peut pas enregistrer en brouillon hors ligne —
+    // il doit être en ligne pour créer une distribution.
+    if (isRoleAdmin) {
+      setSaveError(
+        "Vous êtes hors ligne. En tant qu'administrateur, vous ne pouvez pas enregistrer de brouillon — veuillez réessayer une fois la connexion rétablie."
+      );
+      setSaving(false);
+      return;
+    }
+
     try {
-     
       if (sourceDraftClientId) {
         await deleteDraft(sourceDraftClientId);
       }
-   
+
       await saveDraft("distribution", payload);
       setOfflinePending(true);
       setShowSuccessPopup(true);
@@ -584,6 +594,19 @@ setShowSuccessPopup(true);
       laitStock: null,
     }));
   };
+
+  const handleRemoveLait = () => {
+  setLaitType(null);
+  setSelectedLaitOption(null);
+  setBoxes(0);
+  setErrors((prev) => ({
+    ...prev,
+    laitType: false,
+    grammage: false,
+    boxes: false,
+    laitStock: null,
+  }));
+};
 
   const handleOpenLaitPopup = () => {
     if (!laitType) {
@@ -1194,6 +1217,7 @@ useEffect(() => {
               errors={{ ...errors, famille: false }}
               hasFamille={true}
               onRequireFamille={() => {}}
+               onRemove={handleRemoveLait}
             />
 
             {/* Temporary confirmation */}
