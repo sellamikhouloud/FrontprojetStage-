@@ -7,6 +7,8 @@ import PopupPhoto from "../../components/Popups/PopupPhoto";
 import AjouterPhoto from "../../components/PhotoComposant/AjouterPhoto";
 import Button from "../../components/Button/Button";
 
+import NoResultImage from "../../assets/no result picture.svg";
+
 import {
   listPhotos,
   listVillages,
@@ -224,10 +226,12 @@ useEffect(() => {
 
         <div className="flex-1 min-w-0 w-full overflow-y-auto overflow-x-hidden px-8 py-8">
           {pendingPhotos.length === 0 ? (
-            <div className="h-full w-full flex items-center justify-center">
-              <p className="text-[18px] text-[#9CA3AF]">
-                Aucune photo en attente.
-              </p>
+            <div className="h-full w-full flex flex-col items-center justify-center py-10 md:py-20 px-4">
+              <img
+                src={NoResultImage}
+                alt="Aucun résultat"
+                className="w-56 sm:w-72 md:w-96 h-auto"
+              />
             </div>
           ) : (
             <div className="w-full flex flex-col gap-6">
