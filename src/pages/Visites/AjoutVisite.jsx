@@ -1427,7 +1427,13 @@ useEffect(() => {
         ? "Visite pour la famille suivante"
         : "Ajouter une distribution"
     }
-    secondaryButtonText="Revenir à l'accueil"
+    secondaryButtonText={
+  sourceDraftClientId
+    ? "Revenir à la page de brouillon"
+    : isAdmin
+    ? "Revenir à la liste des visites"
+    : "Revenir à l'accueil"
+}
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
       setResultatVisite(null);
@@ -1444,12 +1450,19 @@ useEffect(() => {
 
       setOfflinePending(false);
     }}
-    onSecondaryClick={() => {
-      setShowSuccessPopup(false);
-      setResultatVisite(null);
-      setOfflinePending(false);
-      navigate("/dashboard");
-    }}
+   onSecondaryClick={() => {
+  setShowSuccessPopup(false);
+  setResultatVisite(null);
+  setOfflinePending(false);
+
+  if (sourceDraftClientId) {
+    navigate("/brouillons-hors-ligne");
+  } else if (isAdmin) {
+    navigate("/liste-visite");
+  } else {
+    navigate("/dashboard");
+  }
+}}
   />
 )}
         </div>
