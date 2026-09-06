@@ -505,28 +505,53 @@ const handleAnnulerDistribution = async (distribution) => {
   }
 };
 
+const filterTagsContent = (
+  <div className="flex flex-wrap gap-2 my-4">
 
-  const filterTagsContent = (
-    <div className="flex flex-wrap gap-2 my-4">
-      {appliedFilters.dateDebut && (
-        <FilterTag
-          text={`Début : ${appliedFilters.dateDebut.toLocaleDateString("fr-FR")}`}
-          onRemove={() =>
-            setAppliedFilters((prev) => ({ ...prev, dateDebut: null }))
-          }
-        />
-      )}
+    {/* DATE DEBUT */}
+    {appliedFilters.dateDebut && (
+      <FilterTag
+        text={`Début : ${appliedFilters.dateDebut.toLocaleDateString("fr-FR")}`}
+        onRemove={() => {
+      
+          setAppliedFilters((prev) => ({
+            ...prev,
+            dateDebut: null,
+          }));
 
-      {appliedFilters.dateFin && (
-        <FilterTag
-          text={`Fin : ${appliedFilters.dateFin.toLocaleDateString("fr-FR")}`}
-          onRemove={() =>
-            setAppliedFilters((prev) => ({ ...prev, dateFin: null }))
-          }
-        />
-      )}
-    </div>
-  );
+         
+          setFilters((prev) => ({
+            ...prev,
+            dateDebut: null,
+          }));
+        }}
+      />
+    )}
+
+    {/* DATE FIN */}
+    {appliedFilters.dateFin && (
+      <FilterTag
+        text={`Fin : ${appliedFilters.dateFin.toLocaleDateString("fr-FR")}`}
+        onRemove={() => {
+        
+          setAppliedFilters((prev) => ({
+            ...prev,
+            dateFin: null,
+          }));
+
+       
+          setFilters((prev) => ({
+            ...prev,
+            dateFin: null,
+          }));
+        }}
+      />
+    )}
+
+  </div>
+);
+
+
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
@@ -919,4 +944,5 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     </div>
   );
 }
+
 
