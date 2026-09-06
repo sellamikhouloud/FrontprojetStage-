@@ -19,6 +19,7 @@ import DateContainer from "../../components/Containers/DateContainer";
 import Button from "../../components/Button/Button";
 
 import PopupListeFamilles from "../../components/Popups/PopupListeFamilles";
+import { useAuth } from "../../components/Providers/AuthProvider";
 
 import Popup from "../../components/Popups/SuccessPopup";
 import SuccessImage from "../../assets/Success.svg";
@@ -198,6 +199,9 @@ function filterCachedFamilles(cachedData, searchTerm) {
 }
 
 export default function AjoutVisite() {
+  const { user } = useAuth();
+  const role = user?.role ?? null;
+  const isAdmin = role === "admin";
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
    const location = useLocation();
@@ -427,53 +431,63 @@ const savingRef = useRef(false);
     });
 
     setShowSuccessPopup(true);
-  } catch (error) {
-   
-    if (!error.response) {
-           try {
-     
-        await saveDraft("visite", payload);
-        if (sourceDraftClientId) {
-          await deleteDraft(sourceDraftClientId);
-        }
-        setResultatVisite(null); 
-        setOfflinePending(true);
-        setShowSuccessPopup(true);
-      } catch (draftError) {
-        console.error("❌ Impossible d'enregistrer le brouillon de visite :", draftError);
-        setBackendGeneralError(
-          "Impossible d'enregistrer la visite, même hors ligne. Veuillez réessayer."
-        );
-      }
+} catch (error) {
+
+  if (!error.response) {
+    // L'admin ne peut pas enregistrer en brouillon hors ligne —
+    // il doit être en ligne pour créer une visite.
+    if (isAdmin) {
+      setBackendGeneralError(
+        "Vous êtes hors ligne. En tant qu'administrateur, vous ne pouvez pas enregistrer de brouillon — veuillez réessayer une fois la connexion rétablie."
+      );
       setSaving(false);
+      savingRef.current = false;
       return;
     }
 
-    // Server responded with an error — unchanged from before.
-    console.error(
-      "❌ Erreur lors de la création de la visite :",
-      error.response?.data || error.message
-    );
-
-    const { fieldErrors, generalMessage } = parseBackendErrors(
-      error.response?.data,
-      error.response?.status
-    );
-
-    const mappedFieldErrors = {};
-    Object.entries(fieldErrors).forEach(([backendField, message]) => {
-      const localKey = FIELD_KEY_MAP[backendField] || backendField;
-      mappedFieldErrors[localKey] = message;
-    });
-
-    setBackendFieldErrors(mappedFieldErrors);
-    setBackendGeneralError(
-      generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la visite.")
-    );
-   } finally {
-    savingRef.current = false;
+    try {
+      await saveDraft("visite", payload);
+      if (sourceDraftClientId) {
+        await deleteDraft(sourceDraftClientId);
+      }
+      setResultatVisite(null);
+      setOfflinePending(true);
+      setShowSuccessPopup(true);
+    } catch (draftError) {
+      console.error("❌ Impossible d'enregistrer le brouillon de visite :", draftError);
+      setBackendGeneralError(
+        "Impossible d'enregistrer la visite, même hors ligne. Veuillez réessayer."
+      );
+    }
     setSaving(false);
+    return;
   }
+
+  // Le serveur a répondu avec une erreur — inchangé.
+  console.error(
+    "❌ Erreur lors de la création de la visite :",
+    error.response?.data || error.message
+  );
+
+  const { fieldErrors, generalMessage } = parseBackendErrors(
+    error.response?.data,
+    error.response?.status
+  );
+
+  const mappedFieldErrors = {};
+  Object.entries(fieldErrors).forEach(([backendField, message]) => {
+    const localKey = FIELD_KEY_MAP[backendField] || backendField;
+    mappedFieldErrors[localKey] = message;
+  });
+
+  setBackendFieldErrors(mappedFieldErrors);
+  setBackendGeneralError(
+    generalMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la visite.")
+  );
+} finally {
+  savingRef.current = false;
+  setSaving(false);
+}
 };
 
   // --- Handlers qui nettoient l'erreur au fur et à mesure ---
