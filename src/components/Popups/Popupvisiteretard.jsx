@@ -176,18 +176,7 @@ if (
   });
 }
 
-/*
- * Retard
- *
- * IMPORTANT :
- * le type doit être "retard"
- * car CardPopup utilise ce type
- * pour mettre le badge sur une ligne séparée.
- */
-badges.push({
-  type: "retard",
-  text: "Visite en retard",
-});
+
 
     return {
       sexe,
