@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import quitter from "../../assets/quitter.svg";
 import CardPopup from "../Cards/Card2";
 import { useNavigate } from "react-router-dom";
-import { listFamilles } from "@/lib/api/familles";
+import { listFamilles, getFamille } from "@/lib/api/familles";
 
 const PopupMas = ({
   open,
@@ -92,11 +92,19 @@ const PopupMas = ({
         // KEEP ONLY FAMILLES PRESENT IN MAS ALERTS
         // =====================================================
 
-        const masFamilles = allFamilles.filter((famille) =>
-          uniqueIds.includes(famille.id)
-        );
+const masFamilles = allFamilles.filter((famille) =>
+  uniqueIds.includes(famille.id)
+);
 
-        setFamilles(masFamilles);
+const famillesDetails = await Promise.all(
+  masFamilles.map(async (famille) => {
+    const response = await getFamille(famille.id);
+    return response.data;
+  })
+);
+
+setFamilles(famillesDetails);
+
       } catch (error) {
         console.error(
           "Erreur lors du chargement des familles MAS:",
@@ -157,10 +165,10 @@ const PopupMas = ({
     ]
       .filter(Boolean)
       .join(" ");
-
 // =======================================================
 // BADGES
 // =======================================================
+
 const badges = [
   // =========================
   // STATUT NUTRITIONNEL BÉBÉ
@@ -176,7 +184,7 @@ const badges = [
   },
 
   famille?.statut_nutritionnel_bebe === "normale" && {
-    type: "mere",
+    type: "mereNormal",
     text: "Nourrisson normal",
   },
 
@@ -184,7 +192,7 @@ const badges = [
   // STATUT NUTRITIONNEL MÈRE
   // =========================
   famille?.statut_nutritionnel_mere === "normale" && {
-    type: "mere",
+    type: "mereNormal",
     text: "Mère normale",
   },
 
@@ -196,6 +204,27 @@ const badges = [
   famille?.statut_nutritionnel_mere === "malnutrition" && {
     type: "mas",
     text: "Mère malnutrie",
+  },
+
+  // =========================
+  // IMC MÈRE
+  // =========================
+  famille?.statut_imc_mere === "sous_poids" && {
+    type: "mas",
+    text: "Mère sous-poids",
+  },
+
+  famille?.statut_imc_mere === "sur_poids" && {
+    type: "mas",
+    text: "Mère en surpoids",
+  },
+
+  // =========================
+  // HÉMOGLOBINE MÈRE
+  // =========================
+  famille?.statut_hemoglobine_mere === "anemie" && {
+    type: "mas",
+    text: "Mère anémiée",
   },
 
   // =========================

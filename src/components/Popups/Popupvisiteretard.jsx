@@ -139,44 +139,85 @@ const PopupRetard = ({
       region = String(mere.village);
     }
 
-/* =========================
-   Badges
-   ========================= */
+    /* =========================
+       Badges
+       ========================= */
 
-const badges = [];
+    const badges = [];
+    /*
+     * STATUT NUTRITIONNEL DU BÉBÉ
+     */
+    if (famille.statut_nutritionnel_bebe === "normale") {
+      badges.push({
+        type: "mereNormal",
+        text: "Nourrisson normal",
+      });
+    }
 
-/*
- * MAS du bébé
- */
-if (
-  famille.statut_nutritionnel_bebe === "mas"
-) {
-  badges.push({
-    type: "mas",
-    text: "MAS nourrisson",
-  });
-}
+    if (famille.statut_nutritionnel_bebe === "mam") {
+      badges.push({
+        type: "mam",
+        text: "MAM nourrisson",
+      });
+    }
 
-/*
- * Statut nutritionnel de la mère
- */
-if (
-  famille.statut_nutritionnel_mere
-) {
-  badges.push({
-    type: famille.statut_nutritionnel_mere,
-    text:
-      famille.statut_nutritionnel_mere === "normale"
-        ? "Mère normale"
-        : famille.statut_nutritionnel_mere === "a_risque"
-        ? "Mère à risque"
-        : famille.statut_nutritionnel_mere === "malnutrition"
-        ? "Mère malnutrie"
-        : famille.statut_nutritionnel_mere,
-  });
-}
+    if (famille.statut_nutritionnel_bebe === "mas") {
+      badges.push({
+        type: "mas",
+        text: "MAS nourrisson",
+      });
+    }
 
+    /*
+     * STATUT NUTRITIONNEL DE LA MÈRE
+     */
+    if (famille.statut_nutritionnel_mere === "normale") {
+      badges.push({
+        type: "mereNormal",
+        text: "Mère normale",
+      });
+    }
 
+    if (famille.statut_nutritionnel_mere === "a_risque") {
+      badges.push({
+        type: "risque",
+        text: "Mère à risque",
+      });
+    }
+
+    if (famille.statut_nutritionnel_mere === "malnutrition") {
+      badges.push({
+        type: "mas",
+        text: "Mère malnutrie",
+      });
+    }
+
+    /*
+     * IMC DE LA MÈRE
+     */
+    if (famille.statut_imc_mere === "sous_poids") {
+      badges.push({
+        type: "mas",
+        text: "Mère sous-poids",
+      });
+    }
+
+    if (famille.statut_imc_mere === "sur_poids") {
+      badges.push({
+        type: "mas",
+        text: "Mère en surpoids",
+      });
+    }
+
+    /*
+     * HÉMOGLOBINE DE LA MÈRE
+     */
+    if (famille.statut_hemoglobine_mere === "anemie") {
+      badges.push({
+        type: "mas",
+        text: "Mère anémiée",
+      });
+    }
 
     return {
       sexe,
