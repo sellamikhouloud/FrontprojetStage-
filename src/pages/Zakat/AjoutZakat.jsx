@@ -481,9 +481,7 @@ const {
 
   try {
     const response = await listFamilles(params);
-    // No saveCache here — the dashboard prefetch already keeps
-    // "familles-popup" warm on login, and a filtered result here
-    // shouldn't silently overwrite that general cache.
+ 
     return response.data;
   } catch (error) {
     if (pageParam === 1) {
@@ -534,8 +532,7 @@ useEffect(() => {
   return () => observer.disconnect();
 }, [openFamilles, hasNextFamillesPage, isFetchingNextFamillesPage, fetchNextFamillesPage]);
 
-  // Mapping vers le format attendu par le popup / les cartes
-  // (même logique que dans "Liste des familles" et "Ajout Visite")
+
  const mapFamilleForPopup = (famille) => ({
   id: famille.id,
   enfant: famille.nourrisson?.prenom,
@@ -1201,7 +1198,13 @@ useEffect(() => {
         ? "Voir les brouillons hors ligne"
         : "Voir la fiche famille"
     }
-    secondaryButtonText="Revenir à l'accueil"
+   secondaryButtonText={
+  sourceDraftClientId
+    ? "Revenir à la page de brouillon"
+    : isRoleAdmin
+    ? "Revenir à la page principale"
+    : "Revenir à l'accueil"
+    }
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
 
@@ -1213,11 +1216,16 @@ useEffect(() => {
 
       setOfflinePending(false);
     }}
-    onSecondaryClick={() => {
-      setShowSuccessPopup(false);
-      setOfflinePending(false);
-      navigate(isAdmin ? "/dashboard" : "/dashboard-coor");
-    }}
+   onSecondaryClick={() => {
+  setShowSuccessPopup(false);
+  setOfflinePending(false);
+
+  if (sourceDraftClientId) {
+    navigate("/brouillons-hors-ligne");
+  } else {
+    navigate(isRoleAdmin ? "/zakat" : "/dashboard");
+  }
+}}
   />
 )}
          </div>
