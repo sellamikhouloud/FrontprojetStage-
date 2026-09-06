@@ -152,6 +152,8 @@ const handleSave = async () => {
   setErrors(newErrors);
 
   if (Object.keys(newErrors).length > 0) return;
+    
+
 
   setSaving(true);
   setSaveError(null);
@@ -855,7 +857,13 @@ useEffect(() => {
     primaryButtonText={
       offlinePending ? "Voir les brouillons hors ligne" : "Ajouter une visite"
     }
-    secondaryButtonText="Revenir à l'accueil"
+    secondaryButtonText={
+  formData.sourceDraftClientId
+    ? "Revenir à la page de brouillon"
+    : isRoleAdmin
+    ? "Revenir à la liste des familles"
+    : "Revenir à l'accueil"
+}
     onPrimaryClick={() => {
       setShowPopup(false);
      if (offlinePending) {
@@ -869,11 +877,18 @@ useEffect(() => {
   }
       setOfflinePending(false);
     }}
-    onSecondaryClick={() => {
-      setShowPopup(false);
-      setOfflinePending(false);
-      navigate("/dashboard");
-    }}
+   onSecondaryClick={() => {
+  setShowPopup(false);
+  setOfflinePending(false);
+
+  if (formData.sourceDraftClientId) {
+    navigate("/brouillons-hors-ligne");
+  } else if (isRoleAdmin) {
+    navigate("/liste-famille");
+  } else {
+    navigate("/dashboard");
+  }
+}}
   />
 )}
 
