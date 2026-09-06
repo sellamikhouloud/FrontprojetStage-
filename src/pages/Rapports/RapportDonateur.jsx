@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
-
+import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import NavigationHeader from "../../components/Navigation,Pageheader/NavigationHeader";
 import ReportTabs from "../../components/Report/ReportTabs";
@@ -54,9 +54,17 @@ const RapportBilan = () => {
   const [terrainPhotos, setTerrainPhotos] = useState([]);
   const [photosLoading, setPhotosLoading] = useState(false);
 
-  const [bilanCandidates, setBilanCandidates] = useState([]);
-const [candidatesLoading, setCandidatesLoading] = useState(false);
-const candidatesRequestIdRef = useRef(0); 
+ const {
+  data: bilanCandidates = [],
+  isLoading: candidatesLoading,
+} = useQuery({
+  queryKey: ["bilan-candidates", rapport?.id],
+  queryFn: () =>
+    getBilanCandidates({ inclus_bilan: "true" }).then((res) => res.data || []),
+  enabled: !!rapport && !rapport.est_valide,
+});
+
+const queryClient = useQueryClient(); 
 
   const requestIdRef = useRef(0);
   const photosRequestIdRef = useRef(0);
@@ -139,20 +147,21 @@ const candidatesRequestIdRef = useRef(0);
     : [];
 
   const handleValidation = async () => {
-    if (!rapport) return;
-    setIsValidating(true);
+  if (!rapport) return;
+  setIsValidating(true);
 
-    try {
-      await validerRapport(rapport.id, narrativeMessage);
-      setRapport((prev) =>
-        prev ? { ...prev, est_valide: true, message: narrativeMessage } : prev
-      );
-    } catch (error) {
-      console.error("Erreur lors de la validation du rapport :", error);
-    } finally {
-      setIsValidating(false);
-    }
-  };
+  try {
+    await validerRapport(rapport.id, narrativeMessage);
+    setRapport((prev) =>
+      prev ? { ...prev, est_valide: true, message: narrativeMessage } : prev
+    );
+    queryClient.removeQueries({ queryKey: ["bilan-candidates", rapport.id] }); // AJOUT
+  } catch (error) {
+    console.error("Erreur lors de la validation du rapport :", error);
+  } finally {
+    setIsValidating(false);
+  }
+};
 
   const handleDownloadPdf = async () => {
     if (!rapport) return;
@@ -176,31 +185,7 @@ const candidatesRequestIdRef = useRef(0);
     }
   };
 
-  // AJOUT : charger les photos candidates uniquement si le rapport n'est pas encore validé
-useEffect(() => {
-  if (!rapport || rapport.est_valide) {
-    setBilanCandidates([]);
-    return;
-  }
 
-  const currentRequestId = ++candidatesRequestIdRef.current;
-  setCandidatesLoading(true);
-
-  getBilanCandidates()
-    .then((res) => {
-      if (currentRequestId !== candidatesRequestIdRef.current) return;
-      setBilanCandidates(res.data || []);
-    })
-    .catch((error) => {
-      console.error("Erreur lors du chargement des photos candidates :", error);
-      if (currentRequestId !== candidatesRequestIdRef.current) return;
-      setBilanCandidates([]);
-    })
-    .finally(() => {
-      if (currentRequestId !== candidatesRequestIdRef.current) return;
-      setCandidatesLoading(false);
-    });
-}, [rapport?.id, rapport?.est_valide]);
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
@@ -551,3 +536,4 @@ useEffect(() => {
 };
 
 export default RapportBilan;
+

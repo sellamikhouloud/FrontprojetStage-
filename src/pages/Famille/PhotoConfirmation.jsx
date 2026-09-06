@@ -152,6 +152,8 @@ const handleSave = async () => {
   setErrors(newErrors);
 
   if (Object.keys(newErrors).length > 0) return;
+    
+
 
   setSaving(true);
   setSaveError(null);
@@ -323,34 +325,41 @@ const handleSave = async () => {
  } catch (error) {
 
   if (!error.response) {
+    // L'admin ne peut pas enregistrer en brouillon hors ligne —
+    // il doit être en ligne pour créer une famille.
+    if (isRoleAdmin) {
+      setSaveError(
+        "Vous êtes hors ligne. En tant qu'administrateur, vous ne pouvez pas enregistrer de brouillon — veuillez réessayer une fois la connexion rétablie."
+      );
+      setSaving(false);
+      return;
+    }
+
     try {
-     const nourrissonsDraft = formData.nourrissons?.length
-  ? formData.nourrissons
-  : [formData.nourrisson];
+      const nourrissonsDraft = formData.nourrissons?.length
+        ? formData.nourrissons
+        : [formData.nourrisson];
 
-const { photo, ...mereSansPhoto } = formData.mere || {};
+      const { photo, ...mereSansPhoto } = formData.mere || {};
 
-// Toujours hors ligne : on remplace l'ancien brouillon par le nouveau,
-// plutôt que de garder les deux (éviter les doublons).
-if (formData.sourceDraftClientId) {
-  await deleteDraft(formData.sourceDraftClientId);
-}
+      if (formData.sourceDraftClientId) {
+        await deleteDraft(formData.sourceDraftClientId);
+      }
 
-await saveDraft(
-  "famille",
-  {
-    mere: mereSansPhoto,
-    nourrissons: nourrissonsDraft,
-   
-    nourrissonClientIds: nourrissonsDraft.map(() => crypto.randomUUID()),
-    date_entree: formData.date_entree,
-    statut: formData.statut,
-    date_sortie: formData.date_sortie,
-    motif_sortie: formData.motif_sortie,
-    coordinateur: formData.coordinateur,
-  },
-  photo instanceof File ? { photo } : undefined
-);
+      await saveDraft(
+        "famille",
+        {
+          mere: mereSansPhoto,
+          nourrissons: nourrissonsDraft,
+          nourrissonClientIds: nourrissonsDraft.map(() => crypto.randomUUID()),
+          date_entree: formData.date_entree,
+          statut: formData.statut,
+          date_sortie: formData.date_sortie,
+          motif_sortie: formData.motif_sortie,
+          coordinateur: formData.coordinateur,
+        },
+        photo instanceof File ? { photo } : undefined
+      );
 
       setCreatedFamilleIds([]);
       setOfflinePending(true);
@@ -389,6 +398,7 @@ await saveDraft(
 const { user, ready } = useAuth();
 const role = user?.role ?? null;
 const isAdmin = role === "admin" || role === "chef_coordinator";
+const isRoleAdmin = role === "admin";
 
 const [searchCoordinateur, setSearchCoordinateur] = useState("");
 
@@ -847,7 +857,13 @@ useEffect(() => {
     primaryButtonText={
       offlinePending ? "Voir les brouillons hors ligne" : "Ajouter une visite"
     }
-    secondaryButtonText="Revenir à l'accueil"
+    secondaryButtonText={
+  formData.sourceDraftClientId
+    ? "Revenir à la page de brouillon"
+    : isRoleAdmin
+    ? "Revenir à la liste des familles"
+    : "Revenir à l'accueil"
+}
     onPrimaryClick={() => {
       setShowPopup(false);
      if (offlinePending) {
@@ -861,11 +877,18 @@ useEffect(() => {
   }
       setOfflinePending(false);
     }}
-    onSecondaryClick={() => {
-      setShowPopup(false);
-      setOfflinePending(false);
-      navigate("/dashboard");
-    }}
+   onSecondaryClick={() => {
+  setShowPopup(false);
+  setOfflinePending(false);
+
+  if (formData.sourceDraftClientId) {
+    navigate("/brouillons-hors-ligne");
+  } else if (isRoleAdmin) {
+    navigate("/liste-famille");
+  } else {
+    navigate("/dashboard");
+  }
+}}
   />
 )}
 

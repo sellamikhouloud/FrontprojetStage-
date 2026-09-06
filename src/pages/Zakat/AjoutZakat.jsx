@@ -149,7 +149,9 @@ function parseBackendErrors(data) {
   return { fieldErrors: {}, generalMessage: "Une erreur est survenue." };
 }
 
-
+// Approximates the backend's search, client-side, against the family list
+// already cached by the dashboard prefetch — used only when offline and
+// the real search can't run.
 function filterCachedFamilles(cachedData, searchTerm) {
   const list = Array.isArray(cachedData) ? cachedData : cachedData?.results ?? [];
 
@@ -210,6 +212,7 @@ const [isSearchingByCode, setIsSearchingByCode] = useState(false);
   const { user } = useAuth();
   const role = user?.role ?? null;
   const isAdmin = role === "admin" || role === "chef_coordinator";
+  const isRoleAdmin = role === "admin";
 
   // Taux de change — récupéré une seule fois à l'ouverture du formulaire
 const { data: tauxData, isLoading: tauxLoading } = useQuery({
@@ -356,57 +359,65 @@ const extractErrorMessage = (error) => {
       await deleteDraft(sourceDraftClientId);
     }
     setShowSuccessPopup(true);
-  } catch (error) {
+} catch (error) {
   if (!error.response) {
-  try {
-  
-    if (sourceDraftClientId) {
-      await deleteDraft(sourceDraftClientId);
-    }
-    await saveDraft("aide_zakat", payload);
-    setOfflinePending(true);
-    setShowSuccessPopup(true);
-  } catch (draftError) {
-    console.error("❌ Impossible d'enregistrer le brouillon de zakat :", draftError);
-    setBackendGeneralError(
-      "Impossible d'enregistrer la zakat, même hors ligne. Veuillez réessayer."
-    );
-  }
-  setSaving(false);
-  return;
-}
-
-    console.error(
-      "❌ Erreur lors de la création de la zakat :",
-      error.response?.data || error.message
-    );
-
-    const { fieldErrors, generalMessage } = parseBackendErrors(
-      error.response?.data,
-      error.response?.status
-    );
-
-       const mappedFieldErrors = {};
-    Object.entries(fieldErrors).forEach(([backendField, message]) => {
-      const localKey = FIELD_KEY_MAP[backendField] || backendField;
-      mappedFieldErrors[localKey] = message;
-    });
-
-
-    let finalGeneralMessage = generalMessage;
-    if (mappedFieldErrors.famille && selectedFamille) {
-      finalGeneralMessage = finalGeneralMessage
-        ? `${finalGeneralMessage} — ${mappedFieldErrors.famille}`
-        : mappedFieldErrors.famille;
+    // L'admin ne peut pas enregistrer en brouillon hors ligne —
+   
+    if (isRoleAdmin) {
+      setBackendGeneralError(
+        "Vous êtes hors ligne. En tant qu'administrateur, vous ne pouvez pas enregistrer de brouillon — veuillez réessayer une fois la connexion rétablie."
+      );
+      setSaving(false);
+      return;
     }
 
-    setBackendFieldErrors(mappedFieldErrors);
-    setBackendGeneralError(
-      finalGeneralMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la zakat.")
-    );
-  } finally {
+    try {
+      if (sourceDraftClientId) {
+        await deleteDraft(sourceDraftClientId);
+      }
+      await saveDraft("aide_zakat", payload);
+      setOfflinePending(true);
+      setShowSuccessPopup(true);
+    } catch (draftError) {
+      console.error("❌ Impossible d'enregistrer le brouillon de zakat :", draftError);
+      setBackendGeneralError(
+        "Impossible d'enregistrer la zakat, même hors ligne. Veuillez réessayer."
+      );
+    }
     setSaving(false);
+    return;
   }
+
+  console.error(
+    "❌ Erreur lors de la création de la zakat :",
+    error.response?.data || error.message
+  );
+
+  const { fieldErrors, generalMessage } = parseBackendErrors(
+    error.response?.data,
+    error.response?.status
+  );
+
+  const mappedFieldErrors = {};
+  Object.entries(fieldErrors).forEach(([backendField, message]) => {
+    const localKey = FIELD_KEY_MAP[backendField] || backendField;
+    mappedFieldErrors[localKey] = message;
+  });
+
+  let finalGeneralMessage = generalMessage;
+  if (mappedFieldErrors.famille && selectedFamille) {
+    finalGeneralMessage = finalGeneralMessage
+      ? `${finalGeneralMessage} — ${mappedFieldErrors.famille}`
+      : mappedFieldErrors.famille;
+  }
+
+  setBackendFieldErrors(mappedFieldErrors);
+  setBackendGeneralError(
+    finalGeneralMessage || (Object.keys(mappedFieldErrors).length ? null : "Une erreur est survenue lors de l'enregistrement de la zakat.")
+  );
+} finally {
+  setSaving(false);
+}
 };
 
   // Chaque onChange nettoie son propre message d'erreur immediatement
@@ -470,7 +481,7 @@ const {
 
   try {
     const response = await listFamilles(params);
-
+ 
     return response.data;
   } catch (error) {
     if (pageParam === 1) {
@@ -569,8 +580,8 @@ useEffect(() => {
       setSelectedFamille(mapFamilleForPopup(response.data));
     })
     .catch(() => {
-      // Hors ligne (ou famille introuvable)
-   
+      // Hors ligne (ou famille introuvable) : on garde le placeholder
+      // minimal du brouillon, le formulaire reste utilisable normalement.
     });
 
   return () => {
@@ -1187,7 +1198,13 @@ useEffect(() => {
         ? "Voir les brouillons hors ligne"
         : "Voir la fiche famille"
     }
-    secondaryButtonText="Revenir à l'accueil"
+   secondaryButtonText={
+  sourceDraftClientId
+    ? "Revenir à la page de brouillon"
+    : isRoleAdmin
+    ? "Revenir à la page principale"
+    : "Revenir à l'accueil"
+    }
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
 
@@ -1199,11 +1216,16 @@ useEffect(() => {
 
       setOfflinePending(false);
     }}
-    onSecondaryClick={() => {
-      setShowSuccessPopup(false);
-      setOfflinePending(false);
-      navigate(isAdmin ? "/dashboard" : "/dashboard-coor");
-    }}
+   onSecondaryClick={() => {
+  setShowSuccessPopup(false);
+  setOfflinePending(false);
+
+  if (sourceDraftClientId) {
+    navigate("/brouillons-hors-ligne");
+  } else {
+    navigate(isRoleAdmin ? "/zakat" : "/dashboard");
+  }
+}}
   />
 )}
          </div>

@@ -21,6 +21,7 @@ const LaitInfantile = ({
   // Tant qu'aucune famille n'est sélectionnée, le lait n'est pas accessible
   hasFamille = true,
   onRequireFamille,
+  onRemove, 
 }) => {
   return (
     <div
@@ -33,11 +34,22 @@ const LaitInfantile = ({
          py-4
       "
     >
-      {/* Title */}
-      <h2 className="text-[20px] font-bold text-[#202124] mb-0">
-        Lait infantile
-      </h2>
+   {/* Title */}
+<div className="flex items-center justify-between mb-0">
+  <h2 className="text-[20px] font-bold text-[#202124]">
+    Lait infantile
+  </h2>
 
+  {type && (
+    <button
+      type="button"
+      onClick={onRemove}
+      className="text-[13px] font-medium text-[#4E9F8A] hover:underline"
+    >
+      Retirer le lait
+    </button>
+  )}
+</div>
       {/* Type */}
       <div className="mb-1">
         <div className="w-full flex">

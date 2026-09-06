@@ -23,8 +23,9 @@ export const refusePhoto = (id, data) =>
 export const reexaminePhoto = (id) =>
   api.post(`/api/photos/${id}/reexaminer/`);
 
-export const getBilanCandidates = () =>
-  api.get("/api/photos/bilan_candidates/");
+
+export const getBilanCandidates = (params) =>
+  api.get("/api/photos/bilan_candidates/", { params });
 
 export const saveBilanSelection = (photoIds) =>
   api.post("/api/photos/bilan/", {

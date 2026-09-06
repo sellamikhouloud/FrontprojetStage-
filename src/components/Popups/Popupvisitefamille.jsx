@@ -244,7 +244,7 @@ const Popupvisites = ({
                         },
                         item.statut_nutritionnel === "normale" && {
                           type: "mere",
-                          text: "Bébé normal",
+                           text: "Nourrisson normal",
                         },
                         item.statut_nutritionnel_mere === "normale" && {
                           type: "mere",

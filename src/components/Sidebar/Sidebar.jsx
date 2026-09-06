@@ -98,29 +98,31 @@ export default function Sidebar({
     role === "coordinator" || role === "chef_coordinator";
 
   useEffect(() => {
-    let cancelled = false;
+  if (isAdmin) return; // l'admin ne crée jamais de brouillon, inutile de vérifier
 
-    const refreshDraftCount = () => {
-      countDrafts()
-        .then((count) => {
-          if (!cancelled) setDraftCount(count);
-        })
-        .catch(() => {
-          // IndexedDB unavailable (private mode, etc.) — badge just stays at 0.
-        });
-    };
+  let cancelled = false;
 
-    refreshDraftCount();
+  const refreshDraftCount = () => {
+    countDrafts()
+      .then((count) => {
+        if (!cancelled) setDraftCount(count);
+      })
+      .catch(() => {
+        // IndexedDB unavailable (private mode, etc.) — badge just stays at 0.
+      });
+  };
 
-    window.addEventListener("focus", refreshDraftCount);
-    window.addEventListener("nutrigest:drafts-changed", refreshDraftCount);
+  refreshDraftCount();
 
-    return () => {
-      cancelled = true;
-      window.removeEventListener("focus", refreshDraftCount);
-      window.removeEventListener("nutrigest:drafts-changed", refreshDraftCount);
-    };
-  }, []);
+  window.addEventListener("focus", refreshDraftCount);
+  window.addEventListener("nutrigest:drafts-changed", refreshDraftCount);
+
+  return () => {
+    cancelled = true;
+    window.removeEventListener("focus", refreshDraftCount);
+    window.removeEventListener("nutrigest:drafts-changed", refreshDraftCount);
+  };
+}, [isAdmin]);
 
 
   useEffect(() => {
@@ -509,11 +511,14 @@ export default function Sidebar({
                   onMouseEnter={() => setExpanded(true)}
                 />
               ))}
-              <DraftsBadge
-                count={draftCount}
-                expanded={expanded}
-                onClick={() => navigate(DRAFTS_PATH)}
-              />
+            
+              {!isAdmin && (
+               <DraftsBadge
+               count={draftCount}
+               expanded={expanded}
+               onClick={() => navigate(DRAFTS_PATH)}
+               />
+              )}
 
               {actions.length > 0 && expanded && (
                 <p className="text-white font-bold">
@@ -627,6 +632,7 @@ export default function Sidebar({
                     />
                   </div>
                 ))}
+                {!isAdmin && (
                  <DraftsBadge
                   count={draftCount}
                   expanded={true}
@@ -634,7 +640,9 @@ export default function Sidebar({
                     setMobileOpen(false);
                     navigate(DRAFTS_PATH);
                   }}
-                />
+                   />
+                   )}
+                
 
                 {actions.length > 0 && (
                   <>
