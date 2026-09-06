@@ -23,7 +23,7 @@ const getBadgeBebe = (statut) => {
     case "mas":
       return { type: "mas", text: "MAS nourrisson" };
     case "normale":
-      return { type: "mere", text: "Bébé normal" };
+      return { type: "mere", text: "Nourrisson normal" };
     default:
       return null;
   }
