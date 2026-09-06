@@ -4,6 +4,7 @@ const GalleryGrid = ({
   photos,
   selectedFilter,
   onPhotoClick,
+  onConsultPhoto,
   selectionMode,
   selectedPhotos,
   setSelectedPhotos,
@@ -36,6 +37,7 @@ const GalleryGrid = ({
             title={photo.title}
             status={photo.status}
             onClick={() => onPhotoClick(photo)}
+            onConsultClick={() => onConsultPhoto(photo)}
             selectionMode={selectionMode}
             selectedPhotos={selectedPhotos}
             setSelectedPhotos={setSelectedPhotos}

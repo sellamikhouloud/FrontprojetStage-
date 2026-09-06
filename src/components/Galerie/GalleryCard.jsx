@@ -7,6 +7,7 @@ const GalleryCard = ({
   title,
   status,
   onClick,
+  onConsultClick,
   photoId,
   selectionMode = false,
   selectedPhotos = [],
@@ -46,21 +47,31 @@ const averageBrightness = brightness / (data.length / 4);
 setIsDarkImage(averageBrightness < 128);
   };
 }, [image]);
-  const handleClick = () => {
-    if (selectionMode){
-      // Only validated photos can be selected
-      if (status !== "validated") return;
-      if(isSelected){
-        setSelectedPhotos((prev) => 
-         prev.filter((id) => id != photoId)
-        );
-      }else{
-        setSelectedPhotos((prev) => [...prev,photoId])
-      }
-      return;
-    }
-    onClick?.()
+const handleClick = () => {
+  if (selectionMode) {
+    // In bilan selection mode:
+    // clicking the photo = consult the photo
+    onConsultClick?.();
+    return;
   }
+
+  // Normal gallery behavior
+  onClick?.();
+};
+
+const handleSelection = () => {
+  // Only validated photos can be selected
+  if (status !== "validated") return;
+
+  if (isSelected) {
+    setSelectedPhotos((prev) =>
+      prev.filter((id) => id !== photoId)
+    );
+  } else {
+    setSelectedPhotos((prev) => [...prev, photoId]);
+  }
+};
+
   return (
     <div
       onClick={handleClick}
@@ -95,7 +106,7 @@ setIsDarkImage(averageBrightness < 128);
           type="button"
           onClick={(e) => {
             e.stopPropagation();
-            handleClick();
+            handleSelection();
           }}          
           className={`
             absolute

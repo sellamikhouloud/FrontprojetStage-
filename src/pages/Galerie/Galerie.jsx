@@ -367,6 +367,11 @@ useEffect(() => {
     }
   };
 
+  const handleConsultPhoto = (photo) => {
+  setSelectedPhoto(photo);
+  setShowConsulter(true);
+};
+
   /*
    * ============================================================
    * PENDING PHOTOS
@@ -1015,19 +1020,20 @@ const handlePreviousPage = async () => {
           {/* GALLERY */}
 
           <div className="flex-1 overflow-y-auto">
-{filteredPhotos.length === 0 ? (
-  <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
-    <img
-      src={NoResultImage}
-      alt="Aucun résultat"
-      className="w-56 sm:w-72 md:w-96 h-auto"
-    />
-  </div>
-) : (
+            {filteredPhotos.length === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center py-10 md:py-20 px-4">
+                <img
+                  src={NoResultImage}
+                  alt="Aucun résultat"
+                  className="w-56 sm:w-72 md:w-96 h-auto"
+                />
+              </div>
+            ) : (
               <GalleryGrid
                 photos={filteredPhotos}
                 selectedFilter={selectedFilter}
                 onPhotoClick={handlePhotoClick}
+                onConsultPhoto={handleConsultPhoto}
                 selectionMode={selectionMode}
                 selectedPhotos={selectedPhotos}
                 setSelectedPhotos={setSelectedPhotos}
