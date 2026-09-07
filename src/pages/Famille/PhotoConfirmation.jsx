@@ -538,7 +538,7 @@ useEffect(() => {
            showRight={false}
            onBack={() => {
            resetFamilyForm();
-           navigate(formData.returnTo || "/liste-famille");
+           navigate(formData.returnTo || -1);
            }}
           />
 

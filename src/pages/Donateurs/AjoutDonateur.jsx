@@ -355,14 +355,14 @@ export default function AjoutDonateur() {
               image={SuccessImage}
               id={createdDonateurId}
               primaryButtonText="Voir le profil du donateur"
-              secondaryButtonText="Revenir à l'accueil"
+              secondaryButtonText="Revenir à la liste des donateurs"
               onPrimaryClick={() => {
                 setShowSuccessPopup(false);
                 navigate(`/fiche-donateur/${createdDonateurId}`);
               }}
               onSecondaryClick={() => {
                 setShowSuccessPopup(false);
-                navigate("/dashboard");
+                navigate("/liste-Donateurs");
               }}
             />
           )}

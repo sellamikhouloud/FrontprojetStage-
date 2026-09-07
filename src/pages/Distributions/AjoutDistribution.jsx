@@ -1292,28 +1292,31 @@ useEffect(() => {
         : "Distribution enregistrée avec succès"
     }
     image={offlinePending ? null : SuccessImage}
-    primaryButtonText={
-      offlinePending
-        ? "Voir les brouillons hors ligne"
-        : "Voir la fiche famille"
-    }
-    secondaryButtonText="Revenir à l'accueil"
-    onPrimaryClick={() => {
-      setShowSuccessPopup(false);
+    primaryButtonText="Voir la fiche famille"
+   secondaryButtonText={
+  sourceDraftClientId
+    ? "Revenir à la page de brouillon"
+    : isAdmin
+    ? "Revenir à la liste des distributions"
+    : "Revenir à l'accueil"
+}
+onPrimaryClick={() => {
+  setShowSuccessPopup(false);
+  setOfflinePending(false);
+  navigate(`/famille/${selectedFamille?.id}`);
+}}
+onSecondaryClick={() => {
+  setShowSuccessPopup(false);
+  setOfflinePending(false);
 
-      if (offlinePending) {
-        navigate("/brouillons-hors-ligne");
-      } else {
-        navigate(`/famille/${selectedFamille?.id}`);
-      }
-
-      setOfflinePending(false);
-    }}
-    onSecondaryClick={() => {
-      setShowSuccessPopup(false);
-      setOfflinePending(false);
-      navigate("/dashboard");
-    }}
+  if (sourceDraftClientId) {
+    navigate("/brouillons-hors-ligne");
+  } else if (isAdmin) {
+    navigate("/liste-distributions");
+  } else {
+    navigate("/dashboard");
+  }
+}}
   />
 )}
         </div>

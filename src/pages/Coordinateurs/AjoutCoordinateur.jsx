@@ -596,14 +596,14 @@ try {
     image={SuccessImage}
     id={createdCoordinatorId}
     primaryButtonText="Voir le profil du coordinateur"
-    secondaryButtonText="Revenir au tableau de bord"
+    secondaryButtonText="Revenir à la liste de coordinateurs"
     onPrimaryClick={() => {
       setShowSuccessPopup(false);
       navigate(`/fiche-coordinateur/${createdCoordinatorId}`);
     }}
     onSecondaryClick={() => {
       setShowSuccessPopup(false);
-      navigate("/dashboard");
+      navigate("/liste-coordinateurs");
     }}
   />
 )}

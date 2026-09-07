@@ -1202,7 +1202,7 @@ useEffect(() => {
   sourceDraftClientId
     ? "Revenir à la page de brouillon"
     : isRoleAdmin
-    ? "Revenir à la page principale"
+    ? "Revenir à la liste des zakats"
     : "Revenir à l'accueil"
     }
     onPrimaryClick={() => {
