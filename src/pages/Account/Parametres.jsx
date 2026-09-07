@@ -638,7 +638,7 @@ return (
         <PageHeader
           leftTitle="Fermer"
           showRight={false}
-          onBack={() => navigate("/dashboard")}
+          onBack={() => navigate(-1)}
         />
 
       {/* ================================
