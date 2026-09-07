@@ -20,7 +20,7 @@ import PopupListeCoordinateurs from "../../components/Popups/PopupListeCoordinat
 import PopupFinSuivi from "../../components/Popups/PopupFinsuivi";
 import Popup from "../../components/Popups/SuccessPopup.jsx";
 import Button from "../../components/Button/Button";
-import MotherPhoto from "../../assets/photo mere.svg";
+import MotherPhoto from "../../assets/images/profilee.png";
 import successImage from "../../assets/Success.svg";
 import { X } from "lucide-react";
 import Spinner from "../../components/Spinner";
