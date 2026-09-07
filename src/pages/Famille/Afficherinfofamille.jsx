@@ -15,7 +15,7 @@ import StatusBadge from "../../components/Cards/Badge";
 import PopupDistributionfamille from "../../components/Popups/PopupDistributionfamille";
 import Button from "../../components/Button/Button";
 import Popupvisites from "../../components/Popups/Popupvisitefamille";
-import MotherPhoto from "../../assets/photo mere.svg";
+import MotherPhoto from "../../assets/images/profilee.png";
 import successImage from "../../assets/Success.svg";
 import PopupFinSuivi from "../../components/Popups/PopupFinsuivi";
 import Popup from "../../components/Popups/SuccessPopup.jsx";
