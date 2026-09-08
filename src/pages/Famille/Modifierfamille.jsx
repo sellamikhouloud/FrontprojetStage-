@@ -1028,8 +1028,8 @@ const makeHandler = (fields) => (index, value) => {
 </div>
        <BackendErrorMessage message={errorMessage} className="mb-4" />
 
-        <div className="grid grid-cols-1 xl:grid-cols-[520px_minmax(0,1fr)] gap-6 xl:gap-10 mb-8">
-                   <div className="relative w-full lg:w-[520px] h-[220px] sm:h-[260px] md:h-[300px] lg:h-[331px]">
+       <div className="grid grid-cols-1 lg:grid-cols-[35fr_65fr] gap-6 xl:gap-10 mb-8">
+              <div className="relative w-full h-[220px] sm:h-[260px] md:h-[300px] lg:h-[331px]">
             <input
               ref={photoInputRef}
               type="file"
