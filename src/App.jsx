@@ -105,13 +105,33 @@ function AppRoutes() {
         }
       />
 
-      {/* Add Family */}
-      <Route path="/information-mere" element={<InformationMere />} />
+       {/* Add Family */}
+      <Route
+       path="/information-mere"
+       element={
+         <ProtectedRoute>
+         <InformationMere />
+      </ProtectedRoute>
+       }
+      />
+
       <Route
         path="/information-nourrisson"
-        element={<InformationNourrisson />}
+        element={
+        <ProtectedRoute>
+        <InformationNourrisson />
+        </ProtectedRoute>
+      }
       />
-      <Route path="/photo-confirmation" element={<PhotoConfirmation />} />
+
+      <Route
+       path="/photo-confirmation" 
+       element={
+        <ProtectedRoute>
+         <PhotoConfirmation />
+       </ProtectedRoute>
+       }
+       />
 
       {/* Coordinateur */}
       <Route
@@ -166,7 +186,14 @@ function AppRoutes() {
       />
 
       {/* Distribution */}
-      <Route path="/ajout-distribution" element={<AjoutDistribution />} />
+      <Route
+       path="/ajout-distribution" 
+       element={
+         <ProtectedRoute>
+           <AjoutDistribution />
+         </ProtectedRoute>
+        } 
+      />
       <Route
         path="/liste-distributions"
         element={
@@ -185,11 +212,32 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="/ajout-zakat" element={<AjoutZakat />} />
+      <Route 
+       path="/ajout-zakat" 
+       element={
+        <ProtectedRoute>
+           <AjoutZakat />
+        </ProtectedRoute>
+      }
+      />
 
       {/* Visite */}
-      <Route path="/liste-visite" element={<ListeVisites />} />
-      <Route path="/ajout-visite" element={<AjoutVisite />} />
+      <Route 
+      path="/liste-visite" 
+      element={
+        <ProtectedRoute>
+          <ListeVisites />
+        </ProtectedRoute>
+      } 
+      />
+      <Route 
+      path="/ajout-visite" 
+      element={
+        <ProtectedRoute>
+         <AjoutVisite />
+       </ProtectedRoute>
+      } 
+      />
 
       <Route
         path="/galerie"
@@ -229,9 +277,30 @@ function AppRoutes() {
 />
 
       {/* Parametres */}
-      <Route path="/parametres" element={<Parametres />} />
-      <Route path="/profile-coor" element={<PageProfilCoordinateur />} />
-      <Route path="/brouillons-hors-ligne" element={<BrouillonsHorsLigne />} />
+      <Route
+       path="/parametres"
+       element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <Parametres />
+       </ProtectedRoute>
+       } 
+       />
+      <Route
+       path="/profile-coor" 
+       element={
+        <ProtectedRoute allowedRoles={["coordinator", "chef_coordinator"]}>
+       <PageProfilCoordinateur />
+       </ProtectedRoute>
+       } 
+       />
+      <Route 
+      path="/brouillons-hors-ligne" 
+      element={
+       <ProtectedRoute allowedRoles={["coordinator", "chef_coordinator"]}>
+         <BrouillonsHorsLigne />
+       </ProtectedRoute>
+      } 
+      />
 
       {/* Notifications */}
  <Route
