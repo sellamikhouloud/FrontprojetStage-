@@ -6,116 +6,82 @@ export default function OMSGraphs({ graphs = [] }) {
 
   return (
     <>
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2
-          className="
-            text-[16px]
-            lg:text-[18px]
-            font-semibold
-            text-black
-          "
-
-        >
-          Courbes OMS
+        <h2 className="text-[16px] lg:text-[18px] font-semibold text-black">
+          Courbes 
         </h2>
 
         <button
-  onClick={() => graphs.length > 0 && setOpen(true)}
-  className="text-[14px] text-gray-600 hover:underline"
->
-  Voir tous
-</button>
+          onClick={() => graphs.length > 0 && setOpen(true)}
+          className="text-[14px] text-gray-600 hover:underline"
+        >
+          Voir tous
+        </button>
       </div>
 
-      {/* Desktop */}
-      <div className="hidden lg:grid grid-cols-2 gap-3">
-       {graphs.slice(0, 2).map((graph) => (
-  <div key={graph.id} className="w-full">
-    {graph.component}
-  </div>
-))}
+      {/* Affichage sur la page principale : 2 courbes côte à côte */}
+      <div className="hidden lg:grid grid-cols-2 gap-4">
+        {graphs.slice(0, 2).map((graph) => (
+          <div key={graph.id} className="w-full min-w-0">
+            {graph.component}
+          </div>
+        ))}
       </div>
 
-      {/* Mobile */}
+      {/* Affichage mobile : 1 seule courbe visible */}
       <div className="lg:hidden">
-        <div className="w-full">
-  {graphs[0]?.component}
-</div>
+        <div className="w-full min-w-0">{graphs[0]?.component}</div>
       </div>
 
-      {/* Popup */}
+      {/* Pop-up Modale : toutes les courbes, une par ligne */}
       {open && (
         <div
-          className="
-            fixed inset-0 z-[60]
-            bg-transparent sm:bg-black/40
-            flex items-start sm:items-center justify-center
-            overflow-y-auto
-          "
+          className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-2 sm:p-4"
           onClick={() => setOpen(false)}
         >
-         <div
-  onClick={(e) => e.stopPropagation()}
-  className="
-    w-full
-    min-h-screen
-
-    sm:min-h-0
-    sm:w-[952px]
-    sm:max-h-[90vh]
-
-    overflow-y-auto
-    scrollbar-hide
-
-    bg-white
-
-    rounded-none
-    sm:rounded-[20px]
-
-    border-0
-    sm:border
-
-    p-4
-    sm:p-6
-  "
-    style={{
-            borderColor: "#4E9F8A",
-          }}
->
-            {/* Header */}
-            <div className="mb-6">
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="
+              w-full
+              sm:w-[95vw]
+              max-w-[1200px]
+              max-h-[92vh]
+              bg-white
+              rounded-[20px]
+              p-4
+              sm:p-6
+              overflow-y-auto
+              no-scrollbar
+              border
+              border-[#4E9F8A]
+            "
+          >
+            {/* Header / Bouton Fermer */}
+            <div className="mb-4 flex justify-between items-center">
               <button
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-2 text-[17px] text-[#202124]"
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-[15px]
+                  font-medium
+                  text-gray-700
+                  hover:text-black
+                "
               >
-                <img
-                  src={quitter}
-                  alt="Fermer"
-                  className="w-5 h-5"
-                />
+                <img src={quitter} alt="Fermer" className="w-4 h-4" />
                 Fermer
               </button>
-
-            
             </div>
 
-            {/* Desktop popup */}
-            <div className="hidden lg:grid grid-cols-2 gap-3 justify-items-center">
-             {graphs.map((graph) => (
-  <div key={graph.id} className="w-full">
-    {graph.component}
-  </div>
-))}
-            </div>
-
-            {/* Mobile popup */}
-            <div className="lg:hidden flex flex-col gap-4">
+            {/* 1 graphique par ligne */}
+            <div className="flex flex-col gap-5">
               {graphs.map((graph) => (
-  <div key={graph.id}>
-    {graph.component}
-  </div>
-))}
+                <div key={graph.id} className="w-full min-w-0">
+                  {graph.component}
+                </div>
+              ))}
             </div>
           </div>
         </div>
