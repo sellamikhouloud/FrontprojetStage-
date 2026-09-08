@@ -1017,11 +1017,7 @@ useEffect(() => {
           </>
         )}
 
- {backendGeneralError && (
-  <div className="mt-2">
-    <BackendErrorMessage message={backendGeneralError} />
-  </div>
-)}
+
         {/* Main content */}
    <div className="mt-5 grid grid-cols-1 lg:grid-cols-[11fr_9fr] gap-6">
 
@@ -1399,6 +1395,12 @@ useEffect(() => {
             </div>
           </div>
         </div>
+
+         {backendGeneralError && (
+  <div className="mt-4">
+    <BackendErrorMessage message={backendGeneralError} />
+  </div>
+)}
 
         {/* Save button */}
         <div className="mt-2">

@@ -393,7 +393,7 @@ export default function FicheDonateur() {
                 
             
 
-              <Input label="Créé par" value={donateur.cree_par || "/"} disabled noPadding />
+              <Input label="Créé par" value={donateur.cree_par || "/"} disabled readOnly noPadding />
 
                 <DateContainer
                 label="Date de création"
@@ -403,7 +403,7 @@ export default function FicheDonateur() {
                 noPadding
               />
 
-               <Input label="Modifié par" value={modifiePar || "/"} disabled noPadding />
+               <Input label="Modifié par" value={modifiePar || "/"} disabled readOnly noPadding />
 
               <DateContainer
                 label="Date de modification"

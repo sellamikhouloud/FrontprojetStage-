@@ -1126,11 +1126,7 @@ useEffect(() => {
             </div>
           </>
         )}
-        {saveError && (
-  <div className="mt-3">
-    <BackendErrorMessage message={saveError} />
-  </div>
-)}
+      
 
         {/* Main content */}
         <div className="mt-5 grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-6">
@@ -1263,6 +1259,12 @@ useEffect(() => {
             </div>
           </div>
         </div>
+
+          {saveError && (
+  <div className="mt-5">
+    <BackendErrorMessage message={saveError} />
+  </div>
+)}
 
         {/* Save button */}
        <div className="mt-2">

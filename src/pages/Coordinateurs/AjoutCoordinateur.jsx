@@ -335,7 +335,7 @@ try {
             Nouveau Coordinateur
           </h1>
 
-         <BackendErrorMessage message={backendError || saveError} className="mt-2" />
+        
 
                   {/* Photo */}
 <div className="flex justify-center">
@@ -577,7 +577,10 @@ try {
             <ErrorMessage message={errors.password} />
           </div>
 
+ <BackendErrorMessage message={backendError || saveError} className="mt-2" />
+
                  {/* Bouton */}
+
 <div className="flex flex-col gap-[0px]">
   <Button
     title={saving ? "Enregistrement..." : "Enregistrer"}

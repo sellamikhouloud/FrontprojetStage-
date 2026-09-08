@@ -261,7 +261,7 @@ export default function AjoutDonateur() {
             Nouveau Donateur
           </h1>
 
-          <BackendErrorMessage message={backendError || saveError} className="mt-2" />
+        
 
           {/* Illustration */}
           <div className="flex justify-center">
@@ -337,6 +337,8 @@ export default function AjoutDonateur() {
             options={["Active", "Inactive"]}
             noPadding
           />
+
+            <BackendErrorMessage message={backendError || saveError} className="mt-2" />
 
           {/* Button */}
           <div className="flex flex-col gap-0">
