@@ -8,7 +8,7 @@ export default function OMSGraphs({ graphs = [] }) {
     <>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[16px] lg:text-[18px] font-semibold text-black">
-          Courbes 
+          Courbes de croissance
         </h2>
 
         <button
