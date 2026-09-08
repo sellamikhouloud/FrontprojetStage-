@@ -8,7 +8,7 @@ export default function OMSGraphs({ graphs = [] }) {
     <>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[16px] lg:text-[18px] font-semibold text-black">
-          Courbes de croissance
+          Courbes de croissance 
         </h2>
 
         <button
@@ -33,10 +33,51 @@ export default function OMSGraphs({ graphs = [] }) {
         <div className="w-full min-w-0">{graphs[0]?.component}</div>
       </div>
 
-      {/* Pop-up Modale : toutes les courbes, une par ligne */}
+      {/* MOBILE : page plein écran (pas de popup) */}
       {open && (
         <div
-          className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-2 sm:p-4"
+          className="
+            lg:hidden
+            fixed inset-0 z-[60]
+            bg-white
+            overflow-y-auto
+            no-scrollbar
+          "
+        >
+          {/* Header fixe type "page" */}
+          <div className="sticky top-0 bg-white z-10 flex items-center gap-2 px-4 py-4 border-b border-gray-100">
+            <button
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 text-[15px] font-medium text-gray-700 hover:text-black"
+            >
+              <img src={quitter} alt="Fermer" className="w-4 h-4" />
+              Retour
+            </button>
+            <h2 className="text-[16px] font-semibold text-black">
+              Courbes de croissance
+            </h2>
+          </div>
+
+          <div className="flex flex-col gap-5 p-4">
+            {graphs.map((graph) => (
+              <div key={graph.id} className="w-full min-w-0">
+                {graph.component}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* DESKTOP : modale classique avec overlay */}
+      {open && (
+        <div
+          className="
+            hidden
+            lg:flex
+            fixed inset-0 z-[60]
+            bg-black/40
+            items-center justify-center p-4
+          "
           onClick={() => setOpen(false)}
         >
           <div
@@ -48,34 +89,23 @@ export default function OMSGraphs({ graphs = [] }) {
               max-h-[92vh]
               bg-white
               rounded-[20px]
-              p-4
-              sm:p-6
+              p-6
               overflow-y-auto
               no-scrollbar
               border
               border-[#4E9F8A]
             "
           >
-            {/* Header / Bouton Fermer */}
             <div className="mb-4 flex justify-between items-center">
               <button
                 onClick={() => setOpen(false)}
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  text-[15px]
-                  font-medium
-                  text-gray-700
-                  hover:text-black
-                "
+                className="flex items-center gap-2 text-[15px] font-medium text-gray-700 hover:text-black"
               >
                 <img src={quitter} alt="Fermer" className="w-4 h-4" />
                 Fermer
               </button>
             </div>
 
-            {/* 1 graphique par ligne */}
             <div className="flex flex-col gap-5">
               {graphs.map((graph) => (
                 <div key={graph.id} className="w-full min-w-0">
