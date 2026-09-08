@@ -81,13 +81,18 @@ export default function Chart({
 }) {
   const gradientId = `chart-gradient-${useId()}`;
 
-  // --- Axe X dynamique ---
   const xValues = data.map((d) => d[xKey]).filter((v) => typeof v === "number");
-  const xMin = xDomainDefault[0];
-  const xMax = Math.max(
-    xDomainDefault[1],
-    xValues.length ? Math.ceil(Math.max(...xValues)) : xDomainDefault[1]
-  );
+
+// xMin = premier âge réellement récupéré pour ce bébé, arrondi au pas inférieur
+const xMin = xValues.length
+  ? Math.floor(Math.min(...xValues) / xStep) * xStep
+  : xDomainDefault[0];
+
+const xMax = Math.max(
+  xMin + xStep, // sécurité pour ne jamais avoir xMax === xMin
+  xDomainDefault[1],
+  xValues.length ? Math.ceil(Math.max(...xValues)) : xDomainDefault[1]
+);
 
   const xTicks = [];
   for (let x = xMin; x <= xMax; x += xStep) xTicks.push(x);
