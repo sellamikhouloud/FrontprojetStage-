@@ -149,7 +149,7 @@ initialPageParam: 1,
     <div className="flex h-screen w-full overflow-hidden bg-white">
       <Sidebar hideOnMobile />
 
-     <main
+   <main
       className="
         flex-1
         min-w-0
@@ -161,14 +161,12 @@ initialPageParam: 1,
         md:px-6
         lg:px-8
         xl:px-10
-        pt-4
-        sm:pt-6
-        lg:pt-8
         pb-8
       "
     >
       {/* Conteneur Header + Bouton Exporter */}
-<div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+{/* Conteneur Header + Bouton Exporter */}
+<div className="sticky top-0 z-10 bg-white pt-4 sm:pt-6 lg:pt-8 pb-3 w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
   <PageHeader
     leftTitle="Fermer"
     showRight={false}
@@ -348,4 +346,3 @@ initialPageParam: 1,
 };
 
 export default HistoriqueNotificationsPage;
-
