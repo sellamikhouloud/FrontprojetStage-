@@ -478,9 +478,10 @@ export default function Sidebar({
           />
         </div>
 
-   {/* Navigation */}
+  {/* Navigation */}
+
 <div
-  className={`
+  className="
     flex-1
     flex
     flex-col
@@ -489,8 +490,8 @@ export default function Sidebar({
     scrollbar-hide
     min-h-0
     w-full
-    ${expanded ? "" : "justify-center"}
-  `}
+    [justify-content:safe_center]
+  "
 >
   {expanded && (
     <p className="text-white font-bold mb-6 self-start">
@@ -502,7 +503,7 @@ export default function Sidebar({
     className={`
       flex
       flex-col
-     ${expanded ? "gap-7 items-start w-full" : "gap-7 items-center"}
+      ${expanded ? "gap-7 items-start w-full" : "gap-7 items-center"}
     `}
   >
     {navigation.map((item, index) => (
@@ -606,70 +607,72 @@ export default function Sidebar({
             </div>
           </div>
 
-          {/* Navigation */}
+        {/* Navigation */}
 
-          <div
-            className="
-              flex-1
-              flex
-              items-center
-              justify-center
-              min-h-0
-            "
-          >
-            <div className="w-full">
-              <p className="text-white font-bold text-[21px] mb-10">
-                Navigation
-              </p>
+<div
+  className="
+    flex-1
+    flex
+    flex-col
+    items-center
+    overflow-y-auto
+    scrollbar-hide
+    min-h-0
+    w-full
+    [justify-content:safe_center]
+  "
+>
+  <p className="text-white font-bold text-[21px] mb-10 self-start">
+    Navigation
+  </p>
 
-              <nav className="flex flex-col gap-10">
-                {navigation.map((item, index) => (
-                  <div
-                    key={index}
-                    onClick={handleItemClick}
-                  >
-                    <SidebarItem
-                      item={item}
-                      expanded={true}
-                    />
-                  </div>
-                ))}
-                {!isAdmin && (
-                 <DraftsBadge
-                  count={draftCount}
-                  expanded={true}
-                  onClick={() => {
-                    setMobileOpen(false);
-                    navigate(DRAFTS_PATH);
-                  }}
-                   />
-                   )}
-                
+  <nav className="flex flex-col gap-10 w-full">
+    {navigation.map((item, index) => (
+      <div
+        key={index}
+        onClick={handleItemClick}
+      >
+        <SidebarItem
+          item={item}
+          expanded={true}
+        />
+      </div>
+    ))}
+    {!isAdmin && (
+      <DraftsBadge
+        count={draftCount}
+        expanded={true}
+        onClick={() => {
+          setMobileOpen(false);
+          navigate(DRAFTS_PATH);
+        }}
+      />
+    )}
 
-                {actions.length > 0 && (
-                  <>
-                    <p className="text-white font-bold text-[21px] mt-4 mb-2">
-                      Action rapide
-                    </p>
+    {actions.length > 0 && (
+      <>
+        <p className="text-white font-bold text-[21px] mt-4 mb-2 self-start">
+          Action rapide
+        </p>
 
-                    <div className="flex flex-col gap-10">
-                      {actions.map((item, index) => (
-                        <div
-                          key={index}
-                          onClick={handleItemClick}
-                        >
-                          <SidebarItem
-                            item={item}
-                            expanded={true}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </nav>
+        <div className="flex flex-col gap-10 w-full">
+          {actions.map((item, index) => (
+            <div
+              key={index}
+              onClick={handleItemClick}
+            >
+              <SidebarItem
+                item={item}
+                expanded={true}
+              />
             </div>
-          </div>
+          ))}
+        </div>
+      </>
+    )}
+  </nav>
+</div>
+          
 
           {/* Avatar */}
 
