@@ -75,15 +75,16 @@ const isSuperviseParMoi =
 
   // Redirection vers la fiche famille
   const handleGoToFamille = () => {
-    if (!famille?.id) return;
+  if (fromFamilyHistory) return;
+  if (!famille?.id) return;
 
-    navigate(`/famille/${famille.id}`, {
-      state: {
-        restoreVisiteId: visite.id,
-        fromPage: "/liste-visite",
-      },
-    });
-  };
+  navigate(`/famille/${famille.id}`, {
+    state: {
+      restoreVisiteId: visite.id,
+      fromPage: "/liste-visite",
+    },
+  });
+};
 
   const infosGenerales = [
     {
@@ -309,14 +310,14 @@ const isSuperviseParMoi =
           </div>
 
           {/* Carte famille */}
-          <div
-            onClick={handleGoToFamille}
-            className="
-              cursor-pointer
-              hover:opacity-95
-              transition
-            "
-          >
+         <div
+  onClick={fromFamilyHistory ? undefined : handleGoToFamille}
+  className={
+    fromFamilyHistory
+      ? ""
+      : "cursor-pointer hover:opacity-95 transition"
+  }
+>
             <Card
               mere={`${famille?.mere?.nom ?? ""} ${
                 famille?.mere?.prenom ?? ""
@@ -510,3 +511,4 @@ const isSuperviseParMoi =
 };
 
 export default PopupDetailVisite;
+
