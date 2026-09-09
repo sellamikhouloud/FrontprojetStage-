@@ -25,17 +25,18 @@ const { user } = useAuth();
   if (!open || !distribution) return null;
 
 
-  const handleGoToFamille = () => {
-    const familleId = famille?.id || distribution?.famille?.id;
-    if (!familleId) return;
+ const handleGoToFamille = () => {
+  if (fromFamilyHistory) return; // pas de navigation depuis l'historique famille
+  const familleId = famille?.id || distribution?.famille?.id;
+  if (!familleId) return;
 
-    navigate(`/famille/${familleId}`, {
-      state: {
-        restoreDistributionId: distribution.id,
-        fromPage: "/liste-distributions", // Ajustez selon le chemin exact de votre route
-      },
-    });
-  };
+  navigate(`/famille/${familleId}`, {
+    state: {
+      restoreDistributionId: distribution.id,
+      fromPage: "/liste-distributions",
+    },
+  });
+};
 
   const isAnnulee = Boolean(distribution.annulee);
 
@@ -172,7 +173,10 @@ const canEditOrDelete = fromFamilyHistory
           </div>
 
           {/* Carte famille */}
-          <div onClick={handleGoToFamille} className="cursor-pointer hover:opacity-95 transition">
+        <div
+  onClick={fromFamilyHistory ? undefined : handleGoToFamille}
+  className={fromFamilyHistory ? "" : "cursor-pointer hover:opacity-95 transition"}
+>
           <Card
             mere={`${famille?.mere?.nom ?? ""} ${famille?.mere?.prenom ?? ""}`.trim()}
   enfant={famille?.nourrisson?.prenom ?? "-"}
