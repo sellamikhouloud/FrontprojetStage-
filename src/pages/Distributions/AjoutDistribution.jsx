@@ -557,7 +557,7 @@ setShowSuccessPopup(true);
         await deleteDraft(sourceDraftClientId);
       }
 
-      await saveDraft("distribution", payload);
+      await saveDraft("distribution", payload, undefined, user?.id);
       setOfflinePending(true);
       setShowSuccessPopup(true);
     } catch (draftError) {
@@ -1284,7 +1284,7 @@ useEffect(() => {
  
 </div>
 
-     {showSuccessPopup && (
+   {showSuccessPopup && (
   <Popup
     title={
       offlinePending
@@ -1294,31 +1294,48 @@ useEffect(() => {
         : "Distribution enregistrée avec succès"
     }
     image={offlinePending ? null : SuccessImage}
-    primaryButtonText="Voir la fiche famille"
-   secondaryButtonText={
-  sourceDraftClientId
-    ? "Revenir à la page de brouillon"
-    : isAdmin
-    ? "Revenir à la liste des distributions"
-    : "Revenir à l'accueil"
-}
-onPrimaryClick={() => {
-  setShowSuccessPopup(false);
-  setOfflinePending(false);
-  navigate(`/famille/${selectedFamille?.id}`);
-}}
-onSecondaryClick={() => {
-  setShowSuccessPopup(false);
-  setOfflinePending(false);
+    primaryButtonText={
+      offlinePending
+        ? "Voir la liste des brouillons"
+        : "Voir la fiche famille"
+    }
+    secondaryButtonText={
+      offlinePending
+        ? (isAdmin ? "Revenir à la liste des distributions" : "Revenir à l'accueil")
+        : sourceDraftClientId
+        ? "Revenir à la page de brouillon"
+        : isAdmin
+        ? "Revenir à la liste des distributions"
+        : "Revenir à l'accueil"
+    }
+    onPrimaryClick={() => {
+      setShowSuccessPopup(false);
+      setOfflinePending(false);
 
-  if (sourceDraftClientId) {
-    navigate("/brouillons-hors-ligne");
-  } else if (isAdmin) {
-    navigate("/liste-distributions");
-  } else {
-    navigate("/dashboard");
-  }
-}}
+      if (offlinePending) {
+        navigate("/brouillons-hors-ligne");
+      } else {
+        navigate(`/famille/${selectedFamille?.id}`);
+      }
+    }}
+    onSecondaryClick={() => {
+      setShowSuccessPopup(false);
+      setOfflinePending(false);
+
+      if (offlinePending) {
+        if (isAdmin) {
+          navigate("/liste-distributions");
+        } else {
+          navigate("/dashboard");
+        }
+      } else if (sourceDraftClientId) {
+        navigate("/brouillons-hors-ligne");
+      } else if (isAdmin) {
+        navigate("/liste-distributions");
+      } else {
+        navigate("/dashboard");
+      }
+    }}
   />
 )}
         </div>
