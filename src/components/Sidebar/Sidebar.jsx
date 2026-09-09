@@ -1,7 +1,7 @@
 
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { countDrafts } from "@/lib/offlineDrafts";
+import { countDraftsByUser } from "@/lib/offlineDrafts";
 import { User } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 import { sidebarConfig } from "./sidebarData";
@@ -98,17 +98,18 @@ export default function Sidebar({
     role === "coordinator" || role === "chef_coordinator";
 
   useEffect(() => {
-  if (isAdmin) return; // l'admin ne crée jamais de brouillon, inutile de vérifier
+  if (isAdmin) return; // l'admin ne crée jamais de brouillon
+  if (!user?.id) return; 
 
   let cancelled = false;
 
   const refreshDraftCount = () => {
-    countDrafts()
+    countDraftsByUser(user.id)
       .then((count) => {
         if (!cancelled) setDraftCount(count);
       })
       .catch(() => {
-        // IndexedDB unavailable (private mode, etc.) — badge just stays at 0.
+      
       });
   };
 
@@ -122,7 +123,7 @@ export default function Sidebar({
     window.removeEventListener("focus", refreshDraftCount);
     window.removeEventListener("nutrigest:drafts-changed", refreshDraftCount);
   };
-}, [isAdmin]);
+}, [isAdmin, user?.id]);   
 
 
   useEffect(() => {
@@ -477,66 +478,67 @@ export default function Sidebar({
           />
         </div>
 
-        {/* Navigation */}
+   {/* Navigation */}
+<div
+  className={`
+    flex-1
+    flex
+    flex-col
+    items-center
+    overflow-y-auto
+    scrollbar-hide
+    min-h-0
+    w-full
+    ${expanded ? "" : "justify-center"}
+  `}
+>
+  {expanded && (
+    <p className="text-white font-bold mb-6 self-start">
+      Navigation
+    </p>
+  )}
 
-        <div
-          className="
-            flex-1
-            flex
-            items-center
-            justify-center
-            overflow-hidden
-          "
-        >
-          <div className="w-full">
-            {expanded && (
-              <p className="text-white font-bold mb-6">
-                Navigation
-              </p>
-            )}
+  <nav
+    className={`
+      flex
+      flex-col
+     ${expanded ? "gap-7 items-start w-full" : "gap-7 items-center"}
+    `}
+  >
+    {navigation.map((item, index) => (
+      <SidebarItem
+        key={index}
+        item={item}
+        expanded={expanded}
+        onMouseEnter={() => setExpanded(true)}
+      />
+    ))}
 
-            <nav
-              className={`
-                flex
-                flex-col
-                gap-7
-                ${expanded ? "items-start" : "items-center"}
-              `}
-            >
-              {navigation.map((item, index) => (
-                <SidebarItem
-                  key={index}
-                  item={item}
-                  expanded={expanded}
-                  onMouseEnter={() => setExpanded(true)}
-                />
-              ))}
-            
-              {!isAdmin && (
-               <DraftsBadge
-               count={draftCount}
-               expanded={expanded}
-               onClick={() => navigate(DRAFTS_PATH)}
-               />
-              )}
+    {!isAdmin && (
+      <DraftsBadge
+        count={draftCount}
+        expanded={expanded}
+        onClick={() => navigate(DRAFTS_PATH)}
+      />
+    )}
 
-              {actions.length > 0 && expanded && (
-                <p className="text-white font-bold">
-                  Action rapide
-                </p>
-              )}
+    {actions.length > 0 && expanded && (
+      <p className="text-white font-bold">
+        Action rapide
+      </p>
+    )}
 
-              {actions.map((item, index) => (
-                <SidebarItem
-                  key={index}
-                  item={item}
-                  expanded={expanded}
-                  onMouseEnter={() => setExpanded(true)}
-                />
-              ))}
-            </nav>
-          </div>
-        </div>
+    {actions.map((item, index) => (
+      <SidebarItem
+        key={index}
+        item={item}
+        expanded={expanded}
+        onMouseEnter={() => setExpanded(true)}
+      />
+    ))}
+  </nav>
+</div>
+        
 
         {/* Avatar */}
 
