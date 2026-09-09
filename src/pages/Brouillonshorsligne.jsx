@@ -7,9 +7,9 @@ import NoResultImage from "@/assets/no result picture.svg";
 import Popup from "@/components/Popups/SuccessPopup";
 import successImage from "../assets/Success.svg";
 import {
-  listDrafts,
   deleteDraft,
   markDraftStatus,
+  listDraftsByUser,
 } from "@/lib/offlineDrafts";
 import PopupDetailBrouillonZakat from "@/components/Popups/PopupDetailBrouillonZakat";
 import PopupDetailBrouillonVisite from "@/components/Popups/PopupDetailBrouillonVisite";
@@ -20,6 +20,7 @@ import { loadCache } from "@/lib/offlineCache";
 import { createDistribution } from "@/lib/api/distributions";
 import { createVisite } from "@/lib/api/visites";
 import { createAideZakat } from "@/lib/api/zakat";
+import { useAuth } from "@/components/Providers/AuthProvider";
 
  import { createFamilleFromDraft } from "@/lib/api/familles";
  import StatusBadge from "@/components/Cards/Badge";
@@ -275,6 +276,7 @@ function summarize(draft) {
 
 export default function BrouillonsHorsLigne() {
   const navigate = useNavigate();
+  const { user } = useAuth(); 
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isError, setIsError] = useState(false);
@@ -289,14 +291,14 @@ export default function BrouillonsHorsLigne() {
     setLoading(true);
     setIsError(false);
     try {
-      const all = await listDrafts();
+     const all = await listDraftsByUser(user?.id);
       setDrafts(all);
     } catch (error) {
       setIsError(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     refresh();
