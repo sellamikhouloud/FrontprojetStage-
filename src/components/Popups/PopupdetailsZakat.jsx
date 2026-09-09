@@ -134,7 +134,8 @@ const canEditOrDelete = fromFamilyHistory
     modeRemiseLabels[zakat.mode_remise] ?? zakat.mode_remise ?? "-";
 
   // Redirection vers la fiche famille avec conservation de l'ID de la Zakat
- const handleFamilyClick = () => {
+const handleFamilyClick = () => {
+  if (fromFamilyHistory) return;
   const familleId =
     famille?.id ||
     zakat.famille_info?.id ||
@@ -300,7 +301,10 @@ const canEditOrDelete = fromFamilyHistory
           </div>
 
           {/* Clic sur la carte famille */}
-          <div onClick={handleFamilyClick} className="cursor-pointer">
+         <div
+  onClick={fromFamilyHistory ? undefined : handleFamilyClick}
+  className={fromFamilyHistory ? "" : "cursor-pointer"}
+>
             <Card
               mere={mere}
               enfant={enfant}
