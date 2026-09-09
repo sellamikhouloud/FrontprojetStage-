@@ -2,6 +2,19 @@ import { openDB } from "idb";
 
 const DB_NAME = "nutrigest-offline";
 const STORE = "drafts";
+const AUTH_USER_KEY = "nutrigest:auth:user";
+
+function getStoredUserId() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(AUTH_USER_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.id ?? null;
+  } catch {
+    return null;
+  }
+}
 
 function notifyDraftsChanged() {
   if (typeof window !== "undefined") {
@@ -35,17 +48,19 @@ function makeClientId() {
 }
 
 // type: 'famille' | 'visite' | 'distribution' | 'aide_zakat'
-// payload: plain JSON-able fields for that record
-// files: optional { fieldName: File } map (e.g. { photo: fileObj })
-export async function saveDraft(type, payload, files = {}) {
+// userId: id de l'utilisateur connecté qui crée ce draft
+export async function saveDraft(type, payload, files = {}, userId = null) {
   const db = await dbPromise();
+  const resolvedUserId = userId ?? getStoredUserId();
+
   const draft = {
     clientId: makeClientId(),
     type,
     payload,
-    files, // File/Blob objects are structured-clone-able, IndexedDB stores them directly
-    status: "pending", // 'pending' | 'sending' | 'error'
+    files,
+    status: "pending",
     error: null,
+    userId: resolvedUserId,
     createdAt: Date.now(),
   };
   await db.put(STORE, draft);
@@ -59,9 +74,22 @@ export async function listDrafts() {
   return all.sort((a, b) => a.createdAt - b.createdAt);
 }
 
+// Ne retourne que les brouillons appartenant à l'utilisateur donné.
+export async function listDraftsByUser(userId) {
+  const all = await listDrafts();
+  if (!userId) return [];
+  return all.filter((draft) => String(draft.userId) === String(userId));
+}
+
 export async function countDrafts() {
   const db = await dbPromise();
   return db.count(STORE);
+}
+
+// Compte uniquement les brouillons de l'utilisateur donné.
+export async function countDraftsByUser(userId) {
+  const drafts = await listDraftsByUser(userId);
+  return drafts.length;
 }
 
 export async function deleteDraft(clientId) {
