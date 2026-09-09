@@ -345,7 +345,7 @@ const handleSave = async () => {
       if (formData.sourceDraftClientId) {
         await deleteDraft(formData.sourceDraftClientId);
       }
-
+     
       await saveDraft(
         "famille",
         {
@@ -358,7 +358,8 @@ const handleSave = async () => {
           motif_sortie: formData.motif_sortie,
           coordinateur: formData.coordinateur,
         },
-        photo instanceof File ? { photo } : undefined
+        photo instanceof File ? { photo } : undefined,
+        user?.id
       );
 
       setCreatedFamilleIds([]);
