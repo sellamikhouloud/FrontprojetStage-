@@ -15,17 +15,19 @@ export async function login(username, password) {
   // Get CSRF cookie first
   await fetchCSRFToken();
 
-  const { data } = await postLogin(username, password);
+  await postLogin(username, password);
 
-  // Save the user locally for offline session restoration
+  // on revalide immédiatement via /me/ pour avoir l'objet utilisateur
+  const { data: user } = await getMe();
+
   localStorage.setItem(
     AUTH_USER_KEY,
-    JSON.stringify(data.user)
+    JSON.stringify(user)
   );
 
-  return data.user;
+  return user;
+  
 }
-
 // LOGOUT
 export async function logout() {
   try {
