@@ -446,7 +446,7 @@ const savingRef = useRef(false);
     }
 
     try {
-      await saveDraft("visite", payload);
+      await saveDraft("visite", payload, undefined, user?.id);
       if (sourceDraftClientId) {
         await deleteDraft(sourceDraftClientId);
       }
