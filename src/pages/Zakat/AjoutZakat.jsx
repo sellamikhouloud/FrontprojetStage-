@@ -375,7 +375,7 @@ const extractErrorMessage = (error) => {
       if (sourceDraftClientId) {
         await deleteDraft(sourceDraftClientId);
       }
-      await saveDraft("aide_zakat", payload);
+      await saveDraft("aide_zakat", payload, undefined, user?.id);
       setOfflinePending(true);
       setShowSuccessPopup(true);
     } catch (draftError) {
