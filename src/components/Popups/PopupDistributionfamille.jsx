@@ -138,6 +138,7 @@ const PopupDistributionfamille = ({
         "Erreur lors de l'annulation de la distribution :",
         error?.response?.data || error
       );
+       throw error; 
     }
   };
 
@@ -344,4 +345,5 @@ const PopupDistributionfamille = ({
 };
 
 export default PopupDistributionfamille;
+
 
