@@ -176,6 +176,7 @@ export default function ListeVisites() {
         "Erreur lors de la suppression de la visite :",
         err?.response?.data || err
       );
+       throw err;  
     }
   };
 
