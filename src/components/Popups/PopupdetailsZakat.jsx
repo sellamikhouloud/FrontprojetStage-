@@ -10,8 +10,62 @@ import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
 import DeleteIcon from "../../assets/Delete.svg";
 
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
 import Popup from "./SuccessPopup";
 import SuccessImage from "../../assets/Confirm.svg";
+
+function extractErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (!data) {
+    return error?.message || "Une erreur est survenue.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (typeof data?.code === "string" && typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") messages.push(`${label} : ${msg}`);
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue.";
+}
 const PopupDetailZakat = ({
   open,
   onClose,
@@ -21,6 +75,8 @@ const PopupDetailZakat = ({
   onDelete,
   fromFamilyHistory = false,
 }) => {
+  const [errorMessage, setErrorMessage] = useState(null); 
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const navigate = useNavigate();
  const { user } = useAuth();
@@ -150,6 +206,31 @@ const handleFamilyClick = () => {
     });
   }
 };
+const openDeletePopup = () => {
+  setErrorMessage(null);
+  setShowDeletePopup(true);
+};
+
+const closeDeletePopup = () => {
+  setErrorMessage(null);
+  setShowDeletePopup(false);
+};
+
+const handleConfirmDelete = async () => {
+  try {
+    setIsDeleting(true);
+    setErrorMessage(null);
+
+    await onDelete?.(zakat);
+
+    setShowDeletePopup(false);   // ferme seulement en cas de succès
+  } catch (error) {
+    console.error("Erreur annulation :", error?.response?.data || error);
+    setErrorMessage(extractErrorMessage(error));
+  } finally {
+    setIsDeleting(false);
+  }
+};
 
   const ActionButtons = ({ className }) => (
     <div className={className}>
@@ -166,7 +247,7 @@ const handleFamilyClick = () => {
         variant="supprimer"
         icon={DeleteIcon}
         noWrapperPadding
-        onClick={() => setShowDeletePopup(true)}
+        onClick={openDeletePopup}
       />
     </div>
   );
@@ -198,27 +279,16 @@ const handleFamilyClick = () => {
             className="fixed inset-0 z-[100] flex items-center justify-center"
           >
             <Popup
-              title="Confirmer l'annulation"
-              image={SuccessImage}
-              description="Êtes-vous sûr de vouloir Annuler ce Zakat ? Cette action est irréversible."
-              primaryButtonText="Annuler Zakat "
-              secondaryButtonText="Annuler"
-              primaryButtonVariant="danger"
-              onPrimaryClick={async () => {
-                try {
-                  await onDelete?.(zakat);
-                  setShowDeletePopup(false);
-                } catch (error) {
-                  console.error(
-                    "Erreur lors de la suppression du Zakat :",
-                    error
-                  );
-                }
-              }}
-              onSecondaryClick={() => {
-                setShowDeletePopup(false);
-              }}
-            />
+  title="Confirmer l'annulation"
+  image={SuccessImage}
+  description="Êtes-vous sûr de vouloir Annuler ce Zakat ? Cette action est irréversible."
+  errorMessage={errorMessage}
+  primaryButtonText={isDeleting ? "Annulation..." : "Annuler Zakat"}
+  secondaryButtonText="Annuler"
+  primaryButtonVariant="danger"
+  onPrimaryClick={handleConfirmDelete}
+  onSecondaryClick={closeDeletePopup}
+/>
           </div>
         )}
 
