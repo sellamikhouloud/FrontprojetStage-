@@ -10,6 +10,61 @@ import quitter from "../../assets/quitter.svg";
 import EditIcon from "../../assets/Container.svg";
 import DeleteIcon from "../../assets/Delete.svg";
 import SuccessImage from "../../assets/Confirm.svg";
+import BackendErrorMessage from "../Forms/BackendErrorMessage";
+
+
+function extractErrorMessage(error) {
+  const data = error?.response?.data;
+
+  if (!data) {
+    return error?.message || "Une erreur est survenue.";
+  }
+
+  if (typeof data === "string") {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    const messages = data.filter((m) => typeof m === "string");
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  if (data?.detail) {
+    return data.detail;
+  }
+
+  if (typeof data?.code === "string" && typeof data?.message === "string") {
+    return data.message;
+  }
+
+  if (typeof data === "object" && !Array.isArray(data)) {
+    const collect = (obj, parentLabel = "") => {
+      const messages = [];
+      Object.entries(obj).forEach(([field, value]) => {
+        const label = parentLabel ? `${parentLabel} > ${field}` : field;
+        if (Array.isArray(value)) {
+          value.forEach((msg) => {
+            if (typeof msg === "string") messages.push(`${label} : ${msg}`);
+          });
+        } else if (value && typeof value === "object") {
+          messages.push(...collect(value, label));
+        } else if (typeof value === "string") {
+          messages.push(`${label} : ${value}`);
+        }
+      });
+      return messages;
+    };
+
+    const messages = collect(data);
+    if (messages.length > 0) {
+      return messages.join(" — ");
+    }
+  }
+
+  return "Une erreur est survenue.";
+}
 const PopupDetailDistribution = ({
   open,
   onClose,
@@ -19,12 +74,40 @@ const PopupDetailDistribution = ({
   onDelete,
   fromFamilyHistory = false,
 }) => {
+  const [errorMessage, setErrorMessage] = useState(null); 
+  const [isDeleting, setIsDeleting] = useState(false);   // ← AJOUT
   const [showDeletePopup, setShowDeletePopup] = useState(false);
 const navigate = useNavigate();
 const { user } = useAuth();
   if (!open || !distribution) return null;
 
+const openDeletePopup = () => {
+  setErrorMessage(null);
+  setShowDeletePopup(true);
+};
 
+const closeDeletePopup = () => {
+  setErrorMessage(null);
+  setShowDeletePopup(false);
+};
+
+const handleConfirmDelete = async () => {
+  try {
+    setIsDeleting(true);
+    setErrorMessage(null);
+
+    console.log("1. clic reçu");
+    await onDelete?.(distribution);
+    console.log("2. onDelete terminé SANS erreur");   // ← si vous voyez ça, le parent avale l'erreur
+
+    setShowDeletePopup(false);
+  } catch (error) {
+    console.log("3. erreur reçue", error?.response?.data);
+    setErrorMessage(extractErrorMessage(error));
+  } finally {
+    setIsDeleting(false);
+  }
+};
  const handleGoToFamille = () => {
   if (fromFamilyHistory) return; // pas de navigation depuis l'historique famille
   const familleId = famille?.id || distribution?.famille?.id;
@@ -100,20 +183,16 @@ const canEditOrDelete = fromFamilyHistory
         {showDeletePopup && (
           <div onClick={(e) => e.stopPropagation()}>
             <Popup
-              title="Confirmer l'annulation"
-              image={SuccessImage}
-              description="Êtes-vous sûr de vouloir Annuler cette distribution ? Cette action est irréversible."
-              primaryButtonText="Annuler la distribution"
-              secondaryButtonText="Annuler"
-              primaryButtonVariant="danger"
-              onPrimaryClick={() => {
-                setShowDeletePopup(false);
-                onDelete?.(distribution);
-              }}
-              onSecondaryClick={() =>
-                setShowDeletePopup(false)
-              }
-            />
+  title="Confirmer l'annulation"
+  image={SuccessImage}
+  description="Êtes-vous sûr de vouloir Annuler cette distribution ? Cette action est irréversible."
+  errorMessage={errorMessage}
+  primaryButtonText={isDeleting ? "Annulation..." : "Annuler la distribution"}
+  secondaryButtonText="Annuler"
+  primaryButtonVariant="danger"
+  onPrimaryClick={handleConfirmDelete}
+  onSecondaryClick={closeDeletePopup}
+/>
           </div>
         )}
 
@@ -335,7 +414,7 @@ const canEditOrDelete = fromFamilyHistory
         variant="supprimer"
         icon={DeleteIcon}
         noWrapperPadding
-        onClick={() => setShowDeletePopup(true)}
+       onClick={openDeletePopup} 
       />
     </div>
   </>
