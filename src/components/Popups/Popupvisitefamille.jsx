@@ -80,6 +80,7 @@ const Popupvisites = ({
         "Erreur lors de la suppression de la visite :",
         err?.response?.data || err
       );
+       throw error; 
     }
   };
 
