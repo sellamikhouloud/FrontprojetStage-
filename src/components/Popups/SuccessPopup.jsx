@@ -1,3 +1,4 @@
+import BackendErrorMessage from "../Forms/BackendErrorMessage";  
 const Popup = ({
   title,
   image,
@@ -6,6 +7,7 @@ const Popup = ({
   extraContent, // 👈 nouveau
   primaryButtonText,
   secondaryButtonText,
+    errorMessage, 
   primaryButtonVariant = "success",
   onPrimaryClick,
   onSecondaryClick,
@@ -84,7 +86,7 @@ const Popup = ({
             {description}
           </p>
         )}
-
+ <BackendErrorMessage message={errorMessage} /> 
         {/* Identifiant */}
         {id && (
           <p
