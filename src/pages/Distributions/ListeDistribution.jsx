@@ -502,6 +502,7 @@ const handleAnnulerDistribution = async (distribution) => {
       "Erreur lors de l'annulation de la distribution :",
       error?.response?.data || error
     );
+    throw error; 
   }
 };
 
@@ -944,5 +945,6 @@ const nomAffiche = `${mereNom} ${merePrenom}`.trim() || "-";
     </div>
   );
 }
+
 
 
